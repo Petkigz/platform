@@ -2,9 +2,14 @@
 # 20261281151000_teaching_answer_told.sql (somebody who applied to teach is
 # written a message when the application is answered). One-time:
 # scripts/hosted-migration-358.mjs refuses unless the hosted history is
-# exactly the 357 and the local files are exactly the reviewed 358. Nobody has
-# asked for this step yet. The environment requires the owner's approval
-# before the job, and so before any secret, is released.
+# exactly the 357 and the local files are exactly the reviewed 358. The owner
+# asked for this step on 2026-11-24. The environment requires the owner's
+# approval before the job, and so before any secret, is released.
+#
+# The branch has since gained the 359th and 360th, which nobody has asked to
+# apply. So the job checks out the commit this step was reviewed at
+# (fbf6341, which holds exactly the 358) and runs that tree's script, test
+# and migrations. Nothing later than that commit reaches the hosted project.
 name: Apply Supabase test migration 358
 on:
   push:
@@ -29,7 +34,15 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          # The tree with exactly the 358 migrations this step was reviewed for.
+          ref: fbf6341366fe32434ac0bbc69031e3e9afbbfad9
           persist-credentials: false
+      - name: The tree is the one reviewed, with 358 migrations and no more
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 'fbf6341366fe32434ac0bbc69031e3e9afbbfad9'
+          test "$(ls supabase/migrations/*.sql | wc -l)" = '358'
+          test "$(ls supabase/migrations/*.sql | tail -1)" = 'supabase/migrations/20261281151000_teaching_answer_told.sql'
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: '22.22.3'

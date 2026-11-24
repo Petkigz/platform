@@ -411,8 +411,10 @@ and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
 hosted project is at 357. This tree has 360. The 358th,
-`20261281151000_teaching_answer_told.sql`, has a job written for it (below)
-that nobody has asked to run. The 359th and 360th
+`20261281151000_teaching_answer_told.sql`, has a job written for it (below);
+the owner asked for it on 2026-11-24. Because the branch now holds two more
+migrations, that job checks out the commit it was reviewed at (`fbf6341`,
+which ends at that file) and applies from that tree. The 359th and 360th
 (`20261281152000_refunds_policy_plan_given_back.sql` and
 `20261281153000_discussion_boards.sql`) have **no job yet**: one is written
 when the 358th has gone, because each job starts from an exact history and
@@ -556,7 +558,7 @@ Plans are switched off; apply the migration before they are switched on.
 
 **The 358th, `20261281151000_teaching_answer_told.sql`** (somebody who
 applied to teach is written a message when the application is answered).
-**Not applied, and not asked for.** It adds one word to the closed list of
+**Asked for by the owner on 2026-11-24.** It adds one word to the closed list of
 notification kinds (two check constraints, two functions) and replaces
 `decide_teaching_application()` and `my_teaching_application()` with their
 earlier definitions plus the message and one field. No table, column,
