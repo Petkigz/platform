@@ -848,16 +848,21 @@ written: not a held draft, nothing.
   been refunded and says so; a line cannot be marked as dealt with. The migration is on the
   hosted test project since 2026-11-19, with both switches off. No request, pledge or recorded
   payment has been read through this page from a real database.
-  **Still English, every one of them:**
-  the pages it links to: `/account/password`
-  and `/forgot-password`. (`/policies`, `/institution` and `/teach/apply` are
-  in the reader's language since 2026-11-23; see their own entries below.) (`/notifications` is in the reader's language
+  **The pages it links to** are in the reader's language: `/policies`,
+  `/institution` and `/teach/apply` since 2026-11-23 (see their own entries
+  below), and `/account/password` and `/forgot-password` from an earlier
+  unit. *(Corrected 2026-11-24: this line said the two password pages
+  were still English. They were not: both ends of a reset were translated
+  together, as `DECISIONS.md` records, and `/forgot-password` was read again
+  in Arabic, Swahili and Hausa on the day of the correction. The one
+  sentence there that is not translated is the sign-in service's own
+  refusal of a new password, shown as it arrives on purpose.)*
+  (`/notifications` is in the reader's language
   since 2026-11-23, `messages/notify.ts`, forty-two sentences, unreviewed;
   the text of a stored message is still the English the database wrote, and
   the page says so. Checked by `scripts/notifications-route-smoke.mjs` on a
   stand-in. **Not exercised:** a notification written by a real payout or
-  class and read through it.) A reader is taken from a
-  page in their language to an English one by each of those links.
+  class and read through it.)
   The preferred-language field is stored and read by nothing; the page now
   says so under the field, and whether to wire it or remove it is undecided.
   On a wide screen the page is one 42rem column at the start of the line with
