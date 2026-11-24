@@ -336,6 +336,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Institution responsive test::${s}`)' "$RUNNER_TEMP/institution-responsive.log"
             exit 1
           fi
+      - name: Check the page for a school's code in three languages, and that a code is refused in the reader's own
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/seats-route-smoke.mjs > "$RUNNER_TEMP/seats-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/seats-responsive.log"
+          else
+            cat "$RUNNER_TEMP/seats-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=School codes responsive test::${s}`)' "$RUNNER_TEMP/seats-responsive.log"
+            exit 1
+          fi
       - name: Check the page that asks to teach in three languages, and that a mistake is said under its own box
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1869 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1901 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -552,7 +552,9 @@ still unreviewed and still saying so.
   plans are kept on, of 1769 with the policy pages and of 1814 with the
   institution page, of 1849 with the page that asks to teach, of 1854 with
   five sentences put back on the plans page, of 1864 with ten for
-  notifications, then this with five for telling of a changed document),
+  notifications, of 1869 with five for telling of a changed document, of
+  1871 with two for a plan given back, then this with thirty for a school's
+  code),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -971,8 +973,8 @@ written: not a held draft, nothing.
   **Still English, for every reader:** the three cards an administrator
   fills in (how it looks, the domain, the keys) and the line about seats
   above them, marked as English under one sentence saying so; the headings
-  inside the file; an institution's and a course's own names; and the two
-  pages this one links to, `/institution/claim` and `/institution/seats`.
+  inside the file; an institution's and a course's own names. (The two
+  pages this one links to were English until 2026-11-24; see the next item.)
   **Not built:** the enrolments by month on the page (the database returns
   them and they are in the file, under an English heading); a member being told which institution their address matches before
   they press Join (the board does not say).
@@ -988,6 +990,39 @@ written: not a held draft, nothing.
   `supabase/tests/institutions.test.mjs`, not here); the administrator's
   cards being used; a real institution's logo; twenty-four languages in a
   browser.
+- *A school's code, and what a school bought (2026-11-24).* `/institution/claim`
+  is in the reader's language for the twenty-seven languages with nothing
+  held (`messages/inst.ts`, thirty more sentences, **read by no speaker**)
+  and in English, marked, for the nineteen: the form, who the course is for,
+  each refusal, what the school sees and that it can withdraw a code. On
+  `/institution/seats` the heading, what a member is told, codes being
+  switched off and a read that failed are in the reader's language.
+  **Still English, for every reader:** the whole of an administrator's desk
+  on `/institution/seats` (orders, issuing codes, withdrawing one, how a
+  school buys), marked as English under one sentence saying so, and every
+  sentence the route answers issuing and withdrawing with
+  (`api/institution/route.ts`, not changed and not read again for this). A
+  course's own title.
+  **Not built:** a school's name on the page where its code is used (the
+  database returns only the course); telling a learner that the school
+  withdrew their code, other than the course no longer opening; a way to
+  move a used code to another learner (a code is one learner, once; the
+  school withdraws it and gives another).
+  Checked by `scripts/seats-route-smoke.mjs` on a synthetic backend in which
+  every school, course, learner and code is invented: HTTP in English and
+  Arabic and one held language; signed out; an account on its own and a
+  family; a family that could not be read, four ways; a member, an
+  administrator, not joined, and a reply that could not be read, four ways;
+  nine shapes that are not a code and five that are not a learner, which
+  reach no database; each of the nine sentences `claim_institution_seat()`
+  raises, as the route answers it; a refusal with no name and no answer at
+  all; Chromium in English, Arabic and Tamil at 320, 390 and 1440 wide, and
+  the form used in Arabic at 390. **Not checked:** a real database or
+  row-level security (that a code works once, for a learner the account may
+  act for, is the database's code, run in
+  `supabase/tests/institution_seats.test.mjs`, not here); a real code used
+  through this page anywhere; the flag being on anywhere (it is off); the
+  administrator's desk being pressed; twenty-four languages in a browser.
 - *The policy pages (2026-11-23).* `/policies` and `/policies/[slug]` are in
   the reader's language for the twenty-seven languages with nothing held
   (`messages/policy.ts`, thirty-three sentences, **read by no speaker**) and

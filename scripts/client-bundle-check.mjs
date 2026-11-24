@@ -180,6 +180,13 @@ for (const [file, key] of [
   ['inst.ts', 'inst.unread'],
   ['inst.ts', 'inst.joinClosed'],
   ['inst.ts', 'inst.noMatch'],
+  // The page for a school's code and the page of what a school bought are
+  // server pages, and the form is handed only what it says. What the school
+  // is shown, a family that could not be read and what a member is told
+  // must be in nothing a browser downloads.
+  ['inst.ts', 'inst.claimSchoolSees'],
+  ['inst.ts', 'inst.claimLearnersUnread'],
+  ['inst.ts', 'inst.seatsMemberBody'],
   // The page that asks to teach is a server page, and hands its form and
   // its button the words they say. What it says before the form, and what
   // it says to somebody who teaches already or whose application could not

@@ -260,8 +260,8 @@ export default async function InstitutionPage({
           <div className="inst-admin" data-inst-admin {...english}>
             <p className="muted">
               <Link href="/institution/seats">Seats</Link> — the courses this institution has bought,
-              the codes to hand out, and how many have been claimed. A seat is one learner for one
-              course, and the school never sees which learner took which.
+              the codes to hand out, and which have been claimed. A seat is one learner for one
+              course. The school sees which of its codes were claimed and when, never the learner.
             </p>
             <InstitutionConsole board={board} />
           </div>

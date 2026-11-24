@@ -2498,6 +2498,55 @@ export const en = {
     'The parts below are for this institution’s administrators and are in English for now.',
   'inst.csvNote': 'The headings inside the file are in English.',
   'inst.whySignedOut': 'You are signed out. Sign in and try again.',
+  // The page a school's code is used on, and what a member reads on the page
+  // the courses an institution bought are listed on (2026-11-24). What an
+  // administrator works with on that second page stays English, marked.
+  'inst.claimTitle': 'Use a code from a school',
+  'inst.claimLede':
+    'Type the code the school gave you. It works once. It adds a course for the learner you choose, and you pay nothing.',
+  'inst.claimSchoolSees':
+    'The school sees which of its codes have been used and when. It is not shown the learner’s name. If the school kept a note of who was given each code, it can tell that yours was used.',
+  'inst.claimWithdraw':
+    'The school can withdraw a code later. If it withdraws one that was used, the learner can no longer open the course. The work already done is kept.',
+  'inst.claimCodeLabel': 'Your code',
+  'inst.claimCodeHelp':
+    'Ten letters and numbers, on the letter or card from the school. Small letters and the dash do not matter. A code never has the letters I, L or O, and never a zero or a one.',
+  'inst.claimWho': 'Who is this course for?',
+  'inst.claimWhoNote':
+    'One code is for one learner. Once it is used for one learner, it cannot be used for another.',
+  'inst.claimMe': 'Myself',
+  'inst.claimForMe': 'This course will be added for you.',
+  'inst.claimLearnersUnread':
+    'The learners on your account could not be read just now, so the code cannot be used here yet. Nothing was used. Try again in a moment.',
+  'inst.claimDo': 'Use this code',
+  'inst.claimDone': 'The code was used. This course was added: {title}',
+  'inst.claimDoneNoTitle': 'The code was used and the course was added.',
+  'inst.claimDoneWhere': 'You will find it on the learning page.',
+  'inst.claimAnother': 'Use another code',
+  'inst.claimUnsure':
+    'We could not confirm that the code was used. Look at the learning page before you try again.',
+  'inst.whyBadCode':
+    'That is not the shape of a code. Check each letter and number against what the school gave you.',
+  'inst.whyCodeUnknown':
+    'We have no code like that one. Check it against what the school gave you. Nothing was used.',
+  'inst.whyCodeUsed':
+    'This code has already been used, and a code works once. If you used it yourself, the course is on the learning page. If you did not, ask the school for another code.',
+  'inst.whyCodeVoided': 'The school has withdrawn this code. Ask the school for another.',
+  'inst.whyCourseGone':
+    'The course this code is for cannot be joined at the moment. The code was not used, so you can try it again later.',
+  'inst.whyNotYourLearner': 'You cannot use a code for that learner. The code was not used.',
+  'inst.whyAlreadyEnrolled':
+    'That learner is already on the course this code is for. The code was not used, so it can be used for another learner.',
+  'inst.whySeatsClosed':
+    'Codes from schools cannot be used at the moment. The code was not used. Try again later.',
+  'inst.seatsTitle': 'Courses the institution bought',
+  'inst.seatsUnread':
+    'What your institution bought could not be read just now. This does not mean it bought nothing. Try again in a moment.',
+  'inst.seatsOff':
+    'Codes from schools are switched off at the moment. Until they are switched on again, nothing new can be bought, no code can be given out and no code can be used. Courses already added by a code are not taken away.',
+  'inst.seatsMemberTitle': 'Only the institution’s administrators see this page',
+  'inst.seatsMemberBody':
+    'You are a member of this institution and not one of its administrators, so the courses it bought are not listed for you. If you were given a code, it is used on another page.',
 
   // The page that asks to teach, its form and taking an application back
   // (`tapply.ts`), for the same twenty-seven languages as the dashboard,

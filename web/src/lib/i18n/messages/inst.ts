@@ -89,6 +89,48 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'الأجزاء أدناه خاصة بمسؤولي هذه المؤسسة وهي بالإنجليزية حاليًا.',
     'inst.csvNote': 'العناوين داخل الملف بالإنجليزية.',
     'inst.whySignedOut': 'لقد سُجّل خروجك. سجّل الدخول وحاول مرة أخرى.',
+    'inst.claimTitle': 'استخدام رمز من مدرسة',
+    'inst.claimLede':
+      'اكتب الرمز الذي أعطتك إياه المدرسة. يعمل مرة واحدة. يضيف دورة للمتعلّم الذي تختاره، ولا تدفع شيئًا.',
+    'inst.claimSchoolSees':
+      'ترى المدرسة أيّ رموزها استُخدم ومتى. لا يُعرض عليها اسم المتعلّم. إذا احتفظت المدرسة بسجلّ لمن أُعطي كل رمز، فبإمكانها أن تعرف أن رمزك استُخدم.',
+    'inst.claimWithdraw':
+      'يمكن للمدرسة أن تسحب رمزًا لاحقًا. إذا سحبت رمزًا استُخدم، لا يستطيع المتعلّم فتح الدورة بعد ذلك. يبقى العمل الذي أُنجز محفوظًا.',
+    'inst.claimCodeLabel': 'رمزك',
+    'inst.claimCodeHelp':
+      'عشرة أحرف وأرقام، على الرسالة أو البطاقة من المدرسة. الأحرف الصغيرة والشرطة لا تهمّ. لا يحتوي الرمز أبدًا على الأحرف I أو L أو O، ولا على صفر أو واحد.',
+    'inst.claimWho': 'لمن هذه الدورة؟',
+    'inst.claimWhoNote': 'الرمز الواحد لمتعلّم واحد. إذا استُخدم لمتعلّم، لا يمكن استخدامه لآخر.',
+    'inst.claimMe': 'لي أنا',
+    'inst.claimForMe': 'ستُضاف هذه الدورة لك.',
+    'inst.claimLearnersUnread':
+      'تعذّرت قراءة المتعلّمين في حسابك الآن، لذا لا يمكن استخدام الرمز هنا بعد. لم يُستخدم شيء. حاول مرة أخرى بعد قليل.',
+    'inst.claimDo': 'استخدم هذا الرمز',
+    'inst.claimDone': 'استُخدم الرمز. أُضيفت هذه الدورة: {title}',
+    'inst.claimDoneNoTitle': 'استُخدم الرمز وأُضيفت الدورة.',
+    'inst.claimDoneWhere': 'ستجدها في صفحة التعلّم.',
+    'inst.claimAnother': 'استخدم رمزًا آخر',
+    'inst.claimUnsure':
+      'لم نتمكّن من التأكّد من أن الرمز استُخدم. انظر في صفحة التعلّم قبل أن تحاول مرة أخرى.',
+    'inst.whyBadCode': 'هذا ليس شكل الرمز. راجع كل حرف ورقم على ما أعطتك المدرسة.',
+    'inst.whyCodeUnknown': 'ليس لدينا رمز كهذا. راجعه على ما أعطتك المدرسة. لم يُستخدم شيء.',
+    'inst.whyCodeUsed':
+      'استُخدم هذا الرمز من قبل، والرمز يعمل مرة واحدة. إذا استخدمته أنت، فالدورة في صفحة التعلّم. وإن لم تستخدمه، فاطلب من المدرسة رمزًا آخر.',
+    'inst.whyCodeVoided': 'سحبت المدرسة هذا الرمز. اطلب من المدرسة رمزًا غيره.',
+    'inst.whyCourseGone':
+      'الدورة التي يخصّها هذا الرمز لا يمكن الانضمام إليها الآن. لم يُستخدم الرمز، فيمكنك تجربته لاحقًا.',
+    'inst.whyNotYourLearner': 'لا يمكنك استخدام رمز لهذا المتعلّم. لم يُستخدم الرمز.',
+    'inst.whyAlreadyEnrolled':
+      'هذا المتعلّم مسجّل من قبل في الدورة التي يخصّها هذا الرمز. لم يُستخدم الرمز، فيمكن استخدامه لمتعلّم آخر.',
+    'inst.whySeatsClosed': 'لا يمكن استخدام رموز المدارس الآن. لم يُستخدم الرمز. حاول لاحقًا.',
+    'inst.seatsTitle': 'الدورات التي اشترتها المؤسسة',
+    'inst.seatsUnread':
+      'تعذّرت قراءة ما اشترته مؤسستك الآن. هذا لا يعني أنها لم تشترِ شيئًا. حاول مرة أخرى بعد قليل.',
+    'inst.seatsOff':
+      'رموز المدارس موقوفة الآن. إلى أن تُشغَّل من جديد، لا يمكن شراء شيء جديد ولا إعطاء رمز ولا استخدام رمز. الدورات التي أُضيفت برمز من قبل لا تُسحب.',
+    'inst.seatsMemberTitle': 'مسؤولو المؤسسة وحدهم يرون هذه الصفحة',
+    'inst.seatsMemberBody':
+      'أنت عضو في هذه المؤسسة ولست من مسؤوليها، لذا لا تُعرض عليك الدورات التي اشترتها. إذا أُعطيت رمزًا، فهو يُستخدم في صفحة أخرى.',
   },
   ur: {
     'inst.title': 'ادارے',
@@ -147,6 +189,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'نیچے کے حصے اس ادارے کے منتظمین کے لیے ہیں اور فی الحال انگریزی میں ہیں۔',
     'inst.csvNote': 'فائل کے اندر کے عنوانات انگریزی میں ہیں۔',
     'inst.whySignedOut': 'آپ سائن آؤٹ ہیں۔ سائن ان کریں اور دوبارہ کوشش کریں۔',
+    'inst.claimTitle': 'اسکول کا کوڈ استعمال کرنا',
+    'inst.claimLede':
+      'وہ کوڈ لکھیں جو اسکول نے آپ کو دیا ہے۔ یہ ایک بار کام کرتا ہے۔ یہ آپ کے چنے ہوئے سیکھنے والے کے لیے ایک کورس شامل کرتا ہے، اور آپ کچھ ادا نہیں کرتے۔',
+    'inst.claimSchoolSees':
+      'اسکول دیکھتا ہے کہ اس کے کون سے کوڈ استعمال ہوئے اور کب۔ اسے سیکھنے والے کا نام نہیں دکھایا جاتا۔ اگر اسکول نے لکھ رکھا ہو کہ کون سا کوڈ کسے دیا گیا تھا تو وہ جان سکتا ہے کہ آپ کا کوڈ استعمال ہوا۔',
+    'inst.claimWithdraw':
+      'اسکول بعد میں کوئی کوڈ واپس لے سکتا ہے۔ اگر وہ استعمال شدہ کوڈ واپس لے تو سیکھنے والا وہ کورس مزید نہیں کھول سکتا۔ جو کام ہو چکا ہے وہ محفوظ رہتا ہے۔',
+    'inst.claimCodeLabel': 'آپ کا کوڈ',
+    'inst.claimCodeHelp':
+      'دس حروف اور ہندسے، جو اسکول کے خط یا کارڈ پر لکھے ہیں۔ چھوٹے حروف اور ڈیش سے فرق نہیں پڑتا۔ کوڈ میں I، L یا O کے حروف کبھی نہیں ہوتے، اور نہ صفر یا ایک۔',
+    'inst.claimWho': 'یہ کورس کس کے لیے ہے؟',
+    'inst.claimWhoNote':
+      'ایک کوڈ ایک سیکھنے والے کے لیے ہے۔ ایک بار کسی کے لیے استعمال ہو جائے تو کسی اور کے لیے استعمال نہیں ہو سکتا۔',
+    'inst.claimMe': 'میرے اپنے لیے',
+    'inst.claimForMe': 'یہ کورس آپ کے لیے شامل کیا جائے گا۔',
+    'inst.claimLearnersUnread':
+      'آپ کے اکاؤنٹ کے سیکھنے والے ابھی پڑھے نہیں جا سکے، اس لیے کوڈ ابھی یہاں استعمال نہیں ہو سکتا۔ کچھ استعمال نہیں ہوا۔ تھوڑی دیر میں دوبارہ کوشش کریں۔',
+    'inst.claimDo': 'یہ کوڈ استعمال کریں',
+    'inst.claimDone': 'کوڈ استعمال ہو گیا۔ یہ کورس شامل کیا گیا: {title}',
+    'inst.claimDoneNoTitle': 'کوڈ استعمال ہو گیا اور کورس شامل کر دیا گیا۔',
+    'inst.claimDoneWhere': 'یہ آپ کو تعلیم کے صفحے پر ملے گا۔',
+    'inst.claimAnother': 'ایک اور کوڈ استعمال کریں',
+    'inst.claimUnsure':
+      'ہم تصدیق نہیں کر سکے کہ کوڈ استعمال ہوا۔ دوبارہ کوشش کرنے سے پہلے تعلیم کا صفحہ دیکھیں۔',
+    'inst.whyBadCode':
+      'یہ کوڈ کی شکل نہیں ہے۔ ہر حرف اور ہندسہ اسکول کی دی ہوئی چیز سے ملا کر دیکھیں۔',
+    'inst.whyCodeUnknown':
+      'ہمارے پاس ایسا کوئی کوڈ نہیں۔ اسے اسکول کی دی ہوئی چیز سے ملا کر دیکھیں۔ کچھ استعمال نہیں ہوا۔',
+    'inst.whyCodeUsed':
+      'یہ کوڈ پہلے ہی استعمال ہو چکا ہے، اور کوڈ ایک بار کام کرتا ہے۔ اگر آپ نے خود استعمال کیا تھا تو کورس تعلیم کے صفحے پر ہے۔ اگر نہیں تو اسکول سے دوسرا کوڈ مانگیں۔',
+    'inst.whyCodeVoided': 'اسکول نے یہ کوڈ واپس لے لیا ہے۔ اسکول سے کوئی اور کوڈ مانگیں۔',
+    'inst.whyCourseGone':
+      'جس کورس کے لیے یہ کوڈ ہے اس میں ابھی شامل نہیں ہوا جا سکتا۔ کوڈ استعمال نہیں ہوا، اس لیے آپ بعد میں دوبارہ آزما سکتے ہیں۔',
+    'inst.whyNotYourLearner':
+      'آپ اس سیکھنے والے کے لیے کوڈ استعمال نہیں کر سکتے۔ کوڈ استعمال نہیں ہوا۔',
+    'inst.whyAlreadyEnrolled':
+      'یہ سیکھنے والا پہلے ہی اس کورس میں ہے جس کے لیے یہ کوڈ ہے۔ کوڈ استعمال نہیں ہوا، اس لیے یہ کسی اور سیکھنے والے کے لیے استعمال ہو سکتا ہے۔',
+    'inst.whySeatsClosed':
+      'اسکولوں کے کوڈ ابھی استعمال نہیں ہو سکتے۔ کوڈ استعمال نہیں ہوا۔ بعد میں دوبارہ کوشش کریں۔',
+    'inst.seatsTitle': 'ادارے کے خریدے ہوئے کورس',
+    'inst.seatsUnread':
+      'آپ کے ادارے نے جو خریدا وہ ابھی پڑھا نہیں جا سکا۔ اس کا یہ مطلب نہیں کہ اس نے کچھ نہیں خریدا۔ تھوڑی دیر میں دوبارہ کوشش کریں۔',
+    'inst.seatsOff':
+      'اسکولوں کے کوڈ ابھی بند ہیں۔ جب تک انہیں دوبارہ کھولا نہ جائے، کچھ نیا خریدا نہیں جا سکتا، کوئی کوڈ دیا نہیں جا سکتا اور کوئی کوڈ استعمال نہیں ہو سکتا۔ جو کورس پہلے کسی کوڈ سے شامل ہو چکے ہیں وہ واپس نہیں لیے جاتے۔',
+    'inst.seatsMemberTitle': 'یہ صفحہ صرف ادارے کے منتظمین دیکھتے ہیں',
+    'inst.seatsMemberBody':
+      'آپ اس ادارے کے رکن ہیں، اس کے منتظم نہیں، اس لیے اس کے خریدے ہوئے کورس آپ کو نہیں دکھائے جاتے۔ اگر آپ کو کوڈ دیا گیا ہے تو وہ ایک دوسرے صفحے پر استعمال ہوتا ہے۔',
   },
   fa: {
     'inst.title': 'مؤسسه‌ها',
@@ -204,6 +293,51 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'بخش‌های زیر برای مدیران این مؤسسه است و فعلاً به انگلیسی است.',
     'inst.csvNote': 'عنوان‌های درون پرونده به انگلیسی است.',
     'inst.whySignedOut': 'شما از حساب بیرون آمده‌اید. وارد شوید و دوباره تلاش کنید.',
+    'inst.claimTitle': 'استفاده از کد یک مدرسه',
+    'inst.claimLede':
+      'کدی را که مدرسه به شما داده بنویسید. یک بار کار می‌کند. برای یادگیرنده‌ای که انتخاب می‌کنید یک دوره اضافه می‌کند و شما چیزی نمی‌پردازید.',
+    'inst.claimSchoolSees':
+      'مدرسه می‌بیند کدام کدهایش استفاده شده و چه زمانی. نام یادگیرنده به آن نشان داده نمی‌شود. اگر مدرسه یادداشت کرده باشد که هر کد به چه کسی داده شده، می‌تواند بفهمد که کد شما استفاده شده است.',
+    'inst.claimWithdraw':
+      'مدرسه می‌تواند بعداً کدی را پس بگیرد. اگر کدی را که استفاده شده پس بگیرد، یادگیرنده دیگر نمی‌تواند دوره را باز کند. کاری که انجام شده نگه داشته می‌شود.',
+    'inst.claimCodeLabel': 'کد شما',
+    'inst.claimCodeHelp':
+      'ده حرف و رقم، روی نامه یا کارتی که مدرسه داده است. حروف کوچک و خط تیره مهم نیست. کد هرگز حرف‌های I، L یا O ندارد و هرگز صفر یا یک ندارد.',
+    'inst.claimWho': 'این دوره برای چه کسی است؟',
+    'inst.claimWhoNote':
+      'هر کد برای یک یادگیرنده است. وقتی برای یک یادگیرنده استفاده شد، برای دیگری قابل استفاده نیست.',
+    'inst.claimMe': 'خودم',
+    'inst.claimForMe': 'این دوره برای شما اضافه می‌شود.',
+    'inst.claimLearnersUnread':
+      'خواندن یادگیرنده‌های حساب شما اکنون ممکن نشد، پس هنوز نمی‌توان کد را اینجا استفاده کرد. چیزی استفاده نشد. کمی بعد دوباره تلاش کنید.',
+    'inst.claimDo': 'استفاده از این کد',
+    'inst.claimDone': 'کد استفاده شد. این دوره اضافه شد: {title}',
+    'inst.claimDoneNoTitle': 'کد استفاده شد و دوره اضافه شد.',
+    'inst.claimDoneWhere': 'آن را در صفحهٔ یادگیری پیدا می‌کنید.',
+    'inst.claimAnother': 'استفاده از کدی دیگر',
+    'inst.claimUnsure':
+      'نتوانستیم مطمئن شویم که کد استفاده شده است. پیش از تلاش دوباره، صفحهٔ یادگیری را ببینید.',
+    'inst.whyBadCode': 'این شکل یک کد نیست. هر حرف و رقم را با آنچه مدرسه به شما داده مقایسه کنید.',
+    'inst.whyCodeUnknown':
+      'کدی مانند این نداریم. آن را با آنچه مدرسه به شما داده مقایسه کنید. چیزی استفاده نشد.',
+    'inst.whyCodeUsed':
+      'این کد پیش‌تر استفاده شده است و هر کد یک بار کار می‌کند. اگر خودتان آن را استفاده کرده‌اید، دوره در صفحهٔ یادگیری است. اگر نه، از مدرسه کد دیگری بخواهید.',
+    'inst.whyCodeVoided': 'مدرسه این کد را پس گرفته است. از مدرسه کدی تازه بخواهید.',
+    'inst.whyCourseGone':
+      'در حال حاضر نمی‌توان به دوره‌ای که این کد برای آن است پیوست. کد استفاده نشد، پس می‌توانید بعداً دوباره امتحان کنید.',
+    'inst.whyNotYourLearner': 'شما نمی‌توانید برای آن یادگیرنده کد استفاده کنید. کد استفاده نشد.',
+    'inst.whyAlreadyEnrolled':
+      'آن یادگیرنده از پیش در دوره‌ای است که این کد برای آن است. کد استفاده نشد، پس می‌توان آن را برای یادگیرندهٔ دیگری استفاده کرد.',
+    'inst.whySeatsClosed':
+      'در حال حاضر نمی‌توان کدهای مدرسه‌ها را استفاده کرد. کد استفاده نشد. بعداً دوباره تلاش کنید.',
+    'inst.seatsTitle': 'دوره‌هایی که مؤسسه خریده است',
+    'inst.seatsUnread':
+      'خواندن آنچه مؤسسهٔ شما خریده اکنون ممکن نشد. این به آن معنا نیست که چیزی نخریده است. کمی بعد دوباره تلاش کنید.',
+    'inst.seatsOff':
+      'کدهای مدرسه‌ها در حال حاضر خاموش است. تا وقتی دوباره روشن نشود، نه چیز تازه‌ای می‌توان خرید، نه کدی می‌توان داد و نه کدی می‌توان استفاده کرد. دوره‌هایی که پیش‌تر با کد اضافه شده‌اند پس گرفته نمی‌شوند.',
+    'inst.seatsMemberTitle': 'فقط مدیران مؤسسه این صفحه را می‌بینند',
+    'inst.seatsMemberBody':
+      'شما عضو این مؤسسه هستید و از مدیران آن نیستید، پس دوره‌هایی که خریده برای شما فهرست نمی‌شود. اگر کدی به شما داده شده، در صفحهٔ دیگری به کار می‌رود.',
   },
   'fa-af': {
     'inst.title': 'مؤسسه‌ها',
@@ -261,6 +395,51 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'بخش‌های زیر برای مدیران این مؤسسه است و فعلاً به انگلیسی است.',
     'inst.csvNote': 'عنوان‌های درون فایل به انگلیسی است.',
     'inst.whySignedOut': 'شما از حساب بیرون شده‌اید. داخل شوید و دوباره کوشش کنید.',
+    'inst.claimTitle': 'استفاده از کود یک مکتب',
+    'inst.claimLede':
+      'کودی را که مکتب به شما داده بنویسید. یک بار کار می‌کند. برای شاگردی که انتخاب می‌کنید یک کورس اضافه می‌کند و شما چیزی نمی‌پردازید.',
+    'inst.claimSchoolSees':
+      'مکتب می‌بیند کدام کودهایش استفاده شده و چه وقت. نام شاگرد به آن نشان داده نمی‌شود. اگر مکتب یادداشت کرده باشد که هر کود به چه کسی داده شده، می‌تواند بفهمد که کود شما استفاده شده است.',
+    'inst.claimWithdraw':
+      'مکتب می‌تواند بعداً کودی را پس بگیرد. اگر کودی را که استفاده شده پس بگیرد، شاگرد دیگر نمی‌تواند کورس را باز کند. کاری که انجام شده نگهداری می‌شود.',
+    'inst.claimCodeLabel': 'کود شما',
+    'inst.claimCodeHelp':
+      'ده حرف و رقم، روی مکتوب یا کارتی که مکتب داده است. حروف خرد و خط تیره مهم نیست. کود هرگز حرف‌های I، L یا O ندارد و هرگز صفر یا یک ندارد.',
+    'inst.claimWho': 'این کورس برای چه کسی است؟',
+    'inst.claimWhoNote':
+      'هر کود برای یک شاگرد است. وقتی برای یک شاگرد استفاده شد، برای دیگری قابل استفاده نیست.',
+    'inst.claimMe': 'خودم',
+    'inst.claimForMe': 'این کورس برای شما اضافه می‌شود.',
+    'inst.claimLearnersUnread':
+      'خواندن شاگردان حساب شما فعلاً ممکن نشد، پس هنوز نمی‌توان کود را اینجا استفاده کرد. چیزی استفاده نشد. کمی بعد دوباره کوشش کنید.',
+    'inst.claimDo': 'استفاده از این کود',
+    'inst.claimDone': 'کود استفاده شد. این کورس اضافه شد: {title}',
+    'inst.claimDoneNoTitle': 'کود استفاده شد و کورس اضافه شد.',
+    'inst.claimDoneWhere': 'آن را در صفحهٔ آموزش پیدا می‌کنید.',
+    'inst.claimAnother': 'استفاده از کودی دیگر',
+    'inst.claimUnsure':
+      'نتوانستیم مطمئن شویم که کود استفاده شده است. پیش از کوشش دوباره، صفحهٔ آموزش را ببینید.',
+    'inst.whyBadCode': 'این شکل یک کود نیست. هر حرف و رقم را با آنچه مکتب به شما داده مقایسه کنید.',
+    'inst.whyCodeUnknown':
+      'کودی مانند این نداریم. آن را با آنچه مکتب به شما داده مقایسه کنید. چیزی استفاده نشد.',
+    'inst.whyCodeUsed':
+      'این کود قبلاً استفاده شده است و هر کود یک بار کار می‌کند. اگر خودتان آن را استفاده کرده‌اید، کورس در صفحهٔ آموزش است. اگر نه، از مکتب کود دیگری بخواهید.',
+    'inst.whyCodeVoided': 'مکتب این کود را پس گرفته است. از مکتب کودی نو بخواهید.',
+    'inst.whyCourseGone':
+      'فعلاً نمی‌توان به کورسی که این کود برای آن است پیوست. کود استفاده نشد، پس می‌توانید بعداً دوباره امتحان کنید.',
+    'inst.whyNotYourLearner': 'شما نمی‌توانید برای آن شاگرد کود استفاده کنید. کود استفاده نشد.',
+    'inst.whyAlreadyEnrolled':
+      'آن شاگرد از قبل در کورسی است که این کود برای آن است. کود استفاده نشد، پس می‌توان آن را برای شاگرد دیگری استفاده کرد.',
+    'inst.whySeatsClosed':
+      'فعلاً نمی‌توان کودهای مکتب‌ها را استفاده کرد. کود استفاده نشد. بعداً دوباره کوشش کنید.',
+    'inst.seatsTitle': 'کورس‌هایی که مؤسسه خریده است',
+    'inst.seatsUnread':
+      'خواندن آنچه مؤسسهٔ شما خریده فعلاً ممکن نشد. این به آن معنا نیست که چیزی نخریده است. کمی بعد دوباره کوشش کنید.',
+    'inst.seatsOff':
+      'کودهای مکتب‌ها فعلاً خاموش است. تا وقتی دوباره روشن نشود، نه چیز نوی می‌توان خرید، نه کودی می‌توان داد و نه کودی می‌توان استفاده کرد. کورس‌هایی که قبلاً با کود اضافه شده‌اند پس گرفته نمی‌شوند.',
+    'inst.seatsMemberTitle': 'تنها مدیران مؤسسه این صفحه را می‌بینند',
+    'inst.seatsMemberBody':
+      'شما عضو این مؤسسه هستید و از مدیران آن نیستید، پس کورس‌هایی که خریده برای شما فهرست نمی‌شود. اگر کودی به شما داده شده، در صفحهٔ دیگری به کار می‌رود.',
   },
   tr: {
     'inst.title': 'Kurumlar',
@@ -320,6 +499,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Aşağıdaki bölümler bu kurumun yöneticileri içindir ve şimdilik İngilizcedir.',
     'inst.csvNote': 'Dosyanın içindeki başlıklar İngilizcedir.',
     'inst.whySignedOut': 'Oturumunuz kapalı. Oturum açıp yeniden deneyin.',
+    'inst.claimTitle': 'Okuldan alınan kodu kullanma',
+    'inst.claimLede':
+      'Okulun size verdiği kodu yazın. Kod bir kez çalışır. Seçtiğiniz öğrenciye bir kurs ekler ve hiçbir şey ödemezsiniz.',
+    'inst.claimSchoolSees':
+      'Okul, kodlarından hangilerinin ne zaman kullanıldığını görür. Öğrencinin adı okula gösterilmez. Okul her kodu kime verdiğini not ettiyse, sizin kodunuzun kullanıldığını anlayabilir.',
+    'inst.claimWithdraw':
+      'Okul bir kodu sonradan geri çekebilir. Kullanılmış bir kodu geri çekerse öğrenci kursu artık açamaz. Yapılmış çalışmalar saklanır.',
+    'inst.claimCodeLabel': 'Kodunuz',
+    'inst.claimCodeHelp':
+      'On harf ve rakam; okulun verdiği mektupta veya kartta yazar. Küçük harf ve tire fark etmez. Bir kodda I, L veya O harfleri hiç bulunmaz; sıfır veya bir de bulunmaz.',
+    'inst.claimWho': 'Bu kurs kimin için?',
+    'inst.claimWhoNote':
+      'Bir kod tek bir öğrenci içindir. Bir öğrenci için kullanıldıktan sonra başkası için kullanılamaz.',
+    'inst.claimMe': 'Kendim',
+    'inst.claimForMe': 'Bu kurs sizin için eklenecek.',
+    'inst.claimLearnersUnread':
+      'Hesabınızdaki öğrenciler şu anda okunamadı, bu yüzden kod burada henüz kullanılamıyor. Hiçbir şey kullanılmadı. Biraz sonra yeniden deneyin.',
+    'inst.claimDo': 'Bu kodu kullan',
+    'inst.claimDone': 'Kod kullanıldı. Şu kurs eklendi: {title}',
+    'inst.claimDoneNoTitle': 'Kod kullanıldı ve kurs eklendi.',
+    'inst.claimDoneWhere': 'Kursu öğrenim sayfasında bulursunuz.',
+    'inst.claimAnother': 'Başka bir kod kullan',
+    'inst.claimUnsure':
+      'Kodun kullanıldığını doğrulayamadık. Yeniden denemeden önce öğrenim sayfasına bakın.',
+    'inst.whyBadCode':
+      'Bu bir kodun biçimi değil. Her harfi ve rakamı okulun size verdiğiyle karşılaştırın.',
+    'inst.whyCodeUnknown':
+      'Böyle bir kodumuz yok. Kodu okulun size verdiğiyle karşılaştırın. Hiçbir şey kullanılmadı.',
+    'inst.whyCodeUsed':
+      'Bu kod daha önce kullanılmış ve bir kod yalnızca bir kez çalışır. Kodu siz kullandıysanız kurs öğrenim sayfasındadır. Kullanmadıysanız okuldan başka bir kod isteyin.',
+    'inst.whyCodeVoided': 'Okul bu kodu geri çekti. Okuldan yeni bir kod isteyin.',
+    'inst.whyCourseGone':
+      'Bu kodun ait olduğu kursa şu anda katılınamıyor. Kod kullanılmadı, daha sonra yeniden deneyebilirsiniz.',
+    'inst.whyNotYourLearner': 'Bu öğrenci için kod kullanamazsınız. Kod kullanılmadı.',
+    'inst.whyAlreadyEnrolled':
+      'Bu öğrenci, kodun ait olduğu kursa zaten kayıtlı. Kod kullanılmadı, başka bir öğrenci için kullanılabilir.',
+    'inst.whySeatsClosed':
+      'Okul kodları şu anda kullanılamıyor. Kod kullanılmadı. Daha sonra yeniden deneyin.',
+    'inst.seatsTitle': 'Kurumun satın aldığı kurslar',
+    'inst.seatsUnread':
+      'Kurumunuzun satın aldıkları şu anda okunamadı. Bu, hiçbir şey satın almadığı anlamına gelmez. Biraz sonra yeniden deneyin.',
+    'inst.seatsOff':
+      'Okul kodları şu anda kapalı. Yeniden açılana kadar yeni bir şey satın alınamaz, kod verilemez ve kod kullanılamaz. Daha önce bir kodla eklenmiş kurslar geri alınmaz.',
+    'inst.seatsMemberTitle': 'Bu sayfayı yalnızca kurumun yöneticileri görür',
+    'inst.seatsMemberBody':
+      'Bu kurumun üyesisiniz, yöneticisi değilsiniz; bu yüzden kurumun satın aldığı kurslar size listelenmez. Size bir kod verildiyse o kod başka bir sayfada kullanılır.',
   },
   id: {
     'inst.title': 'Lembaga',
@@ -380,6 +605,54 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bagian-bagian di bawah ini untuk para pengelola lembaga ini dan untuk saat ini berbahasa Inggris.',
     'inst.csvNote': 'Judul-judul di dalam berkas berbahasa Inggris.',
     'inst.whySignedOut': 'Anda sudah keluar dari akun. Masuk lalu coba lagi.',
+    'inst.claimTitle': 'Pakai kode dari sekolah',
+    'inst.claimLede':
+      'Ketik kode yang diberikan sekolah kepada Anda. Kode berlaku satu kali. Kode itu menambahkan satu kursus untuk peserta didik yang Anda pilih, dan Anda tidak membayar apa pun.',
+    'inst.claimSchoolSees':
+      'Sekolah melihat kode mana yang sudah dipakai dan kapan. Nama peserta didik tidak ditampilkan kepada sekolah. Jika sekolah mencatat siapa yang diberi tiap kode, sekolah dapat mengetahui bahwa kode Anda sudah dipakai.',
+    'inst.claimWithdraw':
+      'Sekolah dapat menarik kembali sebuah kode di kemudian hari. Jika kode yang sudah dipakai ditarik, peserta didik tidak dapat lagi membuka kursus itu. Pekerjaan yang sudah dikerjakan tetap disimpan.',
+    'inst.claimCodeLabel': 'Kode Anda',
+    'inst.claimCodeHelp':
+      'Sepuluh huruf dan angka, tertulis pada surat atau kartu dari sekolah. Huruf kecil dan tanda hubung tidak menjadi masalah. Kode tidak pernah memuat huruf I, L, atau O, dan tidak pernah memuat angka nol atau satu.',
+    'inst.claimWho': 'Untuk siapa kursus ini?',
+    'inst.claimWhoNote':
+      'Satu kode untuk satu peserta didik. Setelah dipakai untuk satu peserta didik, kode tidak dapat dipakai untuk yang lain.',
+    'inst.claimMe': 'Saya sendiri',
+    'inst.claimForMe': 'Kursus ini akan ditambahkan untuk Anda.',
+    'inst.claimLearnersUnread':
+      'Peserta didik di akun Anda tidak dapat dibaca saat ini, jadi kode belum dapat dipakai di sini. Tidak ada yang terpakai. Coba lagi sebentar lagi.',
+    'inst.claimDo': 'Pakai kode ini',
+    'inst.claimDone': 'Kode sudah dipakai. Kursus ini ditambahkan: {title}',
+    'inst.claimDoneNoTitle': 'Kode sudah dipakai dan kursus sudah ditambahkan.',
+    'inst.claimDoneWhere': 'Anda akan menemukannya di halaman pembelajaran.',
+    'inst.claimAnother': 'Pakai kode lain',
+    'inst.claimUnsure':
+      'Kami tidak dapat memastikan bahwa kode sudah dipakai. Lihat halaman pembelajaran sebelum mencoba lagi.',
+    'inst.whyBadCode':
+      'Itu bukan bentuk sebuah kode. Cocokkan tiap huruf dan angka dengan yang diberikan sekolah.',
+    'inst.whyCodeUnknown':
+      'Kami tidak memiliki kode seperti itu. Cocokkan dengan yang diberikan sekolah. Tidak ada yang terpakai.',
+    'inst.whyCodeUsed':
+      'Kode ini sudah pernah dipakai, dan satu kode hanya berlaku satu kali. Jika Anda sendiri yang memakainya, kursusnya ada di halaman pembelajaran. Jika bukan, mintalah kode lain kepada sekolah.',
+    'inst.whyCodeVoided':
+      'Sekolah telah menarik kembali kode ini. Mintalah kode baru kepada sekolah.',
+    'inst.whyCourseGone':
+      'Kursus untuk kode ini belum dapat diikuti saat ini. Kode tidak terpakai, jadi Anda dapat mencobanya lagi nanti.',
+    'inst.whyNotYourLearner':
+      'Anda tidak dapat memakai kode untuk peserta didik itu. Kode tidak terpakai.',
+    'inst.whyAlreadyEnrolled':
+      'Peserta didik itu sudah mengikuti kursus untuk kode ini. Kode tidak terpakai, jadi dapat dipakai untuk peserta didik lain.',
+    'inst.whySeatsClosed':
+      'Kode dari sekolah tidak dapat dipakai saat ini. Kode tidak terpakai. Coba lagi nanti.',
+    'inst.seatsTitle': 'Kursus yang dibeli lembaga',
+    'inst.seatsUnread':
+      'Apa yang dibeli lembaga Anda tidak dapat dibaca saat ini. Ini tidak berarti lembaga tidak membeli apa pun. Coba lagi sebentar lagi.',
+    'inst.seatsOff':
+      'Kode dari sekolah sedang dimatikan saat ini. Sampai dihidupkan kembali, tidak ada hal baru yang dapat dibeli, tidak ada kode yang dapat dibagikan, dan tidak ada kode yang dapat dipakai. Kursus yang sudah ditambahkan dengan kode tidak dicabut.',
+    'inst.seatsMemberTitle': 'Hanya pengelola lembaga yang melihat halaman ini',
+    'inst.seatsMemberBody':
+      'Anda anggota lembaga ini dan bukan salah satu pengelolanya, jadi kursus yang dibelinya tidak ditampilkan kepada Anda. Jika Anda diberi kode, kode itu dipakai di halaman lain.',
   },
   ms: {
     'inst.title': 'Institusi',
@@ -441,6 +714,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bahagian di bawah adalah untuk pentadbir institusi ini dan buat masa ini dalam bahasa Inggeris.',
     'inst.csvNote': 'Tajuk-tajuk di dalam fail adalah dalam bahasa Inggeris.',
     'inst.whySignedOut': 'Anda telah log keluar. Log masuk dan cuba lagi.',
+    'inst.claimTitle': 'Guna kod daripada sekolah',
+    'inst.claimLede':
+      'Taip kod yang diberikan oleh sekolah kepada anda. Kod itu berfungsi sekali sahaja. Kod itu menambah satu kursus untuk pelajar yang anda pilih, dan anda tidak membayar apa-apa.',
+    'inst.claimSchoolSees':
+      'Sekolah melihat kod mana yang telah digunakan dan bila. Nama pelajar tidak ditunjukkan kepada sekolah. Jika sekolah menyimpan catatan tentang siapa yang diberi setiap kod, sekolah boleh tahu bahawa kod anda telah digunakan.',
+    'inst.claimWithdraw':
+      'Sekolah boleh menarik balik sesuatu kod kemudian. Jika kod yang telah digunakan ditarik balik, pelajar tidak lagi dapat membuka kursus itu. Kerja yang telah dibuat tetap disimpan.',
+    'inst.claimCodeLabel': 'Kod anda',
+    'inst.claimCodeHelp':
+      'Sepuluh huruf dan nombor, pada surat atau kad daripada sekolah. Huruf kecil dan tanda sempang tidak menjadi masalah. Kod tidak pernah mengandungi huruf I, L atau O, dan tidak pernah mengandungi sifar atau satu.',
+    'inst.claimWho': 'Untuk siapa kursus ini?',
+    'inst.claimWhoNote':
+      'Satu kod untuk seorang pelajar. Setelah digunakan untuk seorang pelajar, kod itu tidak boleh digunakan untuk pelajar lain.',
+    'inst.claimMe': 'Saya sendiri',
+    'inst.claimForMe': 'Kursus ini akan ditambah untuk anda.',
+    'inst.claimLearnersUnread':
+      'Pelajar dalam akaun anda tidak dapat dibaca sekarang, jadi kod belum boleh digunakan di sini. Tiada apa-apa yang digunakan. Cuba lagi sebentar lagi.',
+    'inst.claimDo': 'Guna kod ini',
+    'inst.claimDone': 'Kod telah digunakan. Kursus ini telah ditambah: {title}',
+    'inst.claimDoneNoTitle': 'Kod telah digunakan dan kursus telah ditambah.',
+    'inst.claimDoneWhere': 'Anda akan menemuinya di halaman pembelajaran.',
+    'inst.claimAnother': 'Guna kod lain',
+    'inst.claimUnsure':
+      'Kami tidak dapat mengesahkan bahawa kod telah digunakan. Lihat halaman pembelajaran sebelum mencuba lagi.',
+    'inst.whyBadCode':
+      'Itu bukan bentuk sesuatu kod. Semak setiap huruf dan nombor dengan apa yang diberikan oleh sekolah.',
+    'inst.whyCodeUnknown':
+      'Kami tidak mempunyai kod seperti itu. Semak dengan apa yang diberikan oleh sekolah. Tiada apa-apa yang digunakan.',
+    'inst.whyCodeUsed':
+      'Kod ini telah pun digunakan, dan sesuatu kod berfungsi sekali sahaja. Jika anda sendiri yang menggunakannya, kursus itu ada di halaman pembelajaran. Jika tidak, minta kod lain daripada sekolah.',
+    'inst.whyCodeVoided': 'Sekolah telah menarik balik kod ini. Minta kod baharu daripada sekolah.',
+    'inst.whyCourseGone':
+      'Kursus bagi kod ini tidak dapat disertai buat masa ini. Kod tidak digunakan, jadi anda boleh mencubanya lagi kemudian.',
+    'inst.whyNotYourLearner':
+      'Anda tidak boleh menggunakan kod untuk pelajar itu. Kod tidak digunakan.',
+    'inst.whyAlreadyEnrolled':
+      'Pelajar itu sudah menyertai kursus bagi kod ini. Kod tidak digunakan, jadi kod itu boleh digunakan untuk pelajar lain.',
+    'inst.whySeatsClosed':
+      'Kod daripada sekolah tidak boleh digunakan buat masa ini. Kod tidak digunakan. Cuba lagi kemudian.',
+    'inst.seatsTitle': 'Kursus yang dibeli oleh institusi',
+    'inst.seatsUnread':
+      'Apa yang dibeli oleh institusi anda tidak dapat dibaca sekarang. Ini tidak bermakna institusi itu tidak membeli apa-apa. Cuba lagi sebentar lagi.',
+    'inst.seatsOff':
+      'Kod daripada sekolah dimatikan buat masa ini. Sehingga dihidupkan semula, tiada perkara baharu boleh dibeli, tiada kod boleh diberikan dan tiada kod boleh digunakan. Kursus yang telah ditambah dengan kod tidak ditarik balik.',
+    'inst.seatsMemberTitle': 'Hanya pentadbir institusi yang melihat halaman ini',
+    'inst.seatsMemberBody':
+      'Anda ahli institusi ini dan bukan salah seorang pentadbirnya, jadi kursus yang dibelinya tidak disenaraikan untuk anda. Jika anda diberi kod, kod itu digunakan di halaman lain.',
   },
   bn: {
     'inst.title': 'প্রতিষ্ঠান',
@@ -499,6 +819,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'নিচের অংশগুলো এই প্রতিষ্ঠানের প্রশাসকদের জন্য এবং আপাতত ইংরেজিতে আছে।',
     'inst.csvNote': 'ফাইলের ভেতরের শিরোনামগুলো ইংরেজিতে আছে।',
     'inst.whySignedOut': 'আপনি সাইন আউট অবস্থায় আছেন। সাইন ইন করে আবার চেষ্টা করুন।',
+    'inst.claimTitle': 'স্কুলের দেওয়া কোড ব্যবহার',
+    'inst.claimLede':
+      'স্কুল আপনাকে যে কোড দিয়েছে তা লিখুন। এটি একবারই কাজ করে। আপনি যে শিক্ষার্থীকে বেছে নেন তার জন্য এটি একটি কোর্স যোগ করে, এবং আপনাকে কিছুই দিতে হয় না।',
+    'inst.claimSchoolSees':
+      'স্কুল দেখতে পায় তার কোন কোডগুলো ব্যবহার হয়েছে এবং কখন। শিক্ষার্থীর নাম স্কুলকে দেখানো হয় না। কোন কোড কাকে দেওয়া হয়েছিল তা স্কুল লিখে রাখলে, আপনার কোডটি ব্যবহার হয়েছে তা সে বুঝতে পারে।',
+    'inst.claimWithdraw':
+      'স্কুল পরে কোনো কোড ফিরিয়ে নিতে পারে। ব্যবহার হওয়া কোড ফিরিয়ে নিলে শিক্ষার্থী আর কোর্সটি খুলতে পারে না। যে কাজ হয়ে গেছে তা রেখে দেওয়া হয়।',
+    'inst.claimCodeLabel': 'আপনার কোড',
+    'inst.claimCodeHelp':
+      'দশটি অক্ষর ও সংখ্যা, স্কুলের চিঠি বা কার্ডে লেখা। ছোট হাতের অক্ষর ও ড্যাশে কিছু যায় আসে না। কোডে কখনো I, L বা O অক্ষর থাকে না, এবং কখনো শূন্য বা এক থাকে না।',
+    'inst.claimWho': 'এই কোর্সটি কার জন্য?',
+    'inst.claimWhoNote':
+      'একটি কোড একজন শিক্ষার্থীর জন্য। একজনের জন্য ব্যবহার হয়ে গেলে তা আর অন্যজনের জন্য ব্যবহার করা যায় না।',
+    'inst.claimMe': 'আমি নিজে',
+    'inst.claimForMe': 'এই কোর্সটি আপনার জন্য যোগ করা হবে।',
+    'inst.claimLearnersUnread':
+      'আপনার অ্যাকাউন্টের শিক্ষার্থীদের এখন পড়া যায়নি, তাই কোডটি এখনো এখানে ব্যবহার করা যাচ্ছে না। কিছুই ব্যবহার হয়নি। একটু পরে আবার চেষ্টা করুন।',
+    'inst.claimDo': 'এই কোড ব্যবহার করুন',
+    'inst.claimDone': 'কোডটি ব্যবহার হয়েছে। এই কোর্সটি যোগ হয়েছে: {title}',
+    'inst.claimDoneNoTitle': 'কোডটি ব্যবহার হয়েছে এবং কোর্সটি যোগ হয়েছে।',
+    'inst.claimDoneWhere': 'এটি আপনি শেখার পাতায় পাবেন।',
+    'inst.claimAnother': 'আরেকটি কোড ব্যবহার করুন',
+    'inst.claimUnsure':
+      'কোডটি ব্যবহার হয়েছে কি না আমরা নিশ্চিত করতে পারিনি। আবার চেষ্টা করার আগে শেখার পাতাটি দেখুন।',
+    'inst.whyBadCode':
+      'এটি কোডের আকার নয়। স্কুল যা দিয়েছে তার সঙ্গে প্রতিটি অক্ষর ও সংখ্যা মিলিয়ে দেখুন।',
+    'inst.whyCodeUnknown':
+      'এমন কোনো কোড আমাদের কাছে নেই। স্কুল যা দিয়েছে তার সঙ্গে মিলিয়ে দেখুন। কিছুই ব্যবহার হয়নি।',
+    'inst.whyCodeUsed':
+      'এই কোডটি আগেই ব্যবহার হয়েছে, আর একটি কোড একবারই কাজ করে। আপনি নিজে ব্যবহার করে থাকলে কোর্সটি শেখার পাতায় আছে। না করে থাকলে স্কুলের কাছে আরেকটি কোড চান।',
+    'inst.whyCodeVoided': 'স্কুল এই কোডটি ফিরিয়ে নিয়েছে। স্কুলের কাছে নতুন একটি কোড চান।',
+    'inst.whyCourseGone':
+      'এই কোডটি যে কোর্সের জন্য, তাতে এখন যোগ দেওয়া যাচ্ছে না। কোডটি ব্যবহার হয়নি, তাই পরে আবার চেষ্টা করতে পারেন।',
+    'inst.whyNotYourLearner':
+      'আপনি ওই শিক্ষার্থীর জন্য কোড ব্যবহার করতে পারেন না। কোডটি ব্যবহার হয়নি।',
+    'inst.whyAlreadyEnrolled':
+      'এই কোডটি যে কোর্সের জন্য, ওই শিক্ষার্থী আগে থেকেই সেই কোর্সে আছে। কোডটি ব্যবহার হয়নি, তাই এটি অন্য শিক্ষার্থীর জন্য ব্যবহার করা যাবে।',
+    'inst.whySeatsClosed':
+      'স্কুলের কোড এখন ব্যবহার করা যাচ্ছে না। কোডটি ব্যবহার হয়নি। পরে আবার চেষ্টা করুন।',
+    'inst.seatsTitle': 'প্রতিষ্ঠান যে কোর্সগুলো কিনেছে',
+    'inst.seatsUnread':
+      'আপনার প্রতিষ্ঠান যা কিনেছে তা এখন পড়া যায়নি। এর মানে এই নয় যে সে কিছুই কেনেনি। একটু পরে আবার চেষ্টা করুন।',
+    'inst.seatsOff':
+      'স্কুলের কোড এখন বন্ধ আছে। আবার চালু না হওয়া পর্যন্ত নতুন কিছু কেনা যাবে না, কোনো কোড দেওয়া যাবে না এবং কোনো কোড ব্যবহার করা যাবে না। আগে কোড দিয়ে যোগ হওয়া কোর্সগুলো ফিরিয়ে নেওয়া হয় না।',
+    'inst.seatsMemberTitle': 'কেবল প্রতিষ্ঠানের প্রশাসকেরা এই পাতাটি দেখেন',
+    'inst.seatsMemberBody':
+      'আপনি এই প্রতিষ্ঠানের সদস্য, এর প্রশাসক নন, তাই এটি যে কোর্সগুলো কিনেছে তা আপনাকে দেখানো হয় না। আপনাকে কোনো কোড দেওয়া হয়ে থাকলে তা অন্য একটি পাতায় ব্যবহার করা হয়।',
   },
   hi: {
     'inst.title': 'संस्थाएँ',
@@ -557,6 +924,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'नीचे के भाग इस संस्था के प्रशासकों के लिए हैं और अभी अंग्रेज़ी में हैं।',
     'inst.csvNote': 'फ़ाइल के अंदर के शीर्षक अंग्रेज़ी में हैं।',
     'inst.whySignedOut': 'आप साइन आउट हैं। साइन इन करके फिर कोशिश करें।',
+    'inst.claimTitle': 'स्कूल का कोड इस्तेमाल करना',
+    'inst.claimLede':
+      'वह कोड लिखें जो स्कूल ने आपको दिया है। यह एक बार काम करता है। यह आपके चुने हुए शिक्षार्थी के लिए एक कोर्स जोड़ता है, और आप कुछ नहीं चुकाते।',
+    'inst.claimSchoolSees':
+      'स्कूल देखता है कि उसके कौन से कोड इस्तेमाल हुए और कब। उसे शिक्षार्थी का नाम नहीं दिखाया जाता। अगर स्कूल ने लिख रखा है कि कौन सा कोड किसे दिया गया था, तो वह जान सकता है कि आपका कोड इस्तेमाल हुआ।',
+    'inst.claimWithdraw':
+      'स्कूल बाद में कोई कोड वापस ले सकता है। अगर वह इस्तेमाल हो चुका कोड वापस लेता है, तो शिक्षार्थी वह कोर्स आगे नहीं खोल सकता। जो काम हो चुका है वह रखा जाता है।',
+    'inst.claimCodeLabel': 'आपका कोड',
+    'inst.claimCodeHelp':
+      'दस अक्षर और अंक, जो स्कूल के पत्र या कार्ड पर लिखे हैं। छोटे अक्षरों और डैश से फ़र्क़ नहीं पड़ता। कोड में I, L या O अक्षर कभी नहीं होते, और शून्य या एक भी कभी नहीं होता।',
+    'inst.claimWho': 'यह कोर्स किसके लिए है?',
+    'inst.claimWhoNote':
+      'एक कोड एक शिक्षार्थी के लिए है। एक बार किसी के लिए इस्तेमाल हो जाए तो वह किसी और के लिए इस्तेमाल नहीं हो सकता।',
+    'inst.claimMe': 'मेरे अपने लिए',
+    'inst.claimForMe': 'यह कोर्स आपके लिए जोड़ा जाएगा।',
+    'inst.claimLearnersUnread':
+      'आपके खाते के शिक्षार्थी अभी पढ़े नहीं जा सके, इसलिए कोड अभी यहाँ इस्तेमाल नहीं हो सकता। कुछ भी इस्तेमाल नहीं हुआ। थोड़ी देर में फिर कोशिश करें।',
+    'inst.claimDo': 'यह कोड इस्तेमाल करें',
+    'inst.claimDone': 'कोड इस्तेमाल हो गया। यह कोर्स जोड़ा गया: {title}',
+    'inst.claimDoneNoTitle': 'कोड इस्तेमाल हो गया और कोर्स जोड़ दिया गया।',
+    'inst.claimDoneWhere': 'यह आपको पढ़ाई के पृष्ठ पर मिलेगा।',
+    'inst.claimAnother': 'एक और कोड इस्तेमाल करें',
+    'inst.claimUnsure':
+      'हम पुष्टि नहीं कर सके कि कोड इस्तेमाल हुआ। फिर कोशिश करने से पहले पढ़ाई का पृष्ठ देखें।',
+    'inst.whyBadCode':
+      'यह कोड का रूप नहीं है। हर अक्षर और अंक को स्कूल की दी हुई चीज़ से मिलाकर देखें।',
+    'inst.whyCodeUnknown':
+      'हमारे पास ऐसा कोई कोड नहीं है। इसे स्कूल की दी हुई चीज़ से मिलाकर देखें। कुछ भी इस्तेमाल नहीं हुआ।',
+    'inst.whyCodeUsed':
+      'यह कोड पहले ही इस्तेमाल हो चुका है, और कोड एक बार काम करता है। अगर आपने ख़ुद इस्तेमाल किया था, तो कोर्स पढ़ाई के पृष्ठ पर है। अगर नहीं, तो स्कूल से दूसरा कोड माँगें।',
+    'inst.whyCodeVoided': 'स्कूल ने यह कोड वापस ले लिया है। स्कूल से कोई और कोड माँगें।',
+    'inst.whyCourseGone':
+      'जिस कोर्स के लिए यह कोड है, उसमें अभी शामिल नहीं हुआ जा सकता। कोड इस्तेमाल नहीं हुआ, इसलिए आप बाद में फिर आज़मा सकते हैं।',
+    'inst.whyNotYourLearner':
+      'आप उस शिक्षार्थी के लिए कोड इस्तेमाल नहीं कर सकते। कोड इस्तेमाल नहीं हुआ।',
+    'inst.whyAlreadyEnrolled':
+      'वह शिक्षार्थी पहले से उस कोर्स में है जिसके लिए यह कोड है। कोड इस्तेमाल नहीं हुआ, इसलिए यह किसी और शिक्षार्थी के लिए इस्तेमाल हो सकता है।',
+    'inst.whySeatsClosed':
+      'स्कूलों के कोड अभी इस्तेमाल नहीं हो सकते। कोड इस्तेमाल नहीं हुआ। बाद में फिर कोशिश करें।',
+    'inst.seatsTitle': 'संस्था के ख़रीदे हुए कोर्स',
+    'inst.seatsUnread':
+      'आपकी संस्था ने जो ख़रीदा वह अभी पढ़ा नहीं जा सका। इसका यह अर्थ नहीं कि उसने कुछ नहीं ख़रीदा। थोड़ी देर में फिर कोशिश करें।',
+    'inst.seatsOff':
+      'स्कूलों के कोड अभी बंद हैं। जब तक इन्हें फिर चालू नहीं किया जाता, कुछ नया ख़रीदा नहीं जा सकता, कोई कोड दिया नहीं जा सकता और कोई कोड इस्तेमाल नहीं हो सकता। जो कोर्स पहले किसी कोड से जुड़ चुके हैं, वे वापस नहीं लिए जाते।',
+    'inst.seatsMemberTitle': 'यह पृष्ठ केवल संस्था के प्रशासक देखते हैं',
+    'inst.seatsMemberBody':
+      'आप इस संस्था के सदस्य हैं, इसके प्रशासक नहीं, इसलिए इसके ख़रीदे हुए कोर्स आपको नहीं दिखाए जाते। अगर आपको कोई कोड दिया गया है, तो वह दूसरे पृष्ठ पर इस्तेमाल होता है।',
   },
   fr: {
     'inst.title': 'Établissements',
@@ -617,6 +1031,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Les parties ci-dessous sont destinées aux administrateurs de cet établissement et sont en anglais pour le moment.',
     'inst.csvNote': 'Les intitulés à l’intérieur du fichier sont en anglais.',
     'inst.whySignedOut': 'Vous êtes déconnecté. Connectez-vous et réessayez.',
+    'inst.claimTitle': 'Utiliser un code remis par une école',
+    'inst.claimLede':
+      'Saisissez le code que l’école vous a remis. Il ne fonctionne qu’une fois. Il ajoute un cours pour l’apprenant que vous choisissez, et vous ne payez rien.',
+    'inst.claimSchoolSees':
+      'L’école voit lesquels de ses codes ont été utilisés et quand. Le nom de l’apprenant ne lui est pas montré. Si l’école a noté à qui chaque code a été remis, elle peut savoir que le vôtre a été utilisé.',
+    'inst.claimWithdraw':
+      'L’école peut retirer un code plus tard. Si elle retire un code déjà utilisé, l’apprenant ne peut plus ouvrir le cours. Le travail déjà fait est conservé.',
+    'inst.claimCodeLabel': 'Votre code',
+    'inst.claimCodeHelp':
+      'Dix lettres et chiffres, sur la lettre ou la carte remise par l’école. Les minuscules et le tiret n’ont pas d’importance. Un code ne contient jamais les lettres I, L ou O, ni de zéro ni de un.',
+    'inst.claimWho': 'Pour qui est ce cours ?',
+    'inst.claimWhoNote':
+      'Un code vaut pour un seul apprenant. Une fois utilisé pour un apprenant, il ne peut plus l’être pour un autre.',
+    'inst.claimMe': 'Moi-même',
+    'inst.claimForMe': 'Ce cours sera ajouté pour vous.',
+    'inst.claimLearnersUnread':
+      'Les apprenants de votre compte n’ont pas pu être lus pour l’instant ; le code ne peut donc pas encore être utilisé ici. Rien n’a été utilisé. Réessayez dans un instant.',
+    'inst.claimDo': 'Utiliser ce code',
+    'inst.claimDone': 'Le code a été utilisé. Ce cours a été ajouté : {title}',
+    'inst.claimDoneNoTitle': 'Le code a été utilisé et le cours a été ajouté.',
+    'inst.claimDoneWhere': 'Vous le trouverez sur la page d’apprentissage.',
+    'inst.claimAnother': 'Utiliser un autre code',
+    'inst.claimUnsure':
+      'Nous n’avons pas pu confirmer que le code a été utilisé. Regardez la page d’apprentissage avant de réessayer.',
+    'inst.whyBadCode':
+      'Ce n’est pas la forme d’un code. Vérifiez chaque lettre et chaque chiffre avec ce que l’école vous a remis.',
+    'inst.whyCodeUnknown':
+      'Nous n’avons aucun code comme celui-ci. Vérifiez-le avec ce que l’école vous a remis. Rien n’a été utilisé.',
+    'inst.whyCodeUsed':
+      'Ce code a déjà été utilisé, et un code ne fonctionne qu’une fois. Si vous l’avez utilisé vous-même, le cours est sur la page d’apprentissage. Sinon, demandez un autre code à l’école.',
+    'inst.whyCodeVoided': 'L’école a retiré ce code. Demandez-lui-en un nouveau.',
+    'inst.whyCourseGone':
+      'Le cours auquel ce code donne accès ne peut pas être rejoint pour le moment. Le code n’a pas été utilisé ; vous pourrez réessayer plus tard.',
+    'inst.whyNotYourLearner':
+      'Vous ne pouvez pas utiliser de code pour cet apprenant. Le code n’a pas été utilisé.',
+    'inst.whyAlreadyEnrolled':
+      'Cet apprenant suit déjà le cours auquel ce code donne accès. Le code n’a pas été utilisé ; il peut servir à un autre apprenant.',
+    'inst.whySeatsClosed':
+      'Les codes des écoles ne peuvent pas être utilisés pour le moment. Le code n’a pas été utilisé. Réessayez plus tard.',
+    'inst.seatsTitle': 'Cours achetés par l’établissement',
+    'inst.seatsUnread':
+      'Ce que votre établissement a acheté n’a pas pu être lu pour l’instant. Cela ne veut pas dire qu’il n’a rien acheté. Réessayez dans un instant.',
+    'inst.seatsOff':
+      'Les codes des écoles sont désactivés pour le moment. Tant qu’ils ne sont pas réactivés, rien de nouveau ne peut être acheté, aucun code ne peut être remis et aucun code ne peut être utilisé. Les cours déjà ajoutés par un code ne sont pas retirés.',
+    'inst.seatsMemberTitle': 'Seuls les administrateurs de l’établissement voient cette page',
+    'inst.seatsMemberBody':
+      'Vous êtes membre de cet établissement et non l’un de ses administrateurs ; les cours qu’il a achetés ne vous sont donc pas présentés. Si un code vous a été remis, il s’utilise sur une autre page.',
   },
   es: {
     'inst.title': 'Instituciones',
@@ -676,6 +1137,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Las partes de abajo son para los administradores de esta institución y por ahora están en inglés.',
     'inst.csvNote': 'Los encabezados dentro del archivo están en inglés.',
     'inst.whySignedOut': 'Su sesión está cerrada. Inicie sesión e inténtelo de nuevo.',
+    'inst.claimTitle': 'Usar un código de una escuela',
+    'inst.claimLede':
+      'Escriba el código que le dio la escuela. Funciona una sola vez. Añade un curso para el alumno que usted elija, y no paga nada.',
+    'inst.claimSchoolSees':
+      'La escuela ve cuáles de sus códigos se han usado y cuándo. No se le muestra el nombre del alumno. Si la escuela anotó a quién le dio cada código, puede saber que el suyo se usó.',
+    'inst.claimWithdraw':
+      'La escuela puede retirar un código más adelante. Si retira uno que ya se usó, el alumno ya no puede abrir el curso. El trabajo ya hecho se conserva.',
+    'inst.claimCodeLabel': 'Su código',
+    'inst.claimCodeHelp':
+      'Diez letras y números, en la carta o la tarjeta de la escuela. Las minúsculas y el guion no importan. Un código nunca tiene las letras I, L u O, ni un cero ni un uno.',
+    'inst.claimWho': '¿Para quién es este curso?',
+    'inst.claimWhoNote':
+      'Un código es para un solo alumno. Una vez usado para un alumno, no se puede usar para otro.',
+    'inst.claimMe': 'Para mí',
+    'inst.claimForMe': 'Este curso se añadirá para usted.',
+    'inst.claimLearnersUnread':
+      'Los alumnos de su cuenta no se pudieron leer en este momento, así que el código aún no se puede usar aquí. No se usó nada. Inténtelo de nuevo en un momento.',
+    'inst.claimDo': 'Usar este código',
+    'inst.claimDone': 'El código se usó. Se añadió este curso: {title}',
+    'inst.claimDoneNoTitle': 'El código se usó y el curso se añadió.',
+    'inst.claimDoneWhere': 'Lo encontrará en la página de aprendizaje.',
+    'inst.claimAnother': 'Usar otro código',
+    'inst.claimUnsure':
+      'No pudimos confirmar que el código se haya usado. Mire la página de aprendizaje antes de intentarlo de nuevo.',
+    'inst.whyBadCode':
+      'Esa no es la forma de un código. Compare cada letra y cada número con lo que le dio la escuela.',
+    'inst.whyCodeUnknown':
+      'No tenemos ningún código como ese. Compárelo con lo que le dio la escuela. No se usó nada.',
+    'inst.whyCodeUsed':
+      'Este código ya se usó, y un código funciona una sola vez. Si lo usó usted, el curso está en la página de aprendizaje. Si no, pida otro código a la escuela.',
+    'inst.whyCodeVoided': 'La escuela ha retirado este código. Pida uno nuevo a la escuela.',
+    'inst.whyCourseGone':
+      'Por ahora no es posible unirse al curso de este código. El código no se usó, así que puede probarlo más tarde.',
+    'inst.whyNotYourLearner': 'No puede usar un código para ese alumno. El código no se usó.',
+    'inst.whyAlreadyEnrolled':
+      'Ese alumno ya está en el curso de este código. El código no se usó, así que se puede usar para otro alumno.',
+    'inst.whySeatsClosed':
+      'Los códigos de escuelas no se pueden usar por ahora. El código no se usó. Inténtelo más tarde.',
+    'inst.seatsTitle': 'Cursos que compró la institución',
+    'inst.seatsUnread':
+      'Lo que compró su institución no se pudo leer en este momento. Esto no significa que no haya comprado nada. Inténtelo de nuevo en un momento.',
+    'inst.seatsOff':
+      'Los códigos de escuelas están desactivados por ahora. Hasta que se activen de nuevo, no se puede comprar nada nuevo, no se puede entregar ningún código y no se puede usar ningún código. Los cursos ya añadidos con un código no se retiran.',
+    'inst.seatsMemberTitle': 'Solo los administradores de la institución ven esta página',
+    'inst.seatsMemberBody':
+      'Usted es miembro de esta institución y no uno de sus administradores, así que no se le muestran los cursos que compró. Si le dieron un código, se usa en otra página.',
   },
   pt: {
     'inst.title': 'Instituições',
@@ -736,6 +1243,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'As partes abaixo destinam-se aos administradores desta instituição e, por agora, estão em inglês.',
     'inst.csvNote': 'Os títulos dentro do ficheiro estão em inglês.',
     'inst.whySignedOut': 'A sua sessão está terminada. Inicie sessão e tente de novo.',
+    'inst.claimTitle': 'Usar um código de uma escola',
+    'inst.claimLede':
+      'Escreva o código que a escola lhe deu. Funciona uma só vez. Acrescenta um curso para o aluno que escolher, e não paga nada.',
+    'inst.claimSchoolSees':
+      'A escola vê quais dos seus códigos foram usados e quando. O nome do aluno não lhe é mostrado. Se a escola anotou a quem deu cada código, pode saber que o seu foi usado.',
+    'inst.claimWithdraw':
+      'A escola pode retirar um código mais tarde. Se retirar um que já foi usado, o aluno deixa de poder abrir o curso. O trabalho já feito é guardado.',
+    'inst.claimCodeLabel': 'O seu código',
+    'inst.claimCodeHelp':
+      'Dez letras e números, na carta ou no cartão da escola. As minúsculas e o hífen não importam. Um código nunca tem as letras I, L ou O, nem um zero nem um um.',
+    'inst.claimWho': 'Para quem é este curso?',
+    'inst.claimWhoNote':
+      'Um código é para um só aluno. Depois de usado para um aluno, não pode ser usado para outro.',
+    'inst.claimMe': 'Para mim',
+    'inst.claimForMe': 'Este curso será acrescentado para si.',
+    'inst.claimLearnersUnread':
+      'Não foi possível ler os alunos da sua conta neste momento, por isso o código ainda não pode ser usado aqui. Nada foi usado. Tente de novo daqui a pouco.',
+    'inst.claimDo': 'Usar este código',
+    'inst.claimDone': 'O código foi usado. Foi acrescentado este curso: {title}',
+    'inst.claimDoneNoTitle': 'O código foi usado e o curso foi acrescentado.',
+    'inst.claimDoneWhere': 'Vai encontrá-lo na página de aprendizagem.',
+    'inst.claimAnother': 'Usar outro código',
+    'inst.claimUnsure':
+      'Não conseguimos confirmar que o código foi usado. Veja a página de aprendizagem antes de tentar de novo.',
+    'inst.whyBadCode':
+      'Essa não é a forma de um código. Compare cada letra e cada número com o que a escola lhe deu.',
+    'inst.whyCodeUnknown':
+      'Não temos nenhum código como esse. Compare-o com o que a escola lhe deu. Nada foi usado.',
+    'inst.whyCodeUsed':
+      'Este código já foi usado, e um código funciona uma só vez. Se foi você que o usou, o curso está na página de aprendizagem. Se não, peça outro código à escola.',
+    'inst.whyCodeVoided': 'A escola retirou este código. Peça um novo à escola.',
+    'inst.whyCourseGone':
+      'De momento não é possível entrar no curso deste código. O código não foi usado, por isso pode tentar mais tarde.',
+    'inst.whyNotYourLearner': 'Não pode usar um código para esse aluno. O código não foi usado.',
+    'inst.whyAlreadyEnrolled':
+      'Esse aluno já está no curso deste código. O código não foi usado, por isso pode ser usado para outro aluno.',
+    'inst.whySeatsClosed':
+      'Os códigos de escolas não podem ser usados de momento. O código não foi usado. Tente mais tarde.',
+    'inst.seatsTitle': 'Cursos que a instituição comprou',
+    'inst.seatsUnread':
+      'Não foi possível ler neste momento o que a sua instituição comprou. Isto não significa que não tenha comprado nada. Tente de novo daqui a pouco.',
+    'inst.seatsOff':
+      'Os códigos de escolas estão desligados de momento. Até voltarem a ser ligados, não se pode comprar nada de novo, não se pode entregar nenhum código e não se pode usar nenhum código. Os cursos já acrescentados por um código não são retirados.',
+    'inst.seatsMemberTitle': 'Só os administradores da instituição veem esta página',
+    'inst.seatsMemberBody':
+      'É membro desta instituição e não um dos seus administradores, por isso os cursos que ela comprou não lhe são mostrados. Se lhe deram um código, ele é usado noutra página.',
   },
   sw: {
     'inst.title': 'Taasisi',
@@ -796,6 +1349,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Sehemu zilizo hapa chini ni za wasimamizi wa taasisi hii na kwa sasa ziko kwa Kiingereza.',
     'inst.csvNote': 'Vichwa vilivyo ndani ya faili viko kwa Kiingereza.',
     'inst.whySignedOut': 'Umetoka kwenye akaunti. Ingia kisha ujaribu tena.',
+    'inst.claimTitle': 'Tumia msimbo kutoka shuleni',
+    'inst.claimLede':
+      'Andika msimbo uliopewa na shule. Unafanya kazi mara moja tu. Unaongeza kozi kwa mwanafunzi unayemchagua, na hulipi chochote.',
+    'inst.claimSchoolSees':
+      'Shule huona ni misimbo yake ipi imetumika na lini. Haionyeshwi jina la mwanafunzi. Ikiwa shule iliandika ni nani alipewa kila msimbo, inaweza kujua kwamba msimbo wako umetumika.',
+    'inst.claimWithdraw':
+      'Shule inaweza kuuondoa msimbo baadaye. Ikiuondoa msimbo uliokwisha tumika, mwanafunzi hataweza tena kuifungua kozi. Kazi iliyokwisha fanyika huhifadhiwa.',
+    'inst.claimCodeLabel': 'Msimbo wako',
+    'inst.claimCodeHelp':
+      'Herufi na namba kumi, kwenye barua au kadi kutoka shuleni. Herufi ndogo na kistari havijalishi. Msimbo hauna kamwe herufi I, L au O, wala sifuri au moja.',
+    'inst.claimWho': 'Kozi hii ni ya nani?',
+    'inst.claimWhoNote':
+      'Msimbo mmoja ni wa mwanafunzi mmoja. Ukishatumika kwa mwanafunzi mmoja, hauwezi kutumika kwa mwingine.',
+    'inst.claimMe': 'Mimi mwenyewe',
+    'inst.claimForMe': 'Kozi hii itaongezwa kwa ajili yako.',
+    'inst.claimLearnersUnread':
+      'Wanafunzi walio kwenye akaunti yako hawakuweza kusomwa sasa hivi, kwa hiyo msimbo hauwezi kutumika hapa bado. Hakuna kilichotumika. Jaribu tena baada ya muda mfupi.',
+    'inst.claimDo': 'Tumia msimbo huu',
+    'inst.claimDone': 'Msimbo umetumika. Kozi hii imeongezwa: {title}',
+    'inst.claimDoneNoTitle': 'Msimbo umetumika na kozi imeongezwa.',
+    'inst.claimDoneWhere': 'Utaipata kwenye ukurasa wa masomo.',
+    'inst.claimAnother': 'Tumia msimbo mwingine',
+    'inst.claimUnsure':
+      'Hatukuweza kuthibitisha kwamba msimbo umetumika. Angalia ukurasa wa masomo kabla ya kujaribu tena.',
+    'inst.whyBadCode':
+      'Huo si muundo wa msimbo. Linganisha kila herufi na namba na kile ulichopewa na shule.',
+    'inst.whyCodeUnknown':
+      'Hatuna msimbo kama huo. Ulinganishe na kile ulichopewa na shule. Hakuna kilichotumika.',
+    'inst.whyCodeUsed':
+      'Msimbo huu umeshatumika, na msimbo hufanya kazi mara moja tu. Ikiwa uliutumia wewe mwenyewe, kozi iko kwenye ukurasa wa masomo. Ikiwa sivyo, omba msimbo mwingine kutoka shuleni.',
+    'inst.whyCodeVoided': 'Shule imeuondoa msimbo huu. Omba msimbo mpya kutoka shuleni.',
+    'inst.whyCourseGone':
+      'Kozi ambayo msimbo huu ni wake haiwezi kujiungwa kwa sasa. Msimbo haukutumika, kwa hiyo unaweza kuujaribu tena baadaye.',
+    'inst.whyNotYourLearner': 'Huwezi kutumia msimbo kwa mwanafunzi huyo. Msimbo haukutumika.',
+    'inst.whyAlreadyEnrolled':
+      'Mwanafunzi huyo tayari yuko kwenye kozi ambayo msimbo huu ni wake. Msimbo haukutumika, kwa hiyo unaweza kutumika kwa mwanafunzi mwingine.',
+    'inst.whySeatsClosed':
+      'Misimbo kutoka shuleni haiwezi kutumika kwa sasa. Msimbo haukutumika. Jaribu tena baadaye.',
+    'inst.seatsTitle': 'Kozi ambazo taasisi ilinunua',
+    'inst.seatsUnread':
+      'Kile ambacho taasisi yako ilinunua hakikuweza kusomwa sasa hivi. Hii haimaanishi kwamba haikununua chochote. Jaribu tena baada ya muda mfupi.',
+    'inst.seatsOff':
+      'Misimbo kutoka shuleni imezimwa kwa sasa. Hadi iwashwe tena, hakuna kipya kinachoweza kununuliwa, hakuna msimbo unaoweza kutolewa na hakuna msimbo unaoweza kutumika. Kozi zilizokwisha ongezwa kwa msimbo haziondolewi.',
+    'inst.seatsMemberTitle': 'Wasimamizi wa taasisi pekee ndio huuona ukurasa huu',
+    'inst.seatsMemberBody':
+      'Wewe ni mwanachama wa taasisi hii na si mmoja wa wasimamizi wake, kwa hiyo kozi ilizonunua hazionyeshwi kwako. Ikiwa ulipewa msimbo, unatumika kwenye ukurasa mwingine.',
   },
   af: {
     'inst.title': 'Instellings',
@@ -856,6 +1455,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Die dele hieronder is vir hierdie instelling se administrateurs en is vir eers in Engels.',
     'inst.csvNote': 'Die opskrifte binne die lêer is in Engels.',
     'inst.whySignedOut': 'Jy is afgemeld. Meld aan en probeer weer.',
+    'inst.claimTitle': 'Gebruik ’n kode van ’n skool',
+    'inst.claimLede':
+      'Tik die kode wat die skool vir jou gegee het. Dit werk een keer. Dit voeg ’n kursus by vir die leerder wat jy kies, en jy betaal niks.',
+    'inst.claimSchoolSees':
+      'Die skool sien watter van sy kodes gebruik is en wanneer. Die leerder se naam word nie vir die skool gewys nie. As die skool aangeteken het wie elke kode gekry het, kan dit weet dat joune gebruik is.',
+    'inst.claimWithdraw':
+      'Die skool kan ’n kode later terugtrek. As dit een terugtrek wat reeds gebruik is, kan die leerder nie meer die kursus oopmaak nie. Die werk wat reeds gedoen is, word gehou.',
+    'inst.claimCodeLabel': 'Jou kode',
+    'inst.claimCodeHelp':
+      'Tien letters en syfers, op die brief of kaart van die skool. Kleinletters en die koppelteken maak nie saak nie. ’n Kode het nooit die letters I, L of O nie, en nooit ’n nul of ’n een nie.',
+    'inst.claimWho': 'Vir wie is hierdie kursus?',
+    'inst.claimWhoNote':
+      'Een kode is vir een leerder. Sodra dit vir een leerder gebruik is, kan dit nie vir ’n ander gebruik word nie.',
+    'inst.claimMe': 'Ekself',
+    'inst.claimForMe': 'Hierdie kursus sal vir jou bygevoeg word.',
+    'inst.claimLearnersUnread':
+      'Die leerders op jou rekening kon nie nou gelees word nie, dus kan die kode nog nie hier gebruik word nie. Niks is gebruik nie. Probeer oor ’n oomblik weer.',
+    'inst.claimDo': 'Gebruik hierdie kode',
+    'inst.claimDone': 'Die kode is gebruik. Hierdie kursus is bygevoeg: {title}',
+    'inst.claimDoneNoTitle': 'Die kode is gebruik en die kursus is bygevoeg.',
+    'inst.claimDoneWhere': 'Jy sal dit op die leerbladsy kry.',
+    'inst.claimAnother': 'Gebruik nog ’n kode',
+    'inst.claimUnsure':
+      'Ons kon nie bevestig dat die kode gebruik is nie. Kyk op die leerbladsy voordat jy weer probeer.',
+    'inst.whyBadCode':
+      'Dit is nie die vorm van ’n kode nie. Vergelyk elke letter en syfer met wat die skool vir jou gegee het.',
+    'inst.whyCodeUnknown':
+      'Ons het geen kode soos daardie nie. Vergelyk dit met wat die skool vir jou gegee het. Niks is gebruik nie.',
+    'inst.whyCodeUsed':
+      'Hierdie kode is reeds gebruik, en ’n kode werk een keer. As jy dit self gebruik het, is die kursus op die leerbladsy. Indien nie, vra die skool vir nog ’n kode.',
+    'inst.whyCodeVoided': 'Die skool het hierdie kode teruggetrek. Vra die skool vir ’n nuwe een.',
+    'inst.whyCourseGone':
+      'Die kursus waarvoor hierdie kode is, kan nie op die oomblik aangesluit word nie. Die kode is nie gebruik nie, dus kan jy dit later weer probeer.',
+    'inst.whyNotYourLearner':
+      'Jy kan nie ’n kode vir daardie leerder gebruik nie. Die kode is nie gebruik nie.',
+    'inst.whyAlreadyEnrolled':
+      'Daardie leerder is reeds in die kursus waarvoor hierdie kode is. Die kode is nie gebruik nie, dus kan dit vir ’n ander leerder gebruik word.',
+    'inst.whySeatsClosed':
+      'Kodes van skole kan nie op die oomblik gebruik word nie. Die kode is nie gebruik nie. Probeer later weer.',
+    'inst.seatsTitle': 'Kursusse wat die instelling gekoop het',
+    'inst.seatsUnread':
+      'Wat jou instelling gekoop het, kon nie nou gelees word nie. Dit beteken nie dat dit niks gekoop het nie. Probeer oor ’n oomblik weer.',
+    'inst.seatsOff':
+      'Kodes van skole is op die oomblik afgeskakel. Totdat hulle weer aangeskakel word, kan niks nuuts gekoop word nie, kan geen kode uitgegee word nie en kan geen kode gebruik word nie. Kursusse wat reeds deur ’n kode bygevoeg is, word nie weggeneem nie.',
+    'inst.seatsMemberTitle': 'Net die instelling se administrateurs sien hierdie bladsy',
+    'inst.seatsMemberBody':
+      'Jy is ’n lid van hierdie instelling en nie een van sy administrateurs nie, dus word die kursusse wat dit gekoop het nie vir jou gelys nie. As jy ’n kode gekry het, word dit op ’n ander bladsy gebruik.',
   },
   'zh-hans': {
     'inst.title': '机构',
@@ -905,6 +1551,36 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': '下面的部分供这个机构的管理员使用，目前为英文。',
     'inst.csvNote': '文件内的标题为英文。',
     'inst.whySignedOut': '你已退出登录。请登录后再试。',
+    'inst.claimTitle': '使用学校给的代码',
+    'inst.claimLede': '输入学校给你的代码。它只能使用一次。它会为你选择的学习者添加一门课程，你不需要付款。',
+    'inst.claimSchoolSees': '学校能看到它的哪些代码已被使用以及使用时间。学校看不到学习者的姓名。如果学校记下了每个代码发给了谁，它就能知道你的代码已被使用。',
+    'inst.claimWithdraw': '学校以后可以撤回代码。如果撤回的是已使用的代码，学习者将无法再打开该课程。已经完成的学习内容会保留。',
+    'inst.claimCodeLabel': '你的代码',
+    'inst.claimCodeHelp': '十个字母和数字，写在学校给的信或卡片上。小写字母和短横线都没有关系。代码中从不出现字母 I、L 或 O，也从不出现零或一。',
+    'inst.claimWho': '这门课程是给谁的？',
+    'inst.claimWhoNote': '一个代码只对应一位学习者。为一位学习者使用后，就不能再为另一位使用。',
+    'inst.claimMe': '我自己',
+    'inst.claimForMe': '这门课程将添加给你。',
+    'inst.claimLearnersUnread': '现在无法读取你账户中的学习者，所以代码暂时不能在这里使用。没有使用任何代码。请稍后再试。',
+    'inst.claimDo': '使用这个代码',
+    'inst.claimDone': '代码已使用。已添加这门课程：{title}',
+    'inst.claimDoneNoTitle': '代码已使用，课程已添加。',
+    'inst.claimDoneWhere': '你可以在学习页面找到它。',
+    'inst.claimAnother': '使用另一个代码',
+    'inst.claimUnsure': '我们无法确认代码是否已被使用。再次尝试之前，请先查看学习页面。',
+    'inst.whyBadCode': '这不是代码的格式。请对照学校给你的内容，核对每个字母和数字。',
+    'inst.whyCodeUnknown': '我们没有这样的代码。请对照学校给你的内容核对。没有使用任何代码。',
+    'inst.whyCodeUsed': '这个代码已经被使用过，而一个代码只能使用一次。如果是你自己用的，课程就在学习页面上。如果不是，请向学校再要一个代码。',
+    'inst.whyCodeVoided': '学校已撤回这个代码。请向学校要一个新的。',
+    'inst.whyCourseGone': '这个代码对应的课程目前无法加入。代码没有被使用，你可以稍后再试。',
+    'inst.whyNotYourLearner': '你不能为那位学习者使用代码。代码没有被使用。',
+    'inst.whyAlreadyEnrolled': '那位学习者已经在这个代码对应的课程中。代码没有被使用，可以用于另一位学习者。',
+    'inst.whySeatsClosed': '目前无法使用学校的代码。代码没有被使用。请稍后再试。',
+    'inst.seatsTitle': '机构购买的课程',
+    'inst.seatsUnread': '现在无法读取你的机构购买的内容。这并不表示它什么都没有购买。请稍后再试。',
+    'inst.seatsOff': '学校代码目前已关闭。在重新开启之前，不能购买新的内容，不能发放代码，也不能使用代码。此前通过代码添加的课程不会被收回。',
+    'inst.seatsMemberTitle': '只有机构的管理员能看到此页面',
+    'inst.seatsMemberBody': '你是这个机构的成员，而不是它的管理员，所以不会向你列出它购买的课程。如果你拿到了代码，它在另一个页面使用。',
   },
   'zh-hant': {
     'inst.title': '機構',
@@ -954,6 +1630,36 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': '下面的部分供這個機構的管理員使用，目前為英文。',
     'inst.csvNote': '檔案內的標題為英文。',
     'inst.whySignedOut': '你已登出。請登入後再試。',
+    'inst.claimTitle': '使用學校給的代碼',
+    'inst.claimLede': '輸入學校給你的代碼。它只能使用一次。它會為你選擇的學習者加入一門課程，你不需要付款。',
+    'inst.claimSchoolSees': '學校能看到它的哪些代碼已被使用以及使用時間。學校看不到學習者的姓名。如果學校記下了每個代碼發給了誰，它就能知道你的代碼已被使用。',
+    'inst.claimWithdraw': '學校之後可以撤回代碼。如果撤回的是已使用的代碼，學習者將無法再開啟該課程。已經完成的學習內容會保留。',
+    'inst.claimCodeLabel': '你的代碼',
+    'inst.claimCodeHelp': '十個字母和數字，寫在學校給的信或卡片上。小寫字母和短橫線都沒有關係。代碼中從不出現字母 I、L 或 O，也從不出現零或一。',
+    'inst.claimWho': '這門課程是給誰的？',
+    'inst.claimWhoNote': '一個代碼只對應一位學習者。為一位學習者使用後，就不能再為另一位使用。',
+    'inst.claimMe': '我自己',
+    'inst.claimForMe': '這門課程將加入給你。',
+    'inst.claimLearnersUnread': '現在無法讀取你帳戶中的學習者，所以代碼暫時不能在這裡使用。沒有使用任何代碼。請稍後再試。',
+    'inst.claimDo': '使用這個代碼',
+    'inst.claimDone': '代碼已使用。已加入這門課程：{title}',
+    'inst.claimDoneNoTitle': '代碼已使用，課程已加入。',
+    'inst.claimDoneWhere': '你可以在學習頁面找到它。',
+    'inst.claimAnother': '使用另一個代碼',
+    'inst.claimUnsure': '我們無法確認代碼是否已被使用。再次嘗試之前，請先查看學習頁面。',
+    'inst.whyBadCode': '這不是代碼的格式。請對照學校給你的內容，核對每個字母和數字。',
+    'inst.whyCodeUnknown': '我們沒有這樣的代碼。請對照學校給你的內容核對。沒有使用任何代碼。',
+    'inst.whyCodeUsed': '這個代碼已經被使用過，而一個代碼只能使用一次。如果是你自己用的，課程就在學習頁面上。如果不是，請向學校再要一個代碼。',
+    'inst.whyCodeVoided': '學校已撤回這個代碼。請向學校要一個新的。',
+    'inst.whyCourseGone': '這個代碼對應的課程目前無法加入。代碼沒有被使用，你可以稍後再試。',
+    'inst.whyNotYourLearner': '你不能為那位學習者使用代碼。代碼沒有被使用。',
+    'inst.whyAlreadyEnrolled': '那位學習者已經在這個代碼對應的課程中。代碼沒有被使用，可以用於另一位學習者。',
+    'inst.whySeatsClosed': '目前無法使用學校的代碼。代碼沒有被使用。請稍後再試。',
+    'inst.seatsTitle': '機構購買的課程',
+    'inst.seatsUnread': '現在無法讀取你的機構購買的內容。這並不表示它什麼都沒有購買。請稍後再試。',
+    'inst.seatsOff': '學校代碼目前已關閉。在重新開啟之前，不能購買新的內容，不能發放代碼，也不能使用代碼。此前透過代碼加入的課程不會被收回。',
+    'inst.seatsMemberTitle': '只有機構的管理員能看到此頁面',
+    'inst.seatsMemberBody': '你是這個機構的成員，而不是它的管理員，所以不會向你列出它購買的課程。如果你拿到了代碼，它在另一個頁面使用。',
   },
   vi: {
     'inst.title': 'Tổ chức',
@@ -1014,6 +1720,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Các phần bên dưới dành cho quản trị viên của tổ chức này và hiện bằng tiếng Anh.',
     'inst.csvNote': 'Các tiêu đề bên trong tệp bằng tiếng Anh.',
     'inst.whySignedOut': 'Bạn đã đăng xuất. Hãy đăng nhập rồi thử lại.',
+    'inst.claimTitle': 'Dùng mã do một trường cấp',
+    'inst.claimLede':
+      'Nhập mã mà trường đã đưa cho bạn. Mã chỉ dùng được một lần. Mã thêm một khóa học cho học viên bạn chọn, và bạn không phải trả gì.',
+    'inst.claimSchoolSees':
+      'Trường thấy mã nào của mình đã được dùng và vào lúc nào. Trường không được cho xem tên học viên. Nếu trường có ghi lại mỗi mã đã được đưa cho ai, trường có thể biết mã của bạn đã được dùng.',
+    'inst.claimWithdraw':
+      'Trường có thể thu hồi một mã về sau. Nếu trường thu hồi một mã đã được dùng, học viên không còn mở được khóa học nữa. Phần đã học vẫn được giữ lại.',
+    'inst.claimCodeLabel': 'Mã của bạn',
+    'inst.claimCodeHelp':
+      'Mười chữ cái và chữ số, ghi trên thư hoặc thẻ của trường. Chữ thường và dấu gạch ngang không quan trọng. Mã không bao giờ có các chữ I, L hay O, và không bao giờ có số không hay số một.',
+    'inst.claimWho': 'Khóa học này dành cho ai?',
+    'inst.claimWhoNote':
+      'Một mã dành cho một học viên. Khi đã dùng cho một học viên, mã không thể dùng cho người khác.',
+    'inst.claimMe': 'Chính tôi',
+    'inst.claimForMe': 'Khóa học này sẽ được thêm cho bạn.',
+    'inst.claimLearnersUnread':
+      'Hiện không đọc được các học viên trong tài khoản của bạn, nên chưa thể dùng mã ở đây. Chưa có gì được dùng. Hãy thử lại sau giây lát.',
+    'inst.claimDo': 'Dùng mã này',
+    'inst.claimDone': 'Mã đã được dùng. Khóa học này đã được thêm: {title}',
+    'inst.claimDoneNoTitle': 'Mã đã được dùng và khóa học đã được thêm.',
+    'inst.claimDoneWhere': 'Bạn sẽ thấy khóa học trên trang học tập.',
+    'inst.claimAnother': 'Dùng một mã khác',
+    'inst.claimUnsure':
+      'Chúng tôi không xác nhận được là mã đã được dùng. Hãy xem trang học tập trước khi thử lại.',
+    'inst.whyBadCode':
+      'Đó không phải là dạng của một mã. Hãy đối chiếu từng chữ cái và chữ số với thứ trường đã đưa cho bạn.',
+    'inst.whyCodeUnknown':
+      'Chúng tôi không có mã nào như vậy. Hãy đối chiếu với thứ trường đã đưa cho bạn. Chưa có gì được dùng.',
+    'inst.whyCodeUsed':
+      'Mã này đã được dùng rồi, và một mã chỉ dùng được một lần. Nếu chính bạn đã dùng, khóa học nằm trên trang học tập. Nếu không, hãy xin trường một mã khác.',
+    'inst.whyCodeVoided': 'Trường đã thu hồi mã này. Hãy xin trường một mã mới.',
+    'inst.whyCourseGone':
+      'Hiện chưa thể tham gia khóa học của mã này. Mã chưa được dùng, nên bạn có thể thử lại sau.',
+    'inst.whyNotYourLearner': 'Bạn không thể dùng mã cho học viên đó. Mã chưa được dùng.',
+    'inst.whyAlreadyEnrolled':
+      'Học viên đó đã ở trong khóa học của mã này. Mã chưa được dùng, nên có thể dùng cho học viên khác.',
+    'inst.whySeatsClosed':
+      'Hiện không thể dùng mã của các trường. Mã chưa được dùng. Hãy thử lại sau.',
+    'inst.seatsTitle': 'Các khóa học tổ chức đã mua',
+    'inst.seatsUnread':
+      'Hiện không đọc được những gì tổ chức của bạn đã mua. Điều này không có nghĩa là tổ chức chưa mua gì. Hãy thử lại sau giây lát.',
+    'inst.seatsOff':
+      'Mã của các trường hiện đang tắt. Cho đến khi được bật lại, không thể mua thêm gì, không thể phát mã và không thể dùng mã. Các khóa học đã được thêm bằng mã trước đây không bị thu lại.',
+    'inst.seatsMemberTitle': 'Chỉ quản trị viên của tổ chức mới thấy trang này',
+    'inst.seatsMemberBody':
+      'Bạn là thành viên của tổ chức này chứ không phải quản trị viên, nên các khóa học tổ chức đã mua không được liệt kê cho bạn. Nếu bạn được đưa một mã, mã đó được dùng ở một trang khác.',
   },
   th: {
     'inst.title': 'สถาบัน',
@@ -1070,6 +1822,50 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'ส่วนด้านล่างสำหรับผู้ดูแลของสถาบันนี้ และขณะนี้เป็นภาษาอังกฤษ',
     'inst.csvNote': 'หัวข้อภายในไฟล์เป็นภาษาอังกฤษ',
     'inst.whySignedOut': 'คุณออกจากระบบแล้ว โปรดเข้าสู่ระบบแล้วลองอีกครั้ง',
+    'inst.claimTitle': 'ใช้รหัสจากโรงเรียน',
+    'inst.claimLede':
+      'พิมพ์รหัสที่โรงเรียนให้คุณ รหัสใช้ได้ครั้งเดียว รหัสจะเพิ่มหลักสูตรให้ผู้เรียนที่คุณเลือก และคุณไม่ต้องจ่ายอะไร',
+    'inst.claimSchoolSees':
+      'โรงเรียนเห็นว่ารหัสใดของตนถูกใช้แล้วและเมื่อใด โรงเรียนไม่เห็นชื่อผู้เรียน หากโรงเรียนจดไว้ว่าให้รหัสใดแก่ใคร โรงเรียนก็รู้ได้ว่ารหัสของคุณถูกใช้แล้ว',
+    'inst.claimWithdraw':
+      'โรงเรียนอาจเพิกถอนรหัสในภายหลังได้ หากเพิกถอนรหัสที่ใช้ไปแล้ว ผู้เรียนจะเปิดหลักสูตรนั้นไม่ได้อีก งานที่ทำไปแล้วจะยังเก็บไว้',
+    'inst.claimCodeLabel': 'รหัสของคุณ',
+    'inst.claimCodeHelp':
+      'ตัวอักษรและตัวเลขรวมสิบตัว อยู่บนจดหมายหรือบัตรจากโรงเรียน ตัวพิมพ์เล็กและขีดกลางไม่มีผล รหัสไม่มีตัวอักษร I, L หรือ O และไม่มีเลขศูนย์หรือเลขหนึ่ง',
+    'inst.claimWho': 'หลักสูตรนี้สำหรับใคร',
+    'inst.claimWhoNote':
+      'รหัสหนึ่งรหัสสำหรับผู้เรียนหนึ่งคน เมื่อใช้กับผู้เรียนคนหนึ่งแล้ว จะใช้กับอีกคนไม่ได้',
+    'inst.claimMe': 'ตัวฉันเอง',
+    'inst.claimForMe': 'หลักสูตรนี้จะถูกเพิ่มให้คุณ',
+    'inst.claimLearnersUnread':
+      'ขณะนี้อ่านรายชื่อผู้เรียนในบัญชีของคุณไม่ได้ จึงยังใช้รหัสที่นี่ไม่ได้ ยังไม่มีสิ่งใดถูกใช้ โปรดลองอีกครั้งในอีกสักครู่',
+    'inst.claimDo': 'ใช้รหัสนี้',
+    'inst.claimDone': 'ใช้รหัสแล้ว เพิ่มหลักสูตรนี้แล้ว: {title}',
+    'inst.claimDoneNoTitle': 'ใช้รหัสแล้วและเพิ่มหลักสูตรแล้ว',
+    'inst.claimDoneWhere': 'คุณจะพบหลักสูตรในหน้าการเรียน',
+    'inst.claimAnother': 'ใช้รหัสอื่น',
+    'inst.claimUnsure': 'เรายืนยันไม่ได้ว่ารหัสถูกใช้แล้ว โปรดดูหน้าการเรียนก่อนลองอีกครั้ง',
+    'inst.whyBadCode':
+      'นั่นไม่ใช่รูปแบบของรหัส โปรดตรวจตัวอักษรและตัวเลขทุกตัวกับสิ่งที่โรงเรียนให้คุณ',
+    'inst.whyCodeUnknown':
+      'เราไม่มีรหัสแบบนั้น โปรดตรวจกับสิ่งที่โรงเรียนให้คุณ ยังไม่มีสิ่งใดถูกใช้',
+    'inst.whyCodeUsed':
+      'รหัสนี้ถูกใช้ไปแล้ว และรหัสใช้ได้ครั้งเดียว หากคุณเป็นผู้ใช้เอง หลักสูตรอยู่ในหน้าการเรียน หากไม่ใช่ โปรดขอรหัสใหม่จากโรงเรียน',
+    'inst.whyCodeVoided': 'โรงเรียนเพิกถอนรหัสนี้แล้ว โปรดขอรหัสอื่นจากโรงเรียน',
+    'inst.whyCourseGone':
+      'ขณะนี้ยังเข้าร่วมหลักสูตรของรหัสนี้ไม่ได้ รหัสยังไม่ถูกใช้ คุณจึงลองใหม่ภายหลังได้',
+    'inst.whyNotYourLearner': 'คุณใช้รหัสให้ผู้เรียนคนนั้นไม่ได้ รหัสยังไม่ถูกใช้',
+    'inst.whyAlreadyEnrolled':
+      'ผู้เรียนคนนั้นอยู่ในหลักสูตรของรหัสนี้อยู่แล้ว รหัสยังไม่ถูกใช้ จึงใช้กับผู้เรียนคนอื่นได้',
+    'inst.whySeatsClosed': 'ขณะนี้ใช้รหัสจากโรงเรียนไม่ได้ รหัสยังไม่ถูกใช้ โปรดลองอีกครั้งภายหลัง',
+    'inst.seatsTitle': 'หลักสูตรที่สถาบันซื้อ',
+    'inst.seatsUnread':
+      'ขณะนี้อ่านสิ่งที่สถาบันของคุณซื้อไม่ได้ ไม่ได้หมายความว่าสถาบันไม่ได้ซื้ออะไร โปรดลองอีกครั้งในอีกสักครู่',
+    'inst.seatsOff':
+      'รหัสจากโรงเรียนปิดอยู่ในขณะนี้ จนกว่าจะเปิดอีกครั้ง จะซื้อสิ่งใหม่ไม่ได้ แจกรหัสไม่ได้ และใช้รหัสไม่ได้ หลักสูตรที่เพิ่มด้วยรหัสไปแล้วจะไม่ถูกนำออก',
+    'inst.seatsMemberTitle': 'เฉพาะผู้ดูแลของสถาบันเท่านั้นที่เห็นหน้านี้',
+    'inst.seatsMemberBody':
+      'คุณเป็นสมาชิกของสถาบันนี้ ไม่ใช่ผู้ดูแล จึงไม่มีการแสดงหลักสูตรที่สถาบันซื้อให้คุณเห็น หากคุณได้รับรหัส รหัสนั้นใช้ในอีกหน้าหนึ่ง',
   },
   fil: {
     'inst.title': 'Mga institusyon',
@@ -1130,6 +1926,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ang mga bahagi sa ibaba ay para sa mga tagapangasiwa ng institusyong ito at nasa Ingles sa ngayon.',
     'inst.csvNote': 'Nasa Ingles ang mga pamagat sa loob ng file.',
     'inst.whySignedOut': 'Naka-sign out ka. Mag-sign in at subukan muli.',
+    'inst.claimTitle': 'Gumamit ng code mula sa paaralan',
+    'inst.claimLede':
+      'I-type ang code na ibinigay sa iyo ng paaralan. Isang beses lang ito gumagana. Nagdaragdag ito ng kurso para sa mag-aaral na pipiliin mo, at wala kang babayaran.',
+    'inst.claimSchoolSees':
+      'Nakikita ng paaralan kung alin sa mga code nito ang nagamit na at kung kailan. Hindi ipinapakita rito ang pangalan ng mag-aaral. Kung itinala ng paaralan kung kanino ibinigay ang bawat code, malalaman nitong nagamit na ang sa iyo.',
+    'inst.claimWithdraw':
+      'Maaaring bawiin ng paaralan ang isang code sa ibang pagkakataon. Kapag binawi nito ang code na nagamit na, hindi na mabubuksan ng mag-aaral ang kurso. Nananatili ang gawaing natapos na.',
+    'inst.claimCodeLabel': 'Ang iyong code',
+    'inst.claimCodeHelp':
+      'Sampung titik at numero, na nasa sulat o card mula sa paaralan. Hindi mahalaga ang maliliit na titik at ang gitling. Walang titik na I, L o O ang isang code kailanman, at walang zero o isa.',
+    'inst.claimWho': 'Para kanino ang kursong ito?',
+    'inst.claimWhoNote':
+      'Ang isang code ay para sa isang mag-aaral. Kapag nagamit na ito para sa isang mag-aaral, hindi na ito magagamit para sa iba.',
+    'inst.claimMe': 'Ako mismo',
+    'inst.claimForMe': 'Idaragdag ang kursong ito para sa iyo.',
+    'inst.claimLearnersUnread':
+      'Hindi mabasa sa ngayon ang mga mag-aaral sa iyong account, kaya hindi pa magagamit dito ang code. Walang nagamit. Subukan muli maya-maya.',
+    'inst.claimDo': 'Gamitin ang code na ito',
+    'inst.claimDone': 'Nagamit na ang code. Naidagdag ang kursong ito: {title}',
+    'inst.claimDoneNoTitle': 'Nagamit na ang code at naidagdag na ang kurso.',
+    'inst.claimDoneWhere': 'Makikita mo ito sa pahina ng pag-aaral.',
+    'inst.claimAnother': 'Gumamit ng ibang code',
+    'inst.claimUnsure':
+      'Hindi namin natiyak na nagamit ang code. Tingnan ang pahina ng pag-aaral bago subukan muli.',
+    'inst.whyBadCode':
+      'Hindi iyan ang anyo ng isang code. Ihambing ang bawat titik at numero sa ibinigay sa iyo ng paaralan.',
+    'inst.whyCodeUnknown':
+      'Wala kaming code na ganyan. Ihambing ito sa ibinigay sa iyo ng paaralan. Walang nagamit.',
+    'inst.whyCodeUsed':
+      'Nagamit na ang code na ito, at isang beses lang gumagana ang isang code. Kung ikaw mismo ang gumamit, nasa pahina ng pag-aaral ang kurso. Kung hindi, humingi ng ibang code sa paaralan.',
+    'inst.whyCodeVoided': 'Binawi na ng paaralan ang code na ito. Humingi ng bago sa paaralan.',
+    'inst.whyCourseGone':
+      'Hindi pa masasalihan sa ngayon ang kursong para sa code na ito. Hindi nagamit ang code, kaya maaari mo itong subukan muli sa ibang pagkakataon.',
+    'inst.whyNotYourLearner':
+      'Hindi ka maaaring gumamit ng code para sa mag-aaral na iyon. Hindi nagamit ang code.',
+    'inst.whyAlreadyEnrolled':
+      'Nasa kursong para sa code na ito na ang mag-aaral na iyon. Hindi nagamit ang code, kaya magagamit ito para sa ibang mag-aaral.',
+    'inst.whySeatsClosed':
+      'Hindi magagamit sa ngayon ang mga code mula sa mga paaralan. Hindi nagamit ang code. Subukan muli sa ibang pagkakataon.',
+    'inst.seatsTitle': 'Mga kursong binili ng institusyon',
+    'inst.seatsUnread':
+      'Hindi mabasa sa ngayon ang binili ng iyong institusyon. Hindi ito nangangahulugang wala itong binili. Subukan muli maya-maya.',
+    'inst.seatsOff':
+      'Nakapatay sa ngayon ang mga code mula sa mga paaralan. Hangga’t hindi muling binubuksan, walang bagong mabibili, walang code na maibibigay at walang code na magagamit. Hindi binabawi ang mga kursong naidagdag na ng isang code.',
+    'inst.seatsMemberTitle': 'Mga tagapangasiwa lang ng institusyon ang nakakakita ng pahinang ito',
+    'inst.seatsMemberBody':
+      'Kasapi ka ng institusyong ito at hindi isa sa mga tagapangasiwa nito, kaya hindi inililista para sa iyo ang mga kursong binili nito. Kung binigyan ka ng code, ginagamit iyon sa ibang pahina.',
   },
   uz: {
     'inst.title': 'Muassasalar',
@@ -1188,6 +2031,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'inst.adminEnglish': 'Quyidagi qismlar bu muassasa maʼmurlari uchun va hozircha ingliz tilida.',
     'inst.csvNote': 'Fayl ichidagi sarlavhalar ingliz tilida.',
     'inst.whySignedOut': 'Siz hisobdan chiqqansiz. Kiring va qayta urinib koʻring.',
+    'inst.claimTitle': 'Maktab bergan koddan foydalanish',
+    'inst.claimLede':
+      'Maktab sizga bergan kodni yozing. U bir marta ishlaydi. U siz tanlagan oʻquvchi uchun kurs qoʻshadi va siz hech narsa toʻlamaysiz.',
+    'inst.claimSchoolSees':
+      'Maktab oʻz kodlaridan qaysilari va qachon ishlatilganini koʻradi. Unga oʻquvchining ismi koʻrsatilmaydi. Agar maktab har bir kod kimga berilganini yozib qoʻygan boʻlsa, sizning kodingiz ishlatilganini bila oladi.',
+    'inst.claimWithdraw':
+      'Maktab kodni keyinroq qaytarib olishi mumkin. Agar ishlatilgan kodni qaytarib olsa, oʻquvchi kursni boshqa ocha olmaydi. Bajarilgan ish saqlanadi.',
+    'inst.claimCodeLabel': 'Kodingiz',
+    'inst.claimCodeHelp':
+      'Oʻnta harf va raqam, maktab bergan xat yoki kartada yozilgan. Kichik harflar va chiziqcha ahamiyatsiz. Kodda hech qachon I, L yoki O harflari boʻlmaydi, nol yoki bir ham boʻlmaydi.',
+    'inst.claimWho': 'Bu kurs kim uchun?',
+    'inst.claimWhoNote':
+      'Bitta kod bitta oʻquvchi uchun. Bir oʻquvchi uchun ishlatilgach, uni boshqasi uchun ishlatib boʻlmaydi.',
+    'inst.claimMe': 'Oʻzim',
+    'inst.claimForMe': 'Bu kurs siz uchun qoʻshiladi.',
+    'inst.claimLearnersUnread':
+      'Hisobingizdagi oʻquvchilarni hozir oʻqib boʻlmadi, shuning uchun kodni bu yerda hali ishlatib boʻlmaydi. Hech narsa ishlatilmadi. Birozdan soʻng qayta urinib koʻring.',
+    'inst.claimDo': 'Shu koddan foydalanish',
+    'inst.claimDone': 'Kod ishlatildi. Ushbu kurs qoʻshildi: {title}',
+    'inst.claimDoneNoTitle': 'Kod ishlatildi va kurs qoʻshildi.',
+    'inst.claimDoneWhere': 'Uni taʼlim sahifasidan topasiz.',
+    'inst.claimAnother': 'Boshqa koddan foydalanish',
+    'inst.claimUnsure':
+      'Kod ishlatilganini tasdiqlay olmadik. Qayta urinishdan oldin taʼlim sahifasiga qarang.',
+    'inst.whyBadCode':
+      'Bu kodning shakli emas. Har bir harf va raqamni maktab bergan narsa bilan solishtiring.',
+    'inst.whyCodeUnknown':
+      'Bizda bunday kod yoʻq. Uni maktab bergan narsa bilan solishtiring. Hech narsa ishlatilmadi.',
+    'inst.whyCodeUsed':
+      'Bu kod allaqachon ishlatilgan, kod esa bir marta ishlaydi. Agar uni oʻzingiz ishlatgan boʻlsangiz, kurs taʼlim sahifasida. Aks holda maktabdan boshqa kod soʻrang.',
+    'inst.whyCodeVoided': 'Maktab bu kodni qaytarib olgan. Maktabdan yangisini soʻrang.',
+    'inst.whyCourseGone':
+      'Bu kod tegishli boʻlgan kursga hozircha qoʻshilib boʻlmaydi. Kod ishlatilmadi, shuning uchun keyinroq yana urinib koʻrishingiz mumkin.',
+    'inst.whyNotYourLearner': 'Siz u oʻquvchi uchun koddan foydalana olmaysiz. Kod ishlatilmadi.',
+    'inst.whyAlreadyEnrolled':
+      'U oʻquvchi bu kod tegishli boʻlgan kursda allaqachon bor. Kod ishlatilmadi, shuning uchun uni boshqa oʻquvchi uchun ishlatish mumkin.',
+    'inst.whySeatsClosed':
+      'Maktab kodlarini hozircha ishlatib boʻlmaydi. Kod ishlatilmadi. Keyinroq qayta urinib koʻring.',
+    'inst.seatsTitle': 'Muassasa sotib olgan kurslar',
+    'inst.seatsUnread':
+      'Muassasangiz sotib olgan narsalarni hozir oʻqib boʻlmadi. Bu u hech narsa sotib olmaganini anglatmaydi. Birozdan soʻng qayta urinib koʻring.',
+    'inst.seatsOff':
+      'Maktab kodlari hozircha oʻchirilgan. Ular qayta yoqilmaguncha yangi narsa sotib olib boʻlmaydi, kod berib boʻlmaydi va kod ishlatib boʻlmaydi. Avval kod bilan qoʻshilgan kurslar olib qoʻyilmaydi.',
+    'inst.seatsMemberTitle': 'Bu sahifani faqat muassasa maʼmurlari koʻradi',
+    'inst.seatsMemberBody':
+      'Siz bu muassasaning aʼzosisiz, maʼmuri emassiz, shuning uchun u sotib olgan kurslar sizga koʻrsatilmaydi. Agar sizga kod berilgan boʻlsa, u boshqa sahifada ishlatiladi.',
   },
   kk: {
     'inst.title': 'Мекемелер',
@@ -1247,6 +2136,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Төмендегі бөліктер осы мекеменің әкімшілеріне арналған және әзірге ағылшын тілінде.',
     'inst.csvNote': 'Файл ішіндегі тақырыптар ағылшын тілінде.',
     'inst.whySignedOut': 'Сіз тіркелгіден шыққансыз. Кіріп, қайталап көріңіз.',
+    'inst.claimTitle': 'Мектеп берген кодты қолдану',
+    'inst.claimLede':
+      'Мектеп сізге берген кодты жазыңыз. Ол бір рет жұмыс істейді. Ол сіз таңдаған оқушыға курс қосады және сіз ештеңе төлемейсіз.',
+    'inst.claimSchoolSees':
+      'Мектеп өз кодтарының қайсысы және қашан қолданылғанын көреді. Оған оқушының аты көрсетілмейді. Егер мектеп әр кодтың кімге берілгенін жазып қойған болса, сіздің кодыңыз қолданылғанын біле алады.',
+    'inst.claimWithdraw':
+      'Мектеп кодты кейін қайтарып ала алады. Егер қолданылған кодты қайтарып алса, оқушы курсты енді аша алмайды. Орындалған жұмыс сақталады.',
+    'inst.claimCodeLabel': 'Сіздің кодыңыз',
+    'inst.claimCodeHelp':
+      'Он әріп пен цифр, мектеп берген хатта немесе карточкада жазылған. Кіші әріптер мен сызықша маңызды емес. Кодта ешқашан I, L немесе O әріптері болмайды, нөл немесе бір де болмайды.',
+    'inst.claimWho': 'Бұл курс кімге арналған?',
+    'inst.claimWhoNote':
+      'Бір код бір оқушыға арналған. Бір оқушыға қолданылғаннан кейін оны басқасына қолдану мүмкін емес.',
+    'inst.claimMe': 'Өзім',
+    'inst.claimForMe': 'Бұл курс сізге қосылады.',
+    'inst.claimLearnersUnread':
+      'Есептік жазбаңыздағы оқушыларды қазір оқу мүмкін болмады, сондықтан кодты мұнда әзірге қолдану мүмкін емес. Ештеңе қолданылған жоқ. Сәлден кейін қайталап көріңіз.',
+    'inst.claimDo': 'Осы кодты қолдану',
+    'inst.claimDone': 'Код қолданылды. Мына курс қосылды: {title}',
+    'inst.claimDoneNoTitle': 'Код қолданылды және курс қосылды.',
+    'inst.claimDoneWhere': 'Оны оқу бетінен табасыз.',
+    'inst.claimAnother': 'Басқа кодты қолдану',
+    'inst.claimUnsure':
+      'Кодтың қолданылғанын растай алмадық. Қайталап көрмес бұрын оқу бетін қараңыз.',
+    'inst.whyBadCode':
+      'Бұл кодтың пішіні емес. Әр әріп пен цифрды мектеп берген нәрсемен салыстырыңыз.',
+    'inst.whyCodeUnknown':
+      'Бізде мұндай код жоқ. Оны мектеп берген нәрсемен салыстырыңыз. Ештеңе қолданылған жоқ.',
+    'inst.whyCodeUsed':
+      'Бұл код бұрын қолданылған, ал код бір рет жұмыс істейді. Егер оны өзіңіз қолданған болсаңыз, курс оқу бетінде. Олай болмаса, мектептен басқа код сұраңыз.',
+    'inst.whyCodeVoided': 'Мектеп бұл кодты қайтарып алды. Мектептен жаңасын сұраңыз.',
+    'inst.whyCourseGone':
+      'Бұл код арналған курсқа қазір қосылу мүмкін емес. Код қолданылған жоқ, сондықтан кейінірек қайта байқап көре аласыз.',
+    'inst.whyNotYourLearner': 'Сіз ол оқушы үшін кодты қолдана алмайсыз. Код қолданылған жоқ.',
+    'inst.whyAlreadyEnrolled':
+      'Ол оқушы бұл код арналған курста бұрыннан бар. Код қолданылған жоқ, сондықтан оны басқа оқушыға қолдануға болады.',
+    'inst.whySeatsClosed':
+      'Мектеп кодтарын қазір қолдану мүмкін емес. Код қолданылған жоқ. Кейінірек қайталап көріңіз.',
+    'inst.seatsTitle': 'Мекеме сатып алған курстар',
+    'inst.seatsUnread':
+      'Мекемеңіз сатып алған нәрселерді қазір оқу мүмкін болмады. Бұл оның ештеңе сатып алмағанын білдірмейді. Сәлден кейін қайталап көріңіз.',
+    'inst.seatsOff':
+      'Мектеп кодтары қазір өшірулі. Олар қайта қосылғанша жаңа ештеңе сатып алуға, код беруге және код қолдануға болмайды. Бұрын кодпен қосылған курстар алынып тасталмайды.',
+    'inst.seatsMemberTitle': 'Бұл бетті тек мекеменің әкімшілері көреді',
+    'inst.seatsMemberBody':
+      'Сіз осы мекеменің мүшесісіз, әкімшісі емессіз, сондықтан ол сатып алған курстар сізге көрсетілмейді. Егер сізге код берілген болса, ол басқа бетте қолданылады.',
   },
   az: {
     'inst.title': 'Qurumlar',
@@ -1306,6 +2241,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Aşağıdakı hissələr bu qurumun idarəçiləri üçündür və hələlik ingilis dilindədir.',
     'inst.csvNote': 'Faylın içindəki başlıqlar ingilis dilindədir.',
     'inst.whySignedOut': 'Siz hesabdan çıxmısınız. Daxil olun və yenidən cəhd edin.',
+    'inst.claimTitle': 'Məktəbdən alınan koddan istifadə',
+    'inst.claimLede':
+      'Məktəbin sizə verdiyi kodu yazın. Kod bir dəfə işləyir. O, seçdiyiniz öyrənən üçün kurs əlavə edir və siz heç nə ödəmirsiniz.',
+    'inst.claimSchoolSees':
+      'Məktəb kodlarından hansının nə vaxt istifadə olunduğunu görür. Öyrənənin adı məktəbə göstərilmir. Məktəb hər kodu kimə verdiyini qeyd edibsə, sizin kodunuzun istifadə olunduğunu bilə bilər.',
+    'inst.claimWithdraw':
+      'Məktəb kodu sonradan geri götürə bilər. İstifadə olunmuş kodu geri götürsə, öyrənən kursu daha aça bilməz. Görülmüş iş saxlanılır.',
+    'inst.claimCodeLabel': 'Kodunuz',
+    'inst.claimCodeHelp':
+      'On hərf və rəqəm; məktəbin verdiyi məktubda və ya kartda yazılıb. Kiçik hərflərin və tirenin fərqi yoxdur. Kodda heç vaxt I, L və ya O hərfləri olmur, sıfır və ya bir də olmur.',
+    'inst.claimWho': 'Bu kurs kimin üçündür?',
+    'inst.claimWhoNote':
+      'Bir kod bir öyrənən üçündür. Bir öyrənən üçün istifadə olunduqdan sonra başqası üçün istifadə oluna bilməz.',
+    'inst.claimMe': 'Özüm',
+    'inst.claimForMe': 'Bu kurs sizin üçün əlavə olunacaq.',
+    'inst.claimLearnersUnread':
+      'Hesabınızdakı öyrənənləri indi oxumaq mümkün olmadı, ona görə kod burada hələ istifadə oluna bilmir. Heç nə istifadə olunmadı. Bir azdan yenidən cəhd edin.',
+    'inst.claimDo': 'Bu koddan istifadə et',
+    'inst.claimDone': 'Kod istifadə olundu. Bu kurs əlavə olundu: {title}',
+    'inst.claimDoneNoTitle': 'Kod istifadə olundu və kurs əlavə olundu.',
+    'inst.claimDoneWhere': 'Onu təhsil səhifəsində tapacaqsınız.',
+    'inst.claimAnother': 'Başqa koddan istifadə et',
+    'inst.claimUnsure':
+      'Kodun istifadə olunduğunu təsdiqləyə bilmədik. Yenidən cəhd etməzdən əvvəl təhsil səhifəsinə baxın.',
+    'inst.whyBadCode':
+      'Bu, kodun forması deyil. Hər hərfi və rəqəmi məktəbin sizə verdiyi ilə tutuşdurun.',
+    'inst.whyCodeUnknown':
+      'Bizdə belə kod yoxdur. Onu məktəbin sizə verdiyi ilə tutuşdurun. Heç nə istifadə olunmadı.',
+    'inst.whyCodeUsed':
+      'Bu kod artıq istifadə olunub və kod bir dəfə işləyir. Onu özünüz istifadə etmisinizsə, kurs təhsil səhifəsindədir. Etməmisinizsə, məktəbdən başqa kod istəyin.',
+    'inst.whyCodeVoided': 'Məktəb bu kodu geri götürüb. Məktəbdən yenisini istəyin.',
+    'inst.whyCourseGone':
+      'Bu kodun aid olduğu kursa hazırda qoşulmaq mümkün deyil. Kod istifadə olunmadı, ona görə sonra yenidən yoxlaya bilərsiniz.',
+    'inst.whyNotYourLearner':
+      'Siz həmin öyrənən üçün koddan istifadə edə bilməzsiniz. Kod istifadə olunmadı.',
+    'inst.whyAlreadyEnrolled':
+      'Həmin öyrənən bu kodun aid olduğu kursda artıq var. Kod istifadə olunmadı, ona görə başqa öyrənən üçün istifadə oluna bilər.',
+    'inst.whySeatsClosed':
+      'Məktəb kodlarından hazırda istifadə etmək mümkün deyil. Kod istifadə olunmadı. Sonra yenidən cəhd edin.',
+    'inst.seatsTitle': 'Qurumun aldığı kurslar',
+    'inst.seatsUnread':
+      'Qurumunuzun aldıqlarını indi oxumaq mümkün olmadı. Bu, onun heç nə almadığı demək deyil. Bir azdan yenidən cəhd edin.',
+    'inst.seatsOff':
+      'Məktəb kodları hazırda söndürülüb. Yenidən yandırılana qədər yeni heç nə alına bilməz, kod verilə bilməz və kod istifadə oluna bilməz. Əvvəl kodla əlavə olunmuş kurslar geri alınmır.',
+    'inst.seatsMemberTitle': 'Bu səhifəni yalnız qurumun idarəçiləri görür',
+    'inst.seatsMemberBody':
+      'Siz bu qurumun üzvüsünüz, idarəçisi deyilsiniz, ona görə onun aldığı kurslar sizə göstərilmir. Sizə kod verilibsə, o, başqa səhifədə istifadə olunur.',
   },
   tg: {
     'inst.title': 'Муассисаҳо',
@@ -1366,6 +2348,53 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Қисмҳои поён барои маъмурони ин муассиса мебошанд ва ҳоло ба забони англисӣ ҳастанд.',
     'inst.csvNote': 'Сарлавҳаҳои дохили файл ба забони англисӣ ҳастанд.',
     'inst.whySignedOut': 'Шумо аз ҳисоб баромадаед. Ворид шавед ва дубора кӯшиш кунед.',
+    'inst.claimTitle': 'Истифодаи рамзи мактаб',
+    'inst.claimLede':
+      'Рамзеро, ки мактаб ба шумо додааст, нависед. Он як маротиба кор мекунад. Он барои хонандае, ки интихоб мекунед, курс илова мекунад ва шумо ҳеҷ чиз намепардозед.',
+    'inst.claimSchoolSees':
+      'Мактаб мебинад, ки кадом рамзҳояш ва кай истифода шудаанд. Номи хонанда ба он нишон дода намешавад. Агар мактаб навишта бошад, ки ҳар рамз ба кӣ дода шудааст, метавонад донад, ки рамзи шумо истифода шудааст.',
+    'inst.claimWithdraw':
+      'Мактаб метавонад рамзро баъдтар бозпас гирад. Агар рамзи истифодашударо бозпас гирад, хонанда дигар курсро кушода наметавонад. Кори иҷрошуда нигоҳ дошта мешавад.',
+    'inst.claimCodeLabel': 'Рамзи шумо',
+    'inst.claimCodeHelp':
+      'Даҳ ҳарф ва рақам, ки дар мактуб ё корти мактаб навишта шудааст. Ҳарфҳои хурд ва тире аҳамият надоранд. Дар рамз ҳеҷ гоҳ ҳарфҳои I, L ё O намешаванд, сифр ё як низ намешавад.',
+    'inst.claimWho': 'Ин курс барои кист?',
+    'inst.claimWhoNote':
+      'Як рамз барои як хонанда аст. Пас аз он ки барои як хонанда истифода шуд, онро барои дигаре истифода кардан мумкин нест.',
+    'inst.claimMe': 'Худам',
+    'inst.claimForMe': 'Ин курс барои шумо илова мешавад.',
+    'inst.claimLearnersUnread':
+      'Хонандагони ҳисоби шуморо ҳозир хондан имкон нашуд, бинобар ин рамзро ҳоло дар ин ҷо истифода кардан мумкин нест. Ҳеҷ чиз истифода нашуд. Пас аз лаҳзае дубора кӯшиш кунед.',
+    'inst.claimDo': 'Истифодаи ин рамз',
+    'inst.claimDone': 'Рамз истифода шуд. Ин курс илова шуд: {title}',
+    'inst.claimDoneNoTitle': 'Рамз истифода шуд ва курс илова шуд.',
+    'inst.claimDoneWhere': 'Онро дар саҳифаи таълим меёбед.',
+    'inst.claimAnother': 'Истифодаи рамзи дигар',
+    'inst.claimUnsure':
+      'Мо тасдиқ карда натавонистем, ки рамз истифода шудааст. Пеш аз кӯшиши дубора ба саҳифаи таълим нигаред.',
+    'inst.whyBadCode':
+      'Ин шакли рамз нест. Ҳар ҳарф ва рақамро бо он чи мактаб ба шумо додааст, муқоиса кунед.',
+    'inst.whyCodeUnknown':
+      'Мо чунин рамз надорем. Онро бо он чи мактаб ба шумо додааст, муқоиса кунед. Ҳеҷ чиз истифода нашуд.',
+    'inst.whyCodeUsed':
+      'Ин рамз аллакай истифода шудааст ва рамз як маротиба кор мекунад. Агар онро худатон истифода карда бошед, курс дар саҳифаи таълим аст. Агар не, аз мактаб рамзи дигар пурсед.',
+    'inst.whyCodeVoided': 'Мактаб ин рамзро бозпас гирифтааст. Аз мактаб рамзи нав пурсед.',
+    'inst.whyCourseGone':
+      'Ба курсе, ки ин рамз барои он аст, ҳоло пайвастан мумкин нест. Рамз истифода нашуд, бинобар ин метавонед баъдтар боз санҷед.',
+    'inst.whyNotYourLearner':
+      'Шумо барои он хонанда рамз истифода карда наметавонед. Рамз истифода нашуд.',
+    'inst.whyAlreadyEnrolled':
+      'Он хонанда аллакай дар курсе аст, ки ин рамз барои он аст. Рамз истифода нашуд, бинобар ин онро барои хонандаи дигар истифода кардан мумкин аст.',
+    'inst.whySeatsClosed':
+      'Рамзҳои мактабҳоро ҳоло истифода кардан мумкин нест. Рамз истифода нашуд. Баъдтар дубора кӯшиш кунед.',
+    'inst.seatsTitle': 'Курсҳое, ки муассиса харидааст',
+    'inst.seatsUnread':
+      'Он чиро, ки муассисаи шумо харидааст, ҳозир хондан имкон нашуд. Ин маънои онро надорад, ки он ҳеҷ чиз нахаридааст. Пас аз лаҳзае дубора кӯшиш кунед.',
+    'inst.seatsOff':
+      'Рамзҳои мактабҳо ҳоло хомӯш карда шудаанд. То дубора фаъол шуданашон чизи нав харидан, рамз додан ва рамз истифода кардан мумкин нест. Курсҳое, ки пештар бо рамз илова шудаанд, гирифта намешаванд.',
+    'inst.seatsMemberTitle': 'Ин саҳифаро танҳо маъмурони муассиса мебинанд',
+    'inst.seatsMemberBody':
+      'Шумо узви ин муассиса ҳастед, на маъмури он, бинобар ин курсҳои харидаи он ба шумо нишон дода намешаванд. Агар ба шумо рамз дода шуда бошад, он дар саҳифаи дигар истифода мешавад.',
   },
   ky: {
     'inst.title': 'Мекемелер',
@@ -1425,6 +2454,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Төмөндөгү бөлүктөр бул мекеменин администраторлору үчүн жана азырынча англис тилинде.',
     'inst.csvNote': 'Файлдын ичиндеги аталыштар англис тилинде.',
     'inst.whySignedOut': 'Сиз аккаунттан чыккансыз. Кирип, кайра аракет кылыңыз.',
+    'inst.claimTitle': 'Мектеп берген кодду колдонуу',
+    'inst.claimLede':
+      'Мектеп сизге берген кодду жазыңыз. Ал бир жолу иштейт. Ал сиз тандаган окуучуга курс кошот жана сиз эч нерсе төлөбөйсүз.',
+    'inst.claimSchoolSees':
+      'Мектеп өз коддорунун кайсынысы жана качан колдонулганын көрөт. Ага окуучунун аты көрсөтүлбөйт. Эгер мектеп ар бир код кимге берилгенин жазып койгон болсо, сиздин кодуңуз колдонулганын биле алат.',
+    'inst.claimWithdraw':
+      'Мектеп кодду кийин кайтарып ала алат. Эгер колдонулган кодду кайтарып алса, окуучу курсту мындан ары ача албайт. Аткарылган иш сакталат.',
+    'inst.claimCodeLabel': 'Сиздин кодуңуз',
+    'inst.claimCodeHelp':
+      'Он тамга жана цифра, мектеп берген катта же карточкада жазылган. Кичине тамгалар менен сызыкча маанилүү эмес. Коддо эч качан I, L же O тамгалары болбойт, нөл же бир да болбойт.',
+    'inst.claimWho': 'Бул курс ким үчүн?',
+    'inst.claimWhoNote':
+      'Бир код бир окуучу үчүн. Бир окуучу үчүн колдонулгандан кийин аны башкасы үчүн колдонууга болбойт.',
+    'inst.claimMe': 'Өзүм',
+    'inst.claimForMe': 'Бул курс сиз үчүн кошулат.',
+    'inst.claimLearnersUnread':
+      'Аккаунтуңуздагы окуучуларды азыр окуу мүмкүн болгон жок, ошондуктан кодду бул жерде азырынча колдонууга болбойт. Эч нерсе колдонулган жок. Бир аздан кийин кайра аракет кылыңыз.',
+    'inst.claimDo': 'Ушул кодду колдонуу',
+    'inst.claimDone': 'Код колдонулду. Бул курс кошулду: {title}',
+    'inst.claimDoneNoTitle': 'Код колдонулду жана курс кошулду.',
+    'inst.claimDoneWhere': 'Аны окуу бетинен табасыз.',
+    'inst.claimAnother': 'Башка кодду колдонуу',
+    'inst.claimUnsure':
+      'Коддун колдонулганын ырастай алган жокпуз. Кайра аракет кылардан мурун окуу бетин караңыз.',
+    'inst.whyBadCode':
+      'Бул коддун формасы эмес. Ар бир тамганы жана цифраны мектеп берген нерсе менен салыштырыңыз.',
+    'inst.whyCodeUnknown':
+      'Бизде мындай код жок. Аны мектеп берген нерсе менен салыштырыңыз. Эч нерсе колдонулган жок.',
+    'inst.whyCodeUsed':
+      'Бул код мурун колдонулган, ал эми код бир жолу иштейт. Эгер аны өзүңүз колдонгон болсоңуз, курс окуу бетинде. Андай болбосо, мектептен башка код сураңыз.',
+    'inst.whyCodeVoided': 'Мектеп бул кодду кайтарып алган. Мектептен жаңысын сураңыз.',
+    'inst.whyCourseGone':
+      'Бул код тиешелүү болгон курска азыр кошулууга болбойт. Код колдонулган жок, ошондуктан кийинчерээк кайра байкап көрө аласыз.',
+    'inst.whyNotYourLearner': 'Сиз ал окуучу үчүн кодду колдоно албайсыз. Код колдонулган жок.',
+    'inst.whyAlreadyEnrolled':
+      'Ал окуучу бул код тиешелүү болгон курста мурунтан эле бар. Код колдонулган жок, ошондуктан аны башка окуучу үчүн колдонууга болот.',
+    'inst.whySeatsClosed':
+      'Мектеп коддорун азыр колдонууга болбойт. Код колдонулган жок. Кийинчерээк кайра аракет кылыңыз.',
+    'inst.seatsTitle': 'Мекеме сатып алган курстар',
+    'inst.seatsUnread':
+      'Мекемеңиз сатып алган нерселерди азыр окуу мүмкүн болгон жок. Бул анын эч нерсе сатып албаганын билдирбейт. Бир аздан кийин кайра аракет кылыңыз.',
+    'inst.seatsOff':
+      'Мектеп коддору азыр өчүрүлгөн. Алар кайра күйгүзүлгөнгө чейин жаңы эч нерсе сатып алууга, код берүүгө жана код колдонууга болбойт. Мурун код менен кошулган курстар алынып салынбайт.',
+    'inst.seatsMemberTitle': 'Бул бетти мекеменин администраторлору гана көрөт',
+    'inst.seatsMemberBody':
+      'Сиз бул мекеменин мүчөсүсүз, администратору эмессиз, ошондуктан ал сатып алган курстар сизге көрсөтүлбөйт. Эгер сизге код берилген болсо, ал башка бетте колдонулат.',
   },
   tk: {
     'inst.title': 'Edaralar',
@@ -1484,6 +2559,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Aşakdaky bölekler bu edaranyň administratorlary üçin we häzirlikçe iňlis dilinde.',
     'inst.csvNote': 'Faýlyň içindäki sözbaşylar iňlis dilinde.',
     'inst.whySignedOut': 'Siz hasapdan çykdyňyz. Giriň we gaýtadan synanyşyň.',
+    'inst.claimTitle': 'Mekdebiň beren koduny ulanmak',
+    'inst.claimLede':
+      'Mekdebiň size beren koduny ýazyň. Ol bir gezek işleýär. Ol siziň saýlan okuwçyňyz üçin kurs goşýar we siz hiç zat tölemeýärsiňiz.',
+    'inst.claimSchoolSees':
+      'Mekdep öz kodlarynyň haýsysynyň we haçan ulanylandygyny görýär. Oňa okuwçynyň ady görkezilmeýär. Eger mekdep her koduň kime berlendigini ýazyp goýan bolsa, siziň koduňyzyň ulanylandygyny bilip biler.',
+    'inst.claimWithdraw':
+      'Mekdep kody soň yzyna alyp biler. Eger ulanylan kody yzyna alsa, okuwçy kursy mundan beýläk açyp bilmez. Edilen iş saklanýar.',
+    'inst.claimCodeLabel': 'Siziň koduňyz',
+    'inst.claimCodeHelp':
+      'On harp we san, mekdebiň beren hatynda ýa-da kartynda ýazylan. Kiçi harplaryň we kese çyzygyň tapawudy ýok. Kodda hiç haçan I, L ýa-da O harplary bolmaýar, nol ýa-da bir hem bolmaýar.',
+    'inst.claimWho': 'Bu kurs kim üçin?',
+    'inst.claimWhoNote':
+      'Bir kod bir okuwçy üçin. Bir okuwçy üçin ulanylandan soň ony başga biri üçin ulanyp bolmaýar.',
+    'inst.claimMe': 'Özüm',
+    'inst.claimForMe': 'Bu kurs siziň üçin goşular.',
+    'inst.claimLearnersUnread':
+      'Hasabyňyzdaky okuwçylary häzir okap bolmady, şonuň üçin kody bu ýerde entek ulanyp bolmaýar. Hiç zat ulanylmady. Biraz wagtdan gaýtadan synanyşyň.',
+    'inst.claimDo': 'Şu kody ulan',
+    'inst.claimDone': 'Kod ulanyldy. Şu kurs goşuldy: {title}',
+    'inst.claimDoneNoTitle': 'Kod ulanyldy we kurs goşuldy.',
+    'inst.claimDoneWhere': 'Ony okuw sahypasynda taparsyňyz.',
+    'inst.claimAnother': 'Başga kody ulan',
+    'inst.claimUnsure':
+      'Koduň ulanylandygyny tassyklap bilmedik. Gaýtadan synanyşmazdan öň okuw sahypasyna serediň.',
+    'inst.whyBadCode':
+      'Bu koduň görnüşi däl. Her harpy we sany mekdebiň size bereni bilen deňeşdiriň.',
+    'inst.whyCodeUnknown':
+      'Bizde beýle kod ýok. Ony mekdebiň size bereni bilen deňeşdiriň. Hiç zat ulanylmady.',
+    'inst.whyCodeUsed':
+      'Bu kod eýýäm ulanyldy, kod bolsa bir gezek işleýär. Eger ony özüňiz ulanan bolsaňyz, kurs okuw sahypasynda. Ýogsa mekdepden başga kod soraň.',
+    'inst.whyCodeVoided': 'Mekdep bu kody yzyna aldy. Mekdepden täzesini soraň.',
+    'inst.whyCourseGone':
+      'Bu koduň degişli kursuna häzir goşulyp bolmaýar. Kod ulanylmady, şonuň üçin soňrak ýene synap bilersiňiz.',
+    'inst.whyNotYourLearner': 'Siz şol okuwçy üçin kod ulanyp bilmeýärsiňiz. Kod ulanylmady.',
+    'inst.whyAlreadyEnrolled':
+      'Şol okuwçy bu koduň degişli kursunda eýýäm bar. Kod ulanylmady, şonuň üçin ony başga okuwçy üçin ulanyp bolar.',
+    'inst.whySeatsClosed':
+      'Mekdep kodlaryny häzir ulanyp bolmaýar. Kod ulanylmady. Soňrak gaýtadan synanyşyň.',
+    'inst.seatsTitle': 'Edaranyň satyn alan kurslary',
+    'inst.seatsUnread':
+      'Edaraňyzyň satyn alan zatlaryny häzir okap bolmady. Bu onuň hiç zat satyn almandygyny aňlatmaýar. Biraz wagtdan gaýtadan synanyşyň.',
+    'inst.seatsOff':
+      'Mekdep kodlary häzir öçürilen. Olar täzeden açylýança täze zat satyn alyp, kod berip we kod ulanyp bolmaýar. Öň kod bilen goşulan kurslar yzyna alynmaýar.',
+    'inst.seatsMemberTitle': 'Bu sahypany diňe edaranyň administratorlary görýär',
+    'inst.seatsMemberBody':
+      'Siz bu edaranyň agzasy, administratory däl, şonuň üçin onuň satyn alan kurslary size görkezilmeýär. Eger size kod berlen bolsa, ol başga sahypada ulanylýar.',
   },
   ta: {
     'inst.title': 'நிறுவனங்கள்',
@@ -1545,6 +2666,54 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'கீழே உள்ள பகுதிகள் இந்த நிறுவனத்தின் நிர்வாகிகளுக்கானவை; தற்போது ஆங்கிலத்தில் உள்ளன.',
     'inst.csvNote': 'கோப்பின் உள்ளே உள்ள தலைப்புகள் ஆங்கிலத்தில் உள்ளன.',
     'inst.whySignedOut': 'நீங்கள் வெளியேறியுள்ளீர்கள். உள்நுழைந்து மீண்டும் முயலுங்கள்.',
+    'inst.claimTitle': 'பள்ளி கொடுத்த குறியீட்டைப் பயன்படுத்துதல்',
+    'inst.claimLede':
+      'பள்ளி உங்களுக்குக் கொடுத்த குறியீட்டை உள்ளிடவும். அது ஒரு முறை மட்டுமே வேலை செய்யும். நீங்கள் தேர்ந்தெடுக்கும் கற்பவருக்கு அது ஒரு பாடநெறியைச் சேர்க்கும், நீங்கள் எதுவும் செலுத்த வேண்டியதில்லை.',
+    'inst.claimSchoolSees':
+      'தன் குறியீடுகளில் எவை எப்போது பயன்படுத்தப்பட்டன என்பதைப் பள்ளி பார்க்கிறது. கற்பவரின் பெயர் அதற்குக் காட்டப்படாது. ஒவ்வொரு குறியீடும் யாருக்குக் கொடுக்கப்பட்டது என்பதைப் பள்ளி குறித்து வைத்திருந்தால், உங்களுடையது பயன்படுத்தப்பட்டது என்பதை அது அறிய முடியும்.',
+    'inst.claimWithdraw':
+      'பள்ளி பின்னர் ஒரு குறியீட்டைத் திரும்பப் பெறலாம். பயன்படுத்தப்பட்ட குறியீட்டை அது திரும்பப் பெற்றால், கற்பவரால் இனி அந்தப் பாடநெறியைத் திறக்க முடியாது. ஏற்கெனவே செய்த வேலை வைத்திருக்கப்படும்.',
+    'inst.claimCodeLabel': 'உங்கள் குறியீடு',
+    'inst.claimCodeHelp':
+      'பத்து எழுத்துகளும் எண்களும், பள்ளி கொடுத்த கடிதத்தில் அல்லது அட்டையில் இருக்கும். சிறிய எழுத்துகளும் இடைக்கோடும் பொருட்டல்ல. குறியீட்டில் I, L அல்லது O எழுத்துகள் ஒருபோதும் இருக்காது, பூஜ்யமோ ஒன்றோ ஒருபோதும் இருக்காது.',
+    'inst.claimWho': 'இந்தப் பாடநெறி யாருக்கானது?',
+    'inst.claimWhoNote':
+      'ஒரு குறியீடு ஒரு கற்பவருக்கானது. ஒரு கற்பவருக்குப் பயன்படுத்தப்பட்ட பின், அதை வேறொருவருக்குப் பயன்படுத்த முடியாது.',
+    'inst.claimMe': 'எனக்கே',
+    'inst.claimForMe': 'இந்தப் பாடநெறி உங்களுக்குச் சேர்க்கப்படும்.',
+    'inst.claimLearnersUnread':
+      'உங்கள் கணக்கில் உள்ள கற்பவர்களை இப்போது படிக்க முடியவில்லை, அதனால் குறியீட்டை இங்கே இன்னும் பயன்படுத்த முடியாது. எதுவும் பயன்படுத்தப்படவில்லை. சிறிது நேரத்தில் மீண்டும் முயலவும்.',
+    'inst.claimDo': 'இந்தக் குறியீட்டைப் பயன்படுத்தவும்',
+    'inst.claimDone': 'குறியீடு பயன்படுத்தப்பட்டது. இந்தப் பாடநெறி சேர்க்கப்பட்டது: {title}',
+    'inst.claimDoneNoTitle': 'குறியீடு பயன்படுத்தப்பட்டது, பாடநெறி சேர்க்கப்பட்டது.',
+    'inst.claimDoneWhere': 'அதைக் கற்றல் பக்கத்தில் காண்பீர்கள்.',
+    'inst.claimAnother': 'வேறொரு குறியீட்டைப் பயன்படுத்தவும்',
+    'inst.claimUnsure':
+      'குறியீடு பயன்படுத்தப்பட்டதா என்பதை எங்களால் உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயல்வதற்கு முன் கற்றல் பக்கத்தைப் பாருங்கள்.',
+    'inst.whyBadCode':
+      'அது ஒரு குறியீட்டின் வடிவம் அல்ல. ஒவ்வொரு எழுத்தையும் எண்ணையும் பள்ளி கொடுத்ததுடன் ஒப்பிட்டுப் பாருங்கள்.',
+    'inst.whyCodeUnknown':
+      'அப்படி ஒரு குறியீடு எங்களிடம் இல்லை. அதைப் பள்ளி கொடுத்ததுடன் ஒப்பிட்டுப் பாருங்கள். எதுவும் பயன்படுத்தப்படவில்லை.',
+    'inst.whyCodeUsed':
+      'இந்தக் குறியீடு ஏற்கெனவே பயன்படுத்தப்பட்டுவிட்டது, ஒரு குறியீடு ஒரு முறை மட்டுமே வேலை செய்யும். நீங்களே பயன்படுத்தியிருந்தால், பாடநெறி கற்றல் பக்கத்தில் உள்ளது. இல்லையெனில், பள்ளியிடம் வேறொரு குறியீட்டைக் கேளுங்கள்.',
+    'inst.whyCodeVoided':
+      'பள்ளி இந்தக் குறியீட்டைத் திரும்பப் பெற்றுவிட்டது. பள்ளியிடம் புதிய ஒன்றைக் கேளுங்கள்.',
+    'inst.whyCourseGone':
+      'இந்தக் குறியீட்டுக்கான பாடநெறியில் இப்போது சேர முடியாது. குறியீடு பயன்படுத்தப்படவில்லை, அதனால் பின்னர் மீண்டும் முயலலாம்.',
+    'inst.whyNotYourLearner':
+      'அந்தக் கற்பவருக்கு நீங்கள் குறியீட்டைப் பயன்படுத்த முடியாது. குறியீடு பயன்படுத்தப்படவில்லை.',
+    'inst.whyAlreadyEnrolled':
+      'அந்தக் கற்பவர் இந்தக் குறியீட்டுக்கான பாடநெறியில் ஏற்கெனவே இருக்கிறார். குறியீடு பயன்படுத்தப்படவில்லை, அதனால் அதை வேறொரு கற்பவருக்குப் பயன்படுத்தலாம்.',
+    'inst.whySeatsClosed':
+      'பள்ளிகளின் குறியீடுகளை இப்போது பயன்படுத்த முடியாது. குறியீடு பயன்படுத்தப்படவில்லை. பின்னர் மீண்டும் முயலவும்.',
+    'inst.seatsTitle': 'நிறுவனம் வாங்கிய பாடநெறிகள்',
+    'inst.seatsUnread':
+      'உங்கள் நிறுவனம் வாங்கியவற்றை இப்போது படிக்க முடியவில்லை. அது எதுவும் வாங்கவில்லை என்று இதற்குப் பொருள் இல்லை. சிறிது நேரத்தில் மீண்டும் முயலவும்.',
+    'inst.seatsOff':
+      'பள்ளிகளின் குறியீடுகள் இப்போது நிறுத்தப்பட்டுள்ளன. அவை மீண்டும் இயக்கப்படும் வரை புதிதாக எதையும் வாங்க முடியாது, குறியீடு கொடுக்க முடியாது, குறியீட்டைப் பயன்படுத்த முடியாது. முன்பு குறியீட்டால் சேர்க்கப்பட்ட பாடநெறிகள் நீக்கப்படாது.',
+    'inst.seatsMemberTitle': 'நிறுவனத்தின் நிர்வாகிகள் மட்டுமே இந்தப் பக்கத்தைப் பார்க்கிறார்கள்',
+    'inst.seatsMemberBody':
+      'நீங்கள் இந்த நிறுவனத்தின் உறுப்பினர், அதன் நிர்வாகி அல்ல; அதனால் அது வாங்கிய பாடநெறிகள் உங்களுக்குக் காட்டப்படாது. உங்களுக்குக் குறியீடு கொடுக்கப்பட்டிருந்தால், அது வேறொரு பக்கத்தில் பயன்படுத்தப்படுகிறது.',
   },
   ne: {
     'inst.title': 'संस्थाहरू',
@@ -1603,5 +2772,52 @@ export const INST: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'तलका भागहरू यस संस्थाका प्रशासकहरूका लागि हुन् र अहिलेका लागि अङ्ग्रेजीमा छन्।',
     'inst.csvNote': 'फाइलभित्रका शीर्षकहरू अङ्ग्रेजीमा छन्।',
     'inst.whySignedOut': 'तपाईं साइन आउट हुनुहुन्छ। साइन इन गरेर फेरि प्रयास गर्नुहोस्।',
+    'inst.claimTitle': 'विद्यालयले दिएको कोड प्रयोग गर्ने',
+    'inst.claimLede':
+      'विद्यालयले तपाईंलाई दिएको कोड लेख्नुहोस्। यसले एक पटक मात्र काम गर्छ। यसले तपाईंले रोजेको सिकारुका लागि एउटा कोर्स थप्छ, र तपाईंले केही तिर्नुपर्दैन।',
+    'inst.claimSchoolSees':
+      'विद्यालयले आफ्ना कुन कोड कहिले प्रयोग भए भनेर देख्छ। सिकारुको नाम त्यसलाई देखाइँदैन। कुन कोड कसलाई दिइएको थियो भनेर विद्यालयले टिपेर राखेको छ भने, तपाईंको कोड प्रयोग भएको त्यसले थाहा पाउन सक्छ।',
+    'inst.claimWithdraw':
+      'विद्यालयले पछि कुनै कोड फिर्ता लिन सक्छ। प्रयोग भइसकेको कोड फिर्ता लियो भने सिकारुले त्यो कोर्स फेरि खोल्न सक्दैन। गरिसकेको काम राखिन्छ।',
+    'inst.claimCodeLabel': 'तपाईंको कोड',
+    'inst.claimCodeHelp':
+      'दस अक्षर र अङ्क, विद्यालयले दिएको पत्र वा कार्डमा लेखिएको। साना अक्षर र ड्यासले फरक पार्दैन। कोडमा I, L वा O अक्षर कहिल्यै हुँदैन, र शून्य वा एक पनि कहिल्यै हुँदैन।',
+    'inst.claimWho': 'यो कोर्स कसका लागि हो?',
+    'inst.claimWhoNote':
+      'एउटा कोड एक जना सिकारुका लागि हो। एक जनाका लागि प्रयोग भएपछि त्यो अर्काका लागि प्रयोग गर्न सकिँदैन।',
+    'inst.claimMe': 'म आफैँ',
+    'inst.claimForMe': 'यो कोर्स तपाईंका लागि थपिनेछ।',
+    'inst.claimLearnersUnread':
+      'तपाईंको खातामा भएका सिकारुहरू अहिले पढ्न सकिएन, त्यसैले कोड यहाँ अझै प्रयोग गर्न सकिँदैन। केही पनि प्रयोग भएन। केही बेरमा फेरि प्रयास गर्नुहोस्।',
+    'inst.claimDo': 'यो कोड प्रयोग गर्नुहोस्',
+    'inst.claimDone': 'कोड प्रयोग भयो। यो कोर्स थपियो: {title}',
+    'inst.claimDoneNoTitle': 'कोड प्रयोग भयो र कोर्स थपियो।',
+    'inst.claimDoneWhere': 'त्यो तपाईंले सिकाइको पृष्ठमा भेट्नुहुनेछ।',
+    'inst.claimAnother': 'अर्को कोड प्रयोग गर्नुहोस्',
+    'inst.claimUnsure':
+      'कोड प्रयोग भएको हामीले पुष्टि गर्न सकेनौँ। फेरि प्रयास गर्नुअघि सिकाइको पृष्ठ हेर्नुहोस्।',
+    'inst.whyBadCode':
+      'त्यो कोडको रूप होइन। हरेक अक्षर र अङ्क विद्यालयले दिएको कुरासँग दाँजेर हेर्नुहोस्।',
+    'inst.whyCodeUnknown':
+      'हामीसँग त्यस्तो कोड छैन। त्यसलाई विद्यालयले दिएको कुरासँग दाँजेर हेर्नुहोस्। केही पनि प्रयोग भएन।',
+    'inst.whyCodeUsed':
+      'यो कोड पहिले नै प्रयोग भइसकेको छ, र कोडले एक पटक मात्र काम गर्छ। तपाईं आफैँले प्रयोग गर्नुभएको हो भने कोर्स सिकाइको पृष्ठमा छ। होइन भने विद्यालयसँग अर्को कोड माग्नुहोस्।',
+    'inst.whyCodeVoided': 'विद्यालयले यो कोड फिर्ता लिएको छ। विद्यालयसँग नयाँ कोड माग्नुहोस्।',
+    'inst.whyCourseGone':
+      'यो कोड जुन कोर्सका लागि हो, त्यसमा अहिले सामेल हुन सकिँदैन। कोड प्रयोग भएन, त्यसैले पछि फेरि प्रयास गर्न सक्नुहुन्छ।',
+    'inst.whyNotYourLearner':
+      'तपाईंले त्यो सिकारुका लागि कोड प्रयोग गर्न सक्नुहुन्न। कोड प्रयोग भएन।',
+    'inst.whyAlreadyEnrolled':
+      'त्यो सिकारु यो कोड जुन कोर्सका लागि हो त्यसमा पहिले नै छ। कोड प्रयोग भएन, त्यसैले यो अर्को सिकारुका लागि प्रयोग गर्न सकिन्छ।',
+    'inst.whySeatsClosed':
+      'विद्यालयका कोडहरू अहिले प्रयोग गर्न सकिँदैन। कोड प्रयोग भएन। पछि फेरि प्रयास गर्नुहोस्।',
+    'inst.seatsTitle': 'संस्थाले किनेका कोर्सहरू',
+    'inst.seatsUnread':
+      'तपाईंको संस्थाले किनेका कुरा अहिले पढ्न सकिएन। यसको अर्थ त्यसले केही किनेको छैन भन्ने होइन। केही बेरमा फेरि प्रयास गर्नुहोस्।',
+    'inst.seatsOff':
+      'विद्यालयका कोडहरू अहिले बन्द छन्। फेरि खोलिएसम्म नयाँ केही किन्न, कोड दिन र कोड प्रयोग गर्न सकिँदैन। पहिले कोडबाट थपिएका कोर्सहरू फिर्ता लिइँदैनन्।',
+    'inst.seatsMemberTitle': 'यो पृष्ठ संस्थाका प्रशासकहरूले मात्र देख्छन्',
+    'inst.seatsMemberBody':
+      'तपाईं यस संस्थाको सदस्य हुनुहुन्छ, यसको प्रशासक होइन, त्यसैले यसले किनेका कोर्सहरू तपाईंलाई देखाइँदैनन्। तपाईंलाई कोड दिइएको छ भने, त्यो अर्को पृष्ठमा प्रयोग हुन्छ।',
   },
 };

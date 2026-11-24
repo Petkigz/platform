@@ -234,8 +234,9 @@ export function parseSeatDirectory(input: unknown): { enabled: boolean; institut
 /** The one sentence that explains what a seat is, used in more than one place. */
 export const SEAT_NOTICE =
   'A seat is one learner for one course version. The school buys seats, hands out one code ' +
-  'per seat, and whoever redeems a code gets the course. The school sees how many seats are ' +
-  'claimed — never which learner took which one, and never a name.';
+  'per seat, and whoever redeems a code gets the course. The school sees which of its codes ' +
+  'have been claimed and when — never the learner, and never a name. A school that kept a note ' +
+  'of who was given each code can therefore tell whose was claimed.';
 
 /** Why payments here are recorded rather than collected. */
 export const SEAT_PAYMENT_NOTICE =

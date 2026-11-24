@@ -171,6 +171,9 @@ jobs:
       - name: Institution synthetic HTTP regression
         run: node scripts/institution-route-smoke.mjs
 
+      - name: School codes synthetic HTTP regression
+        run: node scripts/seats-route-smoke.mjs
+
       - name: Teaching application synthetic HTTP regression
         run: node scripts/teach-apply-route-smoke.mjs
 

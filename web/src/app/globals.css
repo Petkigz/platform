@@ -1646,6 +1646,25 @@ html:has(.policy-notice) { scroll-padding-bottom: 8rem; }
    a title with no place to break wraps rather than making that box a mile wide. */
 .inst-page .scroll-x th, .inst-page .scroll-x td { text-align: start; padding: 0.3rem 0.6rem; vertical-align: top; }
 .inst-page th[scope='row'] { font-weight: 400; min-width: 10rem; overflow-wrap: anywhere; }
+/* The page a school's code is used on. One column: the code, who it is for,
+   what was answered, the button. The code itself is Latin letters whatever
+   the page's direction, so its field is left to right. */
+.claim-form, .claim-done { display: grid; gap: 0.5rem; justify-items: start; }
+.claim-form > label { font-weight: 600; }
+.claim-form > input, .claim-form > select { width: 100%; max-width: 24rem; }
+.claim-form > .notice, .claim-done > .notice { justify-self: stretch; margin: 0.25rem 0; overflow-wrap: anywhere; }
+.claim-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.08em; }
+.claim-help { margin: 0 0 0.75rem; font-size: 0.9rem; }
+.claim-done > p { margin: 0; }
+.claim-note { margin: 0 0 0.75rem; }
+.claim-links { margin-top: 1.5rem; }
+/* The page the courses an institution bought are listed on. What an
+   administrator works with is one English block; a code, an invoice
+   reference and a course title have no place to break of their own. */
+.seats-admin pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.seats-admin h2, .seats-admin p, .seats-admin li, .seats-admin label { overflow-wrap: anywhere; }
+.seats-admin .lessons li { flex-wrap: wrap; }
+.seats-admin input { max-width: 100%; }
 
 /* The page that asks to teach. One column; what a person typed keeps its
    line breaks and wraps wherever it must, because a web address and a

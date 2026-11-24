@@ -2619,6 +2619,59 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A school's code in the reader's language, 2026-11-24
+
+- *The words.* Thirty more sentences in `messages/inst.ts`, twenty-seven
+  languages, **read by no speaker** (`tmp-words/u37`).
+- *The pages.* `app/institution/claim/page.tsx` and its form are in the
+  reader's language. `app/institution/seats/page.tsx` is, for its heading,
+  what a member is told, codes being switched off and a read that failed;
+  the administrator's desk on it (`seats-desk.tsx`, unchanged) stays
+  English and is marked so. `reader.ts` builds the form's words.
+  `api/institution/claim/route.ts` answers by name. See `DECISIONS.md`.
+- *Rules a test holds.* `lib/seat-claim.ts` + test (13): every
+  `raise exception` in the newest `claim_institution_seat`, read out of the
+  migrations, has a name; each name has a status and a sentence; a name is
+  believed only with its own status; an answer that is not the database's
+  is "not known", never "not used"; the route sends the course's title and
+  nothing else of the database's; what the pages say the school sees is
+  what `institution_seat_summary` gives it; a list of learners that cannot
+  be trusted is not read as nobody.
+- *Found on the way.* (1) The page, the administrator's line on
+  `/institution` and `SEAT_NOTICE` said the school never sees which learner
+  took which seat. It is shown each code's last characters, whether it was
+  claimed and when, so a school that noted who got each code can tell. The
+  three now say that. (2) With more than one learner on the account, the
+  first name in the alphabet was already chosen, and a code works once.
+  Nobody is chosen now and the button stays off until somebody is. (3) A
+  list of learners that could not be read was drawn as an account with
+  nobody else, and the code would have gone to the account holder. It is
+  now said, with no form. (4) Every refusal was a 409 with the database
+  part's English sentence, and a reply that never came was called a
+  refusal. (5) Success sent back whatever the database returned. (6)
+  `/institution/seats` sent a reader whose reply could not be read back to
+  `/institution`, as though they had not joined. (7) The page did not say
+  that the school can withdraw a used code and that the course then stops
+  opening; `void_institution_seat_code` does that.
+- *Checked.* `scripts/seats-route-smoke.mjs` in `ci.yml` and, with a
+  browser, in `responsive-smoke.yml`; three more sentences looked for in
+  `scripts/client-bundle-check.mjs`.
+- *Not shown.* Anything from a real database: the stand-in answers what it
+  is asked, and every school, course, learner and code in it is invented.
+  That a code works once and only for a learner the account may act for is
+  `claim_institution_seat()`'s code (`supabase/tests/institution_seats.test.mjs`
+  is where it is run). No real code has been used through this page. The
+  administrator's desk being pressed. Twenty-four languages in a browser.
+- *Not built.* The administrator's desk in any language but English, and
+  the sentences `api/institution/route.ts` answers issuing and withdrawing
+  with (that file was not changed, and its two branches were not read
+  again). The school's name where its code is used. Telling a learner their
+  code was withdrawn.
+- *Counts.* 1901 keys; server-only 1533; unwritten while held 1629
+  (`inst.` 75); held 192 of 1901, 10.10%, shown as 10%. 133 page routes, no
+  new route handler; 34 smoke scripts; 2660 web tests. No migration: 357,
+  174 database suites, not rerun.
+
 ### The test project at 357, 2026-11-24
 
 - *Done.* The owner approved run `45386711064`; it succeeded. The test

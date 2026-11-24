@@ -8765,6 +8765,55 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Using a school's code: who it is for, and what the school sees — **DECIDED 2026-11-24**
+
+`/institution/claim` and `/institution/seats` were English pages. The first
+and the member's half of the second are now in the reader's language: thirty
+more sentences in `inst`; the nineteen held languages read 10%. None of this
+was asked for by name; it is the builder's reading of what the database
+does, and can be changed.
+
+- *Nobody is chosen for you.* A code works once and is for one learner. The
+  form used to open with the first name in the alphabet chosen. An account
+  that manages other learners now has to pick, with "me" as one of the
+  choices, and the button is off until it has. An account with nobody else
+  is not asked; it is told the course is added for them.
+- *A family that could not be read is not an account on its own.* If the
+  list of learners cannot be read, the page says so and shows no form.
+  Offering the form would have put a child's code on the parent.
+- *The page says what the school sees, because it was saying something
+  else.* The database gives an administrator each code's last characters,
+  whether it was used and when, and no learner. The old sentence, "never
+  which learner took which one", is true of what the database stores and
+  untrue of what a school can work out from its own list of who was given
+  which code. The page, the notice on the administrator's desk and the line
+  on `/institution` now say both halves.
+- *The page says the school can take it back.* A school can withdraw a code
+  after it was used; the course then no longer opens and the work done is
+  kept. That was only on the administrator's desk. It is now said to the
+  person typing the code, before they type it.
+- *Using a code is answered by name.* `lib/seat-claim.ts` names the nine
+  things `claim_institution_seat()` refuses, each with a status, and the
+  route sends the name and an English sentence of its own; the database's
+  text is logged and not sent. The names share SQLSTATEs, so the name is
+  read from the message, and a test reads the migrations and fails if the
+  function raises a sentence with no name.
+- *No answer is not "refused".* A dropped request, a reply with no status
+  the page knows, or a database that could not be reached says it is not
+  known whether the code was used, and to look at the learning page before
+  trying again. A refusal the database raised left the code unspent, and
+  the sentences for those say so; this one cannot.
+- *The administrator's desk stays English, and the page says so.* Issuing
+  and withdrawing are done by one or two people per school, who were given
+  the desk by a member of staff writing in English. It is marked
+  `lang="en" dir="ltr"` under one translated sentence. Its sentences are
+  also what the staff desk at `/admin/institutions` prints, so they were
+  left as they are apart from the one above.
+- *A member is told where a code goes.* A member who opens
+  `/institution/seats` is told the page is for administrators and is given
+  the link to use a code. A reply that could not be read is said as that
+  and is no longer a redirect to `/institution`.
+
 ## A plan bought in the EU, the EEA or the UK is given back within fourteen days — **DECIDED 2026-11-24**
 
 The owner's word, 2026-11-24: a buyer in the European Union, the rest of the

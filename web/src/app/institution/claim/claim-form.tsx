@@ -1,147 +1,195 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
+import { Say } from '@/components/say';
+import { claimOutcomeOf, type ClaimLearner, type ClaimOutcome } from '@/lib/seat-claim';
 import { formatSeatCode } from '@/lib/seats';
+
+/** What the form says, already in the reader's language. */
+export type ClaimWords = {
+  codeLabel: string;
+  codeHelp: string;
+  who: string;
+  whoNote: string;
+  choose: string;
+  me: string;
+  /** `{name} (child)` */
+  child: string;
+  forMe: string;
+  submit: string;
+  working: string;
+  /** `… This course was added: {title}` */
+  done: string;
+  doneNoTitle: string;
+  doneWhere: string;
+  learning: string;
+  another: string;
+  reasons: Record<ClaimOutcome, string>;
+};
+
+/** The value of "myself" in the list. No learner's id is this. */
+const MYSELF = 'self';
 
 /**
  * The form a parent fills in from a school letter.
- *
- * Three things it does that a plain input would not.
  *
  * **It reforms as you type.** `abcde fghjk` becomes `ABCDE-FGHJK` in the field,
  * because the code is copied off paper by somebody who has never seen one before
  * and the shape is the only hint that it went in right.
  *
- * **It can put the seat on a child.** A learner switcher is offered when the
- * account manages more than one learner profile; one profile means no choice is
- * shown at all, because a select with one option is a question with no answer.
+ * **Nobody is chosen for the reader.** An account with a child on it is asked
+ * who the course is for, and the button waits for an answer: a code works once,
+ * and the first name in a list is not a decision. An account with nobody else
+ * on it is told the course will be added for them, and is asked nothing.
  *
  * **It does not clear the field on a refusal.** Nine refusals in ten are "check
  * the code", and wiping what the person typed makes them start again from a
  * letter they are holding in their hand.
+ *
+ * **A refusal is a name.** The route answers `{ ok: false, code }` with that
+ * name's own status, and `words.reasons` has the sentence. A name that arrives
+ * with another status, or no name, or no answer at all after the request left,
+ * is `unconfirmed`: the form says it does not know whether the code was used
+ * and where to look, because the code may be spent.
  */
-export function ClaimForm({
-  learners,
-}: {
-  learners: { id: string; name: string }[];
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+export function ClaimForm({ learners, words }: { learners: ClaimLearner[]; words: ClaimWords }) {
   const [code, setCode] = useState('');
-  const [learnerId, setLearnerId] = useState(learners[0]?.id ?? '');
+  const [who, setWho] = useState(learners.length === 0 ? MYSELF : '');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<string | null>(null);
+  const [tone, setTone] = useState<'warn' | 'error'>('error');
+  const [message, setMessage] = useState<string | null>(null);
+  const [done, setDone] = useState<{ title: string | null } | null>(null);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (busy || who === '' || code.length < 11) return;
     setBusy(true);
-    setError(null);
-    setDone(null);
+    setMessage(null);
+
+    let res: Response;
     try {
-      const res = await fetch('/api/institution/claim', {
+      res = await fetch('/api/institution/claim', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ code, learnerProfileId: learnerId || null }),
+        body: JSON.stringify({ code, learnerProfileId: who === MYSELF ? null : who }),
       });
-      const out = (await res.json()) as {
-        ok?: boolean;
-        message?: string;
-        courseTitle?: string;
-        versionNumber?: number;
-        courseSlug?: string;
-      };
-      if (!out.ok) {
-        setError(out.message ?? 'That did not work.');
-        return;
-      }
-      setDone(
-        out.versionNumber
-          ? `That seat is now yours: ${out.courseTitle ?? 'the course'}, version ${out.versionNumber}.`
-          : `That seat is now yours: ${out.courseTitle ?? 'the course'}.`,
-      );
-      setCode('');
-      startTransition(() => router.refresh());
     } catch {
-      setError('The request could not be sent. Nothing was claimed.');
-    } finally {
+      // The request may have left before the connection dropped, so this is
+      // not "nothing was used".
+      setTone('warn');
+      setMessage(words.reasons.unconfirmed);
       setBusy(false);
+      return;
     }
+    const json = (await res.json().catch(() => null)) as { ok?: unknown; code?: unknown; courseTitle?: unknown } | null;
+    setBusy(false);
+
+    if (res.ok && json?.ok === true) {
+      setDone({ title: typeof json.courseTitle === 'string' && json.courseTitle !== '' ? json.courseTitle : null });
+      setCode('');
+      return;
+    }
+    const named = res.ok ? 'unconfirmed' : claimOutcomeOf(res.status, json?.code);
+    setTone(named === 'refused' ? 'error' : 'warn');
+    setMessage(words.reasons[named]);
   }
 
   if (done) {
     return (
-      <div>
+      <div className="claim-done" data-claim-state="done">
         <p className="notice" role="status">
-          <strong>{done}</strong>
+          <strong>
+            {done.title ? <Say text={words.done} parts={{ title: <bdi>{done.title}</bdi> }} /> : words.doneNoTitle}
+          </strong>
         </p>
         <p>
-          It is on <a href="/learn">your learning page</a>, and the school is not told which of its
-          codes went to whom.
+          {words.doneWhere} <a href="/learn">{words.learning}</a>
         </p>
+        <button
+          type="button"
+          className="btn secondary"
+          data-claim-another
+          onClick={() => {
+            setDone(null);
+            setMessage(null);
+            if (learners.length > 0) setWho('');
+          }}
+        >
+          {words.another}
+        </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} style={{ maxWidth: '32rem' }}>
-      <label htmlFor="seat-code" style={{ display: 'block', marginBottom: '0.35rem' }}>
-        Your code
-      </label>
+    <form onSubmit={submit} className="claim-form" data-claim-state="form" noValidate>
+      <label htmlFor="seat-code">{words.codeLabel}</label>
       <input
         id="seat-code"
         name="code"
+        className="claim-code"
         value={code}
         onChange={(event) => setCode(formatSeatCode(event.target.value).slice(0, 11))}
         autoComplete="off"
         spellCheck={false}
         autoCapitalize="characters"
         placeholder="ABCDE-FGHJK"
-        style={{ width: '100%', fontFamily: 'monospace', letterSpacing: '0.08em' }}
+        aria-describedby="seat-code-help"
+        dir="ltr"
+        lang="en"
         required
       />
-      <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.35rem' }}>
-        Ten characters, on the letter or card the school gave you. Capitals are assumed, and the dash
-        does not matter.
+      <p className="muted claim-help" id="seat-code-help">
+        {words.codeHelp}
       </p>
 
-      {learners.length > 1 && (
+      {learners.length > 0 ? (
         <>
-          <label htmlFor="seat-learner" style={{ display: 'block', margin: '1rem 0 0.35rem' }}>
-            Whose learning is this?
-          </label>
+          <label htmlFor="seat-learner">{words.who}</label>
           <select
             id="seat-learner"
-            value={learnerId}
-            onChange={(event) => setLearnerId(event.target.value)}
-            style={{ width: '100%' }}
+            value={who}
+            onChange={(event) => {
+              setWho(event.target.value);
+              setMessage(null);
+            }}
+            aria-describedby="seat-learner-help"
+            disabled={busy}
           >
+            <option value="">{words.choose}</option>
+            <option value={MYSELF}>{words.me}</option>
             {learners.map((learner) => (
               <option key={learner.id} value={learner.id}>
-                {learner.name}
+                {learner.child ? words.child.replace('{name}', `\u2068${learner.name}\u2069`) : learner.name}
               </option>
             ))}
           </select>
-          <p className="muted" style={{ fontSize: '0.85rem', marginTop: '0.35rem' }}>
-            A seat is one learner for one course. Choosing a child uses the seat for them; the
-            school still only sees that a seat was claimed.
+          <p className="muted claim-help" id="seat-learner-help">
+            {words.whoNote}
           </p>
         </>
-      )}
-
-      {error && (
-        <p className="notice error" role="alert" style={{ marginTop: '1rem' }}>
-          {error}
+      ) : (
+        <p className="muted claim-help" data-claim-for="me">
+          {words.forMe}
         </p>
       )}
 
-      <p style={{ marginTop: '1rem' }}>
-        <button type="submit" className="btn" disabled={busy || pending || code.length < 11}>
-          {busy ? 'Claiming…' : 'Claim this seat'}
-        </button>
-      </p>
+      {message ? (
+        <div className={`notice ${tone}`} role={tone === 'error' ? 'alert' : 'status'} data-claim-refusal>
+          {message}
+        </div>
+      ) : null}
+
+      <button
+        type="submit"
+        className="btn"
+        disabled={busy || who === '' || code.length < 11}
+        aria-busy={busy}
+        data-claim-button
+      >
+        {busy ? words.working : words.submit}
+      </button>
     </form>
   );
 }
