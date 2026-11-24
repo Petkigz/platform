@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { Say } from '@/components/say';
 import { formatDateTime } from '@/lib/i18n/format';
+import { AGREED_EVENT } from '@/lib/policy-notice';
 import { policyOutcomeOf, type PolicyOutcome } from '@/lib/policy-outcome';
 
 /**
@@ -30,8 +31,10 @@ export type AcceptWords = {
  * **It asks `/api/policies`, with the version the page showed.** It used to
  * call `accept_policy()` from the browser by slug alone, so somebody who
  * left the page open while a new version was published agreed to a text they
- * had not been shown. The route now refuses that with `changed`, and this
- * button reads the page again so the new text is in front of them.
+ * had not been shown. The writer now refuses that itself and the route
+ * answers `changed`; this button reads the page again so the new text is in
+ * front of them. That is the one time a new version reaches an open page:
+ * because its reader pressed the button under the old one.
  *
  * **What it says after a refusal is this page's sentence for its name.** The
  * old button printed the database's own text when it did not recognise it.
@@ -96,6 +99,9 @@ export function AcceptPolicy({
 
     if (res.ok && json?.ok === true && typeof json.version === 'number' && typeof json.acceptedAt === 'string') {
       setTold({ at: formatDateTime(locale, json.acceptedAt, 'UTC'), version: json.version, shown: version });
+      // The notice under the page stops telling about a document that has
+      // just been agreed to.
+      window.dispatchEvent(new CustomEvent(AGREED_EVENT, { detail: slug }));
       router.refresh();
       return;
     }
@@ -109,7 +115,9 @@ export function AcceptPolicy({
   }
 
   // Recorded for a version this page was not showing when the button was
-  // pressed. It stays said after the page is read again and shows that one.
+  // pressed. The writer compares the two and the route does not pass on an
+  // answer for another version, so this is not expected to be drawn. It is
+  // kept so that if either stops, the reader is told rather than not.
   const newer = told !== null && told.version !== told.shown;
   const when = agreedAt ?? told?.at ?? null;
 

@@ -7,14 +7,15 @@
  * was no route. Now `/api/policies` asks, and answers with a name; the page
  * has a sentence for each name in the reader's language.
  *
- * **`changed` is this route's, not the database's.** `accept_policy()` takes
- * a slug and agrees to whatever version is live at that instant. That is
- * right for a version id nobody can forge, and wrong for a page left open:
- * the owner publishes version 4 while somebody is reading version 3, they
- * press the button, and an agreement to a text they were never shown is
- * recorded with their name on it. The request now carries the version the
- * page showed, the route reads the live one first, and a different number is
- * `changed`: nothing is recorded, and the page is read again.
+ * **`changed` is the database's answer.** Agreeing by slug alone records
+ * whatever version is in force at that instant. That is wrong for a page
+ * left open: the owner publishes version 4 while somebody is reading version
+ * 3, they press the button, and an agreement to a text they were never shown
+ * is recorded with their name on it. The request carries the version the
+ * page showed, and since 2026-11-24 `accept_policy(slug, version)` compares
+ * it with the one in force inside its own transaction. A different number is
+ * `policy:changed`: nothing is recorded, and the page is read again. (For a
+ * day the route compared them itself, with a read before the write.)
  *
  * Kept free of queries and of the catalogue, so the button in the browser
  * can import it.
@@ -48,6 +49,10 @@ const RAISED: Readonly<Record<string, PolicyOutcome>> = {
   'policy:not_signed_in': 'not_signed_in',
   'policy:not_found': 'not_found',
   'policy:not_in_force': 'not_in_force',
+  'policy:changed': 'changed',
+  // The route never sends a request without a version, so this is a caller
+  // that is not the route.
+  'policy:version_required': 'malformed',
 };
 
 /** The name for one sentence the database raised, or null when it has none. */

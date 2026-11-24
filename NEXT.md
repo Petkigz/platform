@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 355 migrations and 172 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 356 migrations and 173 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2619,6 +2619,40 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A changed policy told at the next opening, 2026-11-24
+
+- *Built.* Migration 356, `20261281149000_policy_version_shown.sql`:
+  `accept_policy(p_slug, p_version)` holds the version in force, refuses
+  with `policy:changed` when it is not the number sent, and then records.
+  `POST /api/policies` sends the version and reads nothing first.
+  `GET /api/policies` answers which documents changed since the caller
+  agreed to them. `_shared/policy-notice.tsx` asks it once an opening (a
+  tab), from the root layout, after the one `/api/session` question the
+  masthead already asks (`_shared/session-once.ts`). `/notifications` lists
+  each changed document first. `lib/policy-notice.ts` is what they share.
+  Five sentences, 27 languages (`tmp-words/u35`).
+- *The hosted job.* `scripts/hosted-migration-356.mjs` and the workflow
+  "Apply Supabase test migrations 355 and 356" apply both in one run, on a
+  commit whose message starts
+  `test: apply ayahspring test migrations 355 and 356`, behind the same
+  environment and the owner's approval. Until that run the tree has 356 and
+  the project 354.
+- *Checked.* `supabase/tests/policy_version_shown.test.mjs` (it publishes a
+  version inside a transaction it undoes, so later suites find the documents
+  as they were); `lib/policy-notice.test.ts`; `scripts/policies-route-smoke.mjs`
+  in a browser (once an opening, not again on the next page, a version
+  published during a session not announced on it, put away, a failed read
+  asked again); `scripts/notifications-route-smoke.mjs`; one more check in
+  `scripts/postgrest-contract.mjs` that a real request server picks the
+  two-argument function and passes on `policy:changed`.
+- *Not checked.* Two people at the same instant: the suites run on one
+  connection, so that the version is held while the writer works is read
+  from the function's text and not raced. A screen reader on the notice.
+  The other twenty-four languages in a browser.
+- *Counts.* 1869 keys; server-only 1501; unwritten while held 1597
+  (`notify.` 54, `policy.` 36); held 192 of 1869, 10.27%, shown as 10%. 356
+  migrations, 173 database suites.
+
 ### Notifications said in the reader's language, 2026-11-24
 
 - *Built.* Migration 355, `20261281148000_notification_facts.sql`: a
@@ -2633,9 +2667,9 @@ claim external integrations work without credentials or provider callbacks.
   units ("8000000 KES" for eighty thousand shillings). The page now says it
   as money. The stored sentence is unchanged, and the export still carries
   it.
-- *Not on the hosted test project.* It needs a job like the 354th's
-  (`scripts/hosted-migration-354.mjs` is the pattern) and the owner's
-  approval of the run. Until then the tree has 355 and the project 354.
+- *Not on the hosted test project.* It goes with the next migration in one
+  job (`scripts/hosted-migration-356.mjs`, the entry above) and needs the
+  owner's approval of the run. Until then the project has 354.
 - *Next.* A policy's new version told at the next visit and by a
   notification, and `accept_policy()` taking the version the reader was
   shown. That is another migration; one hosted job can carry both.

@@ -43,7 +43,9 @@ test('every sentence the writer and the standing read raise has a name', () => {
   assert.deepEqual(named('accept_policy'), {
     'policy:not_signed_in': 'not_signed_in',
     'policy:not_found': 'not_found',
+    'policy:version_required': 'malformed',
     'policy:not_in_force': 'not_in_force',
+    'policy:changed': 'changed',
   });
   assert.deepEqual(named('my_policy_standing'), { 'policy:not_signed_in': 'not_signed_in' });
   // The owner's refusals are not the reader's: none of them has a name here.
@@ -52,17 +54,32 @@ test('every sentence the writer and the standing read raise has a name', () => {
   assert.equal(policySentenceReason(null), null);
 });
 
-test('the writer still takes a slug and nothing else, which is why the route checks the version', () => {
+test('the writer takes the version that was read, and compares it before it records', () => {
   const writer = newest('accept_policy');
-  assert.match(writer, /^create or replace function public\.accept_policy\(p_slug text\)/u);
-  // It resolves whatever is live at that instant.
-  assert.match(writer, /where document_id = v_doc\.id and status = 'in_force'/u);
+  assert.match(writer, /^create or replace function public\.accept_policy\(p_slug text, p_version integer\)/u);
+  // The version in force is held until the writer is done, so it cannot be
+  // retired between the comparison and the record.
+  const held = writer.indexOf("where document_id = v_doc.id and status = 'in_force'\n     for share;");
+  const compared = writer.indexOf('if v_version.version_number <> p_version then');
+  const refused = writer.indexOf("raise exception 'policy:changed'");
+  const recorded = writer.indexOf('insert into public.policy_acceptances');
+  assert.ok(held > 0 && compared > held && refused > compared && recorded > refused, 'held, compared, refused, and only then recorded');
+  // What is recorded is the row that was read, never one found by the number sent.
+  assert.match(writer, /values \(v_actor, v_version\.id\)/u);
+  assert.doesNotMatch(writer, /version_number = p_version/u);
   // And a second agreement is answered with the time of the first.
   assert.match(writer, /'already', true/u);
+  // A visitor cannot call it.
+  const file = readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql')).sort().at(-1)!;
+  const sql = readFileSync(new URL(file, MIGRATIONS), 'utf8');
+  assert.match(sql, /revoke all on function public\.accept_policy\(text, integer\) from public, anon;/u);
+  assert.match(sql, /grant execute on function public\.accept_policy\(text, integer\) to authenticated;/u);
 });
 
 test('the database’s answer is a refusal; anything else is unconfirmed', () => {
   assert.equal(policyReasonOf({ code: '23514', message: 'policy:not_in_force' }), 'not_in_force');
+  assert.equal(policyReasonOf({ code: '23514', message: 'policy:changed' }), 'changed');
+  assert.equal(policyReasonOf({ code: '22023', message: 'policy:version_required' }), 'malformed');
   assert.equal(policyReasonOf({ code: 'P0002', message: 'policy:not_found' }), 'not_found');
   assert.equal(policyReasonOf({ code: '42501', message: 'policy:not_signed_in' }), 'not_signed_in');
   assert.equal(policyReasonOf({ code: '42501', message: 'permission denied for function accept_policy' }), 'refused');
@@ -110,19 +127,28 @@ test('the writer’s reply is read without trusting its shape', () => {
   }
 });
 
-test('the route sends a name, checks the version first, and never sends the database’s sentence', () => {
+test('the route sends a name and the version that was read, and never sends the database’s sentence', () => {
   const route = read('app/api/policies/route.ts');
-  // The version on the page against the live one, before the writer is asked.
-  const check = route.indexOf("return refuse('changed')");
-  const write = route.indexOf("supabase.rpc('accept_policy'");
-  assert.ok(check > 0 && write > check, 'the version is checked before the writer is asked');
-  assert.match(route, /live\.data !== null && liveVersion !== b\.version/u);
-  // The reply says which version was recorded, so the button can say when it was not the one shown.
+  // The version goes to the writer, which is the one place that compares it.
+  assert.match(route, /supabase\.rpc\('accept_policy', \{ p_slug: b\.slug, p_version: b\.version \} as never\)/u);
+  assert.equal(route.split("rpc('accept_policy'").length - 1, 1, 'the writer is asked in one place');
+  // Nothing is read first: a read before the write is the gap that was closed.
+  assert.doesNotMatch(route, /rpc\('policy_page'/u);
+  assert.doesNotMatch(route, /refuse\('changed'\)/u);
+  // A reply for another version is not said as agreed.
+  assert.match(route, /if \(accepted\.version !== b\.version\) \{[^}]+return refuse\('unconfirmed'\);/u);
   assert.match(route, /version: accepted\.version/u);
   // `error.message` goes to the log and nowhere else.
   for (const line of route.split('\n').filter((one) => one.includes('.message'))) {
-    assert.match(line, /console\.error|POLICY_ENGLISH\[reason\]/u, line);
+    assert.match(line, /console\.error|POLICY_ENGLISH\[reason\]|error: \{ message: 'no answer' \}/u, line);
   }
+  // What the notice is told is a slug and a number, and a visitor costs no query.
+  assert.match(route, /changed: changed\.map\(\(doc\) => \(\{ slug: doc\.slug, version: doc\.version \}\)\)/u);
+  const get = route.slice(route.indexOf('export async function GET'));
+  assert.ok(get.indexOf("if (!user) return NextResponse.json({ signedIn: false }") < get.indexOf("rpc('my_policy_standing')"));
+  // Not read is said as not read, and not as an error on a page that is fine.
+  assert.match(get, /return NextResponse\.json\(\{ signedIn: true, changed: null \}, \{ headers: noStore \}\);/u);
+  assert.doesNotMatch(get, /status:/u);
 });
 
 test('nothing in the reader’s pages calls the writer from the browser or throws on a read', () => {

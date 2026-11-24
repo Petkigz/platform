@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1864 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1869 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -551,8 +551,8 @@ still unreviewed and still saying so.
   of 1707 with the two plans pages and of 1736 with the page an account's
   plans are kept on, of 1769 with the policy pages and of 1814 with the
   institution page, of 1849 with the page that asks to teach, of 1854 with
-  five sentences put back on the plans page, then this with ten for
-  notifications),
+  five sentences put back on the plans page, of 1864 with ten for
+  notifications, then this with five for telling of a changed document),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -882,7 +882,25 @@ written: not a held draft, nothing.
   can be said in the reader's language (a migration to four functions);
   telling somebody at their next visit, or by a notification, that a policy
   has a new version, and never on a page that is already open; the database
-  refusing an agreement to a version the reader was not shown.
+  refusing an agreement to a version the reader was not shown. (Both built
+  on 2026-11-24; see the two entries below.)
+- *A changed policy told at the next opening (2026-11-24).* Somebody signed
+  in who agreed to a document that has since changed is told by a notice
+  under the page, asked for once each time the application is opened (a
+  tab), and by a section at the top of `/notifications`. A version published
+  during a session is not announced on it. The notice can be put away for
+  those versions on that device. Agreeing sends the version the page showed,
+  and the database refuses when that is not the one in force (migration
+  356). Five more sentences, **read by no speaker**. **Not done:** the
+  migration is not on the hosted test project; the document is still
+  English in every language; the notice does not come back after it is put
+  away, even though the agreement is still owed (the document's page,
+  `/account` and `/notifications` say it); it is not a kept message, so it
+  has no unread mark and is not in the export; a device that keeps nothing
+  asks on every page. **Not checked:** two people at the same instant (the
+  suites run on one connection); a screen reader; the other twenty-four
+  languages in a browser; a real database through PostgREST, except for the
+  one refusal the contract workflow asks for.
 - *Notifications said in the reader's language (2026-11-24).* A message
   written from now on is kept as what it is made of (migration 355) and
   `/notifications` says it in the reader's language: ten more sentences in
@@ -1262,9 +1280,11 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-**The tree has 355 migrations and the test project has 354.** The 355th,
-`20261281148000_notification_facts.sql`, is not applied there: it needs a job
-of its own and the owner's approval of the run.
+**The tree has 356 migrations and the test project has 354.** The 355th,
+`20261281148000_notification_facts.sql`, and the 356th,
+`20261281149000_policy_version_shown.sql`, are not applied there. One job
+carries both (`scripts/hosted-migration-356.mjs`); it needs the owner's
+approval of the run and has not been run.
 
 The existing Supabase test project has the first 354 of the tree's migrations applied
 (the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,

@@ -101,6 +101,12 @@ let off = [];
 let markAnswer = 'ok';
 let setAnswer = 'ok';
 let live = copy(CENTRE);
+// What this account owes and has agreed to: a payload, or null (the read fails).
+// An account that owes nothing unless a case says otherwise: a read that fails
+// is written to the server's log, and a page opened in a browser repeats that
+// log in its console, where a page with nothing wrong must say nothing.
+const NOTHING_OWED = { acceptanceRequired: [], outstanding: 0, history: [] };
+let standing = NOTHING_OWED;
 const calls = [];
 const DATABASE = (code, message) => ({ code, message: `SYNTHETIC-DATABASE ${message}`, details: null, hint: null });
 
@@ -128,6 +134,10 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/rpc/my_notification_preferences') {
     if (prefs === 'broken') send(DATABASE('57014', 'canceling statement due to statement timeout'), 500);
     else send(prefs === 'ok' ? prefsOf(off) : prefs);
+  }
+  else if (path === '/rest/v1/rpc/my_policy_standing') {
+    if (standing === null) send(DATABASE('57014', 'canceling statement due to statement timeout'), 500);
+    else send(standing);
   }
   else if (path === '/rest/v1/rpc/mark_notifications_read') {
     if (markAnswer !== 'ok') { send(markAnswer, 400); return; }
@@ -181,7 +191,7 @@ try {
   // The page without what the database wrote and without the names its rows are marked with.
   const own = (main) => main.replace(/<div class="told-stored" lang="en">[\s\S]*?<\/div>/g, '').replace(/ data-[a-z-]+="[^"]*"/g, '');
   const items = (main, marker) => main.split(marker).slice(1).map((piece) => piece.split('</li>')[0]);
-  const reset = () => { centre = 'ok'; prefs = 'ok'; off = []; markAnswer = 'ok'; setAnswer = 'ok'; live = copy(CENTRE); calls.length = 0; };
+  const reset = () => { centre = 'ok'; prefs = 'ok'; off = []; markAnswer = 'ok'; setAnswer = 'ok'; live = copy(CENTRE); standing = NOTHING_OWED; calls.length = 0; };
   const rpc = (name) => calls.filter((c) => c.path === `/rest/v1/rpc/${name}`);
 
   // ================================================================ the page
@@ -392,6 +402,72 @@ try {
     none(seen.main, ['data-in-english', 'told-stored'], 'the Hausa page');
   }
   console.log('Notifications: signed out goes to sign in and reads nothing; three reminders, a class and a renewal said whole by the page and one with no word shown as stored; thirteen messages: seven kept with what they are made of and said by the page in English, Arabic and French (an amount as money, a class’s moment in its own zone, a reason as typed, a file with no name said without one), five older ones in English shown as the message and in another language each under its kind’s name with the stored text set apart as English, one whose facts are not whole shown as stored, one with no word shown with no name; the note about English only while something on the page is English; an address that leaves the site not followed; what somebody typed kept as typed; eight switches in the database’s order, two held on, two marked not in use; none, some and all off said; nothing yet said as nothing; six kinds of unread centre and four of unread switches, each said as itself and neither taking the other with it; Arabic and French by the reader’s choice, saying once that the messages are English; Hausa in English, marked.');
+
+  // =================================================== documents that changed
+  {
+    reset();
+    // An account that owes nothing: no section, and the question was asked once.
+    let seen = await get('/notifications');
+    assert.equal(rpc('my_policy_standing').length, 1);
+    none(seen.main, ['data-changed', 'Documents that have changed'], 'the page of an account that owes nothing');
+
+    // What this account owes could not be read: the section is left out and
+    // the rest of the page is whole. Nothing of the database's is shown.
+    reset();
+    standing = null;
+    seen = await get('/notifications');
+    assert.equal(seen.status, 200);
+    assert.equal(rpc('my_policy_standing').length, 1);
+    none(seen.main, ['data-changed', 'Documents that have changed', 'SYNTHETIC-DATABASE', 'statement timeout'], 'the page with the standing unread');
+    has(seen.main, ['<h1>Notifications</h1>', '<h2>Coming up</h2>', '<h2>Recent</h2>'], 'the page with the standing unread');
+
+    const owed = (slug, title, versionNumber, acceptedAt) => ({ slug, title, versionNumber, effectiveAt: '2026-11-24', acceptedAt });
+    const before = (slug, title, versionNumber) => ({ slug, title, versionNumber, acceptedAt: '2026-10-29T08:00:00+00:00' });
+    // Three documents ask for agreement. One changed since it was agreed to;
+    // one is agreed to as it stands; one was never agreed to at all.
+    standing = {
+      acceptanceRequired: [
+        owed('synthetic-terms', 'Synthetic terms', 3, null),
+        owed('synthetic-privacy', 'Synthetic privacy notice', 2, '2026-11-20T09:14:00+00:00'),
+        owed('synthetic-teaching', 'Synthetic teacher terms', 1, null),
+      ],
+      outstanding: 2,
+      history: [before('synthetic-terms', 'Synthetic terms', 2), before('synthetic-privacy', 'Synthetic privacy notice', 2)],
+    };
+    seen = await get('/notifications');
+    has(seen.main, [
+      '<section class="told-section" data-changed="1"><h2>Documents that have changed</h2>',
+      '<p class="muted told-english">You agreed to an earlier version of each of these, and that agreement is kept. The new version is not agreed to until you say so on its page.</p>',
+      '<li data-changed-policy="synthetic-terms"><p class="told-name"><bdi>Synthetic terms</bdi></p>',
+      '<li>Version: <bdi>3</bdi></li>', '<li>In force from: <bdi>Nov 24, 2026</bdi></li>',
+      '<p><a href="/policies/synthetic-terms">Read what changed</a></p>',
+    ], 'the changed document');
+    none(seen.main, ['Synthetic privacy notice', 'Synthetic teacher terms', 'data-changed="2"'], 'the changed documents');
+    // It is the first thing on the page, above what is coming up.
+    assert.ok(seen.main.indexOf('data-changed="1"') < seen.main.indexOf('<h2>Coming up</h2>'), 'the changed document is not listed first');
+    // It is not a kept message: it is not counted as unread and has no mark.
+    assert.equal(seen.main.split('data-message=').length - 1, CENTRE.recent.length);
+
+    // In Arabic: the page's words in Arabic, the owner's title as written and marked.
+    seen = await get('/notifications', 'ar');
+    has(seen.main, ['<h2>وثائق تغيّرت</h2>', '<bdi lang="en" dir="ltr">Synthetic terms</bdi>', '<li>الإصدار: <bdi>3</bdi></li>', '<a href="/policies/synthetic-terms">اقرأ ما تغيّر</a>',
+      'وافقت على إصدار سابق من كل وثيقة من هذه، وتلك الموافقة محفوظة. الإصدار الجديد لا يُعدّ موافَقًا عليه حتى توافق عليه في صفحته.'], 'the changed document in Arabic');
+    none(seen.main, ['Documents that have changed', 'Read what changed', 'Version:', 'In force from'], 'the changed document in Arabic');
+
+    // The messages could not be read: the changed document is still said.
+    centre = 'broken';
+    seen = await get('/notifications');
+    has(seen.main, ['data-centre="unread"', 'data-changed="1"', 'Synthetic terms'], 'the page with the messages unread');
+    centre = 'ok';
+
+    // Nothing changed, and an answer that is not a standing: no section.
+    standing = { acceptanceRequired: [owed('synthetic-teaching', 'Synthetic teacher terms', 1, null)], outstanding: 1, history: [] };
+    none((await get('/notifications')).main, ['data-changed'], 'a new account');
+    standing = { SYNTHETIC: 'not a standing' };
+    none((await get('/notifications')).main, ['data-changed', 'not a standing'], 'an answer that is not a standing');
+    standing = NOTHING_OWED;
+  }
+  console.log('Notifications, documents that changed: listed first, one for each document agreed to before whose version in force is not; not one agreed to as it stands and not one never agreed to; the owner’s title as written; in Arabic; still said when the messages are unread; left out when it could not be read, with the rest of the page whole.');
 
   // ============================================================== the routes
   {

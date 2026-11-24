@@ -14,6 +14,7 @@ import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
 import { JsonLdScript } from './_shared/json-ld';
 import { BrandMark } from './_shared/brand-mark';
 import { MastheadActions } from './_shared/masthead-actions';
+import { PolicyNotice } from './_shared/policy-notice';
 import { NavLink } from './_shared/nav-link';
 import './globals.css';
 
@@ -112,6 +113,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const t = translator(code);
   const locale = localeByCode(code);
   const readingLabel = languageShownFor(code, 'account');
+  // The notice about changed documents is in the language the policy pages
+  // are in for this reader: theirs, or English marked as English.
+  const policyShown = languageShownFor(code, 'policy');
+  const policyWords = translator(policyShown.code);
 
   return (
     <html lang={code} dir={directionOf(code)}>
@@ -171,6 +176,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             {children}
           </I18nProvider>
         </main>
+
+        {/* Draws nothing until somebody signed in has a document that changed
+            since they agreed to it, asked once each time the application is
+            opened: see `_shared/policy-notice.tsx`. */}
+        <PolicyNotice
+          locale={code}
+          words={{
+            changed: policyWords('policy.noticeChanged'),
+            open: policyWords('policy.noticeOpen'),
+            dismiss: policyWords('policy.noticeDismiss'),
+          }}
+          {...(policyShown.code !== code ? { lang: policyShown.code, dir: policyShown.dir } : {})}
+        />
 
         <footer>
           <div className="container">

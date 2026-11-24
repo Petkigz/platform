@@ -2265,6 +2265,10 @@ export const en = {
   'notify.mClass': 'The class: {title}',
   'notify.mWasAt': 'It was to start on: {date}',
   'notify.mHeldAt': 'The class was on: {date}',
+  // The same thing on the notifications page: a section, not a kept message.
+  'notify.policyHead': 'Documents that have changed',
+  'notify.policyLead':
+    'You agreed to an earlier version of each of these, and that agreement is kept. The new version is not agreed to until you say so on its page.',
 
   // The plans page and the page a plan is paid for on (`plans.ts`), for the
   // same twenty-seven languages as the dashboard, 2026-11-23. A price is
@@ -2421,6 +2425,11 @@ export const en = {
   'policy.agreeFailed': 'Your agreement could not be recorded. Nothing was changed.',
   'policy.agreeUnsure':
     'We could not confirm that your agreement was recorded. Open this page again to see.',
+  // The notice under every page that a document the reader agreed to has
+  // changed, asked for once each time the application is opened (2026-11-24).
+  'policy.noticeChanged': 'Documents that changed after you agreed to them: {count}',
+  'policy.noticeOpen': 'Read what changed',
+  'policy.noticeDismiss': 'Hide this notice',
 
   // The institution page a member opens, joining and leaving, and the counts
   // (`inst.ts`), for the same twenty-seven languages as the dashboard,

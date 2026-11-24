@@ -8765,6 +8765,85 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## A changed policy is told at the next opening, and agreeing names the version — **DECIDED 2026-11-24**
+
+The owner's word (2026-11-23, the fifth answer below) was that a change of
+policy is told at the next opening or by a notification, and that "if the app
+is open they wait until you close it and open again". Three things were built
+for it. Where the owner's words did not reach, the choice is the builder's
+and is marked.
+
+- *A notice, asked for once each time the application is opened.* Under every
+  page, for somebody signed in: "Documents that changed after you agreed to
+  them", how many, a link and a way to put it away. It asks
+  `GET /api/policies` on the first page of an opening, keeps the answer for
+  as long as the tab lives, and does not ask again. A version published an
+  hour into a session is therefore not announced on it. **An opening is a
+  tab** (the builder's reading): a new tab or window, or the application
+  started again, is an opening; moving between pages is not, and neither is
+  loading a page again. No timer looks again, and nothing looks again when
+  the window is returned to.
+- *Changed, not waiting.* The notice is about a document the reader agreed to
+  whose version in force is no longer the one they agreed to. A new account
+  owes every document and is told of no change: that is asked for where it
+  already was, on the document's page and on `/account`. Rejected: one
+  notice for both, which tells somebody on their first day that things have
+  changed.
+- *It can be put away, for those versions, on that device.* Putting it away
+  agrees to nothing and is not recorded by the database. The next change to
+  the same document is told again. Rejected: bringing it back at every
+  opening until they agree, which is the owner's to ask for if wanted; the
+  document's page, `/account` and `/notifications` go on saying it.
+- *Where it sits.* Between the page and the footer, held to the bottom of
+  the window. It arrives after the page is drawn; above the page it would
+  push everything down under a finger already on its way.
+- *The notifications page lists each one, first.* Read from what the
+  database holds at that moment (`my_policy_standing()`), like the two
+  reminders: there for as long as it is true, gone once they agree. **It is
+  not a kept message** (the builder's choice): it cannot be marked read, it
+  is not counted as unread, it is not in the export, and nothing would send
+  it by email or to a phone if delivery existed. Rejected: writing one row
+  for each person when the owner publishes, which is as many writes as there
+  are accounts inside the owner's own transaction, each stale the moment its
+  reader agrees.
+- *The layout still knows nobody.* Who is signed in is the one question the
+  masthead already asked after the page is drawn; the notice waits for the
+  same answer, so a visitor costs no request.
+- *Agreeing names the version, and the database compares it.* Migration
+  `20261281149000_policy_version_shown.sql` adds
+  `accept_policy(p_slug, p_version)`. It holds the version in force, refuses
+  with `policy:changed` when that is not the number sent, and only then
+  records. The route used to read the live version first and compare the
+  two itself, which left the moment between its read and the write; it now
+  reads nothing first. This is the builder's reading of the owner's rule,
+  said to the owner on 2026-11-23 and not corrected: an agreement to a text
+  nobody was shown is a record of something that did not happen. **A new
+  version does reach an open page in exactly one case:** its reader pressed
+  the button under the old one. Nothing is recorded, the page says the
+  document changed, and it is read again.
+- *A number is compared and never looked up.* A caller cannot agree to a
+  retired version by naming it. `accept_policy(p_slug)` is left as it was.
+- *Two at the same instant, by PostgreSQL's rules and not by a test.* If the
+  reader's press gets there first, the owner's publishing waits for it and
+  the agreement is to the version that was in force when it was recorded.
+  If the owner's publishing gets there first, the writer waits for it and
+  then finds, by the picture it started with, no version in force: it
+  answers `policy:not_in_force` and not `policy:changed`. Nothing is
+  recorded, and the reader is told the same sentence and shown the page
+  again, because those two reasons share one. The suites run on one
+  connection and cannot race two; this is read from the function and from
+  how a row lock is waited for, and has not been observed.
+- *A read that fails is not "nothing changed".* The route answers
+  `changed: null`; the notice keeps nothing and asks again on the next page.
+  It is not an error status, because it is asked in the background of a page
+  that is fine.
+- *Not done.* The two migrations are not on the hosted test project. The
+  document itself is still English in every language. Nothing tells the
+  owner how many accounts have yet to agree to a new version beyond the
+  count `/admin/policies` already shows. A device that keeps nothing (private
+  browsing with storage off) asks on every page and cannot put the notice
+  away for good.
+
 ## A notification is kept as what it is made of — **DECIDED 2026-11-24**
 
 The owner's word was "translate the notifications". A message could not be
@@ -8815,7 +8894,9 @@ which.
 - *Not done.* The migration is not on the hosted test project. The two
   reminders are untouched: a plan's name is still taken off the end of an
   English title. The export does not carry the facts. Telling somebody that a
-  policy has a new version is not a kind of message yet.
+  policy has a new version is not a kind of message. (It was built later the
+  same day as a section of the page read from what is true now, not as a
+  kept message: see the entry above.)
 
 ## Five answers from the owner — **DECIDED 2026-11-23**
 
@@ -8856,6 +8937,8 @@ The words in quotation marks are the owner's.
    refuse to record an agreement to a version the reader was not shown,
    because that is a record of something that did not happen; the page then
    shows the new version only because the reader pressed a button on it.
+   **Built on 2026-11-24:** see "A changed policy is told at the next
+   opening, and agreeing names the version".
 
 ## The plans page says the specifics again — **DECIDED 2026-11-23**
 
@@ -9023,6 +9106,11 @@ be changed.
   page has been read again. **Closing the gap needs `accept_policy()` to take
   the expected version number and refuse inside its own transaction. That is
   a migration, so it was not done here.**
+  **Closed on 2026-11-24** by migration
+  `20261281149000_policy_version_shown.sql`: the writer takes the number and
+  compares it, the route reads nothing first, and `changed` is the writer's
+  answer. The writer now raises five sentences; the names a reader can be
+  told are still the same seven.
 - *A refusal has a name; the database's sentence goes to the log.* The writer
   raises three sentences (`policy:not_signed_in`, `policy:not_found`,
   `policy:not_in_force`); with `malformed`, `changed`, `refused` and

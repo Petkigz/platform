@@ -1586,6 +1586,30 @@ textarea { resize: vertical; min-height: 4rem; }
 .policy-accept { display: grid; gap: 0.6rem; justify-items: start; }
 .policy-accept > .notice { justify-self: stretch; }
 .policy-agreed { font-weight: 600; }
+
+/* The notice that a document the reader agreed to has changed. It arrives
+   after the page is drawn, so it sits between the page and the footer and
+   holds to the bottom of the window: nothing above it moves. */
+.policy-notice {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 2rem;
+  padding: 0.6rem 0;
+  background: var(--surface);
+  border-top: 2px solid var(--green-600);
+  box-shadow: 0 -6px 16px rgba(16, 40, 28, 0.08);
+}
+.policy-notice + footer { margin-top: 0; }
+.policy-notice-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; }
+.policy-notice p { margin: 0; flex: 1 1 14rem; min-width: 0; font-size: 0.95rem; font-weight: 600; overflow-wrap: anywhere; }
+.policy-notice-ways { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; }
+/* It holds to the window, so it is kept short: the buttons are as wide as
+   their words and sit side by side while there is room. */
+.policy-notice-ways .btn { width: auto; margin: 0; padding: 0.42rem 0.7rem; font-size: 0.9rem; }
+/* Something reached with the keyboard is not left underneath it. */
+html:has(.policy-notice) { scroll-padding-bottom: 8rem; }
+.told-changed-facts { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0; padding: 0; list-style: none; color: var(--muted); }
 .policy-kept, .policy-concern { margin-top: 1.5rem; }
 .policy-ways { margin-top: 1rem; }
 

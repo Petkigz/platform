@@ -76,6 +76,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'تغيّرت هذه الوثيقة بعد فتح هذه الصفحة، فلم يُسجّل شيء. اقرأها من جديد قبل أن توافق.',
     'policy.agreeFailed': 'تعذّر تسجيل موافقتك. لم يتغيّر شيء.',
     'policy.agreeUnsure': 'لم نتمكّن من التأكّد من تسجيل موافقتك. افتح هذه الصفحة من جديد لترى.',
+    'policy.noticeChanged': 'وثائق تغيّرت بعد موافقتك عليها: {count}',
+    'policy.noticeOpen': 'اقرأ ما تغيّر',
+    'policy.noticeDismiss': 'أخفِ هذا التنبيه',
   },
   ur: {
     'policy.lede':
@@ -123,6 +126,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'آپ کی رضامندی درج نہیں ہو سکی۔ کچھ نہیں بدلا۔',
     'policy.agreeUnsure':
       'ہم تصدیق نہیں کر سکے کہ آپ کی رضامندی درج ہوئی۔ دیکھنے کے لیے یہ صفحہ دوبارہ کھولیں۔',
+    'policy.noticeChanged': 'آپ کے اتفاق کے بعد بدلنے والی دستاویزات: {count}',
+    'policy.noticeOpen': 'پڑھیں کہ کیا بدلا',
+    'policy.noticeDismiss': 'یہ اطلاع چھپائیں',
   },
   fa: {
     'policy.lede':
@@ -170,6 +176,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'ثبت موافقت شما ممکن نشد. چیزی تغییر نکرد.',
     'policy.agreeUnsure':
       'نتوانستیم تأیید کنیم که موافقت شما ثبت شده است. برای دیدن، این صفحه را دوباره باز کنید.',
+    'policy.noticeChanged': 'سندهایی که پس از موافقت شما تغییر کرده‌اند: {count}',
+    'policy.noticeOpen': 'ببینید چه تغییر کرده است',
+    'policy.noticeDismiss': 'این اعلان را پنهان کنید',
   },
   'fa-af': {
     'policy.lede':
@@ -216,6 +225,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'ثبت موافقت شما ممکن نشد. چیزی تغییر نکرد.',
     'policy.agreeUnsure':
       'نتوانستیم تأیید کنیم که موافقت شما ثبت شده است. برای دیدن، این صفحه را دوباره باز کنید.',
+    'policy.noticeChanged': 'سندهایی که پس از موافقت شما تغییر کرده‌اند: {count}',
+    'policy.noticeOpen': 'ببینید چه چیز تغییر کرده است',
+    'policy.noticeDismiss': 'این اطلاعیه را پنهان کنید',
   },
   tr: {
     'policy.lede':
@@ -262,6 +274,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Onayınız kaydedilemedi. Hiçbir şey değişmedi.',
     'policy.agreeUnsure':
       'Onayınızın kaydedildiğini doğrulayamadık. Görmek için bu sayfayı yeniden açın.',
+    'policy.noticeChanged': 'Onayınızdan sonra değişen belgeler: {count}',
+    'policy.noticeOpen': 'Neyin değiştiğini okuyun',
+    'policy.noticeDismiss': 'Bu bildirimi gizle',
   },
   id: {
     'policy.lede':
@@ -308,6 +323,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Persetujuan Anda tidak dapat dicatat. Tidak ada yang berubah.',
     'policy.agreeUnsure':
       'Kami tidak dapat memastikan bahwa persetujuan Anda tercatat. Buka halaman ini lagi untuk melihatnya.',
+    'policy.noticeChanged': 'Dokumen yang berubah setelah Anda menyetujuinya: {count}',
+    'policy.noticeOpen': 'Baca apa yang berubah',
+    'policy.noticeDismiss': 'Sembunyikan pemberitahuan ini',
   },
   ms: {
     'policy.lede':
@@ -354,6 +372,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Persetujuan anda tidak dapat direkodkan. Tiada apa-apa yang berubah.',
     'policy.agreeUnsure':
       'Kami tidak dapat mengesahkan bahawa persetujuan anda telah direkodkan. Buka halaman ini semula untuk melihatnya.',
+    'policy.noticeChanged': 'Dokumen yang berubah selepas anda bersetuju dengannya: {count}',
+    'policy.noticeOpen': 'Baca apa yang berubah',
+    'policy.noticeDismiss': 'Sembunyikan notis ini',
   },
   bn: {
     'policy.lede':
@@ -401,6 +422,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'আপনার সম্মতি লেখা যায়নি। কিছুই বদলায়নি।',
     'policy.agreeUnsure':
       'আপনার সম্মতি লেখা হয়েছে কি না আমরা নিশ্চিত করতে পারিনি। দেখতে এই পাতা আবার খুলুন।',
+    'policy.noticeChanged': 'আপনার সম্মতির পরে বদলে যাওয়া নথি: {count}',
+    'policy.noticeOpen': 'কী বদলেছে পড়ুন',
+    'policy.noticeDismiss': 'এই বিজ্ঞপ্তি লুকান',
   },
   hi: {
     'policy.lede':
@@ -447,6 +471,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'आपकी सहमति दर्ज नहीं हो सकी। कुछ नहीं बदला।',
     'policy.agreeUnsure':
       'हम पुष्टि नहीं कर सके कि आपकी सहमति दर्ज हुई। देखने के लिए यह पृष्ठ फिर खोलें।',
+    'policy.noticeChanged': 'आपकी सहमति के बाद बदले दस्तावेज़: {count}',
+    'policy.noticeOpen': 'पढ़ें कि क्या बदला',
+    'policy.noticeDismiss': 'यह सूचना छिपाएँ',
   },
   fr: {
     'policy.lede':
@@ -494,6 +521,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Votre accord n’a pas pu être enregistré. Rien n’a été modifié.',
     'policy.agreeUnsure':
       'Nous n’avons pas pu confirmer que votre accord a été enregistré. Rouvrez cette page pour le voir.',
+    'policy.noticeChanged': 'Documents modifiés après votre accord : {count}',
+    'policy.noticeOpen': 'Lire ce qui a changé',
+    'policy.noticeDismiss': 'Masquer cet avis',
   },
   es: {
     'policy.lede':
@@ -540,6 +570,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'No se pudo registrar su conformidad. No se cambió nada.',
     'policy.agreeUnsure':
       'No pudimos confirmar que su conformidad quedó registrada. Abra esta página de nuevo para verlo.',
+    'policy.noticeChanged': 'Documentos que cambiaron después de su conformidad: {count}',
+    'policy.noticeOpen': 'Leer lo que cambió',
+    'policy.noticeDismiss': 'Ocultar este aviso',
   },
   pt: {
     'policy.lede':
@@ -587,6 +620,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Não foi possível registar a sua concordância. Nada foi alterado.',
     'policy.agreeUnsure':
       'Não conseguimos confirmar que a sua concordância ficou registada. Abra esta página de novo para ver.',
+    'policy.noticeChanged': 'Documentos que mudaram depois da sua concordância: {count}',
+    'policy.noticeOpen': 'Ler o que mudou',
+    'policy.noticeDismiss': 'Ocultar este aviso',
   },
   sw: {
     'policy.lede':
@@ -633,6 +669,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Ukubali wako haukuweza kurekodiwa. Hakuna kilichobadilika.',
     'policy.agreeUnsure':
       'Hatukuweza kuthibitisha kwamba ukubali wako ulirekodiwa. Fungua ukurasa huu tena ili kuona.',
+    'policy.noticeChanged': 'Hati zilizobadilika baada ya wewe kuzikubali: {count}',
+    'policy.noticeOpen': 'Soma kilichobadilika',
+    'policy.noticeDismiss': 'Ficha taarifa hii',
   },
   af: {
     'policy.lede':
@@ -680,6 +719,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Jou instemming kon nie aangeteken word nie. Niks is verander nie.',
     'policy.agreeUnsure':
       'Ons kon nie bevestig dat jou instemming aangeteken is nie. Maak hierdie bladsy weer oop om te sien.',
+    'policy.noticeChanged': 'Dokumente wat verander het nadat jy daartoe ingestem het: {count}',
+    'policy.noticeOpen': 'Lees wat verander het',
+    'policy.noticeDismiss': 'Versteek hierdie kennisgewing',
   },
   'zh-hans': {
     'policy.lede': '您在这里学习或教学时同意什么、您的数据如何处理，以及出现问题时会怎样。',
@@ -716,6 +758,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.whyChanged': '此文件在本页打开后发生了更改，因此没有记录任何内容。请重新阅读后再同意。',
     'policy.agreeFailed': '无法记录您的同意。没有任何更改。',
     'policy.agreeUnsure': '我们无法确认您的同意是否已记录。请重新打开本页查看。',
+    'policy.noticeChanged': '在您同意之后发生更改的文件：{count}',
+    'policy.noticeOpen': '阅读更改内容',
+    'policy.noticeDismiss': '隐藏此通知',
   },
   'zh-hant': {
     'policy.lede': '您在這裡學習或教學時同意什麼、您的資料如何處理，以及出現問題時會怎樣。',
@@ -752,6 +797,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.whyChanged': '此文件在本頁開啟後發生了變更，因此沒有記錄任何內容。請重新閱讀後再同意。',
     'policy.agreeFailed': '無法記錄您的同意。沒有任何變更。',
     'policy.agreeUnsure': '我們無法確認您的同意是否已記錄。請重新開啟本頁查看。',
+    'policy.noticeChanged': '在您同意之後發生變更的文件：{count}',
+    'policy.noticeOpen': '閱讀變更內容',
+    'policy.noticeDismiss': '隱藏此通知',
   },
   vi: {
     'policy.lede':
@@ -799,6 +847,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Không ghi nhận được sự đồng ý của bạn. Không có gì thay đổi.',
     'policy.agreeUnsure':
       'Chúng tôi chưa xác nhận được rằng sự đồng ý của bạn đã được ghi nhận. Hãy mở lại trang này để xem.',
+    'policy.noticeChanged': 'Văn bản đã thay đổi sau khi bạn đồng ý: {count}',
+    'policy.noticeOpen': 'Đọc những gì đã thay đổi',
+    'policy.noticeDismiss': 'Ẩn thông báo này',
   },
   th: {
     'policy.lede':
@@ -845,6 +896,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'บันทึกการยอมรับของคุณไม่ได้ ไม่มีอะไรเปลี่ยนแปลง',
     'policy.agreeUnsure':
       'เรายืนยันไม่ได้ว่าการยอมรับของคุณถูกบันทึกแล้ว โปรดเปิดหน้านี้อีกครั้งเพื่อดู',
+    'policy.noticeChanged': 'เอกสารที่เปลี่ยนไปหลังจากคุณยอมรับ: {count}',
+    'policy.noticeOpen': 'อ่านสิ่งที่เปลี่ยนไป',
+    'policy.noticeDismiss': 'ซ่อนประกาศนี้',
   },
   fil: {
     'policy.lede':
@@ -892,6 +946,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Hindi naitala ang pagsang-ayon mo. Walang nabago.',
     'policy.agreeUnsure':
       'Hindi namin matiyak na naitala ang pagsang-ayon mo. Buksang muli ang pahinang ito para makita.',
+    'policy.noticeChanged': 'Mga dokumentong nagbago matapos kang sumang-ayon: {count}',
+    'policy.noticeOpen': 'Basahin ang nagbago',
+    'policy.noticeDismiss': 'Itago ang abisong ito',
   },
   uz: {
     'policy.lede':
@@ -938,6 +995,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Roziligingizni qayd etib boʻlmadi. Hech narsa oʻzgarmadi.',
     'policy.agreeUnsure':
       'Roziligingiz qayd etilganini tasdiqlay olmadik. Koʻrish uchun bu sahifani qayta oching.',
+    'policy.noticeChanged': 'Roziligingizdan keyin oʻzgargan hujjatlar: {count}',
+    'policy.noticeOpen': 'Nima oʻzgarganini oʻqing',
+    'policy.noticeDismiss': 'Bu bildirishnomani yashirish',
   },
   kk: {
     'policy.lede':
@@ -984,6 +1044,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Келісіміңізді тіркеу мүмкін болмады. Ештеңе өзгерген жоқ.',
     'policy.agreeUnsure':
       'Келісіміңіздің тіркелгенін растай алмадық. Көру үшін бұл бетті қайта ашыңыз.',
+    'policy.noticeChanged': 'Келісіміңізден кейін өзгерген құжаттар: {count}',
+    'policy.noticeOpen': 'Не өзгергенін оқыңыз',
+    'policy.noticeDismiss': 'Бұл хабарламаны жасыру',
   },
   az: {
     'policy.lede':
@@ -1030,6 +1093,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Razılığınızı qeyd etmək mümkün olmadı. Heç nə dəyişmədi.',
     'policy.agreeUnsure':
       'Razılığınızın qeyd edildiyini təsdiqləyə bilmədik. Görmək üçün bu səhifəni yenidən açın.',
+    'policy.noticeChanged': 'Razılığınızdan sonra dəyişən sənədlər: {count}',
+    'policy.noticeOpen': 'Nəyin dəyişdiyini oxuyun',
+    'policy.noticeDismiss': 'Bu bildirişi gizlət',
   },
   tg: {
     'policy.lede':
@@ -1077,6 +1143,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Розигии шуморо сабт кардан муяссар нашуд. Ҳеҷ чиз тағйир наёфт.',
     'policy.agreeUnsure':
       'Мо тасдиқ карда натавонистем, ки розигии шумо сабт шудааст. Барои дидан ин саҳифаро дубора кушоед.',
+    'policy.noticeChanged': 'Ҳуҷҷатҳое, ки пас аз розигии шумо тағйир ёфтанд: {count}',
+    'policy.noticeOpen': 'Хонед, ки чӣ тағйир ёфт',
+    'policy.noticeDismiss': 'Ин огоҳиномаро пинҳон кунед',
   },
   ky: {
     'policy.lede':
@@ -1123,6 +1192,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Макулдугуңузду каттоо мүмкүн болгон жок. Эч нерсе өзгөргөн жок.',
     'policy.agreeUnsure':
       'Макулдугуңуз катталганын ырастай алган жокпуз. Көрүү үчүн бул баракты кайра ачыңыз.',
+    'policy.noticeChanged': 'Макулдугуңуздан кийин өзгөргөн документтер: {count}',
+    'policy.noticeOpen': 'Эмне өзгөргөнүн окуңуз',
+    'policy.noticeDismiss': 'Бул билдирүүнү жашыруу',
   },
   tk: {
     'policy.lede':
@@ -1169,6 +1241,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'Razylygyňyzy ýazga alyp bolmady. Hiç zat üýtgemedi.',
     'policy.agreeUnsure':
       'Razylygyňyzyň ýazga alnandygyny tassyklap bilmedik. Görmek üçin bu sahypany täzeden açyň.',
+    'policy.noticeChanged': 'Razylygyňyzdan soň üýtgän resminamalar: {count}',
+    'policy.noticeOpen': 'Nämäniň üýtgänini okaň',
+    'policy.noticeDismiss': 'Bu habarnamany gizle',
   },
   ta: {
     'policy.lede':
@@ -1216,6 +1291,9 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'உங்கள் ஒப்புதலைப் பதிவு செய்ய முடியவில்லை. எதுவும் மாறவில்லை.',
     'policy.agreeUnsure':
       'உங்கள் ஒப்புதல் பதிவானதா என்பதை எங்களால் உறுதிப்படுத்த முடியவில்லை. பார்க்க இந்தப் பக்கத்தை மீண்டும் திறக்கவும்.',
+    'policy.noticeChanged': 'நீங்கள் ஒப்புக்கொண்ட பிறகு மாறிய ஆவணங்கள்: {count}',
+    'policy.noticeOpen': 'என்ன மாறியது என்பதைப் படிக்கவும்',
+    'policy.noticeDismiss': 'இந்த அறிவிப்பை மறை',
   },
   ne: {
     'policy.lede':
@@ -1262,5 +1340,8 @@ export const POLICY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'policy.agreeFailed': 'तपाईंको सहमति अभिलेख गर्न सकिएन। केही बदलिएन।',
     'policy.agreeUnsure':
       'तपाईंको सहमति अभिलेख भएको हामीले पुष्टि गर्न सकेनौं। हेर्न यो पृष्ठ फेरि खोल्नुहोस्।',
+    'policy.noticeChanged': 'तपाईं सहमत भएपछि बदलिएका कागजात: {count}',
+    'policy.noticeOpen': 'के बदलियो पढ्नुहोस्',
+    'policy.noticeDismiss': 'यो सूचना लुकाउनुहोस्',
   },
 };

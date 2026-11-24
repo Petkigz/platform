@@ -459,12 +459,14 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // (Eighty-five and eighty-one since 2026-11-18: one sentence for asking
   // too often, and two on the buy page about which country a number is read
   // as one of and which currency a service collects.)
-  assert.equal(unwrittenKeys.length, 1592);
+  // (Fifty-four and thirty-six since 2026-11-24: telling a reader that a
+  // document they agreed to has changed.)
+  assert.equal(unwrittenKeys.length, 1597);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('receipt.')).length, 18);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 52);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 54);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 42);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('subs.')).length, 34);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('policy.')).length, 33);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('policy.')).length, 36);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('inst.')).length, 45);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('tapply.')).length, 35);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('billing.')).length, 37);
@@ -627,7 +629,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1864);
+    assert.equal(coverageOf(code).total, 1869);
     assert.equal(coverageOf(code).percent, 10, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

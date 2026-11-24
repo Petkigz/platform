@@ -11,9 +11,12 @@
 // that a register or a document that could not be read is said as unread at
 // status 200 and is neither "no policies" nor a broken page; that a draft is
 // never shown; that the button asks the route and not the database; that the
-// route refuses when the live version is not the one the page showed and
-// asks the writer nothing; the name and status the route gives each of the
-// writer's refusals; and that the database's own sentences reach nobody. The
+// route sends the writer the version the page showed and reads nothing
+// first; the name and status the route gives each of the writer's refusals,
+// "changed" among them; that the database's own sentences reach nobody; and
+// that the notice about a changed document is asked for once an opening, by
+// somebody signed in, and is put away for those versions. The stand-in's
+// writer compares the version the way the real one does. The
 // expected sentences are typed here rather than imported, so this fails if a
 // catalogue changes without anybody looking at the page.
 import assert from 'node:assert/strict';
@@ -62,13 +65,15 @@ const fresh = () => ({
   },
   // When this account agreed to the live version, by slug.
   agreed: {},
+  // What this account agreed to before: [slug, version].
+  history: [],
   // Paths that answer with a database error.
   broken: new Set(),
   // Paths that answer with something that is not what was asked for.
   nonsense: new Set(),
   // What the writer answers: 'ok', or [status, body].
   accept: 'ok',
-  // The owner publishes this version of the terms at the moment the writer is asked.
+  // The owner publishes this version of the terms just before the writer runs.
   publishDuringWrite: null,
   // How long the writer takes.
   delay: 0,
@@ -112,7 +117,7 @@ const fake = createServer(async (req, res) => {
     send({
       acceptanceRequired: required.map((d) => ({ slug: d.slug, title: d.title, versionNumber: state.live[d.slug].versionNumber, effectiveAt: state.live[d.slug].effectiveAt, acceptedAt: state.agreed[d.slug] ?? null })),
       outstanding: required.filter((d) => !state.agreed[d.slug]).length,
-      history: [],
+      history: state.history.map(([slug, versionNumber]) => ({ slug, title: state.documents.find((d) => d.slug === slug)?.title ?? slug, versionNumber, acceptedAt: '2026-10-29T08:00:00+00:00' })),
     });
   }
   else if (path === '/rest/v1/rpc/accept_policy') {
@@ -120,11 +125,14 @@ const fake = createServer(async (req, res) => {
     if (state.accept === 'ok') {
       const slug = payload.p_slug;
       if (state.publishDuringWrite !== null) {
-        // A new version went into force between the route's read and this write.
+        // A new version went into force after the page was sent and before this write.
         state.live[slug] = { ...state.live[slug], versionNumber: state.publishDuringWrite, body: 'Synthetic newer paragraph.' };
         state.agreed = {};
         state.publishDuringWrite = null;
       }
+      // The writer's own rules, as migration 20261281149000 has them.
+      if (!state.live[slug]) { res.writeHead(400); send({ code: '23514', message: 'policy:not_in_force', details: null, hint: null }); return; }
+      if (state.live[slug].versionNumber !== payload.p_version) { res.writeHead(400); send({ code: '23514', message: 'policy:changed', details: null, hint: 'the version in force is not the one that was read' }); return; }
       // What the writer would leave behind, so the page read again shows it.
       const already = Boolean(state.agreed[slug]);
       if (!already) state.agreed[slug] = AGREED_AT;
@@ -418,17 +426,19 @@ try {
   }
   assert.equal(calls.filter((c) => c.path.startsWith('/rest/v1/rpc/policy_page') || c.path.startsWith('/rest/v1/rpc/accept_policy')).length, 0, 'a wrong shape still reached the database');
 
-  // The page showed version 2 and version 3 is live: nothing is asked of the writer.
+  // The page showed version 2 and version 3 is live: the writer is told which
+  // version was read, refuses, and nothing is recorded. Nothing is read first.
   calls.length = 0;
   expect(await send({ slug: TERMS, version: 2 }), 409, 'changed', 'an older version than the live one');
   expect(await send({ slug: TERMS, version: 4 }), 409, 'changed', 'a version that is not live');
-  assert.equal(rpcs('policy_page').length, 2);
-  assert.equal(rpcs('accept_policy').length, 0, 'the writer was asked to agree to a version the page did not show');
+  assert.equal(rpcs('policy_page').length, 0, 'the route read the live version itself before asking the writer');
+  assert.deepEqual(rpcs('accept_policy').map((c) => c.payload), [{ p_slug: TERMS, p_version: 2 }, { p_slug: TERMS, p_version: 4 }]);
   assert.deepEqual(state.agreed, {});
-  // The live version could not be read: nothing is asked of the writer either.
-  state.broken = new Set(['/rest/v1/rpc/policy_page']);
-  expect(await send(ask), 500, 'refused', 'the live version unread');
-  assert.equal(rpcs('accept_policy').length, 0);
+  // The writer's own sentence for it, however it arrives.
+  state.accept = refusal(400, '23514', 'policy:changed');
+  expect(await send(ask), 409, 'changed', 'policy:changed');
+  state.accept = refusal(400, '22023', 'policy:version_required');
+  expect(await send(ask), 400, 'malformed', 'policy:version_required');
   state = fresh();
 
   // The writer's three sentences, each by name and status.
@@ -437,7 +447,7 @@ try {
     expect(await send(ask), status, reason, sentence);
   }
   // No live version at all is the writer's to refuse: it knows whether the document exists.
-  state = fresh(); delete state.live[TERMS]; state.accept = refusal(400, '23514', 'policy:not_in_force');
+  state = fresh(); delete state.live[TERMS];
   calls.length = 0;
   expect(await send(ask), 409, 'not_in_force', 'a document with no live version');
   assert.equal(rpcs('accept_policy').length, 1);
@@ -450,22 +460,52 @@ try {
   // An answer that does not say what was agreed to is not a success.
   state.accept = [200, { SYNTHETIC: true }];
   expect(await send(ask), 502, 'unconfirmed', 'an answer with no version in it');
+  // An answer for a version that was not the one sent is not passed on as agreed.
+  state.accept = [200, { slug: TERMS, versionNumber: 4, acceptedAt: AGREED_AT, already: false }];
+  expect(await send(ask), 502, 'unconfirmed', 'an answer for another version');
   state = fresh();
 
   // Agreed: the version and the time. A second press changed nothing, and says the first time.
   calls.length = 0;
   let answer = await send(ask);
   assert.equal(answer.status, 200); assert.deepEqual(answer.json, { ok: true, changed: true, version: 3, acceptedAt: AGREED_AT });
-  assert.deepEqual(rpcs('accept_policy').map((c) => c.payload), [{ p_slug: TERMS }]);
+  assert.deepEqual(rpcs('accept_policy').map((c) => c.payload), [{ p_slug: TERMS, p_version: 3 }]);
   answer = await send(ask);
   assert.equal(answer.status, 200); assert.deepEqual(answer.json, { ok: true, changed: false, version: 3, acceptedAt: AGREED_AT });
   state = fresh();
-  // The owner publishes between the route's read and the write: the reply says which version it was.
+  // The owner publishes after the page was sent and before the writer runs:
+  // refused, and nothing recorded for either version.
   state.publishDuringWrite = 4;
-  answer = await send(ask);
-  assert.equal(answer.status, 200); assert.deepEqual(answer.json, { ok: true, changed: true, version: 4, acceptedAt: AGREED_AT });
+  expect(await send(ask), 409, 'changed', 'published just before the write');
+  assert.deepEqual(state.agreed, {});
   state = fresh();
-  console.log('Policies route: signed out and eight wrong shapes reach no writer; a version that is not the live one is refused with the writer not asked; each of the writer’s three sentences answered by name and status with nothing of the database’s in the reply; an unnamed refusal 500, no answer or no version in it 502; a second press is a success that changed nothing.');
+
+  // What the notice is told. A visitor costs no query.
+  const notice = async (headers = { cookie }) => {
+    const response = await fetch(`${origin}/api/policies`, { headers, signal: AbortSignal.timeout(90000) });
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const text = await response.text();
+    assert.equal(text.includes('SYNTHETIC'), false, `the notice was told something that is not a slug or a number: ${text}`);
+    return { status: response.status, json: JSON.parse(text) };
+  };
+  calls.length = 0;
+  assert.deepEqual(await notice({}), { status: 200, json: { signedIn: false } });
+  assert.equal(calls.length, 0, 'something was read for a visitor');
+  // Signed in and never agreed to anything: the terms are waiting, and nothing changed.
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [] } });
+  // Agreed to version 2, and version 3 is in force: changed. A slug and a number, and no title.
+  state.history = [[TERMS, 2]];
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [{ slug: TERMS, version: 3 }] } });
+  // Agreed to version 3 as well: nothing to tell.
+  state.agreed[TERMS] = AGREED_AT;
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [] } });
+  // Not read is not "nothing changed", and is not an error status on a page that is fine.
+  state = fresh(); state.broken = new Set(['/rest/v1/rpc/my_policy_standing']);
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: null } });
+  state = fresh(); state.nonsense = new Set(['/rest/v1/rpc/my_policy_standing']);
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: null } });
+  state = fresh();
+  console.log('Policies route: signed out and eight wrong shapes reach no writer; a version that is not the live one is refused with nothing recorded; each of the writer’s three sentences answered by name and status with nothing of the database’s in the reply; an unnamed refusal 500, no answer or no version in it 502; a second press is a success that changed nothing.');
 
   // ----------------------------------------------------------- in a browser
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
@@ -478,11 +518,13 @@ try {
       const errors = []; tab.on('pageerror', (e) => errors.push(String(e)));
       // A refused request is said on the console, and this script refuses on purpose.
       tab.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 400)); });
-      const sent = []; tab.on('request', (r) => { if (r.url().includes('/api/policies')) sent.push(r.postDataJSON()); });
+      const sent = []; tab.on('request', (r) => { if (r.url().includes('/api/policies') && r.method() === 'POST') sent.push(r.postDataJSON()); });
+      // How many times the notice asked what changed.
+      const asked = []; tab.on('request', (r) => { if (r.url().endsWith('/api/policies') && r.method() === 'GET') asked.push(r.url()); });
       // Nothing in the browser may talk to the database itself any more.
       const direct = []; tab.on('request', (r) => { if (r.url().includes('/rest/v1/') || r.url().includes('/auth/v1/')) direct.push(r.url()); });
       await tab.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
-      return { context, tab, errors, sent, direct };
+      return { context, tab, errors, sent, direct, asked };
     };
     const shot = async (tab, name) => { if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/${name}.png`, fullPage: true }); };
     const fits = (tab) => tab.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -555,8 +597,9 @@ try {
       await tab.locator('[data-policy-version="4"]').waitFor();
       await tab.getByText('Synthetic newer paragraph.').waitFor();
       assert.deepEqual(sent, [{ slug: TERMS, version: 3 }]);
-      assert.equal(rpcs('accept_policy').length, 0, 'an agreement was recorded for a version the reader had not been shown');
-      assert.deepEqual(state.agreed, {});
+      // The writer was told which version the page showed, and refused.
+      assert.deepEqual(rpcs('accept_policy').map((c) => c.payload), [{ p_slug: TERMS, p_version: 3 }]);
+      assert.deepEqual(state.agreed, {}, 'an agreement was recorded for a version the reader had not been shown');
       await shot(tab, 'policy-ar-390-changed');
 
       // Pressed twice while the writer works: one request, and it says when.
@@ -578,25 +621,171 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
     }
-    // The owner publishes between the route's read and the write: it was
-    // recorded for a version the reader had not been shown, and the page says so.
+    // The owner publishes after the page was sent and just before the writer
+    // runs. Nothing is recorded for either version; the page says the
+    // document changed, is read again and shows the new one, and only a
+    // second press under that text records an agreement, to that version.
     {
       state = fresh(); state.publishDuringWrite = 4;
-      const { context, tab, errors } = await visit(`/policies/${TERMS}`, 'ar', 390);
+      const { context, tab, errors, sent } = await visit(`/policies/${TERMS}`, 'ar', 390);
       const box = tab.locator('.policy-agree');
-      await box.getByRole('button', { name: 'أوافق على هذا الإصدار', exact: true }).click();
-      await box.locator('[data-policy-newer]').filter({ hasText: 'نُشر إصدار أحدث أثناء فتح هذه الصفحة، وسُجّلت موافقتك عليه هو. هذه الصفحة تعرضه الآن. اقرأه.' }).waitFor();
-      // It stays said after the page has been read again and shows that version.
+      const agree = box.getByRole('button', { name: 'أوافق على هذا الإصدار', exact: true });
+      calls.length = 0;
+      await agree.click();
+      await box.locator('[data-policy-refusal]').filter({ hasText: 'تغيّرت هذه الوثيقة بعد فتح هذه الصفحة، فلم يُسجّل شيء. اقرأها من جديد قبل أن توافق.' }).waitFor();
       await tab.locator('[data-policy-version="4"]').waitFor();
       await tab.getByText('Synthetic newer paragraph.').waitFor();
-      assert.equal(await box.locator('[data-policy-newer]').count(), 1, 'the page stopped saying the agreement was for a newer version');
+      assert.deepEqual(state.agreed, {}, 'an agreement was recorded for a version published after the page was sent');
+      assert.equal(await box.locator('[data-policy-newer]').count(), 0);
+      assert.equal(await agree.count(), 1, 'the button went away though nothing was agreed to');
+      await agree.click();
       await box.getByText(`وافقت على هذا الإصدار في: ${moment('ar', AGREED_AT)}`).waitFor();
+      assert.deepEqual(sent, [{ slug: TERMS, version: 3 }, { slug: TERMS, version: 4 }]);
+      assert.deepEqual(rpcs('accept_policy').map((c) => c.payload.p_version), [3, 4]);
       assert.ok(await fits(tab));
-      await shot(tab, 'policy-ar-390-newer');
+      await shot(tab, 'policy-ar-390-published-meanwhile');
       assert.deepEqual(errors, []);
       await context.close();
     }
-    console.log('Agreement button in Arabic at 390: four refusals said in Arabic with nothing of the database’s; a version published while the page was open records nothing and the page is read again; pressed twice, one request; agreed says when and leaves nothing to press; an agreement recorded for a newer version is said and stays said; the browser asked only this app.');
+    console.log('Agreement button in Arabic at 390: four refusals said in Arabic with nothing of the database’s; a version published while the page was open, or just before the writer ran, records nothing and the page is read again; pressed twice, one request; agreed says when and leaves no button.');
+
+    // ------------------------------------------------- the notice of a change
+    const NOTICE = '[data-policy-notice]';
+    const openTab = async (context, path) => {
+      const tab = await context.newPage();
+      const errors = []; tab.on('pageerror', (e) => errors.push(String(e)));
+      tab.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 400)); });
+      const asked = []; tab.on('request', (r) => { if (r.url().endsWith('/api/policies') && r.method() === 'GET') asked.push(r.url()); });
+      await tab.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
+      return { tab, errors, asked };
+    };
+    // A visitor: nothing is asked and nothing is drawn.
+    {
+      state = fresh(); state.history = [[TERMS, 2]];
+      const { context, tab, errors, asked } = await visit('/policies', 'en', 390, false);
+      assert.deepEqual(asked, [], 'the notice asked about a visitor');
+      assert.equal(await tab.locator(NOTICE).count(), 0);
+      assert.deepEqual(errors, []);
+      await context.close();
+    }
+    // Signed in, never agreed to anything: the terms are waiting, which is
+    // said on their page and on the account page. It is not a change.
+    {
+      state = fresh();
+      const { context, tab, errors, asked } = await visit('/policies', 'en', 390);
+      assert.equal(asked.length, 1);
+      assert.equal(await tab.locator(NOTICE).count(), 0, 'a new account was told a document had changed');
+      assert.deepEqual(errors, []);
+      await context.close();
+    }
+    // Agreed to version 2 of the terms; version 3 is in force.
+    {
+      state = fresh(); state.history = [[TERMS, 2]];
+      const { context, tab, errors, asked } = await visit('/policies', 'en', 390);
+      const notice = tab.locator(NOTICE);
+      await notice.waitFor();
+      assert.equal((await notice.locator('p').textContent()).trim(), 'Documents that changed after you agreed to them: 1');
+      assert.equal(await notice.getAttribute('role'), 'status');
+      assert.equal(await notice.getByRole('link', { name: 'Read what changed', exact: true }).getAttribute('href'), `/policies/${TERMS}`);
+      assert.equal(asked.length, 1);
+      // It is after the page and before the footer, and holds to the bottom
+      // of the window: nothing above it was moved to make room.
+      const place = await tab.evaluate(() => {
+        const box = document.querySelector('[data-policy-notice]');
+        const rect = box.getBoundingClientRect();
+        return { afterMain: box.previousElementSibling?.tagName, beforeFooter: box.nextElementSibling?.tagName, bottom: Math.round(rect.bottom), window: window.innerHeight, position: getComputedStyle(box).position };
+      });
+      assert.deepEqual({ ...place, bottom: place.bottom <= place.window }, { afterMain: 'MAIN', beforeFooter: 'FOOTER', bottom: true, window: 900, position: 'sticky' });
+      assert.ok(await fits(tab), 'the notice widens the page');
+      // It holds to the window, so it must stay short.
+      const tall = await notice.evaluate((el) => Math.round(el.getBoundingClientRect().height));
+      assert.ok(tall <= 160, `the notice takes ${tall}px of a 390 screen`);
+      if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/notice-en-390-window.png` });
+      await shot(tab, 'notice-en-390');
+
+      // Another page in the same opening: still told, and not asked again.
+      // Meanwhile the owner publishes a second document this reader had
+      // agreed to. It is not announced on a session that is already open.
+      state.live['synthetic-schools'] = { versionNumber: 2, effectiveAt: '2026-11-24', changeNote: 'Synthetic second change.', body: 'Synthetic school paragraph.' };
+      state.history = [[TERMS, 2], ['synthetic-schools', 1]];
+      await tab.goto(`${origin}/policies/${PRIVACY}`, { waitUntil: 'networkidle' });
+      await notice.waitFor();
+      assert.equal((await notice.locator('p').textContent()).trim(), 'Documents that changed after you agreed to them: 1', 'a version published during the session was announced on it');
+      assert.equal(asked.length, 1, 'the notice asked again within one opening');
+
+      // The next opening (a new tab) is told of both, and sent to the list of them.
+      const second = await openTab(context, '/policies');
+      const both = second.tab.locator(NOTICE);
+      await both.waitFor();
+      assert.equal((await both.locator('p').textContent()).trim(), 'Documents that changed after you agreed to them: 2');
+      assert.equal(await both.getByRole('link', { name: 'Read what changed', exact: true }).getAttribute('href'), '/notifications');
+      assert.equal(second.asked.length, 1);
+
+      // Agreeing to one, on its page, takes it out of the notice at once.
+      await second.tab.goto(`${origin}/policies/${TERMS}`, { waitUntil: 'networkidle' });
+      await second.tab.locator('.policy-agree').getByRole('button', { name: 'Agree to this version', exact: true }).click();
+      await second.tab.locator('[data-policy-accept="agreed"]').waitFor();
+      await both.locator('p').filter({ hasText: 'Documents that changed after you agreed to them: 1' }).waitFor();
+      assert.equal(await both.getByRole('link', { name: 'Read what changed', exact: true }).getAttribute('href'), '/policies/synthetic-schools');
+      assert.equal(second.asked.length, 1);
+
+      // Put away: gone, and it stays gone on the next page and at the next
+      // opening on this device. Nothing was agreed to by putting it away.
+      const before = JSON.stringify(state.agreed);
+      await both.getByRole('button', { name: 'Hide this notice', exact: true }).click();
+      await both.waitFor({ state: 'detached' });
+      await second.tab.goto(`${origin}/policies`, { waitUntil: 'networkidle' });
+      assert.equal(await both.count(), 0);
+      assert.equal(JSON.stringify(state.agreed), before, 'putting the notice away recorded an agreement');
+      const third = await openTab(context, '/policies');
+      assert.equal(third.asked.length, 1);
+      assert.equal(await third.tab.locator(NOTICE).count(), 0, 'a notice put away came back for the same version');
+      // The next change to that document is told again.
+      state.live['synthetic-schools'] = { ...state.live['synthetic-schools'], versionNumber: 3 };
+      const fourth = await openTab(context, '/policies');
+      await fourth.tab.locator(NOTICE).waitFor();
+      assert.equal((await fourth.tab.locator(`${NOTICE} p`).textContent()).trim(), 'Documents that changed after you agreed to them: 1');
+      for (const one of [errors, second.errors, third.errors, fourth.errors]) assert.deepEqual(one, []);
+      await context.close();
+    }
+    // What changed could not be read: nothing is drawn, nothing is kept, and the next page asks again.
+    {
+      state = fresh(); state.history = [[TERMS, 2]]; state.broken = new Set(['/rest/v1/rpc/my_policy_standing']);
+      const { context, tab, errors, asked } = await visit('/policies', 'en', 390);
+      assert.equal(asked.length, 1);
+      assert.equal(await tab.locator(NOTICE).count(), 0);
+      state.broken = new Set();
+      await tab.goto(`${origin}/policies`, { waitUntil: 'networkidle' });
+      await tab.locator(NOTICE).waitFor();
+      assert.equal(asked.length, 2, 'a read that failed was kept as "nothing changed"');
+      assert.deepEqual(errors, []);
+      await context.close();
+    }
+    // In Arabic at 320, and in English, marked, for a language held for review.
+    {
+      state = fresh(); state.history = [[TERMS, 2]];
+      let { context, tab, errors } = await visit('/policies', 'ar', 320);
+      const notice = tab.locator(NOTICE);
+      await notice.waitFor();
+      assert.equal((await notice.locator('p').textContent()).trim(), 'وثائق تغيّرت بعد موافقتك عليها: 1');
+      assert.equal(await notice.getByRole('link', { name: 'اقرأ ما تغيّر', exact: true }).count(), 1);
+      assert.equal(await notice.getByRole('button', { name: 'أخفِ هذا التنبيه', exact: true }).count(), 1);
+      assert.equal(await notice.evaluate((el) => getComputedStyle(el).direction), 'rtl');
+      assert.equal(await notice.getAttribute('lang'), null);
+      assert.ok(await fits(tab), 'the notice widens a 320 screen in Arabic');
+      if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/notice-ar-320-window.png` });
+      await shot(tab, 'notice-ar-320');
+      assert.deepEqual(errors, []);
+      await context.close();
+      ({ context, tab, errors } = await visit('/policies', 'ha', 390));
+      await tab.locator(NOTICE).waitFor();
+      assert.equal(await tab.locator(NOTICE).getAttribute('lang'), 'en');
+      assert.equal(await tab.locator(NOTICE).getAttribute('dir'), 'ltr');
+      assert.equal((await tab.locator(`${NOTICE} p`).textContent()).trim(), 'Documents that changed after you agreed to them: 1');
+      assert.deepEqual(errors, []);
+      await context.close();
+    }
+    console.log('Notice of a changed document: a visitor is not asked about; a new account is not told of a change; asked once an opening and not again on the next page; a version published during a session is not announced on it and is at the next opening; agreeing takes the document out; put away stays away for that version on this device and comes back for the next; a failed read is asked again; Arabic at 320 and English marked for a held language.');
   }
   console.log('Policies HTTP smoke passed. Not real Auth, RLS or the writer’s own rules; every document in it is invented.');
 } catch (e) { console.error(seen.logs.slice(-4000)); throw e; }

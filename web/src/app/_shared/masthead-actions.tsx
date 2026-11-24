@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import {
-  accountLabel, mastheadActions, NOBODY, parseSession,
+  accountLabel, mastheadActions, NOBODY,
   type MastheadLabels, type SessionSummary,
 } from '@/lib/session';
+
+import { sessionOnce } from './session-once';
 
 /**
  * The two buttons at the right of the masthead.
  *
  * They start signed out — which is what the server rendered, so hydration
- * agrees with the HTML — and ask `/api/session` once after mount. An answer that
+ * agrees with the HTML — and ask `/api/session` once after mount
+ * (`sessionOnce`, which the notice about changed documents shares). An answer that
  * arrives too late to apply, or a request that fails, leaves the header exactly
  * as it was: the worst outcome here is a header that is slightly stale, never
  * one that offers a signed-in learner a sign-in button again.
@@ -21,22 +24,14 @@ export function MastheadActions({ labels }: { labels?: MastheadLabels } = {}) {
   const [session, setSession] = useState<SessionSummary>(NOBODY);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    (async () => {
-      try {
-        const response = await fetch('/api/session', {
-          cache: 'no-store',
-          signal: controller.signal,
-        });
-        if (!response.ok) return;
-        setSession(parseSession(await response.json()));
-      } catch {
-        // Aborted or offline: keep the signed-out pair.
-      }
-    })();
-
-    return () => controller.abort();
+    let here = true;
+    // The same answer the notice about changed documents waits for.
+    void sessionOnce().then((answer) => {
+      if (here && answer.signedIn) setSession(answer);
+    });
+    return () => {
+      here = false;
+    };
   }, []);
 
   return (

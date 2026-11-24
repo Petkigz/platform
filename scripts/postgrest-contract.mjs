@@ -254,6 +254,19 @@ async function run() {
       assert.equal(got.body?.code, '42501', `${fn} was not refused to ${who ?? 'an anonymous visitor'} for lack of permission: ${got.status} ${JSON.stringify(got.body).slice(0, 300)}`);
     }
   }
+  // Agreeing to a policy names the version that was read (migration
+  // 20261281149000). Two functions now share the name, and the request server
+  // chooses between them by the names of the arguments. A number that is not
+  // the one in force is the database's own refusal, with its SQLSTATE; a
+  // visitor is refused for lack of permission before anything is compared.
+  const stale = await call('learner', 'accept_policy', { p_slug: 'terms', p_version: 999999 });
+  assert.equal(stale.body?.code, '23514', `agreeing to a version that is not in force was not refused by the database: ${stale.status} ${JSON.stringify(stale.body).slice(0, 300)}`);
+  assert.equal(stale.body?.message, 'policy:changed', `the refusal was not the one the application names: ${JSON.stringify(stale.body).slice(0, 300)}`);
+  const visiting = await call(null, 'accept_policy', { p_slug: 'terms', p_version: 999999 });
+  assert.equal(visiting.body?.code, '42501', `an anonymous visitor could ask to agree to a policy: ${visiting.status} ${JSON.stringify(visiting.body).slice(0, 300)}`);
+  const agreements = await reads('learner', '/policy_acceptances?select=accepted_at');
+  assert.equal(agreements.status === 200 ? (await agreements.json()).length : 0, 0, 'an agreement was recorded by a request that named a version not in force');
+  shape.push(`agreeing to a policy with a version number that is not in force is refused by the database (${stale.status} 23514 policy:changed), and refused to a visitor (42501)`);
   const delivered = await reads('learner', '/notifications?select=id&kind=eq.contract');
   assert.equal(delivered.status === 200 ? (await delivered.json()).length : 0, 0, 'a notification was written by a caller who must not be able to');
   const truncate = await fetch(`${upstream}/course_wishlist`, { method: 'DELETE', headers: { authorization: `Bearer ${anonKey}` } });

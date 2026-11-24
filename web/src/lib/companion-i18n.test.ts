@@ -125,7 +125,7 @@ test('no other page pays for the companion sentences', () => {
     const onServer = (k: string) =>
       ['learn.', 'course.', 'lesson.', 'assess.', 'assign.', 'missing.', 'account.', 'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.', 'merge.', 'share.', 'refer.', 'sponsor.', 'orders.', 'billing.', 'receipt.', 'notify.', 'plans.', 'subs.', 'policy.', 'inst.', 'tapply.'].some((prefix) => k.startsWith(prefix));
     const serverOnly = Object.fromEntries(Object.entries(whole).filter(([k]) => onServer(k)));
-    assert.equal(Object.keys(serverOnly).length, 1496);
+    assert.equal(Object.keys(serverOnly).length, 1501);
     // The page for a page that broke is drawn in the browser, so its ten
     // sentences are the one learner part the shell does carry.
     assert.equal(Object.keys(shell).filter((k) => k.startsWith('broke.')).length, 10, locale.code);

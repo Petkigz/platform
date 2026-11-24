@@ -103,6 +103,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'الحصة: {title}',
     'notify.mWasAt': 'كان موعد بدئها: {date}',
     'notify.mHeldAt': 'كانت الحصة في: {date}',
+    'notify.policyHead': 'وثائق تغيّرت',
+    'notify.policyLead':
+      'وافقت على إصدار سابق من كل وثيقة من هذه، وتلك الموافقة محفوظة. الإصدار الجديد لا يُعدّ موافَقًا عليه حتى توافق عليه في صفحته.',
   },
   ur: {
     'notify.lead':
@@ -170,6 +173,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'کلاس: {title}',
     'notify.mWasAt': 'اسے اس وقت شروع ہونا تھا: {date}',
     'notify.mHeldAt': 'کلاس اس وقت تھی: {date}',
+    'notify.policyHead': 'بدلی ہوئی دستاویزات',
+    'notify.policyLead':
+      'آپ نے ان میں سے ہر ایک کے پہلے نسخے سے اتفاق کیا تھا، اور وہ اتفاق محفوظ ہے۔ نئے نسخے سے اتفاق تب تک نہیں مانا جاتا جب تک آپ اس کے صفحے پر اتفاق نہ کریں۔',
   },
   fa: {
     'notify.lead':
@@ -236,6 +242,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'کلاس: {title}',
     'notify.mWasAt': 'قرار بود در این زمان شروع شود: {date}',
     'notify.mHeldAt': 'کلاس در این زمان بود: {date}',
+    'notify.policyHead': 'سندهای تغییرکرده',
+    'notify.policyLead':
+      'شما با نسخه‌ای پیشین از هر یک از این سندها موافقت کرده بودید و آن موافقت نگه داشته می‌شود. تا وقتی در صفحه سند موافقت نکنید، با نسخه جدید موافقت نشده است.',
   },
   'fa-af': {
     'notify.lead':
@@ -301,6 +310,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'صنف: {title}',
     'notify.mWasAt': 'قرار بود در این وقت شروع شود: {date}',
     'notify.mHeldAt': 'صنف در این وقت بود: {date}',
+    'notify.policyHead': 'سندهای تغییرکرده',
+    'notify.policyLead':
+      'شما با نسخه‌ای قبلی از هر یک از این سندها موافقت کرده بودید و آن موافقت نگهداری می‌شود. تا وقتی که در صفحه سند موافقت نکنید، با نسخه نو موافقت نشده است.',
   },
   tr: {
     'notify.lead':
@@ -369,6 +381,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Ders: {title}',
     'notify.mWasAt': 'Başlayacağı zaman: {date}',
     'notify.mHeldAt': 'Dersin yapıldığı zaman: {date}',
+    'notify.policyHead': 'Değişen belgeler',
+    'notify.policyLead':
+      'Bunların her birinin önceki bir sürümünü onaylamıştınız ve o onay saklanıyor. Yeni sürüm, siz belgenin sayfasında onaylayana kadar onaylanmış sayılmaz.',
   },
   id: {
     'notify.lead':
@@ -438,6 +453,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Kelas: {title}',
     'notify.mWasAt': 'Seharusnya dimulai pada: {date}',
     'notify.mHeldAt': 'Kelas itu berlangsung pada: {date}',
+    'notify.policyHead': 'Dokumen yang berubah',
+    'notify.policyLead':
+      'Anda telah menyetujui versi sebelumnya dari setiap dokumen ini, dan persetujuan itu tetap disimpan. Versi baru belum disetujui sampai Anda menyetujuinya di halamannya.',
   },
   ms: {
     'notify.lead':
@@ -507,6 +525,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Kelas: {title}',
     'notify.mWasAt': 'Sepatutnya bermula pada: {date}',
     'notify.mHeldAt': 'Kelas itu diadakan pada: {date}',
+    'notify.policyHead': 'Dokumen yang telah berubah',
+    'notify.policyLead':
+      'Anda telah bersetuju dengan versi terdahulu bagi setiap dokumen ini, dan persetujuan itu disimpan. Versi baharu belum dipersetujui sehingga anda bersetuju di halamannya.',
   },
   bn: {
     'notify.lead':
@@ -574,6 +595,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'ক্লাস: {title}',
     'notify.mWasAt': 'এটি শুরু হওয়ার কথা ছিল: {date}',
     'notify.mHeldAt': 'ক্লাসটি হয়েছিল: {date}',
+    'notify.policyHead': 'বদলে যাওয়া নথি',
+    'notify.policyLead':
+      'আপনি এগুলোর প্রতিটির আগের একটি সংস্করণে সম্মতি দিয়েছিলেন, এবং সেই সম্মতি রাখা আছে। নথির পাতায় আপনি সম্মতি না দেওয়া পর্যন্ত নতুন সংস্করণে সম্মতি দেওয়া হয়নি।',
   },
   hi: {
     'notify.lead':
@@ -639,6 +663,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'कक्षा: {title}',
     'notify.mWasAt': 'इसे इस समय शुरू होना था: {date}',
     'notify.mHeldAt': 'कक्षा इस समय हुई थी: {date}',
+    'notify.policyHead': 'बदले हुए दस्तावेज़',
+    'notify.policyLead':
+      'आपने इनमें से हर एक के पिछले संस्करण पर सहमति दी थी, और वह सहमति सुरक्षित है। जब तक आप दस्तावेज़ के पृष्ठ पर सहमति नहीं देते, नए संस्करण पर सहमति नहीं मानी जाती।',
   },
   fr: {
     'notify.lead':
@@ -708,6 +735,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Cours : {title}',
     'notify.mWasAt': 'Début prévu : {date}',
     'notify.mHeldAt': 'Date du cours : {date}',
+    'notify.policyHead': 'Documents modifiés',
+    'notify.policyLead':
+      'Vous avez accepté une version antérieure de chacun de ces documents, et cet accord est conservé. La nouvelle version n’est pas acceptée tant que vous ne l’avez pas fait sur sa page.',
   },
   es: {
     'notify.lead':
@@ -778,6 +808,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Clase: {title}',
     'notify.mWasAt': 'Inicio previsto: {date}',
     'notify.mHeldAt': 'Fecha de la clase: {date}',
+    'notify.policyHead': 'Documentos que han cambiado',
+    'notify.policyLead':
+      'Usted aceptó una versión anterior de cada uno de estos documentos, y esa conformidad se conserva. La versión nueva no está aceptada hasta que usted lo haga en su página.',
   },
   pt: {
     'notify.lead':
@@ -847,6 +880,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Aula: {title}',
     'notify.mWasAt': 'Início previsto: {date}',
     'notify.mHeldAt': 'Data da aula: {date}',
+    'notify.policyHead': 'Documentos que mudaram',
+    'notify.policyLead':
+      'Concordou com uma versão anterior de cada um destes documentos, e essa concordância mantém-se. A nova versão não fica aceite enquanto não concordar na página do documento.',
   },
   sw: {
     'notify.lead':
@@ -914,6 +950,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Darasa: {title}',
     'notify.mWasAt': 'Lilikuwa lianze: {date}',
     'notify.mHeldAt': 'Darasa lilifanyika: {date}',
+    'notify.policyHead': 'Hati zilizobadilika',
+    'notify.policyLead':
+      'Ulikubali toleo la awali la kila moja ya hati hizi, na ukubali huo umehifadhiwa. Toleo jipya halijakubaliwa hadi ukubali kwenye ukurasa wake.',
   },
   af: {
     'notify.lead':
@@ -983,6 +1022,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Die klas: {title}',
     'notify.mWasAt': 'Dit sou begin op: {date}',
     'notify.mHeldAt': 'Die klas was op: {date}',
+    'notify.policyHead': 'Dokumente wat verander het',
+    'notify.policyLead':
+      'Jy het tot ’n vroeëre weergawe van elk van hierdie dokumente ingestem, en daardie instemming word gehou. Daar is nie tot die nuwe weergawe ingestem voordat jy dit op sy bladsy doen nie.',
   },
   'zh-hans': {
     'notify.lead': '来自平台的消息，显示在应用内。它们不会发送到任何收件箱或手机。本页是它们唯一出现的地方。',
@@ -1037,6 +1079,8 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': '课程：{title}',
     'notify.mWasAt': '原定开始时间：{date}',
     'notify.mHeldAt': '这节课的时间：{date}',
+    'notify.policyHead': '已更改的文件',
+    'notify.policyLead': '您曾同意过这些文件各自的较早版本，该同意仍被保留。在您于文件页面上表示同意之前，新版本不算已同意。',
   },
   'zh-hant': {
     'notify.lead': '來自平台的訊息，顯示在應用程式內。它們不會傳送到任何收件匣或手機。本頁是它們唯一出現的地方。',
@@ -1091,6 +1135,8 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': '課程：{title}',
     'notify.mWasAt': '原定開始時間：{date}',
     'notify.mHeldAt': '這堂課的時間：{date}',
+    'notify.policyHead': '已變更的文件',
+    'notify.policyLead': '您曾同意過這些文件各自的較早版本，該同意仍被保留。在您於文件頁面上表示同意之前，新版本不算已同意。',
   },
   vi: {
     'notify.lead':
@@ -1159,6 +1205,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Lớp: {title}',
     'notify.mWasAt': 'Lớp lẽ ra bắt đầu lúc: {date}',
     'notify.mHeldAt': 'Lớp đã diễn ra lúc: {date}',
+    'notify.policyHead': 'Văn bản đã thay đổi',
+    'notify.policyLead':
+      'Bạn đã đồng ý với một phiên bản trước của từng văn bản này, và sự đồng ý đó vẫn được lưu. Phiên bản mới chưa được đồng ý cho đến khi bạn đồng ý trên trang của văn bản.',
   },
   th: {
     'notify.lead':
@@ -1223,6 +1272,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'ชั้นเรียน: {title}',
     'notify.mWasAt': 'กำหนดเริ่มเดิมคือ: {date}',
     'notify.mHeldAt': 'ชั้นเรียนมีขึ้นเมื่อ: {date}',
+    'notify.policyHead': 'เอกสารที่เปลี่ยนไป',
+    'notify.policyLead':
+      'คุณเคยยอมรับฉบับก่อนหน้าของเอกสารแต่ละฉบับนี้ และการยอมรับนั้นยังเก็บไว้ ฉบับใหม่ยังไม่ถือว่ายอมรับจนกว่าคุณจะยอมรับในหน้าของเอกสาร',
   },
   fil: {
     'notify.lead':
@@ -1293,6 +1345,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Ang klase: {title}',
     'notify.mWasAt': 'Magsisimula sana ito sa: {date}',
     'notify.mHeldAt': 'Ginanap ang klase noong: {date}',
+    'notify.policyHead': 'Mga dokumentong nagbago',
+    'notify.policyLead':
+      'Sumang-ayon ka sa mas naunang bersyon ng bawat isa sa mga dokumentong ito, at iniingatan ang pagsang-ayong iyon. Hindi pa nasasang-ayunan ang bagong bersyon hanggang sumang-ayon ka sa pahina nito.',
   },
   uz: {
     'notify.lead':
@@ -1361,6 +1416,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Dars: {title}',
     'notify.mWasAt': 'Boshlanishi kerak boʻlgan vaqt: {date}',
     'notify.mHeldAt': 'Dars oʻtgan vaqt: {date}',
+    'notify.policyHead': 'Oʻzgargan hujjatlar',
+    'notify.policyLead':
+      'Siz bu hujjatlarning har birining oldingi versiyasiga rozi boʻlgansiz va oʻsha rozilik saqlanadi. Hujjat sahifasida rozi boʻlmaguningizcha yangi versiyaga rozilik berilmagan hisoblanadi.',
   },
   kk: {
     'notify.lead':
@@ -1429,6 +1487,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Сабақ: {title}',
     'notify.mWasAt': 'Басталуға тиіс болған уақыты: {date}',
     'notify.mHeldAt': 'Сабақ өткен уақыт: {date}',
+    'notify.policyHead': 'Өзгерген құжаттар',
+    'notify.policyLead':
+      'Сіз осы құжаттардың әрқайсысының бұрынғы нұсқасына келіскенсіз, және ол келісім сақталады. Құжат бетінде келіспейінше, жаңа нұсқаға келісім берілген болып саналмайды.',
   },
   az: {
     'notify.lead':
@@ -1496,6 +1557,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Dərs: {title}',
     'notify.mWasAt': 'Başlamalı olduğu vaxt: {date}',
     'notify.mHeldAt': 'Dərsin keçirildiyi vaxt: {date}',
+    'notify.policyHead': 'Dəyişən sənədlər',
+    'notify.policyLead':
+      'Siz bu sənədlərin hər birinin əvvəlki versiyası ilə razılaşmısınız və həmin razılıq saxlanılır. Sənədin səhifəsində razılaşmayınca yeni versiya ilə razılaşılmış sayılmır.',
   },
   tg: {
     'notify.lead':
@@ -1565,6 +1629,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Дарс: {title}',
     'notify.mWasAt': 'Он бояд дар ин вақт оғоз мешуд: {date}',
     'notify.mHeldAt': 'Дарс дар ин вақт буд: {date}',
+    'notify.policyHead': 'Ҳуҷҷатҳои тағйирёфта',
+    'notify.policyLead':
+      'Шумо ба нусхаи пештараи ҳар яке аз ин ҳуҷҷатҳо розӣ шуда будед ва он розигӣ нигоҳ дошта мешавад. То даме ки дар саҳифаи ҳуҷҷат розӣ нашавед, ба нусхаи нав розигӣ дода нашудааст.',
   },
   ky: {
     'notify.lead':
@@ -1633,6 +1700,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Сабак: {title}',
     'notify.mWasAt': 'Башталышы керек болгон убакыт: {date}',
     'notify.mHeldAt': 'Сабак өткөн убакыт: {date}',
+    'notify.policyHead': 'Өзгөргөн документтер',
+    'notify.policyLead':
+      'Сиз бул документтердин ар биринин мурунку версиясына макул болгонсуз жана ал макулдук сакталат. Документтин барагында макул болмоюнча, жаңы версияга макулдук берилген деп эсептелбейт.',
   },
   tk: {
     'notify.lead':
@@ -1699,6 +1769,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'Sapak: {title}',
     'notify.mWasAt': 'Başlanmaly wagty: {date}',
     'notify.mHeldAt': 'Sapagyň geçen wagty: {date}',
+    'notify.policyHead': 'Üýtgän resminamalar',
+    'notify.policyLead':
+      'Siz bu resminamalaryň her biriniň öňki wersiýasyna razy bolupdyňyz we şol razylyk saklanýar. Resminamanyň sahypasynda razy bolýançaňyz, täze wersiýa razylyk berlen hasaplanmaýar.',
   },
   ta: {
     'notify.lead':
@@ -1770,6 +1843,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'வகுப்பு: {title}',
     'notify.mWasAt': 'அது தொடங்கவிருந்த நேரம்: {date}',
     'notify.mHeldAt': 'வகுப்பு நடந்த நேரம்: {date}',
+    'notify.policyHead': 'மாறிய ஆவணங்கள்',
+    'notify.policyLead':
+      'இவை ஒவ்வொன்றின் முந்தைய பதிப்புக்கு நீங்கள் ஒப்புக்கொண்டீர்கள், அந்த ஒப்புதல் வைக்கப்பட்டுள்ளது. ஆவணத்தின் பக்கத்தில் நீங்கள் ஒப்புக்கொள்ளும் வரை புதிய பதிப்புக்கு ஒப்புதல் அளிக்கப்படவில்லை.',
   },
   ne: {
     'notify.lead':
@@ -1834,5 +1910,8 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mClass': 'कक्षा: {title}',
     'notify.mWasAt': 'यो सुरु हुनुपर्ने समय: {date}',
     'notify.mHeldAt': 'कक्षा भएको समय: {date}',
+    'notify.policyHead': 'बदलिएका कागजात',
+    'notify.policyLead':
+      'तपाईं यीमध्ये प्रत्येकको अघिल्लो संस्करणमा सहमत हुनुभएको थियो, र त्यो सहमति राखिएको छ। कागजातको पृष्ठमा तपाईं सहमत नभएसम्म नयाँ संस्करणमा सहमति दिइएको मानिँदैन।',
   },
 };

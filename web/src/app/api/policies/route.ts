@@ -10,6 +10,7 @@ import {
   policyStatusOf,
   type PolicyOutcome,
 } from '@/lib/policy-outcome';
+import { changedSince } from '@/lib/policy-notice';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,14 +31,18 @@ const refuse = (reason: PolicyOutcome) =>
  * **The answer is a name.** The page says its own sentence for it, in the
  * reader's language. The database's sentence is logged and never sent.
  *
- * **The version is checked.** `accept_policy()` takes a slug and agrees to
- * whatever is live at that instant. The request carries the version number
- * the reader was shown; the live one is read first, and if it is a different
- * number nothing is asked of the writer and the answer is `changed`. Between
- * that read and the write the owner could still publish, so the reply says
- * which version was recorded, and the button says so when it is not the one
- * on the page. Closing that last gap needs the writer itself to take the
- * version, which is a migration.
+ * **The version the reader was shown goes to the writer.** Agreeing by slug
+ * alone records whatever is in force at that instant, which for a page left
+ * open while the owner published is a text its reader never saw. This route
+ * used to read the live version first and refuse a different number itself,
+ * which left the moment between that read and the write. Since 2026-11-24
+ * the writer takes the number and compares it inside its own transaction,
+ * holding the version it read until it has written. So nothing is read here
+ * first: the writer is the one place that decides, and `changed` is its
+ * answer.
+ *
+ * The reply still says which version was recorded. It can only be the one
+ * that was sent; a reply that says otherwise is not believed.
  *
  * A second press is a success with `changed: false`: the writer answers with
  * the time of the first.
@@ -60,18 +65,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return refuse('not_signed_in');
 
-  const live = await supabase.rpc('policy_page', { p_slug: b.slug } as never);
-  if (live.error) {
-    // Nothing has been asked of the writer yet, so nothing was recorded.
-    console.error('policies: the live version could not be read before agreeing:', live.error.message);
-    return refuse('refused');
-  }
-  const liveVersion = (live.data as { versionNumber?: unknown } | null)?.versionNumber;
-  // No live version at all is left to the writer, which knows whether the
-  // document exists. A live version with another number is not what was read.
-  if (live.data !== null && liveVersion !== b.version) return refuse('changed');
-
-  const { data, error } = await supabase.rpc('accept_policy', { p_slug: b.slug } as never);
+  const { data, error } = await supabase.rpc('accept_policy', { p_slug: b.slug, p_version: b.version } as never);
   if (error) {
     const reason = policyReasonOf(error);
     if (reason === 'refused' || reason === 'unconfirmed') {
@@ -84,10 +78,59 @@ export async function POST(request: Request) {
     console.error('policies: the writer answered without a version and a time');
     return refuse('unconfirmed');
   }
+  if (accepted.version !== b.version) {
+    // The writer compares before it records. An answer naming another
+    // version is not one this route can explain, so it does not say "agreed".
+    console.error('policies: the writer answered for a version that was not the one sent');
+    return refuse('unconfirmed');
+  }
   return NextResponse.json({
     ok: true,
     changed: !accepted.already,
     version: accepted.version,
     acceptedAt: accepted.acceptedAt,
   });
+}
+
+const noStore = { 'cache-control': 'no-store' } as const;
+
+/**
+ * Which documents changed since this reader agreed to them.
+ *
+ * Asked by the notice under every page, once each time the application is
+ * opened (`_shared/policy-notice.tsx`). The root layout cannot ask on the
+ * server: it knows nobody, so that pages can be drawn once for everyone.
+ *
+ * The answer is a slug and a version number for each document, and nothing
+ * else: no title, no text, no time. A visitor is answered `signedIn: false`
+ * and the database is not asked.
+ *
+ * A read that fails is answered `changed: null`, which says nothing about
+ * any document: the notice shows nothing and asks again on the next page
+ * rather than recording that nothing changed. It is not an error status.
+ * This is asked in the background of whatever page was opened, and a failed
+ * request there would be reported in the browser on a page that is fine.
+ */
+export async function GET() {
+  if (!isSupabaseConfigured()) return NextResponse.json({ signedIn: false }, { headers: noStore });
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ signedIn: false }, { headers: noStore });
+
+  const standing = await supabase.rpc('my_policy_standing').then(
+    (reply) => reply,
+    () => ({ data: null, error: { message: 'no answer' } }),
+  );
+  const changed = standing.error ? null : changedSince(standing.data);
+  if (changed === null) {
+    console.error('policies: what changed could not be read for the notice:', standing.error?.message ?? 'a reply that was not a standing');
+    return NextResponse.json({ signedIn: true, changed: null }, { headers: noStore });
+  }
+  return NextResponse.json(
+    { signedIn: true, changed: changed.map((doc) => ({ slug: doc.slug, version: doc.version })) },
+    { headers: noStore },
+  );
 }

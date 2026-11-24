@@ -6,10 +6,11 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { NOTIFICATION_KINDS, describeKind, parsePreferences, type NotificationKind, type Preference } from '@/lib/notification-prefs';
 import { formatMinor } from '@/lib/money';
 import { centreOf, planNameOf, type Centre, type CentreReminder, type MessageFacts } from '@/lib/notifications';
+import { changedSince } from '@/lib/policy-notice';
 
 import { Ending } from '../_shared/ending';
 import { MarkAllRead } from './notification-actions';
@@ -65,6 +66,17 @@ export async function generateMetadata(): Promise<Metadata> {
  * could not be read says so and still shows the switches; switches that
  * could not be read say so and still show the messages.
  *
+ * **A document that changed is listed first.** The owner's rule
+ * (2026-11-23) is that a change of policy is told at the next opening or by
+ * a notification. This is the notification: each document the reader agreed
+ * to whose version in force is no longer the one they agreed to, read from
+ * what the database holds now (`my_policy_standing()`), so it is there for
+ * as long as it is true and gone once they agree. It is not a kept message:
+ * it cannot be marked read, and nothing writes one row for each person when
+ * the owner publishes. If that read fails the section is left out and the
+ * rest of the page is drawn; the document's page and the account page say
+ * the same thing.
+ *
  * **Only an address inside this site is followed** (`internalHrefOf`).
  *
  * What it never does is claim something was emailed or texted.
@@ -85,7 +97,7 @@ export default async function NotificationsPage() {
   const num = (value: number) => formatNumber(shown.code, value);
 
   // Each reply on its own: one failing must not take the other with it.
-  const [centreReply, prefsReply] = await Promise.all([
+  const [centreReply, prefsReply, standingReply] = await Promise.all([
     supabase.rpc('my_notifications', { p_limit: 50 }).then(
       (reply) => reply,
       () => ({ data: null, error: { code: 'no-answer', message: '' } }),
@@ -94,7 +106,18 @@ export default async function NotificationsPage() {
       (reply) => reply,
       () => ({ data: null, error: { code: 'no-answer', message: '' } }),
     ),
+    supabase.rpc('my_policy_standing').then(
+      (reply) => reply,
+      () => ({ data: null, error: { code: 'no-answer', message: '' } }),
+    ),
   ]);
+
+  // The documents that changed since this reader agreed to them. Not read is
+  // not drawn: the page is about messages, and this is said elsewhere too.
+  const changed = (standingReply.error ? null : changedSince(standingReply.data)) ?? [];
+  if (standingReply.error) console.error('[notifications] changed documents unread:', standingReply.error.code);
+  // The documents are the owner's words, in English, whatever the page is in.
+  const written = shown.code === 'en' ? {} : { lang: 'en', dir: 'ltr' as const };
 
   let centre: Centre | null = null;
   if (centreReply.error) {
@@ -256,6 +279,38 @@ export default async function NotificationsPage() {
         <div className="notice error" role="alert" data-centre="unread">
           {t('notify.unread')}
         </div>
+      )}
+
+      {changed.length > 0 && (
+        <section className="told-section" data-changed={changed.length}>
+          <h2>{t('notify.policyHead')}</h2>
+          <p className="muted told-english">{t('notify.policyLead')}</p>
+          <ul className="card told-list">
+            {changed.map((doc) => {
+              const day = formatDay(shown.code, doc.effectiveAt);
+              return (
+                <li key={doc.slug} data-changed-policy={doc.slug}>
+                  <p className="told-name">
+                    <bdi {...written}>{doc.title}</bdi>
+                  </p>
+                  <ul className="told-changed-facts">
+                    <li>
+                      <Ending words={t('policy.versionNo')} gap="number" value={num(doc.version)} />
+                    </li>
+                    {day && (
+                      <li>
+                        <Ending words={t('policy.inForceFrom')} gap="date" value={day} />
+                      </li>
+                    )}
+                  </ul>
+                  <p>
+                    <Link href={`/policies/${doc.slug}`}>{t('policy.noticeOpen')}</Link>
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {centre !== null && reminders.length > 0 && (

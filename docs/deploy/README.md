@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-355 files in `supabase/migrations/`, applied in filename order — the 14-digit
+356 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -494,12 +494,30 @@ one file. At 353 it only repeats the comparison. It does not switch
 **Done:** run `44505560049`, approved by the owner on 2026-11-19, succeeded;
 the test project records 353. This job is now spent too.
 
-**The 355th, `20261281148000_notification_facts.sql`** (a notification kept
-as what it is made of, so that it can be said in the reader's language) is in
-the tree and **not on the test project**. It needs a job of its own, built
-the way the 354th's was, and the owner's approval of the run. It adds one
-nullable column and one function, and replaces seven functions with their
-earlier definitions plus the facts; it changes no row.
+**The 355th and the 356th** are in the tree and **not on the test project**:
+`20261281148000_notification_facts.sql` (a notification kept as what it is
+made of, so that it can be said in the reader's language) and
+`20261281149000_policy_version_shown.sql` (agreeing to a policy names the
+version that was read). The first adds one nullable column and one function,
+and replaces seven functions with their earlier definitions plus the facts.
+The second adds one function. Neither changes a row or turns a switch on.
+Their job is `scripts/hosted-migration-356.mjs`, run by the workflow "Apply
+Supabase test migrations 355 and 356" on a commit whose message starts
+`test: apply ayahspring test migrations 355 and 356`, behind the same
+environment and the same approval. It starts only from exactly the 354 with
+neither migration's own change there, rehearses both on the hosted database
+in one transaction and rolls it back, compares the two roles' privileges
+with the tested database built from all 356, and applies only if the CLI's
+dry-run names exactly those two files. The CLI applies each file in its own
+transaction: if the second failed after the first was recorded, the job
+would say the history records 355 and would not start again; that state
+needs a person. At 356 it only repeats the comparison. **Not run yet.**
+
+**The application and the 356th go in that order.** From this commit
+`POST /api/policies` calls the two-argument `accept_policy()`. An
+application deployed against a database without the 356th cannot record an
+agreement: the button says it could not confirm, and nothing is written.
+Apply the migration first.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
 pledge through checkout). Its
