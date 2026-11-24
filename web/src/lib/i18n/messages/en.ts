@@ -2328,6 +2328,11 @@ export const en = {
   'plans.whyChoose': 'Choose who this plan is for.',
   'plans.whyNoService': 'No payment service can take this payment at the moment.',
   'plans.whyFailed': 'The payment could not be started.',
+  // Money back, said at the owner's word (2026-11-24): the fourteen days the
+  // law gives a buyer in the EU, the rest of the EEA and the UK, where the
+  // asking is done, and what a full refund does to the plan.
+  'plans.refundLaw':
+    'If you live in the European Union, Iceland, Liechtenstein, Norway or the United Kingdom, you can ask for your money back within 14 days of paying. You ask on your orders page. The plan ends when all of the money has been returned.',
 
   // The page an account's plans are kept on, and its two forms (`subs.ts`),
   // for the same twenty-seven languages as the dashboard, 2026-11-23. What
@@ -2376,6 +2381,8 @@ export const en = {
   'subs.inChild': 'In a place for a child: {name}',
   'subs.plusAdds': 'Saving lessons in the app, to watch with no connection, comes with: {plus}',
   'subs.compare': 'Compare the plans',
+  // A plan that ended because its payment went back in full (2026-11-24).
+  'subs.refunded': 'Ended when its payment was returned: {date}',
 
   // The policy register, one document's page and the button that records an
   // agreement (`policy.ts`), for the same twenty-seven languages as the

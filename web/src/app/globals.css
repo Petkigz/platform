@@ -1555,6 +1555,7 @@ textarea { resize: vertical; min-height: 4rem; }
 /* A child's ages stay on one line: "8–" at the end of a line reads as nothing. */
 .sub-band { white-space: nowrap; }
 .sub-plus { margin: 0; overflow-wrap: anywhere; }
+.sub-refund { margin: 0.6rem 0 0; overflow-wrap: anywhere; }
 .sub-from { font-size: 0.95rem; }
 .sub-card h3 { margin: 0; }
 .sub-forms { display: grid; gap: 0.9rem; margin-top: 0.4rem; border-top: 1px solid var(--line, rgba(23, 116, 75, 0.18)); padding-top: 0.9rem; }

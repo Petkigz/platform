@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 356 migrations and 173 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 357 migrations and 174 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,49 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A plan given back within fourteen days, 2026-11-24
+
+- *Decided by the owner, 2026-11-24.* A buyer in the European Union, the
+  rest of the European Economic Area or the United Kingdom who pays for a
+  plan gets the money back when they ask within fourteen days.
+- *Already true.* Such a buyer could already ask: `order_withdrawal_window()`
+  gives a plan order from those countries, or from an account with no
+  country, fourteen days, because a plan order records no waiver. Nothing
+  was changed there.
+- *Built.* Migration 357, `20261281150000_plan_refund_ends_plan.sql`:
+  `revoke_entitlements_for_refund()` copied whole, and then, for every plan
+  the refunded order paid for, its grants taken back, its places released,
+  the plan cancelled and its paid period closed at that moment; audit action
+  `subscription.ended_on_refund`. It runs only on a refund in full, as
+  before. `lib/subscriptions.ts` gains the standing `refunded` and
+  `refundLaw`; `/subscriptions` says "Ended when its payment was returned"
+  and, in the first fourteen days of a plan from those countries, the right
+  and the way to `/orders`; `/plans` and `/plans/[id]` say the right unless
+  the account's country is outside them. Two sentences, 27 languages
+  (`tmp-words/u36`).
+- *The hosted job.* `scripts/hosted-migration-357.mjs` and the workflow
+  "Apply Supabase test migration 357", on a commit whose message starts
+  `test: apply ayahspring test migration 357`. **Not asked for and not
+  run.** It starts only from exactly the 356, so the 355th and 356th go
+  first.
+- *Checked.* `supabase/tests/plan_refund.test.mjs` (14 tests: the window by
+  country, asking ends nothing, a full refund ends the plan for every
+  learner, a partial one ends nothing, the buyer reads their own account
+  and order and another household does not); `lib/subscriptions.test.ts`;
+  `scripts/subscriptions-route-smoke.mjs` and `scripts/plans-route-smoke.mjs`
+  in a browser; one more read in `scripts/postgrest-contract.mjs`;
+  `scripts/hosted-migration-357.test.mjs`.
+- *Not done.* The refunds policy does not say that a plan ends when it is
+  refunded, and still says only that a month already used is not refunded
+  pro rata. A change is a new version that every account is asked to agree
+  to again, and its words are the owner's to approve; a paragraph is
+  proposed in `DECISIONS.md`. What a learner enrolled in under the plan is
+  left as it was. A teacher's share of a plan is not built, so nothing is
+  reversed there. No money has moved: no provider is connected.
+- *Counts.* 1871 keys; server-only 1503; unwritten while held 1599
+  (`plans.` 43, `subs.` 35); held 192 of 1871, 10.26%, shown as 10%. 357
+  migrations, 174 database suites, 2730 database assertions; 2647 web tests.
 
 ### A changed policy told at the next opening, 2026-11-24
 

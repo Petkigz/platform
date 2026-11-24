@@ -25,6 +25,13 @@ import type { Messages } from './en.ts';
  * `cancelPlanNote` says both. When something does renew, that sentence is
  * the one to change.
  *
+ * **A refund is not cancelling** (2026-11-24). A buyer in the EU, the EEA or
+ * the UK may ask for the money back within fourteen days, on the orders
+ * page, and the plan ends when all of it has gone back (`refunded`).
+ * `cancelPlanNote` still says that cancelling returns no money, because that
+ * is true of cancelling everywhere; the right is said beside it
+ * (`plans.refundLaw`), not in it.
+ *
  * **Cancelling an order is a different thing** (`cancelOrder`): nothing was
  * paid, no reason is asked, and the plans page sends people here to do it.
  *
@@ -72,6 +79,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'في مكان للأطفال: {name}',
     'subs.plusAdds': 'حفظ الدروس داخل التطبيق لمشاهدتها بلا اتصال متاح مع: {plus}',
     'subs.compare': 'قارن بين الخطط',
+    'subs.refunded': 'انتهت عند إعادة ما دُفع عنها: {date}',
   },
   ur: {
     'subs.title': 'آپ کے پلان',
@@ -114,6 +122,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'اسباق ایپ میں محفوظ کرنا، تاکہ کنکشن کے بغیر دیکھے جا سکیں، اس کے ساتھ ملتا ہے: {plus}',
     'subs.compare': 'پلانوں کا موازنہ کریں',
+    'subs.refunded': 'ادائیگی واپس ہونے پر ختم ہوا: {date}',
   },
   fa: {
     'subs.title': 'طرح‌های شما',
@@ -156,6 +165,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'در جای ویژهٔ کودکان: {name}',
     'subs.plusAdds': 'ذخیرهٔ درس‌ها در برنامه، برای تماشا بدون اتصال، همراه این است: {plus}',
     'subs.compare': 'مقایسهٔ طرح‌ها',
+    'subs.refunded': 'با برگرداندن پرداختش پایان یافت: {date}',
   },
   'fa-af': {
     'subs.title': 'پلان‌های شما',
@@ -198,6 +208,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'در جای ویژهٔ اطفال: {name}',
     'subs.plusAdds': 'ذخیرهٔ درس‌ها در اپلیکیشن، برای دیدن بدون اتصال، همراه این است: {plus}',
     'subs.compare': 'مقایسهٔ پلان‌ها',
+    'subs.refunded': 'با برگرداندن پرداختش ختم شد: {date}',
   },
   tr: {
     'subs.title': 'Planlarınız',
@@ -239,6 +250,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'Çocuklar için yerde: {name}',
     'subs.plusAdds': 'Dersleri uygulamaya kaydedip bağlantı olmadan izleme şununla gelir: {plus}',
     'subs.compare': 'Planları karşılaştır',
+    'subs.refunded': 'Ödemesi iade edilince sona erdi: {date}',
   },
   id: {
     'subs.title': 'Paket Anda',
@@ -282,6 +294,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Menyimpan pelajaran di aplikasi untuk ditonton tanpa koneksi tersedia dengan: {plus}',
     'subs.compare': 'Bandingkan paket',
+    'subs.refunded': 'Berakhir saat pembayarannya dikembalikan: {date}',
   },
   ms: {
     'subs.title': 'Pelan anda',
@@ -325,6 +338,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Menyimpan pelajaran dalam aplikasi untuk ditonton tanpa sambungan disertakan dengan: {plus}',
     'subs.compare': 'Bandingkan pelan',
+    'subs.refunded': 'Tamat apabila bayarannya dipulangkan: {date}',
   },
   bn: {
     'subs.title': 'আপনার প্ল্যান',
@@ -368,6 +382,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'পাঠ অ্যাপে সংরক্ষণ করা, যাতে সংযোগ ছাড়াই দেখা যায়, পাওয়া যায় এর সঙ্গে: {plus}',
     'subs.compare': 'প্ল্যানগুলো তুলনা করুন',
+    'subs.refunded': 'এর টাকা ফেরত দেওয়ায় শেষ হয়েছে: {date}',
   },
   hi: {
     'subs.title': 'आपकी योजनाएँ',
@@ -411,6 +426,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'पाठ ऐप में सहेजना, ताकि बिना कनेक्शन के देखे जा सकें, इसके साथ मिलता है: {plus}',
     'subs.compare': 'योजनाओं की तुलना करें',
+    'subs.refunded': 'इसका भुगतान लौटाए जाने पर समाप्त हुई: {date}',
   },
   fr: {
     'subs.title': 'Vos formules',
@@ -455,6 +471,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Enregistrer des leçons dans l’application, pour les regarder sans connexion, est compris avec : {plus}',
     'subs.compare': 'Comparer les formules',
+    'subs.refunded': 'Terminée au remboursement de son paiement : {date}',
   },
   es: {
     'subs.title': 'Sus planes',
@@ -497,6 +514,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Guardar lecciones en la aplicación para verlas sin conexión viene con: {plus}',
     'subs.compare': 'Comparar los planes',
+    'subs.refunded': 'Terminó al devolverse su pago: {date}',
   },
   pt: {
     'subs.title': 'Os seus planos',
@@ -539,6 +557,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'Num lugar para criança: {name}',
     'subs.plusAdds': 'Guardar lições na aplicação, para ver sem ligação, vem com: {plus}',
     'subs.compare': 'Comparar os planos',
+    'subs.refunded': 'Terminou quando o pagamento foi devolvido: {date}',
   },
   sw: {
     'subs.title': 'Mipango yako',
@@ -582,6 +601,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Kuhifadhi masomo ndani ya programu, ili kuyatazama bila mtandao, kunapatikana na: {plus}',
     'subs.compare': 'Linganisha mipango',
+    'subs.refunded': 'Uliisha malipo yake yaliporejeshwa: {date}',
   },
   af: {
     'subs.title': 'Jou planne',
@@ -626,6 +646,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Lesse in die toepassing stoor, om sonder verbinding te kyk, kom saam met: {plus}',
     'subs.compare': 'Vergelyk die planne',
+    'subs.refunded': 'Het geëindig toe die betaling daarvoor terugbetaal is: {date}',
   },
   'zh-hans': {
     'subs.title': '您的方案',
@@ -662,6 +683,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': '占用儿童名额：{name}',
     'subs.plusAdds': '将课程保存在应用内、无需联网即可观看的功能包含于：{plus}',
     'subs.compare': '比较各方案',
+    'subs.refunded': '款项退回后已结束：{date}',
   },
   'zh-hant': {
     'subs.title': '您的方案',
@@ -698,6 +720,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': '佔用兒童名額：{name}',
     'subs.plusAdds': '將課程儲存在應用程式內、無需連線即可觀看的功能包含於：{plus}',
     'subs.compare': '比較各個方案',
+    'subs.refunded': '款項退回後已結束：{date}',
   },
   vi: {
     'subs.title': 'Các gói của bạn',
@@ -740,6 +763,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'Ở chỗ cho trẻ em: {name}',
     'subs.plusAdds': 'Lưu bài học trong ứng dụng để xem khi không có kết nối đi kèm với: {plus}',
     'subs.compare': 'So sánh các gói',
+    'subs.refunded': 'Đã kết thúc khi khoản thanh toán được trả lại: {date}',
   },
   th: {
     'subs.title': 'แพ็กเกจของคุณ',
@@ -781,6 +805,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'อยู่ในที่สำหรับเด็ก: {name}',
     'subs.plusAdds': 'การบันทึกบทเรียนไว้ในแอปเพื่อดูโดยไม่ต้องเชื่อมต่อมาพร้อมกับ: {plus}',
     'subs.compare': 'เปรียบเทียบแพ็กเกจ',
+    'subs.refunded': 'สิ้นสุดเมื่อคืนเงินที่ชำระแล้ว: {date}',
   },
   fil: {
     'subs.title': 'Ang iyong mga plano',
@@ -825,6 +850,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Ang pag-save ng mga aralin sa app, para mapanood nang walang koneksyon, ay kasama sa: {plus}',
     'subs.compare': 'Ihambing ang mga plano',
+    'subs.refunded': 'Natapos nang ibalik ang bayad para rito: {date}',
   },
   uz: {
     'subs.title': 'Tariflaringiz',
@@ -868,6 +894,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Darslarni ilovada saqlab, aloqasiz tomosha qilish shu bilan birga beriladi: {plus}',
     'subs.compare': 'Tariflarni solishtirish',
+    'subs.refunded': 'Toʻlovi qaytarilgach tugagan: {date}',
   },
   kk: {
     'subs.title': 'Тарифтеріңіз',
@@ -911,6 +938,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Сабақтарды қолданбада сақтап, байланыссыз көру мынамен бірге беріледі: {plus}',
     'subs.compare': 'Тарифтерді салыстыру',
+    'subs.refunded': 'Төлемі қайтарылғанда аяқталды: {date}',
   },
   az: {
     'subs.title': 'Tarifləriniz',
@@ -953,6 +981,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Dərsləri tətbiqdə saxlayıb bağlantısız izləmək bununla birlikdə verilir: {plus}',
     'subs.compare': 'Tarifləri müqayisə et',
+    'subs.refunded': 'Ödənişi qaytarılanda bitib: {date}',
   },
   tg: {
     'subs.title': 'Нақшаҳои шумо',
@@ -997,6 +1026,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Нигоҳ доштани дарсҳо дар барнома барои тамошо бе пайвастшавӣ ҳамроҳи ин дода мешавад: {plus}',
     'subs.compare': 'Муқоисаи нақшаҳо',
+    'subs.refunded': 'Бо баргардонидани пардохташ ба охир расид: {date}',
   },
   ky: {
     'subs.title': 'Тарифтериңиз',
@@ -1040,6 +1070,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Сабактарды колдонмодо сактап, байланышсыз көрүү мунун менен кошо берилет: {plus}',
     'subs.compare': 'Тарифтерди салыштыруу',
+    'subs.refunded': 'Төлөмү кайтарылганда аяктады: {date}',
   },
   tk: {
     'subs.title': 'Meýilnamalaryňyz',
@@ -1083,6 +1114,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'Sapaklary programmada saklap, baglanyşyksyz görmek şunuň bilen bilelikde berilýär: {plus}',
     'subs.compare': 'Meýilnamalary deňeşdirmek',
+    'subs.refunded': 'Tölegi gaýtarylanda gutardy: {date}',
   },
   ta: {
     'subs.title': 'உங்கள் திட்டங்கள்',
@@ -1126,6 +1158,7 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.plusAdds':
       'பாடங்களைச் செயலியில் சேமித்து, இணைப்பின்றிப் பார்த்தல் இதனுடன் கிடைக்கும்: {plus}',
     'subs.compare': 'திட்டங்களை ஒப்பிடுக',
+    'subs.refunded': 'இதன் கட்டணம் திருப்பித் தரப்பட்டதும் முடிந்தது: {date}',
   },
   ne: {
     'subs.title': 'तपाईंका योजनाहरू',
@@ -1167,5 +1200,6 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.inChild': 'बालबालिकाका लागि स्थानमा: {name}',
     'subs.plusAdds': 'पाठहरू एपमा सुरक्षित गरेर जडानबिना हेर्ने सुविधा यससँग आउँछ: {plus}',
     'subs.compare': 'योजनाहरू तुलना गर्नुहोस्',
+    'subs.refunded': 'यसको भुक्तानी फिर्ता भएपछि सकियो: {date}',
   },
 };

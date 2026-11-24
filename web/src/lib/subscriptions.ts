@@ -16,6 +16,10 @@
  *                Cancelling revokes nothing: what was paid for is dated to
  *                the end of the period and stays.
  * - `ended`      the period is over, whatever the row's word is.
+ * - `refunded`   the period is over because the payment was returned in full:
+ *                the order the plan began with says `refunded`. The database
+ *                closes the paid period at that moment (migration 357), so
+ *                the date is the day the money went back.
  * - `withdrawn`  cancelled before it was ever paid.
  * - `unknown`    a row with a word for a paid plan and no dates. Shown with
  *                no sentence about its state: the page does not guess one.
@@ -28,11 +32,15 @@
  */
 
 import type { PlanInclusion, PlanLearner } from './plans.ts';
+import { hasCourseWithdrawalRight } from './withdrawal.ts';
 
 export const SUB_STATUSES = ['pending', 'trialing', 'active', 'past_due', 'paused', 'cancelled', 'expired'] as const;
 export type SubStatus = (typeof SUB_STATUSES)[number];
 
-export type SubStanding = 'waiting' | 'running' | 'stopped' | 'ended' | 'withdrawn' | 'unknown';
+export type SubStanding = 'waiting' | 'running' | 'stopped' | 'ended' | 'refunded' | 'withdrawn' | 'unknown';
+
+/** The days the law gives a buyer in the EU, the rest of the EEA or the UK to withdraw. */
+export const WITHDRAWAL_DAYS = 14;
 
 export type SubLearner = {
   /** The learner's profile. */
@@ -77,6 +85,14 @@ export type SubCard = {
    * the one thing this can say and be right.
    */
   plusAdds: boolean;
+  /**
+   * Whether to say that the money can be asked back within fourteen days: a
+   * plan that was paid for and has not ended, in its first fourteen days,
+   * unless the account is known to be in a country where the law gives no
+   * such days. The sentence names no date. The date is the database's to
+   * say (`order_withdrawal_window()`), on the page the asking is done on.
+   */
+  refundLaw: boolean;
 };
 
 type Row = Record<string, unknown>;
@@ -131,7 +147,11 @@ export function subscriptionCards(
     if (id === null || status === null) return null;
     const periodEnd = row.current_period_end === null || row.current_period_end === undefined ? null : text(row.current_period_end);
     if (periodEnd !== null && Number.isNaN(Date.parse(periodEnd))) return null;
-    const standing = standingOfSubscription(status, periodEnd, options.now);
+    const byDate = standingOfSubscription(status, periodEnd, options.now);
+    // The order the plan began with. Not read, or not shown to this reader,
+    // is not "refunded": the plan is then said to have ended, which is true.
+    const paidBy = one(one(row.order_items)?.orders);
+    const standing = byDate === 'ended' && paidBy?.status === 'refunded' ? 'refunded' : byDate;
     // A start that is not a date is left out; the card is still drawn.
     const started = text(row.current_period_start);
     const periodStart = started !== null && !Number.isNaN(Date.parse(started)) ? started : null;
@@ -185,6 +205,10 @@ export function subscriptionCards(
         };
 
     const tier = tierOf(plan?.tier) ?? tierOf(known?.tier);
+    // The fourteen days run from the payment, which is when the paid period began.
+    const began = periodStart === null ? Number.NaN : Date.parse(periodStart);
+    const inFourteenDays = !Number.isNaN(began) && options.now < began + WITHDRAWAL_DAYS * 24 * 60 * 60 * 1000;
+    const country = text(one(row.billing_accounts)?.billing_country);
     cards.push({
       id,
       standing,
@@ -203,6 +227,8 @@ export function subscriptionCards(
       // whose period is over has nothing left to cancel.
       cancel: standing === 'waiting' ? 'order' : standing === 'running' ? 'plan' : null,
       plusAdds: tier === 'basic' && options.offlineOn && (standing === 'waiting' || standing === 'running'),
+      // A country nobody recorded keeps the benefit of the doubt, as the clock gives it.
+      refundLaw: (standing === 'running' || standing === 'stopped') && inFourteenDays && hasCourseWithdrawalRight(country),
     });
   }
   return cards;

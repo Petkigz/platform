@@ -83,6 +83,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'اختر لمن هذه الخطة.',
     'plans.whyNoService': 'لا توجد جهة دفع تستطيع استلام هذه الدفعة حاليًا.',
     'plans.whyFailed': 'تعذّر بدء الدفع.',
+    'plans.refundLaw':
+      'إذا كنت تقيم في الاتحاد الأوروبي أو أيسلندا أو ليختنشتاين أو النرويج أو المملكة المتحدة، يمكنك طلب استرداد مالك خلال 14 يومًا من الدفع. تطلب ذلك من صفحة طلباتك. تنتهي الخطة عند إعادة المبلغ كله.',
   },
   ur: {
     'plans.title': 'سیکھنے کا پلان منتخب کریں',
@@ -143,6 +145,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'منتخب کریں کہ یہ پلان کس کے لیے ہے۔',
     'plans.whyNoService': 'اس وقت کوئی ادائیگی سروس یہ ادائیگی نہیں لے سکتی۔',
     'plans.whyFailed': 'ادائیگی شروع نہیں ہو سکی۔',
+    'plans.refundLaw':
+      'اگر آپ یورپی یونین، آئس لینڈ، لیختنسٹائن، ناروے یا برطانیہ میں رہتے ہیں تو ادائیگی کے 14 دن کے اندر اپنی رقم واپس مانگ سکتے ہیں۔ یہ درخواست اپنے آرڈر کے صفحے سے کریں۔ پوری رقم واپس ہونے پر پلان ختم ہو جاتا ہے۔',
   },
   fa: {
     'plans.title': 'یک طرح یادگیری انتخاب کنید',
@@ -201,6 +205,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'انتخاب کنید این طرح برای چه کسی است.',
     'plans.whyNoService': 'در حال حاضر هیچ سرویس پرداختی نمی‌تواند این پرداخت را بگیرد.',
     'plans.whyFailed': 'پرداخت آغاز نشد.',
+    'plans.refundLaw':
+      'اگر در اتحادیهٔ اروپا، ایسلند، لیختن‌اشتاین، نروژ یا بریتانیا زندگی می‌کنید، می‌توانید تا ۱۴ روز پس از پرداخت، پول خود را پس بخواهید. این درخواست را از صفحهٔ سفارش‌هایتان بدهید. وقتی همهٔ مبلغ برگردانده شود، طرح پایان می‌یابد.',
   },
   'fa-af': {
     'plans.title': 'یک پلان آموزش انتخاب کنید',
@@ -259,6 +265,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'انتخاب کنید این پلان برای کیست.',
     'plans.whyNoService': 'فعلاً هیچ خدمت پرداختی نمی‌تواند این پرداخت را بگیرد.',
     'plans.whyFailed': 'پرداخت آغاز نشد.',
+    'plans.refundLaw':
+      'اگر در اتحادیهٔ اروپا، آیسلند، لیختن‌اشتاین، ناروی یا بریتانیا زندگی می‌کنید، می‌توانید تا ۱۴ روز پس از پرداخت، پول خود را پس بخواهید. این درخواست را از صفحهٔ فرمایش‌های خود بدهید. وقتی تمام مبلغ برگردانده شود، پلان ختم می‌شود.',
   },
   tr: {
     'plans.title': 'Bir öğrenme planı seçin',
@@ -318,6 +326,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Bu planın kimin için olduğunu seçin.',
     'plans.whyNoService': 'Şu anda hiçbir ödeme hizmeti bu ödemeyi alamıyor.',
     'plans.whyFailed': 'Ödeme başlatılamadı.',
+    'plans.refundLaw':
+      'Avrupa Birliği, İzlanda, Lihtenştayn, Norveç veya Birleşik Krallık’ta yaşıyorsanız, ödemeden sonraki 14 gün içinde paranızı geri isteyebilirsiniz. Bunu siparişler sayfanızdan istersiniz. Paranın tamamı iade edildiğinde plan sona erer.',
   },
   id: {
     'plans.title': 'Pilih paket belajar',
@@ -379,6 +389,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyNoService':
       'Saat ini tidak ada layanan pembayaran yang dapat menerima pembayaran ini.',
     'plans.whyFailed': 'Pembayaran tidak dapat dimulai.',
+    'plans.refundLaw':
+      'Jika Anda tinggal di Uni Eropa, Islandia, Liechtenstein, Norwegia, atau Britania Raya, Anda dapat meminta uang Anda kembali dalam 14 hari setelah membayar. Mintalah dari halaman pesanan Anda. Paket berakhir ketika seluruh uang telah dikembalikan.',
   },
   ms: {
     'plans.title': 'Pilih pelan pembelajaran',
@@ -438,6 +450,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyNoService':
       'Tiada perkhidmatan pembayaran yang dapat menerima pembayaran ini pada masa ini.',
     'plans.whyFailed': 'Pembayaran tidak dapat dimulakan.',
+    'plans.refundLaw':
+      'Jika anda tinggal di Kesatuan Eropah, Iceland, Liechtenstein, Norway atau United Kingdom, anda boleh meminta wang anda kembali dalam masa 14 hari selepas membayar. Mintalah dari halaman pesanan anda. Pelan tamat apabila semua wang telah dipulangkan.',
   },
   bn: {
     'plans.title': 'একটি শেখার প্ল্যান বেছে নিন',
@@ -498,6 +512,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'এই প্ল্যান কার জন্য তা বেছে নিন।',
     'plans.whyNoService': 'এই মুহূর্তে কোনো পেমেন্ট সেবা এই পেমেন্ট নিতে পারছে না।',
     'plans.whyFailed': 'পেমেন্ট শুরু করা যায়নি।',
+    'plans.refundLaw':
+      'আপনি যদি ইউরোপীয় ইউনিয়ন, আইসল্যান্ড, লিশটেনস্টাইন, নরওয়ে বা যুক্তরাজ্যে থাকেন, তবে টাকা দেওয়ার ১৪ দিনের মধ্যে আপনার টাকা ফেরত চাইতে পারেন। আপনার অর্ডারের পাতা থেকে তা চাইবেন। পুরো টাকা ফেরত দেওয়া হলে প্ল্যান শেষ হয়।',
   },
   hi: {
     'plans.title': 'सीखने की योजना चुनें',
@@ -558,6 +574,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'चुनें कि यह योजना किसके लिए है।',
     'plans.whyNoService': 'इस समय कोई भुगतान सेवा यह भुगतान नहीं ले सकती।',
     'plans.whyFailed': 'भुगतान शुरू नहीं हो सका।',
+    'plans.refundLaw':
+      'अगर आप यूरोपीय संघ, आइसलैंड, लिकटेंस्टाइन, नॉर्वे या यूनाइटेड किंगडम में रहते हैं, तो भुगतान के 14 दिनों के भीतर अपना पैसा वापस माँग सकते हैं। यह अपने ऑर्डर के पेज से माँगें। पूरा पैसा लौटाए जाने पर योजना समाप्त हो जाती है।',
   },
   fr: {
     'plans.title': 'Choisissez une formule d’apprentissage',
@@ -621,6 +639,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Choisissez à qui cette formule est destinée.',
     'plans.whyNoService': 'Aucun service de paiement ne peut encaisser ce paiement pour le moment.',
     'plans.whyFailed': 'Le paiement n’a pas pu être lancé.',
+    'plans.refundLaw':
+      'Si vous vivez dans l’Union européenne, en Islande, au Liechtenstein, en Norvège ou au Royaume-Uni, vous pouvez demander à être remboursé dans les 14 jours suivant le paiement. Faites la demande depuis la page de vos commandes. La formule prend fin lorsque la totalité de la somme a été remboursée.',
   },
   es: {
     'plans.title': 'Elija un plan de aprendizaje',
@@ -681,6 +701,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Elija para quién es este plan.',
     'plans.whyNoService': 'Ningún servicio de pagos puede cobrar este pago en este momento.',
     'plans.whyFailed': 'No se pudo iniciar el pago.',
+    'plans.refundLaw':
+      'Si vive en la Unión Europea, Islandia, Liechtenstein, Noruega o el Reino Unido, puede pedir que se le devuelva el dinero en los 14 días siguientes al pago. Se pide desde la página de sus pedidos. El plan termina cuando se ha devuelto todo el dinero.',
   },
   pt: {
     'plans.title': 'Escolha um plano de aprendizagem',
@@ -742,6 +764,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Escolha a quem se destina este plano.',
     'plans.whyNoService': 'Nenhum serviço de pagamentos pode receber este pagamento neste momento.',
     'plans.whyFailed': 'Não foi possível iniciar o pagamento.',
+    'plans.refundLaw':
+      'Se vive na União Europeia, na Islândia, no Liechtenstein, na Noruega ou no Reino Unido, pode pedir o seu dinheiro de volta nos 14 dias a seguir ao pagamento. O pedido faz-se na página das suas encomendas. O plano termina quando todo o dinheiro tiver sido devolvido.',
   },
   sw: {
     'plans.title': 'Chagua mpango wa kujifunza',
@@ -802,6 +826,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Chagua mpango huu ni wa nani.',
     'plans.whyNoService': 'Hakuna huduma ya malipo inayoweza kupokea malipo haya kwa sasa.',
     'plans.whyFailed': 'Malipo hayakuweza kuanzishwa.',
+    'plans.refundLaw':
+      'Ukiishi katika Umoja wa Ulaya, Iceland, Liechtenstein, Norway au Uingereza, unaweza kuomba kurejeshewa pesa zako ndani ya siku 14 baada ya kulipa. Omba kupitia ukurasa wa maagizo yako. Mpango huisha pesa zote zinaporejeshwa.',
   },
   af: {
     'plans.title': 'Kies ’n leerplan',
@@ -863,6 +889,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Kies vir wie hierdie plan is.',
     'plans.whyNoService': 'Geen betalingsdiens kan hierdie betaling op die oomblik neem nie.',
     'plans.whyFailed': 'Die betaling kon nie begin word nie.',
+    'plans.refundLaw':
+      'As jy in die Europese Unie, Ysland, Liechtenstein, Noorweë of die Verenigde Koninkryk woon, kan jy binne 14 dae nadat jy betaal het jou geld terugvra. Vra dit vanaf die bladsy met jou bestellings. Die plan eindig wanneer al die geld terugbetaal is.',
   },
   'zh-hans': {
     'plans.title': '选择学习方案',
@@ -908,6 +936,7 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': '请选择此方案为谁购买。',
     'plans.whyNoService': '目前没有支付服务可以收取这笔付款。',
     'plans.whyFailed': '无法发起付款。',
+    'plans.refundLaw': '如果您居住在欧盟、冰岛、列支敦士登、挪威或英国，您可以在付款后 14 天内要求退款。请在您的订单页面提出。全部款项退回后，方案即结束。',
   },
   'zh-hant': {
     'plans.title': '選擇學習方案',
@@ -953,6 +982,7 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': '請選擇此方案為誰購買。',
     'plans.whyNoService': '目前沒有付款服務可以收取這筆付款。',
     'plans.whyFailed': '無法發起付款。',
+    'plans.refundLaw': '如果您居住在歐盟、冰島、列支敦斯登、挪威或英國，您可以在付款後 14 天內要求退款。請在您的訂單頁面提出。全部款項退回後，方案即結束。',
   },
   vi: {
     'plans.title': 'Chọn một gói học',
@@ -1012,6 +1042,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Hãy chọn gói này dành cho ai.',
     'plans.whyNoService': 'Hiện không có dịch vụ thanh toán nào có thể nhận khoản thanh toán này.',
     'plans.whyFailed': 'Không thể bắt đầu thanh toán.',
+    'plans.refundLaw':
+      'Nếu bạn sống ở Liên minh châu Âu, Iceland, Liechtenstein, Na Uy hoặc Vương quốc Anh, bạn có thể yêu cầu trả lại tiền trong vòng 14 ngày kể từ khi thanh toán. Hãy yêu cầu từ trang đơn hàng của bạn. Gói kết thúc khi toàn bộ số tiền đã được trả lại.',
   },
   th: {
     'plans.title': 'เลือกแพ็กเกจการเรียน',
@@ -1069,6 +1101,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'เลือกว่าแพ็กเกจนี้เป็นของใคร',
     'plans.whyNoService': 'ขณะนี้ไม่มีบริการชำระเงินใดรับการชำระเงินนี้ได้',
     'plans.whyFailed': 'เริ่มการชำระเงินไม่ได้',
+    'plans.refundLaw':
+      'หากคุณอาศัยอยู่ในสหภาพยุโรป ไอซ์แลนด์ ลิกเตนสไตน์ นอร์เวย์ หรือสหราชอาณาจักร คุณขอเงินคืนได้ภายใน 14 วันหลังชำระเงิน โดยขอจากหน้าคำสั่งซื้อของคุณ แพ็กเกจจะสิ้นสุดเมื่อคืนเงินทั้งหมดแล้ว',
   },
   fil: {
     'plans.title': 'Pumili ng plano sa pag-aaral',
@@ -1131,6 +1165,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyNoService':
       'Walang serbisyo sa pagbabayad na makatatanggap ng bayad na ito sa ngayon.',
     'plans.whyFailed': 'Hindi nasimulan ang pagbabayad.',
+    'plans.refundLaw':
+      'Kung nakatira ka sa European Union, Iceland, Liechtenstein, Norway o United Kingdom, maaari mong hilinging ibalik ang pera mo sa loob ng 14 na araw mula nang magbayad. Hilingin ito mula sa pahina ng mga order mo. Natatapos ang plano kapag naibalik na ang buong halaga.',
   },
   uz: {
     'plans.title': 'Oʻqish tarifini tanlang',
@@ -1190,6 +1226,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Bu tarif kim uchun ekanini tanlang.',
     'plans.whyNoService': 'Hozir hech bir toʻlov xizmati bu toʻlovni qabul qila olmaydi.',
     'plans.whyFailed': 'Toʻlovni boshlab boʻlmadi.',
+    'plans.refundLaw':
+      'Agar siz Yevropa Ittifoqi, Islandiya, Lixtenshteyn, Norvegiya yoki Buyuk Britaniyada yashasangiz, toʻlovdan keyin 14 kun ichida pulingizni qaytarishni soʻrashingiz mumkin. Buni buyurtmalaringiz sahifasidan soʻraysiz. Pulning hammasi qaytarilgach, tarif tugaydi.',
   },
   kk: {
     'plans.title': 'Оқу тарифін таңдаңыз',
@@ -1250,6 +1288,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Бұл тариф кімге арналғанын таңдаңыз.',
     'plans.whyNoService': 'Қазір ешбір төлем қызметі бұл төлемді қабылдай алмайды.',
     'plans.whyFailed': 'Төлемді бастау мүмкін болмады.',
+    'plans.refundLaw':
+      'Егер сіз Еуропалық Одақта, Исландияда, Лихтенштейнде, Норвегияда немесе Біріккен Корольдікте тұрсаңыз, төлегеннен кейін 14 күн ішінде ақшаңызды қайтаруды сұрай аласыз. Мұны тапсырыстарыңыздың бетінен сұрайсыз. Ақша толық қайтарылғанда тариф аяқталады.',
   },
   az: {
     'plans.title': 'Öyrənmə tarifi seçin',
@@ -1309,6 +1349,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Bu tarifin kim üçün olduğunu seçin.',
     'plans.whyNoService': 'Hazırda heç bir ödəniş xidməti bu ödənişi qəbul edə bilmir.',
     'plans.whyFailed': 'Ödənişi başlatmaq mümkün olmadı.',
+    'plans.refundLaw':
+      'Avropa İttifaqında, İslandiyada, Lixtenşteyndə, Norveçdə və ya Birləşmiş Krallıqda yaşayırsınızsa, ödənişdən sonra 14 gün ərzində pulunuzu geri istəyə bilərsiniz. Bunu sifarişləriniz səhifəsindən istəyirsiniz. Pulun hamısı qaytarılanda tarif bitir.',
   },
   tg: {
     'plans.title': 'Нақшаи омӯзишро интихоб кунед',
@@ -1368,6 +1410,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Интихоб кунед, ки ин нақша барои кист.',
     'plans.whyNoService': 'Ҳоло ягон хидмати пардохт ин пардохтро қабул карда наметавонад.',
     'plans.whyFailed': 'Пардохтро оғоз кардан муяссар нашуд.',
+    'plans.refundLaw':
+      'Агар шумо дар Иттиҳоди Аврупо, Исландия, Лихтенштейн, Норвегия ё Британияи Кабир зиндагӣ кунед, метавонед дар давоми 14 рӯз пас аз пардохт пулатонро пас талаб кунед. Инро аз саҳифаи фармоишҳоятон талаб мекунед. Вақте ҳамаи маблағ баргардонида мешавад, нақша анҷом меёбад.',
   },
   ky: {
     'plans.title': 'Окуу тарифин тандаңыз',
@@ -1428,6 +1472,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Бул тариф ким үчүн экенин тандаңыз.',
     'plans.whyNoService': 'Азыр эч бир төлөм кызматы бул төлөмдү кабыл ала албайт.',
     'plans.whyFailed': 'Төлөмдү баштоо мүмкүн болгон жок.',
+    'plans.refundLaw':
+      'Эгер сиз Европа Биримдигинде, Исландияда, Лихтенштейнде, Норвегияда же Улуу Британияда жашасаңыз, төлөгөндөн кийин 14 күндүн ичинде акчаңызды кайтарууну сурай аласыз. Муну буйрутмаларыңыздын барагынан сурайсыз. Акча толугу менен кайтарылганда тариф аяктайт.',
   },
   tk: {
     'plans.title': 'Okuw meýilnamasyny saýlaň',
@@ -1487,6 +1533,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'Bu meýilnamanyň kim üçindigini saýlaň.',
     'plans.whyNoService': 'Häzir hiç bir töleg hyzmaty bu tölegi kabul edip bilmeýär.',
     'plans.whyFailed': 'Tölegi başlap bolmady.',
+    'plans.refundLaw':
+      'Eger siz Ýewropa Bileleşiginde, Islandiýada, Lihtenşteýnde, Norwegiýada ýa-da Birleşen Patyşalykda ýaşaýan bolsaňyz, töländen soň 14 günüň dowamynda puluňyzy yzyna sorap bilersiniz. Muny sargytlaryňyzyň sahypasyndan soraýarsyňyz. Puluň hemmesi gaýtarylanda meýilnama tamamlanýar.',
   },
   ta: {
     'plans.title': 'ஒரு கற்றல் திட்டத்தைத் தேர்ந்தெடுக்கவும்',
@@ -1549,6 +1597,8 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'இந்தத் திட்டம் யாருக்கானது என்பதைத் தேர்ந்தெடுக்கவும்.',
     'plans.whyNoService': 'தற்போது எந்தக் கட்டணச் சேவையாலும் இந்தக் கட்டணத்தைப் பெற முடியாது.',
     'plans.whyFailed': 'கட்டணத்தைத் தொடங்க முடியவில்லை.',
+    'plans.refundLaw':
+      'நீங்கள் ஐரோப்பிய ஒன்றியம், ஐஸ்லாந்து, லிக்டன்ஸ்டைன், நார்வே அல்லது ஐக்கிய இராச்சியத்தில் வசித்தால், கட்டணம் செலுத்திய 14 நாட்களுக்குள் உங்கள் பணத்தைத் திரும்பக் கேட்கலாம். உங்கள் ஆர்டர்கள் பக்கத்திலிருந்து அதைக் கேளுங்கள். முழுப் பணமும் திருப்பித் தரப்பட்டதும் திட்டம் முடிவடையும்.',
   },
   ne: {
     'plans.title': 'सिकाइ योजना छान्नुहोस्',
@@ -1606,5 +1656,7 @@ export const PLANS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'plans.whyChoose': 'यो योजना कसका लागि हो भनी छान्नुहोस्।',
     'plans.whyNoService': 'अहिले कुनै पनि भुक्तानी सेवाले यो भुक्तानी लिन सक्दैन।',
     'plans.whyFailed': 'भुक्तानी सुरु गर्न सकिएन।',
+    'plans.refundLaw':
+      'तपाईं युरोपेली सङ्घ, आइसल्यान्ड, लिक्टेनस्टाइन, नर्वे वा संयुक्त अधिराज्यमा बस्नुहुन्छ भने, भुक्तानी गरेको 14 दिनभित्र आफ्नो रकम फिर्ता माग्न सक्नुहुन्छ। यो आफ्ना अर्डरहरूको पृष्ठबाट माग्नुहोस्। सबै रकम फिर्ता भएपछि योजना सकिन्छ।',
   },
 };

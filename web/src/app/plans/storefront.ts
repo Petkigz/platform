@@ -23,7 +23,13 @@ export type Storefront =
   | { state: 'closed' }
   /** Something could not be read. Not the same as nothing being on sale. */
   | { state: 'unread' }
-  | { state: 'open'; cards: PlanCard[]; accountId: string | null };
+  | {
+      state: 'open';
+      cards: PlanCard[];
+      accountId: string | null;
+      /** The country on the buyer's billing account; null for a visitor or when none is recorded. */
+      country: string | null;
+    };
 
 /**
  * Whether plans are on sale: the switch, or null when it could not be read.
@@ -70,7 +76,7 @@ export async function readStorefront(
     country = account.country;
   }
 
-  if (planIds.length === 0) return { state: 'open', cards: [], accountId };
+  if (planIds.length === 0) return { state: 'open', cards: [], accountId, country };
 
   const versions = await supabase
     .from('plan_versions')
@@ -79,7 +85,7 @@ export async function readStorefront(
     .eq('status', 'active');
   if (versions.error || !Array.isArray(versions.data)) return { state: 'unread' };
   const versionIds = (versions.data as { id?: unknown }[]).map((v) => v.id).filter((id): id is string => typeof id === 'string');
-  if (versionIds.length === 0) return { state: 'open', cards: [], accountId };
+  if (versionIds.length === 0) return { state: 'open', cards: [], accountId, country };
 
   const [prices, entitlements, offline] = await Promise.all([
     supabase
@@ -100,5 +106,5 @@ export async function readStorefront(
     { plans: plans.data, versions: versions.data, prices: prices.data, entitlements: entitlements.data },
     { country, offlineOn: offline, now: Date.now() },
   );
-  return cards === null ? { state: 'unread' } : { state: 'open', cards, accountId };
+  return cards === null ? { state: 'unread' } : { state: 'open', cards, accountId, country };
 }

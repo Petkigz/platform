@@ -12,6 +12,7 @@ import { formatDateTime, translator } from '@/lib/i18n';
 import { availableProviders, providersForAmount } from '@/lib/payments/registry';
 import { findCountry } from '@/lib/phone';
 import { PERIOD_KEY, learnersFor, standingOf } from '@/lib/plans';
+import { hasCourseWithdrawalRight } from '@/lib/withdrawal';
 import { SUBSCRIPTIONS_FLAG, readStorefront, readerLanguage } from '../storefront';
 import { PlanPayForm, type PlanPayOffer, type PlanPayWords } from './plan-pay-form';
 
@@ -145,6 +146,12 @@ export default async function PlanPayPage({ params }: { params: Promise<{ id: st
       <p className="muted" style={{ margin: 0 }}>
         {t('plans.noRenew')}
       </p>
+      {/* Said before the money is asked for, to whoever it may be true of. */}
+      {hasCourseWithdrawalRight(store.country) && (
+        <p className="muted" data-plans-refund style={{ margin: '0.5rem 0 0' }}>
+          {t('plans.refundLaw')}
+        </p>
+      )}
     </div>
   );
   const mine = (

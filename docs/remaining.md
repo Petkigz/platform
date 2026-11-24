@@ -1062,9 +1062,15 @@ written: not a held draft, nothing.
   page asks a buyer in the EU, EEA or UK. The plan page does not ask it and
   the old one did not either, so a plan sold to such a buyer starts with the
   right to withdraw intact and nothing recorded about it. **The owner decided
-  on 2026-11-23 that a plan asks nothing.** Whether such a buyer is promised
-  a refund within fourteen days was not said, and no page says so; it is to
-  be settled before plans are switched on for those countries.
+  on 2026-11-23 that a plan asks nothing, and on 2026-11-24 that such a
+  buyer gets the money back when they ask within fourteen days.** The
+  database already gave them the fourteen days to ask in; since migration
+  357 a refund in full ends the plan, for every learner on it, at that
+  moment. Both plan pages and `/subscriptions` say so to a buyer whose
+  account is in one of those countries or has no country. **Not done:** the
+  refunds policy does not say it (a new version is the owner's to approve);
+  a refund in part ends nothing and leaves the plan running; what a learner
+  enrolled in under the plan is left as it was.
   Checked by `scripts/plans-route-smoke.mjs` on a synthetic backend and a
   synthetic provider, in which no money exists: HTTP in English, Arabic and
   Hausa; each read that can fail, one at a time; a visitor's prices and an
@@ -1280,11 +1286,14 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-**The tree has 356 migrations and the test project has 354.** The 355th,
+**The tree has 357 migrations and the test project has 354.** The 355th,
 `20261281148000_notification_facts.sql`, and the 356th,
 `20261281149000_policy_version_shown.sql`, are not applied there. One job
-carries both (`scripts/hosted-migration-356.mjs`); it needs the owner's
-approval of the run and has not been run.
+carries both (`scripts/hosted-migration-356.mjs`); the owner asked for it on
+2026-11-24 and run `45358527173` is waiting for the owner's approval of the
+run itself. The 357th, `20261281150000_plan_refund_ends_plan.sql`, has a job
+of its own (`scripts/hosted-migration-357.mjs`) that has not been asked for
+and can only start once the project records 356.
 
 The existing Supabase test project has the first 354 of the tree's migrations applied
 (the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,

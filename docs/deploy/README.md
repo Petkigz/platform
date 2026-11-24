@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-356 files in `supabase/migrations/`, applied in filename order — the 14-digit
+357 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -518,6 +518,24 @@ needs a person. At 356 it only repeats the comparison. **Not run yet.**
 application deployed against a database without the 356th cannot record an
 agreement: the button says it could not confirm, and nothing is written.
 Apply the migration first.
+
+**The 357th, `20261281150000_plan_refund_ends_plan.sql`** (a plan ends when
+the order that paid for it has been refunded in full). It replaces one
+function and adds nothing: no table, column, function or grant, and no row
+changes. Its job is `scripts/hosted-migration-357.mjs`, run by the workflow
+"Apply Supabase test migration 357" on a commit whose message starts
+`test: apply ayahspring test migration 357`, behind the same environment and
+the same approval. It starts only from exactly the 356, so it cannot run
+before the job above has; it rehearses on the hosted database and rolls
+back, compares the two roles' privileges with the tested database built from
+all 357, and applies only if the CLI's dry-run names exactly that one file.
+**Not asked for and not run.**
+
+**The application and the 357th go in that order too.** From this commit the
+plan pages tell a buyer in the EU, the EEA or the UK that the plan ends when
+all of the money has been returned. On a database without the 357th a
+refunded plan runs to the end of its period, and that sentence is not true.
+Plans are switched off; apply the migration before they are switched on.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
 pledge through checkout). Its

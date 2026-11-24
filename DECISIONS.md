@@ -8765,6 +8765,68 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## A plan bought in the EU, the EEA or the UK is given back within fourteen days — **DECIDED 2026-11-24**
+
+The owner's word, 2026-11-24: a buyer in the European Union, the rest of the
+European Economic Area or the United Kingdom who pays for a plan gets the
+money back if they ask within fourteen days. It settles what the first of
+the five answers below left open.
+
+- *Who.* The thirty-one countries the course buy page already uses
+  (`course_withdrawal_countries()`), by the country on the billing account.
+  An account with no country is treated as one of them, as it is for a
+  course: the doubt goes to the buyer.
+- *Nothing is asked at checkout.* A plan order records no waiver (the
+  owner's answer of 2026-11-23), so the fourteen days are never given up.
+  That was already how the database worked it out, and nothing was changed
+  there: `order_withdrawal_window()` gives such an order 336 hours.
+  Elsewhere a plan has the platform's own window, as a course has.
+- *It is still a request.* The buyer asks on `/orders`. A person approves
+  it and the money goes back the way it came. Nothing here makes the
+  approval automatic; inside the fourteen days there is no ground to refuse
+  on, and that is for whoever decides the request to know.
+- *When all of it has gone back, the plan ends.* Migration 357
+  (`20261281150000_plan_refund_ends_plan.sql`): every grant the plan gave
+  is taken back from every learner on it, its places are released, the plan
+  is cancelled and its paid period is closed at that moment, and the ending
+  is written in the plan's history and the audit trail
+  (`subscription.ended_on_refund`). Before it, a refund took back what an
+  order bought outright and left a plan running to the end of its period.
+  The account may buy the same plan again.
+- *Part of the money going back ends nothing.* The ledger calls the
+  function only on a refund in full, as it does for a course. A plan with
+  part refunded runs on, and its card says only what is true of it.
+- *What is not taken back.* A course a learner enrolled in under the plan
+  stays on their record; with the plan's grant gone it no longer opens.
+  What was learned is not removed.
+- *What the pages say.* `/plans` and the page where a plan is paid for say
+  the right, unless the account's country is recorded and is not one of
+  the thirty-one. `/subscriptions` says it on a plan in its first fourteen
+  days, with the way to the orders page, and says of a plan whose payment
+  went back in full that it ended for that reason. The sentence names no
+  date: the date is the database's, and `/orders` says it.
+- *Cancelling is still not a refund.* "Cancelling returns no money and
+  does not end the plan early" stays as written, because it is true of
+  cancelling in every country. The right is said beside it, not instead
+  of it.
+
+**Not decided here, and the owner's to decide: the refunds policy.** The
+version in force says that in those countries a buyer has 14 days from the
+day they pay to withdraw from a purchase, which covers a plan. It also says
+"A subscription month already used is not refunded pro rata" and that a
+cancelled subscription runs to the end of the paid period, and it does not
+say that a refunded plan ends. None of that is false; a reader could still
+take it to mean a plan is never refunded. Changing it is a new version,
+which every account is then asked to agree to again, and the wording there
+has not been read by a lawyer. A paragraph to add, if the owner wants it:
+
+> A plan bought in the European Union, Iceland, Liechtenstein, Norway or
+> the United Kingdom can be given back within 14 days of paying: you ask on
+> your orders page, and all of what you paid is returned. The plan ends for
+> everyone learning on it when the money has been returned. After the 14
+> days, and everywhere else, a plan that is cancelled runs to the end of
+> the period that was paid for and no part of it is refunded.
+
 ## A changed policy is told at the next opening, and agreeing names the version — **DECIDED 2026-11-24**
 
 The owner's word (2026-11-23, the fifth answer below) was that a change of
@@ -8910,6 +8972,9 @@ The words in quotation marks are the owner's.
    buyer is promised a refund within fourteen days. No page says so. Plans
    are switched off, and this is to be settled before they are switched on
    for those countries.
+   *(Settled 2026-11-24: such a buyer is given the money back within
+   fourteen days. See "A plan bought in the EU, the EEA or the UK is given
+   back within fourteen days".)*
 2. *Launch free, and register a business in parallel.* Nothing that takes
    money through the site is switched on until there is a registered business
    and a live payment account. Every paid feature stays behind its switch.
@@ -9276,6 +9341,8 @@ is the builder's reading of what the order writer does, and can be changed.
   of a buyer in the EU, EEA or UK. The plan page does not, and the page it
   replaces did not. **Decided by the owner on 2026-11-23: a plan asks
   nothing.** See "Five answers from the owner".
+  *(2026-11-24: the pages now say the right itself, and still ask
+  nothing.)*
 
 ## Notifications, in the reader's language as far as the record allows — **DECIDED 2026-11-23**
 

@@ -267,6 +267,13 @@ async function run() {
   const agreements = await reads('learner', '/policy_acceptances?select=accepted_at');
   assert.equal(agreements.status === 200 ? (await agreements.json()).length : 0, 0, 'an agreement was recorded by a request that named a version not in force');
   shape.push(`agreeing to a policy with a version number that is not in force is refused by the database (${stale.status} 23514 policy:changed), and refused to a visitor (42501)`);
+  // The page of an account's plans asks, with each plan, for the country on
+  // its billing account and for the order it began with (2026-11-24): whether
+  // to say the fourteen days, and whether it ended because the money went
+  // back. Both are relationships the request server has to find.
+  const plansRead = await reads('learner', '/subscriptions?select=id,status,billing_accounts(billing_country),order_items(orders(status))');
+  assert.equal(plansRead.status, 200, `the plans page's read of the account and the order was refused: ${plansRead.status} ${(await plansRead.text()).slice(0, 300)}`);
+  shape.push('a plan is read with its billing account’s country and the status of the order it began with (200)');
   const delivered = await reads('learner', '/notifications?select=id&kind=eq.contract');
   assert.equal(delivered.status === 200 ? (await delivered.json()).length : 0, 0, 'a notification was written by a caller who must not be able to');
   const truncate = await fetch(`${upstream}/course_wishlist`, { method: 'DELETE', headers: { authorization: `Bearer ${anonKey}` } });

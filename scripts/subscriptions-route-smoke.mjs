@@ -58,8 +58,12 @@ const bilal = { id: BILAL, display_name: 'Bilal', learner_type: 'child', linked_
 const spouse = { id: SPOUSE, display_name: 'Synthetic spouse', learner_type: 'adult', linked_user_id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' };
 
 const on = (learner, name = learner.display_name) => ({ status: 'active', learner_profile_id: learner.id, slot_type: learner.learner_type, learner_profiles: name === null ? null : { display_name: name, age_band: learner.age_band ?? null } });
-const family = { plans: { name: 'Synthetic family', tier: 'plus' }, plan_versions: { adult_allowance: 1, child_allowance: 2 } };
-const solo = { plans: { name: 'Synthetic solo', tier: 'basic' }, plan_versions: { adult_allowance: 1, child_allowance: 0 } };
+// Every plan here belongs to an account in Uganda unless a case says
+// otherwise, and was paid for by an order that is still paid: the fourteen
+// days the law gives elsewhere are said only where a case asks for them.
+const account = (country) => ({ billing_accounts: { billing_country: country }, order_items: { orders: { status: 'paid' } } });
+const family = { plans: { name: 'Synthetic family', tier: 'plus' }, plan_versions: { adult_allowance: 1, child_allowance: 2 }, ...account('UG') };
+const solo = { plans: { name: 'Synthetic solo', tier: 'basic' }, plan_versions: { adult_allowance: 1, child_allowance: 0 }, ...account('UG') };
 
 const fresh = () => ({
   flags: new Set(['learning.offline']),
@@ -79,7 +83,7 @@ const fresh = () => ({
     // Cancelled before it was ever paid.
     { id: GONE, status: 'cancelled', plan_version_id: V_SOLO, current_period_start: START, current_period_end: null, ...solo, family_plan_allocations: [] },
     // A plan that is no longer on sale: the plain read is shown neither its name nor its places.
-    { id: OLD, status: 'active', plan_version_id: V_OLD, current_period_start: START, current_period_end: LATER, plans: null, plan_versions: null, family_plan_allocations: [] },
+    { id: OLD, status: 'active', plan_version_id: V_OLD, current_period_start: START, current_period_end: LATER, plans: null, plan_versions: null, family_plan_allocations: [], ...account('UG') },
   ],
   summary: [{ subscriptionId: OLD, planName: 'Synthetic retired plan', tier: 'basic', adultAllowance: 1, childAllowance: 0 }],
   entitlements: [
@@ -331,6 +335,68 @@ try {
   state = fresh();
   console.log('Subscriptions page: signed out goes to sign in; the list unread and a status it does not know are each one sentence at 200; learners, what plans open and the summary unread each leave the cards and say part is missing; six plans each said from status and date with no stored word; only the one child with a free place is offered.');
 
+  // -------------------------------------------------------------- money back
+  // The owner's word of 2026-11-24: a buyer in the European Union, the rest of
+  // the European Economic Area or the United Kingdom may ask for the money
+  // back within fourteen days of paying, and the plan ends when it has all
+  // gone back.
+  {
+    const REFUND = 'If you live in the European Union, Iceland, Liechtenstein, Norway or the United Kingdom, you can ask for your money back within 14 days of paying. You ask on your orders page. The plan ends when all of the money has been returned.';
+    const SAID = `<p class="muted sub-refund" data-sub-refund="true">${REFUND} <a href="/orders">My orders</a></p>`;
+    const daysAgo = (days) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const running = (more) => { state = fresh(); Object.assign(state.subscriptions[0], { current_period_start: daysAgo(3) }, more); };
+
+    // The page asks for the account's country and for the order the plan began with.
+    calls.length = 0;
+    running(account('DE'));
+    let shown = await page({ 'accept-language': 'en' });
+    const asked = calls.find((c) => c.path === '/rest/v1/subscriptions');
+    assert.ok(decodeURIComponent(asked.query).includes('billing_accounts(billing_country),order_items(orders(status))'), `the page did not ask for the account or the order: ${asked.query}`);
+    // Paid for three days ago from Germany: said, on that card and on no other.
+    has(card(shown, RUN), [SAID, 'data-standing="running"', 'data-sub-cancel="plan"'], 'a plan paid for three days ago from Germany');
+    assert.equal(shown.split('data-sub-refund').length - 1, 1, 'the fourteen days are said on a card they are not true of');
+    // From Uganda: not said. The platform's own time is said on the orders page.
+    running(account('UG'));
+    hasNot(await page({ 'accept-language': 'en' }), ['data-sub-refund', '14 days'], 'a plan paid for three days ago from Uganda');
+    // No country on the account, or the account not shown: the benefit of the doubt.
+    running(account(null));
+    has(card(await page({ 'accept-language': 'en' }), RUN), [SAID], 'a plan on an account with no country');
+    running({ billing_accounts: null });
+    has(card(await page({ 'accept-language': 'en' }), RUN), [SAID], 'a plan whose account was not shown');
+    // Fifteen days after paying: not said any more.
+    running({ ...account('DE'), current_period_start: daysAgo(15) });
+    hasNot(await page({ 'accept-language': 'en' }), ['data-sub-refund'], 'a plan paid for fifteen days ago');
+    // Cancelled and still running: cancelling returned no money, and it can still be asked back.
+    state = fresh(); Object.assign(state.subscriptions[2], { current_period_start: daysAgo(1), ...account('IE') });
+    has(card(await page({ 'accept-language': 'en' }), STOP), [SAID, 'data-standing="stopped"'], 'a cancelled plan in its first fourteen days');
+
+    // The money went back in full: the plan ended then, and the card says why.
+    const BACK = '2026-11-10T10:00:00Z';
+    const refunded = (status) => { state = fresh(); Object.assign(state.subscriptions[0], { status: 'cancelled', current_period_start: START, current_period_end: BACK, billing_accounts: { billing_country: 'DE' }, order_items: { orders: { status } }, family_plan_allocations: [{ status: 'released', learner_profile_id: OWN, slot_type: 'adult', learner_profiles: { display_name: 'Synthetic learner' } }] }); };
+    refunded('refunded');
+    shown = card(await page({ 'accept-language': 'en' }), RUN);
+    has(shown, ['data-standing="refunded"', `<p class="sub-standing">Ended when its payment was returned: <bdi>${date('en', BACK)}</bdi></p><p class="muted sub-from">Paid for from: <bdi>${start}</bdi></p>`], 'a plan whose payment was returned');
+    hasNot(shown, ['Learning on this plan', 'data-sub-refund', 'data-sub-forms', '<button', 'Ended: <bdi>', 'Synthetic learner'], 'a plan whose payment was returned');
+    // Part of the money back, or the order not shown: it ended, and no reason is guessed.
+    for (const status of ['partially_refunded', null]) {
+      refunded(status);
+      if (status === null) state.subscriptions[0].order_items = null;
+      shown = card(await page({ 'accept-language': 'en' }), RUN);
+      has(shown, ['data-standing="ended"', `<p class="sub-standing">Ended: <bdi>${date('en', BACK)}</bdi></p>`], `a plan that ended with its order ${status}`);
+      hasNot(shown, ['payment was returned'], `a plan that ended with its order ${status}`);
+    }
+
+    // In Arabic, with the link in Arabic.
+    running(account('FR'));
+    has(card(await page({ 'accept-language': 'ar' }), RUN), ['<p class="muted sub-refund" data-sub-refund="true">إذا كنت تقيم في الاتحاد الأوروبي أو أيسلندا أو ليختنشتاين أو النرويج أو المملكة المتحدة، يمكنك طلب استرداد مالك خلال 14 يومًا من الدفع. تطلب ذلك من صفحة طلباتك. تنتهي الخطة عند إعادة المبلغ كله. <a href="/orders">طلباتي</a></p>'], 'the fourteen days in Arabic');
+    refunded('refunded');
+    shown = card(await page({ 'accept-language': 'ar' }), RUN);
+    has(shown, [`<p class="sub-standing">انتهت عند إعادة ما دُفع عنها: <bdi>${date('ar', BACK)}</bdi></p>`], 'a refunded plan in Arabic');
+    hasNot(shown, ['Ended', 'returned'], 'a refunded plan in Arabic');
+    state = fresh();
+  }
+  console.log('Subscriptions page, money back: the fourteen days said on a plan paid for from Germany, Ireland or France or from an account with no country, in its first fourteen days, with the way to the orders page; not said from Uganda or after the fourteen days; a plan whose payment went back in full said to have ended for that reason, and one part refunded or whose order is not shown said only to have ended; both in Arabic.');
+
   // ------------------------------------------------------------------ Arabic
   const ar = await page({ 'accept-language': 'ar' });
   const laterAr = date('ar', LATER);
@@ -473,9 +539,13 @@ try {
     const shot = async (tab, name) => { if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/${name}.png`, fullPage: true }); };
     const fits = (tab) => tab.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
+    // The longest card there is: a plan paid for three days ago from Germany,
+    // which also says the fourteen days.
+    state = fresh(); Object.assign(state.subscriptions[0], { current_period_start: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), ...account('DE') });
     for (const [code, title, dir] of [['en', 'Your plans', 'ltr'], ['ar', 'خططك', 'rtl'], ['ta', 'உங்கள் திட்டங்கள்', 'ltr']]) {
       for (const width of [320, 390, 1440]) {
         const { context, tab, errors } = await visit(code, width);
+        assert.equal(await tab.locator(`[data-sub="${RUN}"] [data-sub-refund] a[href="/orders"]`).count(), 1, `${code} ${width}: the fourteen days and the way to the orders page`);
         assert.equal(await tab.evaluate(() => document.documentElement.lang), code);
         assert.equal(await tab.getByRole('heading', { name: title, exact: true, level: 1 }).count(), 1, `${code} ${width}: heading`);
         assert.equal(await tab.locator('main article').count(), 6);
@@ -490,7 +560,7 @@ try {
         await context.close();
       }
     }
-    console.log('Subscriptions page in a browser: English, Arabic and Tamil at 320, 390 and 1440; six cards, nothing wider than the screen with the cancel form open.');
+    console.log('Subscriptions page in a browser: English, Arabic and Tamil at 320, 390 and 1440; six cards, one of them saying the fourteen days, nothing wider than the screen with the cancel form open.');
 
     // The forms, in Arabic.
     {

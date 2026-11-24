@@ -212,6 +212,9 @@ const ENGLISH_ONLY = ['Choose a learning plan', 'A plan opens', 'Nothing is take
 // What the database calls things. None of it is a sentence.
 const STORED = ['offline_downloads', 'something_new', 'version 2', 'catalogue', 'SYNTHETIC-DATABASE', 'p-month', 'KES', '17171', '27272', '37373'];
 const LIST = '/plans';
+// The fourteen days the law gives in some countries (the owner's word, 2026-11-24).
+const REFUND = 'If you live in the European Union, Iceland, Liechtenstein, Norway or the United Kingdom, you can ask for your money back within 14 days of paying. You ask on your orders page. The plan ends when all of the money has been returned.';
+const REFUND_AR = 'إذا كنت تقيم في الاتحاد الأوروبي أو أيسلندا أو ليختنشتاين أو النرويج أو المملكة المتحدة، يمكنك طلب استرداد مالك خلال 14 يومًا من الدفع. تطلب ذلك من صفحة طلباتك. تنتهي الخطة عند إعادة المبلغ كله.';
 const PAY = `/plans/${V_MONTH}`;
 const MTN = { MTN_MOMO_SUBSCRIPTION_KEY: 'synthetic', MTN_MOMO_API_USER: 'synthetic', MTN_MOMO_API_KEY: 'synthetic' };
 
@@ -304,6 +307,8 @@ try {
       `<a class="btn" href="/sign-in?next=/plans/${V_MONTH}">Choose this plan</a>`,
       `<a class="btn" href="/sign-in?next=/plans/${V_YEAR}">Choose this plan</a>`,
       'Nothing is taken again automatically. When the period ends, the plan ends unless it is paid for again.',
+      // A visitor may be one of the people the fourteen days are for.
+      `<p class="muted" data-plans-refund="true">${REFUND}</p>`,
     ], 'the visitor’s page');
     hasNot(visitor, [...STORED, 'UGX 15000', V_OLD, 'per month', 'renew', '<a href="/subscriptions">'], 'the visitor’s page');
     // Basic above Plus, and a plan's month before its year.
@@ -320,9 +325,16 @@ try {
     const buyer = await page(LIST, { cookie, 'accept-language': 'en', ...uganda });
     has(buyer, [`<li>For one month: ${amount('UGX 15000')}</li>`, `<a class="btn" href="/plans/${V_SOLO}">Choose this plan</a>`, '<a href="/subscriptions">Subscriptions</a>'], 'the Ugandan account’s page');
     hasNot(buyer, ['USD 4.99', ...STORED, '/sign-in'], 'the Ugandan account’s page');
+    // The fourteen days are not said to an account known to be somewhere the law gives none.
+    hasNot(buyer, ['data-plans-refund', '14 days'], 'the Ugandan account’s page');
     // A country the request claims is not the account's: the account has none.
     state.country = null;
-    has(await page(LIST, { cookie, 'accept-language': 'en', ...uganda }), [`<li>For one month: ${amount('USD 4.99')}</li>`], 'the page of an account with no country');
+    has(await page(LIST, { cookie, 'accept-language': 'en', ...uganda }), [`<li>For one month: ${amount('USD 4.99')}</li>`, 'data-plans-refund="true"', REFUND], 'the page of an account with no country');
+    // An account in Germany, and one in the United Kingdom: said.
+    for (const country of ['DE', 'GB', 'NO']) {
+      state.country = country;
+      has(await page(LIST, { cookie, 'accept-language': 'en' }), ['data-plans-refund="true"', REFUND], `the page of an account in ${country}`);
+    }
     // An account in a country with no price of its own for a plan gets the default.
     state.country = 'TZ';
     has(await page(LIST, { cookie, 'accept-language': 'en' }), [`<li>For one month: ${amount('USD 4.99')}</li>`, `<li>For one month: ${amount('UGX 30000')}</li>`], 'the Tanzanian account’s page');
@@ -349,6 +361,7 @@ try {
       'لا يُخصم أي مبلغ مرة أخرى تلقائيًا. عند انتهاء المدة تنتهي الخطة ما لم تُدفع من جديد.',
       '<a href="/subscriptions">الاشتراكات</a>',
       '<p class="eyebrow"><bdi lang="en" dir="ltr">Plus</bdi></p>',
+      `<p class="muted" data-plans-refund="true">${REFUND_AR}</p>`,
     ], 'the Arabic page');
     hasNot(arabic, [...ENGLISH_ONLY, ...STORED, '<div class="page" lang'], 'the Arabic page');
     // Held for review: English, and the wrapper says so.
@@ -391,7 +404,7 @@ try {
     assert.deepEqual(unpayable.json, { reason: 'provider_unavailable', error: 'No payment provider can take this payment yet.' });
     assert.equal(rpcs('create_plan_order').length, 0, 'a plan was ordered with nothing to pay it through');
     assert.equal(calls.some((c) => c.path === '/rest/v1/billing_accounts' && c.method === 'POST'), false, 'a billing account was opened for an order that was never written');
-    console.log('Plans, no provider: closed while the switch is off and nothing read; each failed read said as unread at status 200; a visitor shown the default prices and an account its own market’s; English, Arabic and a held language; the pay page with no form; the route orders nothing.');
+    console.log('Plans, no provider: closed while the switch is off and nothing read; each failed read said as unread at status 200; a visitor shown the default prices and an account its own market’s; the fourteen days the law gives in some countries said to a visitor, to an account with no country and to one in Germany, the United Kingdom, Norway or France, on the list and before paying, and not to an account in Uganda; English, Arabic and a held language; the pay page with no form; the route orders nothing.');
   });
 
   // ======================================================= a provider connected
@@ -433,6 +446,13 @@ try {
     const solo = await page(`/plans/${V_SOLO}`, { 'accept-language': 'en' });
     has(solo, ['This plan is for: <bdi>Synthetic learner</bdi>', `For one month: ${amount('UGX 15000')}`], 'the solo pay page');
     hasNot(solo, ['Aisha'], 'the solo pay page');
+    // Before the money is asked for: the fourteen days, to whoever they may be
+    // true of. Not to an account in Uganda; to one in France, and in Arabic.
+    hasNot(solo, ['data-plans-refund', '14 days'], 'the Ugandan account’s pay page');
+    state.country = 'FR';
+    has(await page(`/plans/${V_SOLO}`, { 'accept-language': 'en' }), ['data-plans-refund="true"', REFUND], 'the French account’s pay page');
+    has(await page(`/plans/${V_SOLO}`, { 'accept-language': 'ar' }), ['data-plans-refund="true"', REFUND_AR], 'the French account’s pay page in Arabic');
+    state.country = 'UG';
     // Nobody the plan can cover.
     state.learners = [aisha];
     const nobody = await page(`/plans/${V_SOLO}`, { 'accept-language': 'en' });
@@ -562,13 +582,14 @@ try {
           assert.equal(await tab.evaluate(() => getComputedStyle(document.querySelector('main h1')).direction), dir);
           // An amount is left to right whatever the page is.
           assert.equal(await tab.evaluate(() => getComputedStyle(document.querySelector('main .plan-prices bdi')).direction), 'ltr');
+          assert.ok(await tab.locator('main [data-plans-refund]').isVisible(), `${code} ${width}: the fourteen days are not said`);
           assert.ok(await fits(tab), `${code} ${width}: the list is wider than the screen`);
           if ([390, 1440].includes(width)) await shot(tab, `plans-${code}-${width}`);
           assert.deepEqual(errors, [], `${code} ${width}`);
           await context.close();
         }
       }
-      console.log('Plans list in a browser: English, Arabic and Tamil at 320, 390 and 1440; three cards, nothing wider than the screen, amounts left to right.');
+      console.log('Plans list in a browser: English, Arabic and Tamil at 320, 390 and 1440; three cards and the fourteen days said, nothing wider than the screen, amounts left to right.');
 
       // The whole form, in Arabic.
       {

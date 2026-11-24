@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { SUB_STATUSES, addableLearners, standingOfSubscription, subscriptionCards } from './subscriptions.ts';
+import { SUB_STATUSES, WITHDRAWAL_DAYS, addableLearners, standingOfSubscription, subscriptionCards } from './subscriptions.ts';
 
 const NOW = Date.parse('2026-11-23T12:00:00Z');
 const LATER = '2026-12-23T12:00:00Z';
@@ -213,4 +213,69 @@ test('a learner who can be added carries their age band, to tell two children ap
     { id: 'b', name: 'Yusuf', type: 'child', band: '11-13' },
     { id: 'c', name: 'Maryam', type: 'child', band: null },
   ]);
+});
+
+test('a plan whose payment went back in full is said to have ended for that reason', () => {
+  const order = (status: string) => ({ order_items: { orders: { status } } });
+  const of = (more: Record<string, unknown>) => cards([row({ status: 'cancelled', current_period_end: EARLIER, ...more })])![0]!;
+  assert.equal(of(order('refunded')).standing, 'refunded');
+  // PostgREST may answer a joined row as a list of one.
+  assert.equal(of({ order_items: [{ orders: [{ status: 'refunded' }] }] }).standing, 'refunded');
+  // Part of the money back is not the plan given back.
+  assert.equal(of(order('partially_refunded')).standing, 'ended');
+  assert.equal(of(order('paid')).standing, 'ended');
+  // The order not read, or not shown to this reader: ended, which is true, and no reason guessed.
+  assert.equal(of({}).standing, 'ended');
+  assert.equal(of({ order_items: null }).standing, 'ended');
+  assert.equal(of({ order_items: { orders: null } }).standing, 'ended');
+  // The date decides first: a row that still has paid time is not called refunded.
+  assert.equal(of({ ...order('refunded'), current_period_end: LATER }).standing, 'stopped');
+  // Nothing is offered on it and nobody is listed as learning on it.
+  const card = of(order('refunded'));
+  assert.equal(card.cancel, null);
+  assert.equal(card.takesLearners, false);
+  assert.equal(card.refundLaw, false);
+
+  // The database closes the paid period when the money has gone back, which
+  // is what makes the date on the card the day it ended.
+  const ends = readFileSync(new URL('20261281150000_plan_refund_ends_plan.sql', MIGRATIONS), 'utf8');
+  assert.match(ends, /set status\s+= 'cancelled',[\s\S]+current_period_end = case[\s\S]+least\(current_period_end,/u);
+  // And the page asks for the order the plan began with.
+  const page = readFileSync(new URL('../app/subscriptions/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /billing_accounts\(billing_country\),order_items\(orders\(status\)\)/u);
+});
+
+test('the fourteen days are said while they may be running, to whoever they may be true of', () => {
+  const day = 24 * 60 * 60 * 1000;
+  const ago = (days: number) => new Date(NOW - days * day).toISOString();
+  const from = (country: string | null) => ({ billing_accounts: { billing_country: country } });
+  const of = (more: Record<string, unknown>) => cards([row({ current_period_start: ago(3), ...from('DE'), ...more })])![0]!;
+
+  assert.equal(of({}).refundLaw, true);
+  assert.equal(of(from('GB')).refundLaw, true);
+  assert.equal(of(from('NO')).refundLaw, true);
+  // A country where the law gives no such days: not said.
+  assert.equal(of(from('UG')).refundLaw, false);
+  assert.equal(of(from('US')).refundLaw, false);
+  // No country recorded, or the account not read: the benefit of the doubt, as the clock gives it.
+  assert.equal(of(from(null)).refundLaw, true);
+  assert.equal(of({ billing_accounts: null }).refundLaw, true);
+  // Cancelled and still running: the money can still be asked back.
+  assert.equal(of({ status: 'cancelled' }).refundLaw, true);
+  // The last day, and the day after.
+  assert.equal(of({ current_period_start: new Date(NOW - 14 * day + 1000).toISOString() }).refundLaw, true);
+  assert.equal(of({ current_period_start: ago(14) }).refundLaw, false);
+  assert.equal(of({ current_period_start: ago(40) }).refundLaw, false);
+  // Not paid for, over, or with no day it began: nothing to say.
+  assert.equal(of({ status: 'pending', current_period_end: null }).refundLaw, false);
+  assert.equal(of({ current_period_end: EARLIER }).refundLaw, false);
+  assert.equal(of({ current_period_start: null }).refundLaw, false);
+
+  // The same fourteen days the one clock gives, and a plan's buyer is never asked to give them up.
+  const source = sql();
+  assert.equal(WITHDRAWAL_DAYS, 14);
+  assert.match(source, /v_hours := greatest\(v_policy, 14 \* 24\);/u);
+  const planOrder = source.slice(source.lastIndexOf('create or replace function public.create_plan_order('));
+  const body = planOrder.slice(0, planOrder.indexOf('$$;'));
+  assert.doesNotMatch(body, /withdrawal/u);
 });

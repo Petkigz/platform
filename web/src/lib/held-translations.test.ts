@@ -461,11 +461,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // as one of and which currency a service collects.)
   // (Fifty-four and thirty-six since 2026-11-24: telling a reader that a
   // document they agreed to has changed.)
-  assert.equal(unwrittenKeys.length, 1597);
+  assert.equal(unwrittenKeys.length, 1599);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('receipt.')).length, 18);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 54);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 42);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('subs.')).length, 34);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 43);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('subs.')).length, 35);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('policy.')).length, 36);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('inst.')).length, 45);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('tapply.')).length, 35);
@@ -625,11 +625,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // the page that asks to teach added thirty-five and it is 10% (10.38%);
   // five sentences put back on the page an account's plans are kept on
   // (10.36%, still 10%); ten more for a notification said from what it is
-  // made of (10.30%, still 10%).
+  // made of (10.30%, still 10%); five for a policy that changed (10.27%)
+  // and two for a plan given back (10.26%, still 10%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1869);
+    assert.equal(coverageOf(code).total, 1871);
     assert.equal(coverageOf(code).percent, 10, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

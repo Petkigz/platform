@@ -61,6 +61,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * of them out. What Plus adds is said only on a Basic plan that is running
  * or waiting, and only while saving lessons is switched on.
  *
+ * **Money back is said where it is true** (2026-11-24, at the owner's
+ * word). A buyer in the European Union, the rest of the European Economic
+ * Area or the United Kingdom may ask for the money back within fourteen days
+ * of paying. The card says so while those days may still be running, and
+ * sends the reader to their orders, where the asking is done and the
+ * database says the date. A plan whose payment went back in full is said to
+ * have ended for that reason, not only to have ended.
+ *
  * **Who can be added is only who the writer would take**: the reader's own
  * adult profile for an adult place and a child for a child's, while a place
  * of that kind is free. The old list offered every learner the reader could
@@ -86,7 +94,7 @@ export default async function SubscriptionsPage() {
     supabase
       .from('subscriptions')
       .select(
-        'id,status,plan_version_id,current_period_start,current_period_end,plans(name,tier),plan_versions(adult_allowance,child_allowance),family_plan_allocations(status,learner_profile_id,slot_type,learner_profiles(display_name,age_band))',
+        'id,status,plan_version_id,current_period_start,current_period_end,plans(name,tier),plan_versions(adult_allowance,child_allowance),family_plan_allocations(status,learner_profile_id,slot_type,learner_profiles(display_name,age_band)),billing_accounts(billing_country),order_items(orders(status))',
       )
       .order('created_at', { ascending: false })
       .then((r) => r, () => failed),
@@ -203,7 +211,7 @@ export default async function SubscriptionsPage() {
     const addable = profiles.error ? null : addableLearners(card, profiles.data, user.id);
     // A plan that takes learners, and the page cannot say who: part is missing.
     if (card.takesLearners && addable === null) partial = true;
-    const listed = card.standing !== 'ended' && card.standing !== 'withdrawn';
+    const listed = card.standing !== 'ended' && card.standing !== 'refunded' && card.standing !== 'withdrawn';
     const full = card.takesLearners && card.left !== null && card.left.adult === 0 && card.left.child === 0;
 
     return (
@@ -236,6 +244,12 @@ export default async function SubscriptionsPage() {
           {card.standing === 'ended' && card.until && (
             <p className="sub-standing">
               <Say text={t('subs.ended')} parts={{ date: said(card.until) }} />
+            </p>
+          )}
+          {/* Ended early, and why: the money for it went back. */}
+          {card.standing === 'refunded' && card.until && (
+            <p className="sub-standing">
+              <Say text={t('subs.refunded')} parts={{ date: said(card.until) }} />
             </p>
           )}
           {/* When the paid period began: with the line above, the whole period. */}
@@ -311,6 +325,13 @@ export default async function SubscriptionsPage() {
           <p className="muted sub-plus" data-sub-plus>
             <Say text={t('subs.plusAdds')} parts={{ plus: <bdi lang="en" dir="ltr">Plus</bdi> }} />{' '}
             <Link href="/plans">{t('subs.compare')}</Link>
+          </p>
+        )}
+
+        {/* The fourteen days the law gives in some countries, said while they may still be running. */}
+        {card.refundLaw && (
+          <p className="muted sub-refund" data-sub-refund>
+            {t('plans.refundLaw')} <Link href="/orders">{t('orders.title')}</Link>
           </p>
         )}
 

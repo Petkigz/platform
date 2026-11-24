@@ -70,8 +70,10 @@ test('the writer takes the version that was read, and compares it before it reco
   // And a second agreement is answered with the time of the first.
   assert.match(writer, /'already', true/u);
   // A visitor cannot call it.
-  const file = readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql')).sort().at(-1)!;
-  const sql = readFileSync(new URL(file, MIGRATIONS), 'utf8');
+  // The migration that made the writer, by its name: it is not the newest file for long.
+  const file = readdirSync(MIGRATIONS).filter((name) => name.endsWith('_policy_version_shown.sql'));
+  assert.equal(file.length, 1);
+  const sql = readFileSync(new URL(file[0]!, MIGRATIONS), 'utf8');
   assert.match(sql, /revoke all on function public\.accept_policy\(text, integer\) from public, anon;/u);
   assert.match(sql, /grant execute on function public\.accept_policy\(text, integer\) to authenticated;/u);
 });

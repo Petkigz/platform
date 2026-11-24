@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { formatNumber, translator } from '@/lib/i18n';
 import { PERIOD_KEY } from '@/lib/plans';
+import { hasCourseWithdrawalRight } from '@/lib/withdrawal';
 import { PlanSeen } from './plan-seen';
 import { SUBSCRIPTIONS_FLAG, readStorefront, readerLanguage, type Storefront } from './storefront';
 
@@ -31,6 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
  * opens, in sentences: the page used to print "Feature: offline_downloads"
  * and "version 3". Nothing here says a plan renews, because nothing renews
  * one; `plans.noRenew` says so.
+ *
+ * **Money back is said** (2026-11-24, at the owner's word): a buyer in the
+ * European Union, the rest of the European Economic Area or the United
+ * Kingdom may ask for the money back within fourteen days of paying, and the
+ * plan ends when all of it has gone back. One sentence, `plans.refundLaw`,
+ * under the list and on the page a plan is paid for on; left out for an
+ * account whose country is recorded and is not one of those.
  *
  * **Paying is another page** (`/plans/[id]`), one plan at a time, like a
  * course and a pledge. This page used to carry a form in every card that
@@ -210,6 +218,14 @@ export default async function PlansPage() {
       <p className="muted" style={{ marginTop: '1.5rem' }}>
         {t('plans.noRenew')}
       </p>
+      {/* The fourteen days the law gives in some countries. Left out only for
+          an account known to be somewhere else: a visitor, and an account
+          with no country, may be one of the people it is for. */}
+      {hasCourseWithdrawalRight(store.country) && (
+        <p className="muted" data-plans-refund>
+          {t('plans.refundLaw')}
+        </p>
+      )}
       {signedIn && (
         <p>
           <Link href="/subscriptions">{t('nav.subscriptions')}</Link>
