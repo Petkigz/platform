@@ -39,6 +39,19 @@ const M3 = '33333333-3333-4333-8333-333333333333';
 const M4 = '44444444-4444-4444-8444-444444444444';
 const M5 = '55555555-5555-4555-8555-555555555555';
 const CLASS = '66666666-6666-4666-8666-666666666666';
+// Messages kept with what they are made of (since migration 355). The five above them are older: sentences only.
+const N1 = '71111111-1111-4111-8111-111111111111';
+const N2 = '72222222-2222-4222-8222-222222222222';
+const N3 = '73333333-3333-4333-8333-333333333333';
+const N4 = '74444444-4444-4444-8444-444444444444';
+const N5 = '75555555-5555-4555-8555-555555555555';
+const N6 = '76666666-6666-4666-8666-666666666666';
+const N7 = '77777777-7777-4777-8777-777777777777';
+const N8 = '78888888-8888-4888-8888-888888888888';
+const COURSE = '88888888-8888-4888-8888-888888888888';
+const STARTS = '2026-11-21T06:00:00+00:00';
+const READ = '2026-11-15T12:00:00Z';
+const said = (id, kind, title, body, href, facts, createdAt, readAt = READ) => ({ id, kind, title, body, href, severity: 'info', createdAt, readAt, facts });
 const message = (id, kind, title, body, href, readAt = null, createdAt = '2026-11-20T10:00:00Z') => ({ id, kind, title, body, href, severity: 'info', createdAt, readAt });
 const CENTRE = {
   unreadCount: 3,
@@ -55,6 +68,25 @@ const CENTRE = {
     // A kind added to the database before this page learned it, and an address that leaves the site.
     message(M4, 'marketing_offers', 'SYNTHETIC offer', 'Half price today.', '//evil.example/offer', null, '2026-11-17T10:00:00Z'),
     message(M5, 'media_encode_failed', 'A recording will not play', 'The upload could not be prepared.', null, '2026-11-16T12:00:00Z', '2026-11-16T10:00:00Z'),
+    // The amount is kept in minor units: eighty thousand shillings. The stored sentence prints the figure as it is kept.
+    said(N1, 'payout_paid', 'Your payout has been sent', '8000000 KES was sent under reference REF-77 <b>.', '/teach/payouts',
+      { amountMinor: '8000000', currency: 'KES', reference: 'REF-77 <b>' }, '2026-11-15T10:00:00Z'),
+    said(N2, 'payout_failed', 'A payout did not go through', '51500 UGX was not sent. الرقم مغلق <i> Your earnings are still owed and nothing has been lost.', '/teach/payouts',
+      { amountMinor: '51500', currency: 'UGX', reason: 'الرقم مغلق <i>' }, '2026-11-15T09:00:00Z'),
+    said(N3, 'payout_cancelled', 'A payout request was cancelled', 'The request for 20000 UGX was cancelled by the platform. Your earnings are still owed; ask again when you are ready.', '/teach/payouts',
+      { amountMinor: '20000', currency: 'UGX' }, '2026-11-15T08:00:00Z'),
+    // A file with no name, to the person who uploaded it; and a named one, to the author of a lesson that uses it.
+    said(N4, 'media_encode_failed', 'A recording of yours will not play', 'A recording you uploaded could not be turned into something a learner can play, so it will not play until it is retried. The encoder said: encoder exited 137 (out of memory)', '/teach/media',
+      { part: 'uploader', name: null, reason: 'encoder exited 137 (out of memory)' }, '2026-11-15T07:00:00Z'),
+    said(N5, 'media_encode_failed', 'A lesson of yours has nothing to play', 'The recording “Surah <one>” could not be turned into something a learner can play.', `/teach/${COURSE}/preview`,
+      { part: 'author', name: 'Surah <one>', reason: 'encoder exited 137 (out of memory)' }, '2026-11-15T06:00:00Z'),
+    said(N6, 'live_cancelled', 'Class cancelled: Tajweed <circle>', '21 Nov 2026, 09:00 Africa/Kampala · المعلم مريض اليوم', `/live/${CLASS}`,
+      { title: 'Tajweed <circle>', startsAt: STARTS, zone: 'Africa/Kampala', reason: 'المعلم مريض اليوم' }, '2026-11-15T05:00:00Z'),
+    said(N7, 'live_recording_ready', 'Recording ready: Tajweed <circle>', '21 Nov 2026, 09:00 Africa/Kampala · the recording is ready to watch', `/live/${CLASS}`,
+      { title: 'Tajweed <circle>', startsAt: STARTS, zone: 'Africa/Kampala' }, '2026-11-15T04:00:00Z'),
+    // Facts that are not whole: nothing is said from them, and the message is shown as it was written.
+    said(N8, 'payout_paid', 'Your payout has been sent', 'SYNTHETIC stored sentence.', '/teach/payouts',
+      { amountMinor: 'lots', currency: 'KES', reference: 'REF-78' }, '2026-11-15T03:00:00Z'),
   ],
 };
 const KINDS = ['payout_paid', 'payout_failed', 'payout_cancelled', 'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled', 'live_recording_ready'];
@@ -143,8 +175,9 @@ try {
   const none = (text, words, label) => { for (const word of words) assert.ok(!text.includes(word), `${label} says "${word}"`); };
   // English a page in another language must not say.
   // English a page in another language must not say. (Outside the stored text, which is English on purpose.)
-  const ENGLISH = ['Notifications', 'Account settings', 'Messages from', 'Coming up', 'Recent', 'Unread', 'A class', 'Plan:', 'The next period', 'Cancel before', 'Mark all', 'What you are told', 'These switches', 'Everything you', 'Always on', 'Not in use', 'A payout', 'A recording', 'When ', 'Turning this off', 'Your area', 'Open', 'reminder'];
-  const date = (code, iso) => new Intl.DateTimeFormat(code, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone: 'UTC' }).format(new Date(iso));
+  const ENGLISH = ['Amount:', 'Reference:', 'The reason given', 'The money is still', 'The staff of', 'A lesson of yours', 'The recording:', 'It could not be prepared', 'What the program', 'The class:', 'It was to start', 'The class was on', 'Older messages', 'Notifications', 'Account settings', 'Messages from', 'Coming up', 'Recent', 'Unread', 'A class', 'Plan:', 'The next period', 'Cancel before', 'Mark all', 'What you are told', 'These switches', 'Everything you', 'Always on', 'Not in use', 'A payout', 'A recording', 'When ', 'Turning this off', 'Your area', 'Open', 'reminder'];
+  const dateIn = (code, iso, timeZone) => new Intl.DateTimeFormat(code, { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short', timeZone }).format(new Date(iso));
+  const date = (code, iso) => dateIn(code, iso, 'UTC');
   // The page without what the database wrote and without the names its rows are marked with.
   const own = (main) => main.replace(/<div class="told-stored" lang="en">[\s\S]*?<\/div>/g, '').replace(/ data-[a-z-]+="[^"]*"/g, '');
   const items = (main, marker) => main.split(marker).slice(1).map((piece) => piece.split('</li>')[0]);
@@ -185,22 +218,55 @@ try {
 
     // A stored message, in English: the stored text is the message, said once, with when and where it leads.
     const messages = items(seen.main, '<li data-message=');
-    assert.equal(messages.length, 5);
-    none(seen.main, ['told-stored', 'A payout was sent to you</strong></div>', 'A class you were going to was cancelled</strong></div>'], 'the English page names a message above itself');
-    assert.equal(seen.main.split('A payout did not go through').length - 1, 2, 'once as the message, once beside its switch');
-    has(messages[0], [`"${M1}" data-kind="payout_failed" data-read="no">`, '<div class="told-kind"><span class="badge">Unread</span></div>',
+    assert.equal(messages.length, 13);
+    assert.deepEqual(messages.map((m) => /data-said="([a-z]+)"/.exec(m)?.[1]), ['stored', 'stored', 'stored', 'stored', 'stored', 'here', 'here', 'here', 'here', 'here', 'here', 'here', 'stored']);
+    none(seen.main, ['told-stored'], 'the English page');
+    none(messages.slice(0, 5).join(''), ['A payout was sent to you</strong></div>', 'A class you were going to was cancelled</strong></div>'], 'the English page names an older message above itself');
+    assert.equal(seen.main.split('A payout did not go through').length - 1, 3, 'once as the older message, once as the heading of the newer one, once beside its switch');
+    has(messages[0], [`"${M1}" data-kind="payout_failed" data-read="no" data-said="stored">`, '<div class="told-kind"><span class="badge">Unread</span></div>',
       '<div class="told-text" lang="en"><p dir="auto"><strong>A payout did not go through</strong></p><p dir="auto">51500 UGX was not sent: the number is not registered.</p></div>',
       `<p class="told-foot"><span class="muted">${date('en', '2026-11-20T10:00:00Z')}</span><a href="/teach/payouts">Open</a></p>`], 'a failed payout');
     // What somebody typed is kept as typed, and is text.
     has(messages[1], ['data-kind="live_cancelled" data-read="no"', '<p dir="auto"><strong>Class cancelled: Tajweed &lt;circle&gt;</strong></p>',
       '<p dir="auto">The teacher wrote: المعلم مريض اليوم &lt;i&gt;</p>', `<a href="/live/${CLASS}">Open</a>`], 'a cancelled class');
-    has(messages[2], ['data-kind="payout_paid" data-read="yes"><div class="told-text" lang="en"><p dir="auto"><strong>Payout sent</strong></p>', `<span class="muted">${date('en', '2026-11-18T10:00:00Z')}</span>`], 'a payout');
+    has(messages[2], ['data-kind="payout_paid" data-read="yes" data-said="stored"><div class="told-text" lang="en"><p dir="auto"><strong>Payout sent</strong></p>', `<span class="muted">${date('en', '2026-11-18T10:00:00Z')}</span>`], 'a payout');
     none(messages[2], ['badge', 'told-kind'], 'a read message');
     // A kind with no word: no name, still a message. Its address leaves the site, so it is not a link.
     has(messages[3], ['data-kind="unnamed" data-read="no"', '<div class="told-kind"><span class="badge">Unread</span></div>', '<p dir="auto"><strong>SYNTHETIC offer</strong></p><p dir="auto">Half price today.</p>'], 'a message with no word');
     none(messages[3], ['<a ', 'marketing_offers'], 'a message with no word');
     has(messages[4], ['data-kind="media_encode_failed" data-read="yes"', '<strong>A recording will not play</strong>'], 'a failed recording');
     none(messages[4], ['<a '], 'a message that leads nowhere');
+
+    // A message kept with what it is made of is said by the page, in English too.
+    // The amount is said as money: 8000000 minor units of KES is KES 80000.00, which the stored sentence never said.
+    const when = dateIn('en', STARTS, 'Africa/Kampala');
+    has(messages[5], [`"${N1}" data-kind="payout_paid" data-read="yes" data-said="here"><div class="told-kind"><strong>A payout was sent to you</strong></div>`,
+      '<div class="told-said"><p>Amount: <bdi dir="ltr">KES 80000.00</bdi></p><p>Reference: <bdi dir="ltr">REF-77 &lt;b&gt;</bdi></p></div>',
+      `<p class="told-foot"><span class="muted">${date('en', '2026-11-15T10:00:00Z')}</span><a href="/teach/payouts">Open</a></p>`], 'a payout, said');
+    none(messages[5], ['8000000', 'Your payout has been sent', 'was sent under', 'lang="en"', 'badge'], 'a payout, said');
+    // A reason is what somebody typed: kept as typed, as text, finding its own direction.
+    has(messages[6], ['<strong>A payout did not go through</strong></div><div class="told-said"><p>Amount: <bdi dir="ltr">UGX 51500</bdi></p><p>The reason given: <bdi>الرقم مغلق &lt;i&gt;</bdi></p><p>The money is still owed to you. Nothing has been lost.</p></div>'], 'a failed payout, said');
+    has(messages[7], ['<strong>A payout request was cancelled</strong></div><div class="told-said"><p>Amount: <bdi dir="ltr">UGX 20000</bdi></p><p>The staff of this site cancelled this request. The money is still owed to you. Ask again when you are ready.</p></div>'], 'a cancelled payout, said');
+    // No name: no line for one, and no empty quotation marks.
+    has(messages[8], ['<strong>A recording of yours will not play</strong></div><div class="told-said"><p>It could not be prepared for playing. It will not play until it is tried again.</p><p>What the program that prepares it reported: <bdi dir="ltr">encoder exited 137 (out of memory)</bdi></p></div>', '<a href="/teach/media">Open</a>'], 'a failed recording, to its uploader');
+    none(messages[8], ['The recording:'], 'a failed recording with no name');
+    // The author of a lesson is told it is their lesson, and is led to the rehearsal.
+    has(messages[9], ['<strong>A lesson of yours has nothing to play</strong></div><div class="told-said"><p>The recording: <bdi>Surah &lt;one&gt;</bdi></p><p>It could not be prepared for playing.', `<a href="/teach/${COURSE}/preview">Open</a>`], 'a failed recording, to an author');
+    // A class's moment is said in the zone it was scheduled in.
+    assert.match(when, /9:00/, when);
+    has(messages[10], [`<strong>A class you were going to was cancelled</strong></div><div class="told-said"><p>The class: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>It was to start on: <bdi>${when}</bdi></p><p>The reason given: <bdi>المعلم مريض اليوم</bdi></p></div>`, `<a href="/live/${CLASS}">Open</a>`], 'a cancelled class, said');
+    has(messages[11], [`<strong>A recording of a class is ready</strong></div><div class="told-said"><p>The class: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>The class was on: <bdi>${when}</bdi></p></div>`], 'a recording, said');
+    none(messages.slice(5, 12).join(''), ['Class cancelled:', 'Recording ready:', 'The encoder said', 'Africa/Kampala ·', 'told-text', 'told-stored'], 'a message said by the page');
+    // Facts that are not whole are not said: the stored sentences are, and nothing reads "lots".
+    has(messages[12], [`"${N8}" data-kind="payout_paid" data-read="yes" data-said="stored"><div class="told-text" lang="en"><p dir="auto"><strong>Your payout has been sent</strong></p><p dir="auto">SYNTHETIC stored sentence.</p></div>`], 'a message whose facts are not whole');
+    none(seen.main, ['lots', 'REF-78', 'NaN', 'Invalid Date'], 'a message whose facts are not whole');
+    // Unread beside the heading the page says.
+    const unreadSaid = copy(CENTRE); unreadSaid.recent = unreadSaid.recent.filter((m) => m.id === N1).map((m) => ({ ...m, readAt: null })); unreadSaid.unreadCount = 1; unreadSaid.reminders = [];
+    centre = unreadSaid;
+    seen = await get('/notifications');
+    has(seen.main, ['data-read="no" data-said="here"><div class="told-kind"><strong>A payout was sent to you</strong><span class="badge">Unread</span></div>'], 'an unread message, said');
+    centre = 'ok';
+    seen = await get('/notifications');
     has(seen.main, ['<div class="told-mark" data-mark-all="true"><button class="btn secondary" type="button">Mark all as read</button></div>'], 'the button');
 
     // The switches: eight, in the database's order, the two money failures on and held.
@@ -265,7 +331,17 @@ try {
       '<p class="lede">رسائل من المنصة تُعرض داخل التطبيق. لا تُرسَل إلى بريد ولا إلى هاتف. هذه الصفحة هي المكان الوحيد الذي تظهر فيه.</p>',
       '<h2>قريبًا</h2>', `<h2>الأخيرة</h2><span class="badge">غير مقروءة: <bdi>${new Intl.NumberFormat('ar').format(3)}</bdi></span>`,
       // Said once, above the list, to somebody who is not reading English.
-      '<p class="muted told-english" data-in-english="true">الرسائل نفسها مكتوبة بالإنجليزية حاليًا. السطر الذي فوق كل رسالة يبيّن موضوعها.</p>',
+      '<p class="muted told-english" data-in-english="true">الرسائل الأقدم تظهر بالإنجليزية كما كُتبت. السطر الذي فوق كل رسالة يبيّن موضوعها.</p>',
+      // A message kept with what it is made of is said in Arabic: nothing of it is English but what somebody typed.
+      '<div class="told-kind"><strong>أُرسلت إليك دفعة</strong></div><div class="told-said"><p>المبلغ: <bdi dir="ltr">KES 80000.00</bdi></p><p>المرجع: <bdi dir="ltr">REF-77 &lt;b&gt;</bdi></p></div>',
+      '<strong>دفعة لم تتم</strong></div><div class="told-said"><p>المبلغ: <bdi dir="ltr">UGX 51500</bdi></p><p>السبب المذكور: <bdi>الرقم مغلق &lt;i&gt;</bdi></p><p>المال ما زال مستحقًا لك. لم يضع شيء.</p></div>',
+      '<strong>أُلغي طلب دفعة</strong></div><div class="told-said"><p>المبلغ: <bdi dir="ltr">UGX 20000</bdi></p><p>ألغى العاملون في هذا الموقع هذا الطلب. المال ما زال مستحقًا لك. اطلب من جديد متى كنت مستعدًا.</p></div>',
+      '<strong>تسجيل لك لا يمكن تشغيله</strong></div><div class="told-said"><p>تعذّر تجهيزه للتشغيل. لن يعمل حتى تُعاد المحاولة.</p><p>ما أفاد به البرنامج الذي يجهّزه: <bdi dir="ltr">encoder exited 137 (out of memory)</bdi></p></div>',
+      '<strong>درس لك ليس فيه ما يُشغَّل</strong></div><div class="told-said"><p>التسجيل: <bdi>Surah &lt;one&gt;</bdi></p>',
+      `<strong>أُلغيت حصة كنت ستحضرها</strong></div><div class="told-said"><p>الحصة: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>كان موعد بدئها: <bdi>${dateIn('ar', STARTS, 'Africa/Kampala')}</bdi></p><p>السبب المذكور: <bdi>المعلم مريض اليوم</bdi></p></div>`,
+      `<strong>تسجيل حصة صار جاهزًا</strong></div><div class="told-said"><p>الحصة: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>كانت الحصة في: <bdi>${dateIn('ar', STARTS, 'Africa/Kampala')}</bdi></p></div>`,
+      // The one whose facts are not whole is named in Arabic and shown as stored, like an older message.
+      'data-said="stored"><div class="told-kind"><strong>أُرسلت إليك دفعة</strong></div><div class="told-stored" lang="en"><p dir="auto"><strong>Your payout has been sent</strong></p><p dir="auto">SYNTHETIC stored sentence.</p></div>',
       '<strong>حصة على وشك أن تبدأ</strong>', `<p>موعد بدء الحصة: <bdi>${date('ar', '2026-11-24T09:00:00Z')}</bdi></p>`,
       '<strong>خطة تتجدّد قريبًا</strong>', '<p class="told-name">الخطة: <bdi>Family &lt;plan&gt;</bdi></p>', `<p>الفترة التالية تبدأ في: <bdi>${date('ar', '2026-11-25T00:00:00Z')}</bdi></p>`, '<p class="muted">ألغِ قبل ذلك إن لم ترد أن يستمر.</p>',
       '<div class="told-kind"><strong>دفعة لم تتم</strong><span class="badge">غير مقروءة</span></div>',
@@ -284,12 +360,21 @@ try {
     seen = await get('/notifications', 'ar');
     has(seen.main, ['<p class="empty">لا توجد رسائل بعد.</p>'], 'Arabic, nothing yet');
     none(seen.main, ['data-in-english'], 'Arabic, nothing yet');
+    // Only messages the page can say: nothing on it is English, so nothing says that some of it is.
+    const onlySaid = copy(CENTRE); onlySaid.recent = onlySaid.recent.filter((m) => [N1, N2, N3, N4, N5, N6, N7].includes(m.id)); onlySaid.unreadCount = 0; onlySaid.reminders = [];
+    centre = onlySaid;
+    seen = await get('/notifications', 'ar');
+    assert.equal(items(seen.main, '<li data-message=').length, 7);
+    none(seen.main, ['data-in-english', 'told-stored', 'lang="en"', 'data-said="stored"'], 'Arabic, only messages the page says');
+    none(own(seen.main), ENGLISH, 'Arabic, only messages the page says');
     reset();
 
     // ------------------------------------------------------------ French, and a held language
     seen = await get('/notifications', 'fr');
     has(seen.main, ['<a href="/account">Paramètres du compte</a>', '<h2>À venir</h2>', '<h2>Récents</h2><span class="badge">Non lus\u00a0: <bdi>3</bdi></span>',
-      '<p class="muted told-english" data-in-english="true">Les messages eux-mêmes sont rédigés en anglais pour le moment. La ligne au-dessus de chacun dit de quoi il s’agit.</p>',
+      '<p class="muted told-english" data-in-english="true">Les messages plus anciens sont affichés en anglais, tels qu’ils ont été rédigés. La ligne au-dessus de chacun dit de quoi il s’agit.</p>',
+      '<strong>Un versement vous a été envoyé</strong></div><div class="told-said"><p>Montant\u00a0: <bdi dir="ltr">KES 80000.00</bdi></p><p>Référence\u00a0: <bdi dir="ltr">REF-77 &lt;b&gt;</bdi></p></div>',
+      `<p>Cours\u00a0: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>Début prévu\u00a0: <bdi>${dateIn('fr', STARTS, 'Africa/Kampala')}</bdi></p><p>Raison donnée\u00a0: <bdi>المعلم مريض اليوم</bdi></p>`,
       '<strong>Un cours va bientôt commencer</strong>', `<p>Début du cours\u00a0: <bdi>${date('fr', '2026-11-24T09:00:00Z')}</bdi></p>`, '<p class="told-name">Formule\u00a0: <bdi>Family &lt;plan&gt;</bdi></p>',
       `<p>Début de la prochaine période\u00a0: <bdi>${date('fr', '2026-11-25T00:00:00Z')}</bdi></p>`, '<p class="muted">Annulez avant cette date si vous ne voulez pas que cela continue.</p>',
       '<div class="told-kind"><strong>Un versement n’a pas abouti</strong><span class="badge">Non lu</span></div>', '<strong>Un cours auquel vous deviez assister a été annulé</strong>',
@@ -306,7 +391,7 @@ try {
     has(seen.main, ['<h1>Notifications</h1>', '<strong>A class is about to start</strong>', 'Everything you can choose is on.', '<div class="told-text" lang="en">'], 'the Hausa page');
     none(seen.main, ['data-in-english', 'told-stored'], 'the Hausa page');
   }
-  console.log('Notifications: signed out goes to sign in and reads nothing; three reminders, a class and a renewal said whole by the page and one with no word shown as stored; five messages, in English shown as the message and said once, in another language each under its kind’s name with the stored text set apart as English and one with no word shown with no name; an address that leaves the site not followed; what somebody typed kept as typed; eight switches in the database’s order, two held on, two marked not in use; none, some and all off said; nothing yet said as nothing; six kinds of unread centre and four of unread switches, each said as itself and neither taking the other with it; Arabic and French by the reader’s choice, saying once that the messages are English; Hausa in English, marked.');
+  console.log('Notifications: signed out goes to sign in and reads nothing; three reminders, a class and a renewal said whole by the page and one with no word shown as stored; thirteen messages: seven kept with what they are made of and said by the page in English, Arabic and French (an amount as money, a class’s moment in its own zone, a reason as typed, a file with no name said without one), five older ones in English shown as the message and in another language each under its kind’s name with the stored text set apart as English, one whose facts are not whole shown as stored, one with no word shown with no name; the note about English only while something on the page is English; an address that leaves the site not followed; what somebody typed kept as typed; eight switches in the database’s order, two held on, two marked not in use; none, some and all off said; nothing yet said as nothing; six kinds of unread centre and four of unread switches, each said as itself and neither taking the other with it; Arabic and French by the reader’s choice, saying once that the messages are English; Hausa in English, marked.');
 
   // ============================================================== the routes
   {
@@ -404,6 +489,11 @@ try {
         // and a name typed in Arabic reads right to left whichever way the page does.
         assert.equal(await tab.locator('[data-message] [lang="en"] p').first().evaluate((el) => getComputedStyle(el).direction), 'ltr');
         assert.equal(await tab.locator('[data-reminder="class_starting"] .told-name bdi').evaluate((el) => getComputedStyle(el).direction), 'rtl');
+        // In a message the page says: an amount and a reference read left to right on an Arabic page,
+        // and a reason typed in Arabic reads right to left on an English one.
+        assert.equal(await tab.locator(`[data-message="${N1}"] .told-said bdi`).first().evaluate((el) => getComputedStyle(el).direction), 'ltr');
+        assert.equal(await tab.locator(`[data-message="${N6}"] .told-said bdi`).last().evaluate((el) => getComputedStyle(el).direction), 'rtl');
+        assert.equal(await tab.locator('[data-message][data-said="here"]').count(), 7);
         // Eight switches, each a real checkbox with its words beside it, none wider than the card.
         assert.equal(await tab.locator('.told-switch input[type="checkbox"]').count(), 8);
         assert.equal(await tab.locator('.told-switch input:disabled').count(), 2);
@@ -416,7 +506,7 @@ try {
         assert.deepEqual(errors, [], `/notifications ${code} ${width}: ${errors.join(' | ')}`);
         await context.close();
       }
-      console.log(`Synthetic notifications in ${code}: fits a phone with no sideways scroll; stored English reads left to right and a typed Arabic name right to left; eight checkboxes, two held; no link leaves the site; no page error`);
+      console.log(`Synthetic notifications in ${code}: fits a phone with no sideways scroll; stored English reads left to right and a typed Arabic name right to left; in a message the page says, an amount reads left to right and a reason typed in Arabic right to left; eight checkboxes, two held; no link leaves the site; no page error`);
     }
 
     // A switch moves when the database says it did, and only then.

@@ -1670,6 +1670,9 @@ blockquote.tapply-written { margin: 0; padding-inline-start: 0.75rem; border-inl
 .told-stored { margin-top: 0.35rem; padding-inline-start: 0.7rem; border-inline-start: 3px solid var(--border); font-size: 0.93rem; }
 .told-stored p, .told-text p { margin: 0.1rem 0 0; overflow-wrap: anywhere; }
 .told-text { margin-top: 0.25rem; }
+/* A kept message said from what it is made of: one fact to a line. */
+.told-said { margin-top: 0.25rem; }
+.told-said p { margin: 0.1rem 0 0; overflow-wrap: anywhere; }
 .told-foot { display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; font-size: 0.85rem; }
 .told-english { margin: 0 0 0.6rem; font-size: 0.9rem; }
 .told-mark { margin-top: 1rem; }

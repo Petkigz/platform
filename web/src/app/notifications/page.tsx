@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies, headers } from 'next/headers';
@@ -7,7 +8,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { NOTIFICATION_KINDS, describeKind, parsePreferences, type NotificationKind, type Preference } from '@/lib/notification-prefs';
-import { centreOf, planNameOf, type Centre, type CentreReminder } from '@/lib/notifications';
+import { formatMinor } from '@/lib/money';
+import { centreOf, planNameOf, type Centre, type CentreReminder, type MessageFacts } from '@/lib/notifications';
 
 import { Ending } from '../_shared/ending';
 import { MarkAllRead } from './notification-actions';
@@ -40,14 +42,23 @@ export async function generateMetadata(): Promise<Metadata> {
  * is not something you read and dismiss. "Recent" is what happened, and it can
  * be marked read.
  *
- * **In the reader's language, as far as the record allows.** Everything the
- * page says itself is from the catalogue. A reminder is said whole, because
- * it arrives with the moment it is about as a value. A stored message is
- * not: its text was composed in English by the database, with an amount or
- * somebody's reason inside it. The page names what kind of message it is in
- * the reader's language, shows the stored text beneath marked as English,
- * and says once that it is doing so. In English the stored text is the
- * message, so it is shown alone: a name above it would say it twice.
+ * **In the reader's language.** Everything the page says itself is from the
+ * catalogue. A reminder is said whole, because it arrives with the moment
+ * it is about as a value. A kept message is said from what it is made of
+ * (`facts`: an amount, a reference, a title, a moment, somebody's reason),
+ * in every language, English included: the amount is then said as money
+ * and the moment in the reader's own way of writing a date.
+ *
+ * **An older message is English, and the page says so.** A message written
+ * before facts were kept has only the two English sentences the database
+ * composed. The page names what kind of message it is in the reader's
+ * language, shows the stored text beneath marked as English, and says once
+ * that older messages are shown that way. In English the stored text is
+ * the message, so it is shown alone.
+ *
+ * **A reason is shown as written.** What staff typed about a payout, what a
+ * teacher typed about a class and what the encoder reported are not
+ * translated by anything.
  *
  * **Not read is said, not drawn as empty and not thrown.** This page used to
  * answer with an error page when either reply failed. Now a centre that
@@ -115,6 +126,55 @@ export default async function NotificationsPage() {
   // and set apart; to a reader of English it is simply the message.
   const named = shown.code !== 'en';
   const storedClass = named ? 'told-stored' : 'told-text';
+
+  /**
+   * A kept message said from what it is made of: its heading and its lines.
+   *
+   * Every sentence ends in its value, after a colon, so no language has to
+   * inflect an amount or a name. A class's moment is said in the zone the
+   * class was scheduled in, which is the one its teacher and its learners
+   * were told.
+   */
+  const said = (f: MessageFacts): { heading: string; lines: ReactNode[] } => {
+    const amount = (minor: string, currency: string) => (
+      <Ending words={t('sponsor.amount')} gap="amount" value={formatMinor(minor, currency)} ltr />
+    );
+    const reason = (value: string) => <Ending words={t('notify.mReason')} gap="reason" value={value} />;
+    const moment = (words: string, iso: string, zone: string) => {
+      const date = formatDateTime(shown.code, iso, zone);
+      return date ? <Ending words={words} gap="date" value={date} /> : null;
+    };
+    const theClass = (title: string) => <Ending words={t('notify.mClass')} gap="title" value={title} />;
+    switch (f.kind) {
+      case 'payout_paid':
+        return {
+          heading: t('notify.kPayoutPaid'),
+          lines: [amount(f.amountMinor, f.currency), <Ending key="r" words={t('sponsor.reference')} gap="reference" value={f.reference} ltr />],
+        };
+      case 'payout_failed':
+        return { heading: t('notify.kPayoutFailed'), lines: [amount(f.amountMinor, f.currency), reason(f.reason), t('notify.mStillOwed')] };
+      case 'payout_cancelled':
+        return { heading: t('notify.kPayoutCancelled'), lines: [amount(f.amountMinor, f.currency), t('notify.mCancelledBy')] };
+      case 'media_encode_failed':
+        return {
+          // The two readers can do different things about it, and are told which they are.
+          heading: f.part === 'author' ? t('notify.mLessonEmpty') : t('notify.kMediaFailed'),
+          lines: [
+            f.name ? <Ending key="n" words={t('notify.mRecording')} gap="name" value={f.name} /> : null,
+            t('notify.mNotPlayable'),
+            // What a program printed: read left to right whatever the page's direction.
+            <Ending key="e" words={t('notify.mEncoder')} gap="reason" value={f.reason} ltr />,
+          ],
+        };
+      case 'live_cancelled':
+        return {
+          heading: t('notify.kLiveCancelled'),
+          lines: [theClass(f.title), moment(t('notify.mWasAt'), f.startsAt, f.zone), reason(f.reason)],
+        };
+      case 'live_recording_ready':
+        return { heading: t('notify.kRecordingReady'), lines: [theClass(f.title), moment(t('notify.mHeldAt'), f.startsAt, f.zone)] };
+    }
+  };
 
   const kinds = Object.fromEntries(
     NOTIFICATION_KINDS.map((k) => [k.kind, { label: t(k.labelKey), description: t(k.descriptionKey) }]),
@@ -231,7 +291,7 @@ export default async function NotificationsPage() {
             <p className="empty">{t('notify.none')}</p>
           ) : (
             <>
-              {named && (
+              {named && recent.some((m) => m.facts === null) && (
                 <p className="muted told-english" data-in-english>
                   {t('notify.inEnglish')}
                 </p>
@@ -240,20 +300,41 @@ export default async function NotificationsPage() {
                 {recent.map((m) => {
                   const info = m.kind ? describeKind(m.kind) : null;
                   const date = when(m.createdAt);
+                  const telling = m.facts ? said(m.facts) : null;
                   return (
-                    <li key={m.id} data-message={m.id} data-kind={m.kind ?? 'unnamed'} data-read={m.read ? 'yes' : 'no'}>
-                      {((named && info) || !m.read) && (
-                        <div className="told-kind">
-                          {named && info && <strong>{t(info.labelKey)}</strong>}
-                          {!m.read && <span className="badge">{t('notify.unreadMark')}</span>}
-                        </div>
+                    <li
+                      key={m.id}
+                      data-message={m.id}
+                      data-kind={m.kind ?? 'unnamed'}
+                      data-read={m.read ? 'yes' : 'no'}
+                      data-said={telling ? 'here' : 'stored'}
+                    >
+                      {telling ? (
+                        <>
+                          <div className="told-kind">
+                            <strong>{telling.heading}</strong>
+                            {!m.read && <span className="badge">{t('notify.unreadMark')}</span>}
+                          </div>
+                          <div className="told-said">
+                            {telling.lines.map((line, at) => (line === null ? null : <p key={at}>{line}</p>))}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {((named && info) || !m.read) && (
+                            <div className="told-kind">
+                              {named && info && <strong>{t(info.labelKey)}</strong>}
+                              {!m.read && <span className="badge">{t('notify.unreadMark')}</span>}
+                            </div>
+                          )}
+                          <div className={storedClass} lang="en">
+                            <p dir="auto">
+                              <strong>{m.title}</strong>
+                            </p>
+                            <p dir="auto">{m.body}</p>
+                          </div>
+                        </>
                       )}
-                      <div className={storedClass} lang="en">
-                        <p dir="auto">
-                          <strong>{m.title}</strong>
-                        </p>
-                        <p dir="auto">{m.body}</p>
-                      </div>
                       <p className="told-foot">
                         {date && <span className="muted">{date}</span>}
                         {m.href && <Link href={m.href}>{t('assign.open')}</Link>}

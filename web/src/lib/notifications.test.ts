@@ -8,6 +8,7 @@ import {
   PLAN_REMINDER_SUFFIX,
   REMINDER_KINDS,
   centreOf,
+  factsOf,
   internalHrefOf,
   markReadIdsOf,
   planNameOf,
@@ -15,8 +16,16 @@ import {
 
 const MIGRATIONS = new URL('../../../supabase/migrations/', import.meta.url);
 const read = (name: string) => readFileSync(new URL(name, MIGRATIONS), 'utf8');
-const CENTRE = read('20261277000100_notification_preferences.sql');
-const centreFunction = CENTRE.slice(CENTRE.indexOf('create or replace function public.my_notifications('), CENTRE.indexOf('revoke all on function public.my_notifications(integer)'));
+/** One function out of a migration: from its `create or replace` to the `$$;` that ends it. */
+function functionIn(migration: string, name: string): string {
+  const sql = read(migration);
+  const start = sql.lastIndexOf(`create or replace function public.${name}(`);
+  assert.ok(start >= 0, `${name}() is not in ${migration}`);
+  return sql.slice(start, sql.indexOf('\n$$;\n', start) + 5);
+}
+// The migration that keeps what a message is made of, and the last definition of my_notifications().
+const FACTS = '20261281148000_notification_facts.sql';
+const centreFunction = functionIn(FACTS, 'my_notifications');
 
 const ID = '11111111-1111-4111-8111-111111111111';
 const message = (over: Record<string, unknown> = {}) => ({
@@ -53,7 +62,7 @@ test('a message is shown with its kind named, or with no name, never with the st
   const seen = centreOf(centre());
   assert.deepEqual(seen?.recent[0], {
     id: ID, kind: 'payout_failed', title: 'A payout did not go through', body: '51500 UGX was not sent.',
-    href: '/teach/payouts', createdAt: '2026-11-20T10:00:00Z', read: false,
+    facts: null, href: '/teach/payouts', createdAt: '2026-11-20T10:00:00Z', read: false,
   });
   assert.equal(centreOf(centre({ recent: [message({ readAt: '2026-11-20T11:00:00Z' })] }))?.recent[0]?.read, true);
   // A kind added to the database before this code learned it: the message is kept, unnamed.
@@ -128,7 +137,7 @@ test('a notification is shown here and is not sent: nothing that writes one writ
   // The other way round: nothing that writes a notification queues a message
   // through the function that fills the outbox.
   const writesNotification = names.filter((name) => /public\.notify_user\(/u.test(read(name)));
-  assert.equal(writesNotification.length, 4);
+  assert.equal(writesNotification.length, 5);
   for (const name of writesNotification) {
     assert.doesNotMatch(read(name), /queue_message\(|insert into public\.outbound_messages/u, `${name} writes a notification and queues a message`);
   }
@@ -136,4 +145,156 @@ test('a notification is shown here and is not sent: nothing that writes one writ
   const body = notify.slice(notify.indexOf('create or replace function public.notify_user('), notify.indexOf('revoke all on function public.notify_user('));
   assert.ok(body.length > 300);
   assert.doesNotMatch(body, /outbound_messages|enqueue/u);
+  // The one that also keeps the facts.
+  const withFacts = functionIn(FACTS, 'notify_user');
+  assert.match(withFacts, /p_facts\s+jsonb\n\)/u);
+  assert.doesNotMatch(withFacts, /outbound_messages|enqueue|queue_message/u);
+});
+
+// ------------------------------------------------------------------ facts
+
+const PAID = { amountMinor: '8000000', currency: 'KES', reference: 'REF-77' };
+const CLASS = { title: 'Tafsir circle', startsAt: '2026-11-21T06:00:00+00:00', zone: 'Africa/Kampala' };
+
+test('each kind of kept message is read from what it is made of', () => {
+  assert.deepEqual(factsOf('payout_paid', PAID), { kind: 'payout_paid', ...PAID });
+  assert.deepEqual(factsOf('payout_failed', { amountMinor: '51500', currency: 'UGX', reason: ' The number was closed ' }),
+    { kind: 'payout_failed', amountMinor: '51500', currency: 'UGX', reason: 'The number was closed' });
+  assert.deepEqual(factsOf('payout_cancelled', { amountMinor: '0', currency: 'UGX' }), { kind: 'payout_cancelled', amountMinor: '0', currency: 'UGX' });
+  assert.deepEqual(factsOf('media_encode_failed', { part: 'author', name: 'Recorded lesson', reason: 'encoder exited 137' }),
+    { kind: 'media_encode_failed', part: 'author', name: 'Recorded lesson', reason: 'encoder exited 137' });
+  // A file with no name is said without one.
+  assert.equal(factsOf('media_encode_failed', { part: 'uploader', name: null, reason: 'x' })?.kind, 'media_encode_failed');
+  assert.deepEqual(factsOf('media_encode_failed', { part: 'uploader', reason: 'x' }), { kind: 'media_encode_failed', part: 'uploader', name: null, reason: 'x' });
+  assert.deepEqual(factsOf('live_cancelled', { ...CLASS, reason: 'Teacher is unwell' }), { kind: 'live_cancelled', ...CLASS, reason: 'Teacher is unwell' });
+  assert.deepEqual(factsOf('live_recording_ready', CLASS), { kind: 'live_recording_ready', ...CLASS });
+  // Something extra in the row is not said and does no harm.
+  assert.deepEqual(factsOf('payout_cancelled', { amountMinor: '1', currency: 'UGX', note: 'x' }), { kind: 'payout_cancelled', amountMinor: '1', currency: 'UGX' });
+});
+
+test('facts that are not whole are not said at all: the message is then its stored English', () => {
+  // Every message written before facts were kept.
+  for (const none of [null, undefined, '', 'x', 7, [], [PAID]]) assert.equal(factsOf('payout_paid', none), null, JSON.stringify(none));
+  // A kind with no sentence, a reminder's kind, and a name every object has.
+  for (const kind of ['marketing_offers', 'class_starting', 'plan_renewing', 'constructor', '__proto__', null, 7]) {
+    assert.equal(factsOf(kind, PAID), null, String(kind));
+  }
+  // The facts of another kind.
+  assert.equal(factsOf('live_cancelled', PAID), null);
+  assert.equal(factsOf('payout_paid', CLASS), null);
+  for (const over of [{ amountMinor: 8000000 }, { amountMinor: '80.5' }, { amountMinor: '-5' }, { amountMinor: '' }, { amountMinor: '007' }, { amountMinor: '1e3' },
+    { amountMinor: '9'.repeat(19) }, { currency: 'kes' }, { currency: 'KE' }, { currency: 'KES ' }, { currency: null }, { reference: '' }, { reference: '   ' },
+    { reference: 7 }, { reference: 'x'.repeat(301) }, { reference: undefined }]) {
+    assert.equal(factsOf('payout_paid', { ...PAID, ...over }), null, JSON.stringify(over).slice(0, 50));
+  }
+  for (const over of [{ reason: '' }, { reason: null }, { reason: 'x'.repeat(1001) }]) {
+    assert.equal(factsOf('payout_failed', { amountMinor: '1', currency: 'UGX', ...over }), null, JSON.stringify(over).slice(0, 40));
+    assert.equal(factsOf('live_cancelled', { ...CLASS, ...over }), null, JSON.stringify(over).slice(0, 40));
+    assert.equal(factsOf('media_encode_failed', { part: 'uploader', name: null, ...over }), null, JSON.stringify(over).slice(0, 40));
+  }
+  for (const over of [{ part: 'learner' }, { part: undefined }, { name: 7 }, { name: '' }, { name: '  ' }]) {
+    assert.equal(factsOf('media_encode_failed', { part: 'uploader', name: 'n', reason: 'r', ...over }), null, JSON.stringify(over));
+  }
+  for (const over of [{ title: '' }, { title: null }, { startsAt: 'soon' }, { startsAt: null }, { startsAt: 1763704800 }, { zone: 'Mars/Olympus' }, { zone: '' }, { zone: null },
+    { zone: 'x'.repeat(65) }]) {
+    assert.equal(factsOf('live_recording_ready', { ...CLASS, ...over }), null, JSON.stringify(over));
+    assert.equal(factsOf('live_cancelled', { ...CLASS, reason: 'r', ...over }), null, JSON.stringify(over));
+  }
+  // A message whose facts are refused is still a message, and the centre is still read.
+  const seen = centreOf(centre({ recent: [message({ facts: { amountMinor: 'lots' } }), message({ kind: 'payout_paid', facts: PAID })] }));
+  assert.equal(seen?.recent[0]?.facts, null);
+  assert.equal(seen?.recent[0]?.title, 'A payout did not go through');
+  assert.deepEqual(seen?.recent[1]?.facts, { kind: 'payout_paid', ...PAID });
+});
+
+/** What a writer keeps, by name, read out of the migration: the names after `marker` up to the end of the call. */
+function keptAfter(sql: string, marker: string): string[] {
+  const at = sql.indexOf(marker);
+  assert.ok(at >= 0, `${marker} is not in the migration`);
+  const from = sql.indexOf('jsonb_build_object(', at);
+  const call = sql.slice(from, sql.indexOf('\n\n', from));
+  return [...call.slice(0, call.search(/\)\);|\)\n\s+\) is not null/u)).matchAll(/'([A-Za-z]+)', /gu)].map((m) => m[1] as string).sort();
+}
+
+test('the names this code reads are the names the database keeps', () => {
+  const sql = read(FACTS);
+  const kept: Record<string, string[]> = {
+    payout_paid: keptAfter(sql, "'payout_paid:' || p_payout_id::text,"),
+    payout_failed: keptAfter(sql, "'payout_failed:' || p_payout_id::text,"),
+    payout_cancelled: keptAfter(sql, "'payout_cancelled:' || p_payout_id::text,"),
+    media_encode_failed: keptAfter(sql, "'/teach/media',"),
+    live_cancelled: keptAfter(sql, "'live-cancel:' || v_row.id::text,"),
+    live_recording_ready: keptAfter(sql, "'live-recording:' || v_row.id::text,"),
+  };
+  assert.deepEqual(kept, {
+    payout_paid: ['amountMinor', 'currency', 'reference'],
+    payout_failed: ['amountMinor', 'currency', 'reason'],
+    payout_cancelled: ['amountMinor', 'currency'],
+    media_encode_failed: ['name', 'part', 'reason'],
+    live_cancelled: ['reason', 'startsAt', 'title', 'zone'],
+    live_recording_ready: ['startsAt', 'title', 'zone'],
+  });
+  // The second writer about a recording keeps the same names, as the author.
+  assert.deepEqual(keptAfter(sql, "|| '/preview',"), ['name', 'part', 'reason']);
+  assert.match(sql, /jsonb_build_object\('part', 'uploader',/u);
+  assert.match(sql, /jsonb_build_object\('part', 'author',/u);
+  // A value for each of those names makes facts this code will say.
+  const sample: Record<string, unknown> = { amountMinor: '1', currency: 'UGX', reference: 'r', reason: 'r', part: 'author', name: 'n', ...CLASS };
+  for (const [kind, names] of Object.entries(kept)) {
+    const facts = factsOf(kind, Object.fromEntries(names.map((name) => [name, sample[name]])));
+    assert.deepEqual(Object.keys(facts ?? {}).sort(), [...names, 'kind'].sort(), kind);
+  }
+  // And the centre hands them over.
+  assert.match(centreFunction, /'facts',\s+v_row\.facts,/u);
+});
+
+test('each writer is its earlier definition with the facts added, and nothing else', () => {
+  // PostgreSQL cannot wrap the function it replaces, so each was copied whole.
+  // A copy can lose a line. This reads both and allows only the facts.
+  const ADDED = /^\s+(?:jsonb_build_object\()?'[A-Za-z]+', \S.*$/u;
+  const before: [string, string][] = [
+    ['complete_instructor_payout', '20261261000100_notifications.sql'],
+    ['fail_instructor_payout', '20261261000100_notifications.sql'],
+    ['cancel_instructor_payout', '20261261000100_notifications.sql'],
+    ['notify_media_encode_failed', '20261281004100_media_encode_notifications.sql'],
+    ['cancel_live_session', '20261281005000_live_cancel.sql'],
+    ['attach_live_recording', '20261281009000_live_recording.sql'],
+    ['my_notifications', '20261277000100_notification_preferences.sql'],
+  ];
+  for (const [name, migration] of before) {
+    const old = functionIn(migration, name).split('\n');
+    const now = functionIn(FACTS, name).replace('n.body, n.facts, n.href', 'n.body, n.href').split('\n');
+    let i = 0;
+    let added = 0;
+    for (const line of now) {
+      const was = old[i];
+      if (was !== undefined && (line === was || line === `${was},` || (was.endsWith(');') && line === `${was.slice(0, -2)},`))) {
+        i += 1;
+      } else if (ADDED.test(line) || /^\s+'facts',\s+v_row\.facts,$/u.test(line)) {
+        added += 1;
+      } else {
+        assert.fail(`${name}(): a line that is neither the earlier one nor a fact: ${line}`);
+      }
+    }
+    assert.equal(i, old.length, `${name}(): the earlier definition has ${old.length - i} lines the new one lost`);
+    assert.ok(added >= 1 && added <= 8, `${name}(): ${added} lines were added`);
+  }
+  // No later migration defines any of them again without this test being told.
+  const names = readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql')).sort();
+  for (const [name] of before) {
+    const last = names.filter((n) => read(n).includes(`create or replace function public.${name}(`)).at(-1);
+    assert.equal(last, FACTS, `${name}() is defined again in ${last}`);
+  }
+});
+
+test('the message is still written in English beside its facts, and an old message is given none', () => {
+  const sql = read(FACTS);
+  // Title and body are still passed by every writer: the export and an older reader read them.
+  for (const words of ["'Your payout has been sent'", "'A payout did not go through'", "'A payout request was cancelled'", "'A recording of yours will not play'",
+    "'A lesson of yours has nothing to play'", "format('Class cancelled: %s', v_row.title)", "format('Recording ready: %s', v_row.title)"]) {
+    assert.ok(sql.includes(words), words);
+  }
+  // Nothing fills in facts for rows already there.
+  assert.doesNotMatch(sql, /update public\.notifications/u);
+  assert.match(sql, /add column if not exists facts jsonb;/u);
 });

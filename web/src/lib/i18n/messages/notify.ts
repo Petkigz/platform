@@ -52,7 +52,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'غير مقروءة',
     'notify.none': 'لا توجد رسائل بعد.',
     'notify.inEnglish':
-      'الرسائل نفسها مكتوبة بالإنجليزية حاليًا. السطر الذي فوق كل رسالة يبيّن موضوعها.',
+      'الرسائل الأقدم تظهر بالإنجليزية كما كُتبت. السطر الذي فوق كل رسالة يبيّن موضوعها.',
     'notify.classAt': 'موعد بدء الحصة: {date}',
     'notify.planNamed': 'الخطة: {name}',
     'notify.renewsOn': 'الفترة التالية تبدأ في: {date}',
@@ -92,6 +92,17 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'عندما تُلغى حصة مباشرة فيها تسجيل لك أو لأحد أطفالك، مع السبب. إيقاف هذا يعني أن تعرف ذلك عند فتح الغرفة. الحصة تبقى تقول إنها أُلغيت ولماذا.',
     'notify.dRecordingReady':
       'عندما يُضاف تسجيل لحصة كنت فيها أنت أو أحد أطفالك. إيقاف هذا يعني أن تعرف ذلك عند فتح صفحة الحصة. التسجيل يبقى موجودًا، وتمكن مشاهدته ما دام تسجيلك في الدورة قائمًا.',
+    'notify.mReason': 'السبب المذكور: {reason}',
+    'notify.mStillOwed': 'المال ما زال مستحقًا لك. لم يضع شيء.',
+    'notify.mCancelledBy':
+      'ألغى العاملون في هذا الموقع هذا الطلب. المال ما زال مستحقًا لك. اطلب من جديد متى كنت مستعدًا.',
+    'notify.mLessonEmpty': 'درس لك ليس فيه ما يُشغَّل',
+    'notify.mRecording': 'التسجيل: {name}',
+    'notify.mNotPlayable': 'تعذّر تجهيزه للتشغيل. لن يعمل حتى تُعاد المحاولة.',
+    'notify.mEncoder': 'ما أفاد به البرنامج الذي يجهّزه: {reason}',
+    'notify.mClass': 'الحصة: {title}',
+    'notify.mWasAt': 'كان موعد بدئها: {date}',
+    'notify.mHeldAt': 'كانت الحصة في: {date}',
   },
   ur: {
     'notify.lead':
@@ -104,7 +115,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'بغیر پڑھا',
     'notify.none': 'ابھی کوئی پیغام نہیں۔',
     'notify.inEnglish':
-      'پیغامات خود فی الحال انگریزی میں لکھے ہیں۔ ہر پیغام کے اوپر کی سطر بتاتی ہے کہ وہ کس بارے میں ہے۔',
+      'پرانے پیغامات انگریزی میں دکھائے جاتے ہیں، جیسے وہ لکھے گئے تھے۔ ہر پیغام کے اوپر کی سطر بتاتی ہے کہ وہ کس بارے میں ہے۔',
     'notify.classAt': 'کلاس شروع ہونے کا وقت: {date}',
     'notify.planNamed': 'پلان: {name}',
     'notify.renewsOn': 'اگلی مدت شروع ہوگی: {date}',
@@ -147,6 +158,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'جب وہ براہِ راست کلاس منسوخ ہو جس میں آپ یا آپ کا کوئی بچہ داخل تھا، وجہ کے ساتھ۔ اسے بند کرنے کا مطلب ہے کہ آپ کو یہ کمرہ کھولنے پر پتا چلے گا۔ کلاس پھر بھی بتاتی ہے کہ وہ منسوخ ہوئی اور کیوں۔',
     'notify.dRecordingReady':
       'جب اس کلاس کی ریکارڈنگ شامل کی جائے جس میں آپ یا آپ کا کوئی بچہ تھا۔ اسے بند کرنے کا مطلب ہے کہ آپ کو یہ کلاس کا صفحہ کھولنے پر پتا چلے گا۔ ریکارڈنگ پھر بھی وہیں رہتی ہے، اور جب تک آپ کا داخلہ برقرار ہے دیکھی جا سکتی ہے۔',
+    'notify.mReason': 'بتائی گئی وجہ: {reason}',
+    'notify.mStillOwed': 'رقم اب بھی آپ کو واجب الادا ہے۔ کچھ ضائع نہیں ہوا۔',
+    'notify.mCancelledBy':
+      'اس سائٹ کے عملے نے یہ درخواست منسوخ کی۔ رقم اب بھی آپ کو واجب الادا ہے۔ جب تیار ہوں تو دوبارہ درخواست کریں۔',
+    'notify.mLessonEmpty': 'آپ کے ایک سبق میں چلانے کو کچھ نہیں',
+    'notify.mRecording': 'ریکارڈنگ: {name}',
+    'notify.mNotPlayable':
+      'اسے چلانے کے لیے تیار نہیں کیا جا سکا۔ دوبارہ کوشش ہونے تک یہ نہیں چلے گی۔',
+    'notify.mEncoder': 'اسے تیار کرنے والے پروگرام نے یہ بتایا: {reason}',
+    'notify.mClass': 'کلاس: {title}',
+    'notify.mWasAt': 'اسے اس وقت شروع ہونا تھا: {date}',
+    'notify.mHeldAt': 'کلاس اس وقت تھی: {date}',
   },
   fa: {
     'notify.lead':
@@ -158,7 +181,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'خوانده‌نشده',
     'notify.none': 'هنوز پیامی نیست.',
     'notify.inEnglish':
-      'خود پیام‌ها فعلاً به انگلیسی نوشته شده‌اند. سطر بالای هر پیام می‌گوید درباره چیست.',
+      'پیام‌های قدیمی‌تر به انگلیسی نشان داده می‌شوند، همان‌طور که نوشته شده‌اند. سطر بالای هر پیام می‌گوید درباره چیست.',
     'notify.classAt': 'زمان شروع کلاس: {date}',
     'notify.planNamed': 'طرح: {name}',
     'notify.renewsOn': 'دوره بعدی شروع می‌شود در: {date}',
@@ -202,6 +225,17 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'وقتی کلاس زنده‌ای که شما یا یکی از کودکانتان در آن ثبت‌نام بودید لغو شود، همراه با دلیل. خاموش کردن این یعنی با باز کردن اتاق باخبر می‌شوید. کلاس همچنان می‌گوید که لغو شده و چرا.',
     'notify.dRecordingReady':
       'وقتی ضبطی برای کلاسی افزوده شود که شما یا یکی از کودکانتان در آن بودید. خاموش کردن این یعنی با باز کردن صفحه کلاس باخبر می‌شوید. ضبط همچنان آنجاست، و تا وقتی ثبت‌نام شما برقرار است می‌توان آن را دید.',
+    'notify.mReason': 'دلیل گفته‌شده: {reason}',
+    'notify.mStillOwed': 'این پول همچنان طلب شماست. چیزی از دست نرفته است.',
+    'notify.mCancelledBy':
+      'کارکنان این سایت این درخواست را لغو کردند. این پول همچنان طلب شماست. هر وقت آماده بودید دوباره درخواست کنید.',
+    'notify.mLessonEmpty': 'یکی از درس‌های شما چیزی برای پخش ندارد',
+    'notify.mRecording': 'ضبط: {name}',
+    'notify.mNotPlayable': 'برای پخش آماده نشد. تا دوباره امتحان نشود پخش نخواهد شد.',
+    'notify.mEncoder': 'آنچه برنامهٔ آماده‌ساز گزارش کرد: {reason}',
+    'notify.mClass': 'کلاس: {title}',
+    'notify.mWasAt': 'قرار بود در این زمان شروع شود: {date}',
+    'notify.mHeldAt': 'کلاس در این زمان بود: {date}',
   },
   'fa-af': {
     'notify.lead':
@@ -213,7 +247,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'ناخوانده',
     'notify.none': 'هنوز پیامی نیست.',
     'notify.inEnglish':
-      'خود پیام‌ها فعلاً به انگلیسی نوشته شده‌اند. سطر بالای هر پیام می‌گوید درباره چیست.',
+      'پیام‌های قدیمی‌تر به انگلیسی نشان داده می‌شوند، همان‌طور که نوشته شده‌اند. سطر بالای هر پیام می‌گوید درباره چیست.',
     'notify.classAt': 'وقت شروع صنف: {date}',
     'notify.planNamed': 'پلان: {name}',
     'notify.renewsOn': 'دوره بعدی شروع می‌شود در: {date}',
@@ -256,6 +290,17 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'وقتی صنف زنده‌ای که شما یا یکی از اطفالتان در آن شامل بودید لغو شود، همراه با دلیل. خاموش کردن این یعنی با باز کردن اتاق خبر می‌شوید. صنف همچنان می‌گوید که لغو شده و چرا.',
     'notify.dRecordingReady':
       'وقتی ثبتی برای صنفی افزوده شود که شما یا یکی از اطفالتان در آن بودید. خاموش کردن این یعنی با باز کردن صفحه صنف خبر می‌شوید. ثبت همچنان آنجاست، و تا وقتی شمولیت شما برقرار است می‌توان آن را دید.',
+    'notify.mReason': 'دلیل گفته‌شده: {reason}',
+    'notify.mStillOwed': 'این پول هنوز طلب شماست. چیزی از دست نرفته است.',
+    'notify.mCancelledBy':
+      'کارمندان این سایت این درخواست را لغو کردند. این پول هنوز طلب شماست. هر وقت آماده بودید دوباره درخواست کنید.',
+    'notify.mLessonEmpty': 'یکی از درس‌های شما چیزی برای پخش ندارد',
+    'notify.mRecording': 'ثبت: {name}',
+    'notify.mNotPlayable': 'برای پخش آماده نشد. تا دوباره امتحان نشود پخش نخواهد شد.',
+    'notify.mEncoder': 'آنچه برنامهٔ آماده‌ساز گزارش داد: {reason}',
+    'notify.mClass': 'صنف: {title}',
+    'notify.mWasAt': 'قرار بود در این وقت شروع شود: {date}',
+    'notify.mHeldAt': 'صنف در این وقت بود: {date}',
   },
   tr: {
     'notify.lead':
@@ -268,7 +313,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Okunmamış',
     'notify.none': 'Henüz mesaj yok.',
     'notify.inEnglish':
-      'Mesajların kendisi şimdilik İngilizce yazılıyor. Her birinin üstündeki satır neyle ilgili olduğunu söyler.',
+      'Eski mesajlar, yazıldıkları gibi İngilizce gösterilir. Her birinin üstündeki satır neyle ilgili olduğunu söyler.',
     'notify.classAt': 'Dersin başlama zamanı: {date}',
     'notify.planNamed': 'Planın adı: {name}',
     'notify.renewsOn': 'Sonraki dönemin başlangıcı: {date}',
@@ -312,6 +357,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Sizin ya da bir çocuğunuzun kayıtlı olduğu canlı bir ders iptal edildiğinde, nedeniyle birlikte. Bunu kapatmak, durumu odayı açınca öğrenmek demektir. Ders yine de iptal edildiğini ve nedenini söyler.',
     'notify.dRecordingReady':
       'Sizin ya da bir çocuğunuzun bulunduğu bir derse kayıt eklendiğinde. Bunu kapatmak, durumu ders sayfasını açınca öğrenmek demektir. Kayıt yine oradadır ve kurs kaydınız sürdükçe izlenebilir.',
+    'notify.mReason': 'Belirtilen neden: {reason}',
+    'notify.mStillOwed': 'Para hâlâ size borçlu olunan paradır. Hiçbir şey kaybolmadı.',
+    'notify.mCancelledBy':
+      'Bu sitenin görevlileri bu talebi iptal etti. Para hâlâ size borçlu olunan paradır. Hazır olduğunuzda yeniden isteyin.',
+    'notify.mLessonEmpty': 'Bir dersinizde oynatılacak bir şey yok',
+    'notify.mRecording': 'Kayıt: {name}',
+    'notify.mNotPlayable':
+      'Oynatılmak üzere hazırlanamadı. Yeniden denenene kadar oynatılamayacak.',
+    'notify.mEncoder': 'Onu hazırlayan programın bildirdiği: {reason}',
+    'notify.mClass': 'Ders: {title}',
+    'notify.mWasAt': 'Başlayacağı zaman: {date}',
+    'notify.mHeldAt': 'Dersin yapıldığı zaman: {date}',
   },
   id: {
     'notify.lead':
@@ -324,7 +381,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Belum dibaca',
     'notify.none': 'Belum ada pesan.',
     'notify.inEnglish':
-      'Pesannya sendiri untuk saat ini ditulis dalam bahasa Inggris. Baris di atas setiap pesan menyebutkan isinya tentang apa.',
+      'Pesan yang lebih lama ditampilkan dalam bahasa Inggris, sebagaimana ditulis. Baris di atas setiap pesan menyebutkan isinya tentang apa.',
     'notify.classAt': 'Kelas dimulai pada: {date}',
     'notify.planNamed': 'Paket: {name}',
     'notify.renewsOn': 'Periode berikutnya dimulai pada: {date}',
@@ -369,6 +426,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ketika kelas langsung yang diikuti Anda atau anak Anda dibatalkan, beserta alasannya. Mematikan ini berarti Anda mengetahuinya saat membuka ruang kelas. Kelas itu tetap menyatakan bahwa ia dibatalkan, dan mengapa.',
     'notify.dRecordingReady':
       'Ketika rekaman ditambahkan untuk kelas yang diikuti Anda atau anak Anda. Mematikan ini berarti Anda mengetahuinya saat membuka halaman kelas. Rekaman itu tetap ada, dan tetap dapat ditonton selama pendaftaran Anda berlaku.',
+    'notify.mReason': 'Alasan yang diberikan: {reason}',
+    'notify.mStillOwed': 'Uang itu masih menjadi hak Anda. Tidak ada yang hilang.',
+    'notify.mCancelledBy':
+      'Petugas situs ini membatalkan permintaan ini. Uang itu masih menjadi hak Anda. Minta lagi saat Anda siap.',
+    'notify.mLessonEmpty': 'Sebuah pelajaran Anda tidak punya apa pun untuk diputar',
+    'notify.mRecording': 'Rekaman: {name}',
+    'notify.mNotPlayable':
+      'Rekaman itu tidak dapat disiapkan untuk diputar. Rekaman itu tidak akan dapat diputar sampai dicoba lagi.',
+    'notify.mEncoder': 'Yang dilaporkan program penyiapnya: {reason}',
+    'notify.mClass': 'Kelas: {title}',
+    'notify.mWasAt': 'Seharusnya dimulai pada: {date}',
+    'notify.mHeldAt': 'Kelas itu berlangsung pada: {date}',
   },
   ms: {
     'notify.lead':
@@ -381,7 +450,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Belum dibaca',
     'notify.none': 'Belum ada mesej.',
     'notify.inEnglish':
-      'Mesej itu sendiri buat masa ini ditulis dalam bahasa Inggeris. Baris di atas setiap mesej menyatakan perkaranya.',
+      'Mesej yang lebih lama dipaparkan dalam bahasa Inggeris, seperti yang ditulis. Baris di atas setiap mesej menyatakan perkaranya.',
     'notify.classAt': 'Kelas bermula pada: {date}',
     'notify.planNamed': 'Pelan: {name}',
     'notify.renewsOn': 'Tempoh seterusnya bermula pada: {date}',
@@ -426,6 +495,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Apabila kelas langsung yang disertai anda atau anak anda dibatalkan, berserta sebabnya. Mematikan ini bermakna anda mengetahuinya apabila membuka bilik kelas. Kelas itu tetap menyatakan bahawa ia dibatalkan, dan mengapa.',
     'notify.dRecordingReady':
       'Apabila rakaman ditambah bagi kelas yang disertai anda atau anak anda. Mematikan ini bermakna anda mengetahuinya apabila membuka halaman kelas. Rakaman itu tetap ada, dan masih boleh ditonton selagi pendaftaran anda berkuat kuasa.',
+    'notify.mReason': 'Sebab yang diberikan: {reason}',
+    'notify.mStillOwed': 'Wang itu masih terhutang kepada anda. Tiada apa-apa yang hilang.',
+    'notify.mCancelledBy':
+      'Kakitangan laman ini membatalkan permintaan ini. Wang itu masih terhutang kepada anda. Minta semula apabila anda bersedia.',
+    'notify.mLessonEmpty': 'Satu pelajaran anda tiada apa-apa untuk dimainkan',
+    'notify.mRecording': 'Rakaman: {name}',
+    'notify.mNotPlayable':
+      'Rakaman itu tidak dapat disediakan untuk dimainkan. Ia tidak akan dapat dimainkan sehingga dicuba semula.',
+    'notify.mEncoder': 'Yang dilaporkan oleh program penyedianya: {reason}',
+    'notify.mClass': 'Kelas: {title}',
+    'notify.mWasAt': 'Sepatutnya bermula pada: {date}',
+    'notify.mHeldAt': 'Kelas itu diadakan pada: {date}',
   },
   bn: {
     'notify.lead':
@@ -438,7 +519,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'পড়া হয়নি',
     'notify.none': 'এখনো কোনো বার্তা নেই।',
     'notify.inEnglish':
-      'বার্তাগুলো আপাতত ইংরেজিতে লেখা। প্রতিটির ওপরের লাইনটি বলে দেয় সেটি কী নিয়ে।',
+      'পুরোনো বার্তাগুলো যেভাবে লেখা হয়েছিল সেভাবেই ইংরেজিতে দেখানো হয়। প্রতিটির ওপরের লাইনটি বলে দেয় সেটি কী নিয়ে।',
     'notify.classAt': 'ক্লাস শুরু হবে: {date}',
     'notify.planNamed': 'প্ল্যান: {name}',
     'notify.renewsOn': 'পরের মেয়াদ শুরু হবে: {date}',
@@ -481,6 +562,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'যখন আপনি বা আপনার কোনো সন্তান যে সরাসরি ক্লাসে নথিভুক্ত ছিলেন তা বাতিল হয়, কারণসহ। এটি বন্ধ করার মানে হলো কক্ষটি খুলে জানতে পারা। ক্লাসটি তখনো বলে যে সেটি বাতিল হয়েছে, এবং কেন।',
     'notify.dRecordingReady':
       'যখন আপনি বা আপনার কোনো সন্তান যে ক্লাসে ছিলেন তার রেকর্ডিং যোগ করা হয়। এটি বন্ধ করার মানে হলো ক্লাসের পৃষ্ঠা খুলে জানতে পারা। রেকর্ডিংটি তখনো সেখানেই থাকে, এবং আপনার ভর্তি যত দিন বহাল থাকে তত দিন দেখা যায়।',
+    'notify.mReason': 'যে কারণ জানানো হয়েছে: {reason}',
+    'notify.mStillOwed': 'টাকাটি এখনো আপনার পাওনা। কিছুই হারায়নি।',
+    'notify.mCancelledBy':
+      'এই সাইটের কর্মীরা এই অনুরোধটি বাতিল করেছেন। টাকাটি এখনো আপনার পাওনা। প্রস্তুত হলে আবার অনুরোধ করুন।',
+    'notify.mLessonEmpty': 'আপনার একটি পাঠে চালানোর মতো কিছু নেই',
+    'notify.mRecording': 'রেকর্ডিং: {name}',
+    'notify.mNotPlayable':
+      'এটি চালানোর জন্য প্রস্তুত করা যায়নি। আবার চেষ্টা না করা পর্যন্ত এটি চলবে না।',
+    'notify.mEncoder': 'যে প্রোগ্রাম এটি প্রস্তুত করে সেটি যা জানিয়েছে: {reason}',
+    'notify.mClass': 'ক্লাস: {title}',
+    'notify.mWasAt': 'এটি শুরু হওয়ার কথা ছিল: {date}',
+    'notify.mHeldAt': 'ক্লাসটি হয়েছিল: {date}',
   },
   hi: {
     'notify.lead':
@@ -492,7 +585,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'अपठित',
     'notify.none': 'अभी कोई संदेश नहीं है।',
     'notify.inEnglish':
-      'संदेश ख़ुद फ़िलहाल अंग्रेज़ी में लिखे हैं। हर संदेश के ऊपर की पंक्ति बताती है कि वह किस बारे में है।',
+      'पुराने संदेश अंग्रेज़ी में दिखाए जाते हैं, जैसे वे लिखे गए थे। हर संदेश के ऊपर की पंक्ति बताती है कि वह किस बारे में है।',
     'notify.classAt': 'कक्षा शुरू होने का समय: {date}',
     'notify.planNamed': 'प्लान: {name}',
     'notify.renewsOn': 'अगली अवधि शुरू होगी: {date}',
@@ -534,6 +627,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'जब वह लाइव कक्षा रद्द हो जिसमें आप या आपका कोई बच्चा नामांकित था, कारण के साथ। इसे बंद करने का मतलब है कि आपको यह कमरा खोलने पर पता चलेगा। कक्षा फिर भी बताती है कि वह रद्द हुई, और क्यों।',
     'notify.dRecordingReady':
       'जब उस कक्षा की रिकॉर्डिंग जोड़ी जाए जिसमें आप या आपका कोई बच्चा था। इसे बंद करने का मतलब है कि आपको यह कक्षा का पृष्ठ खोलने पर पता चलेगा। रिकॉर्डिंग फिर भी वहीं रहती है, और जब तक आपका नामांकन बना है तब तक देखी जा सकती है।',
+    'notify.mReason': 'बताया गया कारण: {reason}',
+    'notify.mStillOwed': 'यह पैसा अब भी आपका बकाया है। कुछ भी खोया नहीं है।',
+    'notify.mCancelledBy':
+      'इस साइट के कर्मचारियों ने यह अनुरोध रद्द किया। यह पैसा अब भी आपका बकाया है। जब तैयार हों तो फिर से माँगें।',
+    'notify.mLessonEmpty': 'आपके एक पाठ में चलाने को कुछ नहीं है',
+    'notify.mRecording': 'रिकॉर्डिंग: {name}',
+    'notify.mNotPlayable':
+      'इसे चलाने के लिए तैयार नहीं किया जा सका। दोबारा कोशिश होने तक यह नहीं चलेगी।',
+    'notify.mEncoder': 'इसे तैयार करने वाले प्रोग्राम ने यह बताया: {reason}',
+    'notify.mClass': 'कक्षा: {title}',
+    'notify.mWasAt': 'इसे इस समय शुरू होना था: {date}',
+    'notify.mHeldAt': 'कक्षा इस समय हुई थी: {date}',
   },
   fr: {
     'notify.lead':
@@ -546,7 +651,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Non lu',
     'notify.none': 'Aucun message pour l’instant.',
     'notify.inEnglish':
-      'Les messages eux-mêmes sont rédigés en anglais pour le moment. La ligne au-dessus de chacun dit de quoi il s’agit.',
+      'Les messages plus anciens sont affichés en anglais, tels qu’ils ont été rédigés. La ligne au-dessus de chacun dit de quoi il s’agit.',
     'notify.classAt': 'Début du cours : {date}',
     'notify.planNamed': 'Formule : {name}',
     'notify.renewsOn': 'Début de la prochaine période : {date}',
@@ -591,6 +696,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Quand un cours en direct où vous ou l’un de vos enfants aviez une inscription est annulé, avec la raison. Désactiver cet avis, c’est l’apprendre en ouvrant la salle. Le cours indique toujours qu’il a été annulé, et pourquoi.',
     'notify.dRecordingReady':
       'Quand un enregistrement est ajouté pour un cours auquel vous ou l’un de vos enfants avez assisté. Désactiver cet avis, c’est l’apprendre en ouvrant la page du cours. L’enregistrement reste là, et peut être regardé tant que dure votre inscription.',
+    'notify.mReason': 'Raison donnée : {reason}',
+    'notify.mStillOwed': 'Cet argent vous est toujours dû. Rien n’a été perdu.',
+    'notify.mCancelledBy':
+      'Le personnel de ce site a annulé cette demande. Cet argent vous est toujours dû. Refaites une demande quand vous serez prêt.',
+    'notify.mLessonEmpty': 'Une de vos leçons n’a rien à lire',
+    'notify.mRecording': 'Enregistrement : {name}',
+    'notify.mNotPlayable':
+      'Il n’a pas pu être préparé pour la lecture. Il ne pourra pas être lu tant qu’un nouvel essai n’aura pas été fait.',
+    'notify.mEncoder': 'Ce qu’a signalé le programme qui le prépare : {reason}',
+    'notify.mClass': 'Cours : {title}',
+    'notify.mWasAt': 'Début prévu : {date}',
+    'notify.mHeldAt': 'Date du cours : {date}',
   },
   es: {
     'notify.lead':
@@ -603,7 +720,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Sin leer',
     'notify.none': 'Todavía no hay mensajes.',
     'notify.inEnglish':
-      'Los mensajes en sí están escritos en inglés por ahora. La línea que hay encima de cada uno dice de qué trata.',
+      'Los mensajes más antiguos se muestran en inglés, tal como se escribieron. La línea que hay encima de cada uno dice de qué trata.',
     'notify.classAt': 'Inicio de la clase: {date}',
     'notify.planNamed': 'Nombre del plan: {name}',
     'notify.renewsOn': 'Inicio del próximo periodo: {date}',
@@ -649,6 +766,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Cuando se cancela una clase en directo en la que usted o uno de sus hijos tenía una inscripción, con el motivo. Desactivar esto significa enterarse al abrir la sala. La clase sigue diciendo que se canceló, y por qué.',
     'notify.dRecordingReady':
       'Cuando se añade una grabación de una clase en la que estuvo usted o uno de sus hijos. Desactivar esto significa enterarse al abrir la página de la clase. La grabación sigue ahí, y se puede ver mientras dure su inscripción.',
+    'notify.mReason': 'Motivo indicado: {reason}',
+    'notify.mStillOwed': 'Ese dinero se le sigue debiendo. No se ha perdido nada.',
+    'notify.mCancelledBy':
+      'El personal de este sitio canceló esta solicitud. Ese dinero se le sigue debiendo. Vuelva a pedirlo cuando esté listo.',
+    'notify.mLessonEmpty': 'Una lección suya no tiene nada que reproducir',
+    'notify.mRecording': 'Grabación: {name}',
+    'notify.mNotPlayable':
+      'No se pudo preparar para su reproducción. No se podrá reproducir hasta que se intente de nuevo.',
+    'notify.mEncoder': 'Lo que indicó el programa que la prepara: {reason}',
+    'notify.mClass': 'Clase: {title}',
+    'notify.mWasAt': 'Inicio previsto: {date}',
+    'notify.mHeldAt': 'Fecha de la clase: {date}',
   },
   pt: {
     'notify.lead':
@@ -661,7 +790,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Por ler',
     'notify.none': 'Ainda não há mensagens.',
     'notify.inEnglish':
-      'As mensagens em si estão, por agora, escritas em inglês. A linha por cima de cada uma diz de que se trata.',
+      'As mensagens mais antigas são mostradas em inglês, tal como foram escritas. A linha por cima de cada uma diz de que se trata.',
     'notify.classAt': 'Início da aula: {date}',
     'notify.planNamed': 'Nome do plano: {name}',
     'notify.renewsOn': 'Início do próximo período: {date}',
@@ -706,6 +835,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Quando é cancelada uma aula em direto em que havia uma inscrição sua ou de uma criança sua, com o motivo. Desligar isto significa ficar a saber ao abrir a sala. A aula continua a dizer que foi cancelada, e porquê.',
     'notify.dRecordingReady':
       'Quando é adicionada uma gravação de uma aula em que esteve, ou em que esteve uma criança sua. Desligar isto significa ficar a saber ao abrir a página da aula. A gravação continua lá, e pode ser vista enquanto durar a sua inscrição.',
+    'notify.mReason': 'Motivo indicado: {reason}',
+    'notify.mStillOwed': 'Esse dinheiro continua a ser-lhe devido. Nada se perdeu.',
+    'notify.mCancelledBy':
+      'A equipa deste sítio cancelou este pedido. Esse dinheiro continua a ser-lhe devido. Volte a pedir quando estiver pronto.',
+    'notify.mLessonEmpty': 'Uma lição sua não tem nada para reproduzir',
+    'notify.mRecording': 'Gravação: {name}',
+    'notify.mNotPlayable':
+      'Não pôde ser preparada para reprodução. Não poderá ser reproduzida até se tentar de novo.',
+    'notify.mEncoder': 'O que indicou o programa que a prepara: {reason}',
+    'notify.mClass': 'Aula: {title}',
+    'notify.mWasAt': 'Início previsto: {date}',
+    'notify.mHeldAt': 'Data da aula: {date}',
   },
   sw: {
     'notify.lead':
@@ -718,7 +859,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Haijasomwa',
     'notify.none': 'Bado hakuna jumbe.',
     'notify.inEnglish':
-      'Jumbe zenyewe kwa sasa zimeandikwa kwa Kiingereza. Mstari ulio juu ya kila ujumbe unasema unahusu nini.',
+      'Jumbe za zamani huonyeshwa kwa Kiingereza, jinsi zilivyoandikwa. Mstari ulio juu ya kila ujumbe unasema unahusu nini.',
     'notify.classAt': 'Darasa linaanza: {date}',
     'notify.planNamed': 'Mpango: {name}',
     'notify.renewsOn': 'Kipindi kijacho kinaanza: {date}',
@@ -762,6 +903,17 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Darasa la moja kwa moja ambalo wewe au mtoto wako mlisajiliwa linapoghairiwa, pamoja na sababu. Kuzima hii kunamaanisha utajua kwa kufungua chumba. Darasa bado linasema lilighairiwa, na kwa nini.',
     'notify.dRecordingReady':
       'Rekodi inapoongezwa ya darasa ambalo wewe au mtoto wako mlikuwemo. Kuzima hii kunamaanisha utajua kwa kufungua ukurasa wa darasa. Rekodi bado ipo, na inaweza kutazamwa muda wote usajili wako unapodumu.',
+    'notify.mReason': 'Sababu iliyotolewa: {reason}',
+    'notify.mStillOwed': 'Pesa hizo bado ni haki yako. Hakuna kilichopotea.',
+    'notify.mCancelledBy':
+      'Wafanyakazi wa tovuti hii wameghairi ombi hili. Pesa hizo bado ni haki yako. Omba tena utakapokuwa tayari.',
+    'notify.mLessonEmpty': 'Somo lako moja halina cha kuchezwa',
+    'notify.mRecording': 'Rekodi: {name}',
+    'notify.mNotPlayable': 'Haikuweza kuandaliwa ili ichezwe. Haitachezwa hadi ijaribiwe tena.',
+    'notify.mEncoder': 'Kilichoripotiwa na programu inayoiandaa: {reason}',
+    'notify.mClass': 'Darasa: {title}',
+    'notify.mWasAt': 'Lilikuwa lianze: {date}',
+    'notify.mHeldAt': 'Darasa lilifanyika: {date}',
   },
   af: {
     'notify.lead':
@@ -774,7 +926,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Ongelees',
     'notify.none': 'Nog geen boodskappe nie.',
     'notify.inEnglish':
-      'Die boodskappe self is vir eers in Engels geskryf. Die reël bokant elkeen sê waaroor dit gaan.',
+      'Ouer boodskappe word in Engels gewys, soos hulle geskryf is. Die reël bokant elkeen sê waaroor dit gaan.',
     'notify.classAt': 'Die klas begin op: {date}',
     'notify.planNamed': 'Naam van die plan: {name}',
     'notify.renewsOn': 'Die volgende tydperk begin op: {date}',
@@ -819,6 +971,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Wanneer ’n regstreekse klas waarvoor jy of ’n kind van jou ingeskryf was, afgestel word, met die rede. As jy dit afskakel, vind jy eerder uit wanneer jy die kamer oopmaak. Die klas sê steeds dat dit gekanselleer is, en waarom.',
     'notify.dRecordingReady':
       'Wanneer ’n opname bygevoeg word vir ’n klas waarin jy of ’n kind van jou was. As jy dit afskakel, vind jy eerder uit wanneer jy die klas se bladsy oopmaak. Die opname is steeds daar, en kan gekyk word solank jou inskrywing duur.',
+    'notify.mReason': 'Die rede wat gegee is: {reason}',
+    'notify.mStillOwed': 'Die geld is steeds aan jou verskuldig. Niks het verlore gegaan nie.',
+    'notify.mCancelledBy':
+      'Die personeel van hierdie webwerf het hierdie versoek gekanselleer. Die geld is steeds aan jou verskuldig. Vra weer wanneer jy gereed is.',
+    'notify.mLessonEmpty': '’n Les van jou het niks om te speel nie',
+    'notify.mRecording': 'Die opname: {name}',
+    'notify.mNotPlayable':
+      'Dit kon nie vir afspeel voorberei word nie. Dit sal nie speel totdat daar weer probeer word nie.',
+    'notify.mEncoder': 'Wat die program wat dit voorberei, gemeld het: {reason}',
+    'notify.mClass': 'Die klas: {title}',
+    'notify.mWasAt': 'Dit sou begin op: {date}',
+    'notify.mHeldAt': 'Die klas was op: {date}',
   },
   'zh-hans': {
     'notify.lead': '来自平台的消息，显示在应用内。它们不会发送到任何收件箱或手机。本页是它们唯一出现的地方。',
@@ -828,7 +992,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadCount': '未读：{count}',
     'notify.unreadMark': '未读',
     'notify.none': '还没有消息。',
-    'notify.inEnglish': '消息本身目前以英文书写。每条消息上方的一行说明它是关于什么的。',
+    'notify.inEnglish': '较早的消息按原文以英文显示。每条消息上方的一行说明它是关于什么的。',
     'notify.classAt': '上课时间：{date}',
     'notify.planNamed': '套餐：{name}',
     'notify.renewsOn': '下一周期开始于：{date}',
@@ -863,6 +1027,16 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.dPlanRenewing': '订阅续订前三天，以便来得及取消。',
     'notify.dLiveCancelled': '你或你的孩子报名的直播课被取消时，并附上原因。关闭它意味着你要打开教室才会得知。课程本身仍会说明它已取消以及原因。',
     'notify.dRecordingReady': '你或你的孩子上过的课添加了录制内容时。关闭它意味着你要打开课程页面才会得知。录制内容仍在那里，在你的报名有效期间仍可观看。',
+    'notify.mReason': '给出的原因：{reason}',
+    'notify.mStillOwed': '这笔钱仍然应付给你。没有任何损失。',
+    'notify.mCancelledBy': '本站工作人员取消了这项申请。这笔钱仍然应付给你。准备好后可再次申请。',
+    'notify.mLessonEmpty': '你的一节课没有可播放的内容',
+    'notify.mRecording': '录制内容：{name}',
+    'notify.mNotPlayable': '它无法处理成可播放的内容。在重新尝试之前，它将无法播放。',
+    'notify.mEncoder': '处理它的程序报告的内容：{reason}',
+    'notify.mClass': '课程：{title}',
+    'notify.mWasAt': '原定开始时间：{date}',
+    'notify.mHeldAt': '这节课的时间：{date}',
   },
   'zh-hant': {
     'notify.lead': '來自平台的訊息，顯示在應用程式內。它們不會傳送到任何收件匣或手機。本頁是它們唯一出現的地方。',
@@ -872,7 +1046,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadCount': '未讀：{count}',
     'notify.unreadMark': '未讀',
     'notify.none': '還沒有訊息。',
-    'notify.inEnglish': '訊息本身目前以英文書寫。每則訊息上方的一行說明它是關於什麼的。',
+    'notify.inEnglish': '較早的訊息依原文以英文顯示。每則訊息上方的一行說明它是關於什麼的。',
     'notify.classAt': '上課時間：{date}',
     'notify.planNamed': '方案：{name}',
     'notify.renewsOn': '下一週期開始於：{date}',
@@ -907,6 +1081,16 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.dPlanRenewing': '訂閱續訂前三天，以便來得及取消。',
     'notify.dLiveCancelled': '你或你的孩子報名的直播課被取消時，並附上原因。關閉它表示你要打開教室才會得知。課程本身仍會說明它已取消以及原因。',
     'notify.dRecordingReady': '你或你的孩子上過的課新增了錄製內容時。關閉它表示你要打開課程頁面才會得知。錄製內容仍在那裡，在你的報名有效期間仍可觀看。',
+    'notify.mReason': '提出的原因：{reason}',
+    'notify.mStillOwed': '這筆錢仍然應付給你。沒有任何損失。',
+    'notify.mCancelledBy': '本站工作人員取消了這項申請。這筆錢仍然應付給你。準備好後可再次申請。',
+    'notify.mLessonEmpty': '你的一堂課沒有可播放的內容',
+    'notify.mRecording': '錄製內容：{name}',
+    'notify.mNotPlayable': '它無法處理成可播放的內容。在重新嘗試之前，它將無法播放。',
+    'notify.mEncoder': '處理它的程式回報的內容：{reason}',
+    'notify.mClass': '課程：{title}',
+    'notify.mWasAt': '原定開始時間：{date}',
+    'notify.mHeldAt': '這堂課的時間：{date}',
   },
   vi: {
     'notify.lead':
@@ -919,7 +1103,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Chưa đọc',
     'notify.none': 'Chưa có tin nhắn nào.',
     'notify.inEnglish':
-      'Bản thân các tin nhắn hiện được viết bằng tiếng Anh. Dòng phía trên mỗi tin cho biết tin đó nói về việc gì.',
+      'Các tin nhắn cũ hơn được hiển thị bằng tiếng Anh, đúng như khi được viết. Dòng phía trên mỗi tin cho biết tin đó nói về việc gì.',
     'notify.classAt': 'Lớp bắt đầu lúc: {date}',
     'notify.planNamed': 'Gói: {name}',
     'notify.renewsOn': 'Kỳ tiếp theo bắt đầu vào: {date}',
@@ -963,6 +1147,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Khi một lớp trực tiếp mà bạn hoặc con bạn đã ghi danh bị hủy, kèm theo lý do. Tắt mục này nghĩa là bạn sẽ biết khi mở phòng học. Lớp vẫn ghi rõ là đã bị hủy, và vì sao.',
     'notify.dRecordingReady':
       'Khi một bản ghi được thêm cho lớp mà bạn hoặc con bạn đã tham dự. Tắt mục này nghĩa là bạn sẽ biết khi mở trang của lớp. Bản ghi vẫn ở đó, và vẫn xem được chừng nào lượt ghi danh của bạn còn hiệu lực.',
+    'notify.mReason': 'Lý do được nêu: {reason}',
+    'notify.mStillOwed': 'Số tiền đó vẫn là khoản còn nợ bạn. Không có gì bị mất.',
+    'notify.mCancelledBy':
+      'Nhân viên của trang này đã hủy yêu cầu này. Số tiền đó vẫn là khoản còn nợ bạn. Hãy yêu cầu lại khi bạn sẵn sàng.',
+    'notify.mLessonEmpty': 'Một bài học của bạn không có gì để phát',
+    'notify.mRecording': 'Bản ghi: {name}',
+    'notify.mNotPlayable':
+      'Không thể chuẩn bị bản ghi này để phát. Nó sẽ không phát được cho đến khi được thử lại.',
+    'notify.mEncoder': 'Điều mà chương trình chuẩn bị bản ghi báo lại: {reason}',
+    'notify.mClass': 'Lớp: {title}',
+    'notify.mWasAt': 'Lớp lẽ ra bắt đầu lúc: {date}',
+    'notify.mHeldAt': 'Lớp đã diễn ra lúc: {date}',
   },
   th: {
     'notify.lead':
@@ -974,7 +1170,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'ยังไม่ได้อ่าน',
     'notify.none': 'ยังไม่มีข้อความ',
     'notify.inEnglish':
-      'ตัวข้อความในตอนนี้เขียนเป็นภาษาอังกฤษ บรรทัดเหนือแต่ละข้อความบอกว่าเป็นเรื่องอะไร',
+      'ข้อความที่เก่ากว่าจะแสดงเป็นภาษาอังกฤษตามที่เขียนไว้ บรรทัดเหนือแต่ละข้อความบอกว่าเป็นเรื่องอะไร',
     'notify.classAt': 'ชั้นเรียนเริ่มเมื่อ: {date}',
     'notify.planNamed': 'แผน: {name}',
     'notify.renewsOn': 'รอบถัดไปเริ่มเมื่อ: {date}',
@@ -1016,6 +1212,17 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'เมื่อชั้นเรียนสดที่คุณหรือบุตรหลานของคุณลงทะเบียนไว้ถูกยกเลิก พร้อมเหตุผล การปิดรายการนี้หมายความว่าคุณจะรู้เมื่อเปิดห้องแทน ชั้นเรียนยังคงบอกว่าถูกยกเลิก และเพราะอะไร',
     'notify.dRecordingReady':
       'เมื่อมีการเพิ่มสื่อบันทึกของชั้นเรียนที่คุณหรือบุตรหลานของคุณเข้าร่วม การปิดรายการนี้หมายความว่าคุณจะรู้เมื่อเปิดหน้าชั้นเรียนแทน สื่อบันทึกยังคงอยู่ที่นั่น และดูได้ตราบเท่าที่การลงทะเบียนของคุณยังมีผล',
+    'notify.mReason': 'เหตุผลที่แจ้งไว้: {reason}',
+    'notify.mStillOwed': 'เงินจำนวนนี้ยังคงค้างจ่ายให้คุณ ไม่มีอะไรสูญหาย',
+    'notify.mCancelledBy':
+      'เจ้าหน้าที่ของเว็บไซต์นี้ยกเลิกคำขอนี้ เงินจำนวนนี้ยังคงค้างจ่ายให้คุณ ขออีกครั้งได้เมื่อคุณพร้อม',
+    'notify.mLessonEmpty': 'บทเรียนของคุณบทหนึ่งไม่มีอะไรให้เล่น',
+    'notify.mRecording': 'สื่อบันทึก: {name}',
+    'notify.mNotPlayable': 'ไม่สามารถเตรียมให้เล่นได้ จะเล่นไม่ได้จนกว่าจะลองใหม่อีกครั้ง',
+    'notify.mEncoder': 'สิ่งที่โปรแกรมซึ่งเตรียมสื่อนี้รายงาน: {reason}',
+    'notify.mClass': 'ชั้นเรียน: {title}',
+    'notify.mWasAt': 'กำหนดเริ่มเดิมคือ: {date}',
+    'notify.mHeldAt': 'ชั้นเรียนมีขึ้นเมื่อ: {date}',
   },
   fil: {
     'notify.lead':
@@ -1028,7 +1235,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Hindi pa nababasa',
     'notify.none': 'Wala pang mensahe.',
     'notify.inEnglish':
-      'Sa ngayon, nakasulat sa Ingles ang mga mensahe mismo. Sinasabi ng linya sa itaas ng bawat isa kung tungkol saan ito.',
+      'Ang mas lumang mga mensahe ay ipinapakita sa Ingles, ayon sa pagkakasulat. Sinasabi ng linya sa itaas ng bawat isa kung tungkol saan ito.',
     'notify.classAt': 'Magsisimula ang klase sa: {date}',
     'notify.planNamed': 'Pangalan ng plan: {name}',
     'notify.renewsOn': 'Magsisimula ang susunod na panahon sa: {date}',
@@ -1074,6 +1281,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Kapag kinansela ang live na klaseng naka-enroll ka o ang anak mo, kasama ang dahilan. Kapag pinatay ito, malalaman mo na lang sa pagbukas ng silid. Sinasabi pa rin ng klase na kinansela ito, at kung bakit.',
     'notify.dRecordingReady':
       'Kapag may idinagdag na recording para sa klaseng dinaluhan mo o ng anak mo. Kapag pinatay ito, malalaman mo na lang sa pagbukas ng pahina ng klase. Naroon pa rin ang recording, at mapapanood pa rin habang tumatagal ang enrolment mo.',
+    'notify.mReason': 'Ang ibinigay na dahilan: {reason}',
+    'notify.mStillOwed': 'Utang pa rin sa iyo ang perang iyon. Walang nawala.',
+    'notify.mCancelledBy':
+      'Kinansela ng mga tauhan ng site na ito ang kahilingang ito. Utang pa rin sa iyo ang perang iyon. Humiling muli kapag handa ka na.',
+    'notify.mLessonEmpty': 'May aralin mo na walang mapapatugtog',
+    'notify.mRecording': 'Ang recording: {name}',
+    'notify.mNotPlayable':
+      'Hindi ito naihanda para mapatugtog. Hindi ito mapapatugtog hanggang subukan muli.',
+    'notify.mEncoder': 'Ang iniulat ng programang naghahanda nito: {reason}',
+    'notify.mClass': 'Ang klase: {title}',
+    'notify.mWasAt': 'Magsisimula sana ito sa: {date}',
+    'notify.mHeldAt': 'Ginanap ang klase noong: {date}',
   },
   uz: {
     'notify.lead':
@@ -1086,7 +1305,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Oʻqilmagan',
     'notify.none': 'Hali xabar yoʻq.',
     'notify.inEnglish':
-      'Xabarlarning oʻzi hozircha ingliz tilida yozilgan. Har birining ustidagi satr u nima haqida ekanini aytadi.',
+      'Eskiroq xabarlar qanday yozilgan boʻlsa, shunday ingliz tilida koʻrsatiladi. Har birining ustidagi satr u nima haqida ekanini aytadi.',
     'notify.classAt': 'Dars boshlanish vaqti: {date}',
     'notify.planNamed': 'Tarif nomi: {name}',
     'notify.renewsOn': 'Keyingi davr boshlanishi: {date}',
@@ -1130,6 +1349,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Siz yoki bolangiz yozilgan jonli dars bekor qilinganda, sababi bilan. Buni oʻchirish buni xonani ochganda bilib olishni anglatadi. Dars baribir bekor qilinganini va nega ekanini aytib turadi.',
     'notify.dRecordingReady':
       'Siz yoki bolangiz qatnashgan darsga yozuv qoʻshilganda. Buni oʻchirish buni dars sahifasini ochganda bilib olishni anglatadi. Yozuv baribir oʻsha yerda turadi va kursga yozilganingiz amalda ekan, uni koʻrish mumkin.',
+    'notify.mReason': 'Koʻrsatilgan sabab: {reason}',
+    'notify.mStillOwed': 'Bu pul hamon sizga berilishi kerak. Hech narsa yoʻqolmadi.',
+    'notify.mCancelledBy':
+      'Ushbu sayt xodimlari bu soʻrovni bekor qildi. Bu pul hamon sizga berilishi kerak. Tayyor boʻlganingizda yana soʻrang.',
+    'notify.mLessonEmpty': 'Bir darsingizda ijro etiladigan narsa yoʻq',
+    'notify.mRecording': 'Yozuv: {name}',
+    'notify.mNotPlayable':
+      'Uni ijroga tayyorlab boʻlmadi. Qayta urinib koʻrilmaguncha u ijro etilmaydi.',
+    'notify.mEncoder': 'Uni tayyorlaydigan dastur xabar qilgani: {reason}',
+    'notify.mClass': 'Dars: {title}',
+    'notify.mWasAt': 'Boshlanishi kerak boʻlgan vaqt: {date}',
+    'notify.mHeldAt': 'Dars oʻtgan vaqt: {date}',
   },
   kk: {
     'notify.lead':
@@ -1142,7 +1373,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Оқылмаған',
     'notify.none': 'Әзірге хабар жоқ.',
     'notify.inEnglish':
-      'Хабарлардың өзі әзірге ағылшын тілінде жазылған. Әрқайсысының үстіндегі жол оның не туралы екенін айтады.',
+      'Ескірек хабарлар қалай жазылса, солай ағылшын тілінде көрсетіледі. Әрқайсысының үстіндегі жол оның не туралы екенін айтады.',
     'notify.classAt': 'Сабақтың басталу уақыты: {date}',
     'notify.planNamed': 'Жоспардың атауы: {name}',
     'notify.renewsOn': 'Келесі кезеңнің басталуы: {date}',
@@ -1186,6 +1417,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Сіз немесе балаңыз тіркелген тікелей сабақ болмайтын болғанда, себебімен бірге. Мұны өшіру оны бөлмені ашқанда білуді білдіреді. Сабақ бәрібір өзінің болмайтынын және неге екенін айтып тұрады.',
     'notify.dRecordingReady':
       'Сіз немесе балаңыз қатысқан сабаққа жазба қосылғанда. Мұны өшіру оны сабақ бетін ашқанда білуді білдіреді. Жазба бәрібір сол жерде тұрады және курсқа тіркелуіңіз күшінде болғанша оны көруге болады.',
+    'notify.mReason': 'Айтылған себеп: {reason}',
+    'notify.mStillOwed': 'Бұл ақша әлі де сізге тиесілі. Ештеңе жоғалған жоқ.',
+    'notify.mCancelledBy':
+      'Осы сайттың қызметкерлері бұл өтінімді кері қайтарды. Бұл ақша әлі де сізге тиесілі. Дайын болғанда қайта сұраңыз.',
+    'notify.mLessonEmpty': 'Бір сабағыңызда ойнататын ештеңе жоқ',
+    'notify.mRecording': 'Жазба: {name}',
+    'notify.mNotPlayable':
+      'Оны ойнатуға дайындау мүмкін болмады. Қайта әрекет жасалғанша ол ойнатылмайды.',
+    'notify.mEncoder': 'Оны дайындайтын бағдарлама хабарлағаны: {reason}',
+    'notify.mClass': 'Сабақ: {title}',
+    'notify.mWasAt': 'Басталуға тиіс болған уақыты: {date}',
+    'notify.mHeldAt': 'Сабақ өткен уақыт: {date}',
   },
   az: {
     'notify.lead':
@@ -1198,7 +1441,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Oxunmamış',
     'notify.none': 'Hələ mesaj yoxdur.',
     'notify.inEnglish':
-      'Mesajların özü hələlik ingilis dilində yazılır. Hər birinin üstündəki sətir onun nə barədə olduğunu deyir.',
+      'Köhnə mesajlar yazıldığı kimi ingilis dilində göstərilir. Hər birinin üstündəki sətir onun nə barədə olduğunu deyir.',
     'notify.classAt': 'Dərsin başlama vaxtı: {date}',
     'notify.planNamed': 'Planın adı: {name}',
     'notify.renewsOn': 'Növbəti dövrün başlanğıcı: {date}',
@@ -1241,6 +1484,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Sizin və ya uşağınızın yazıldığı canlı dərs ləğv ediləndə, səbəbi ilə birlikdə. Bunu söndürmək onu otağı açanda öyrənmək deməkdir. Dərs yenə də ləğv edildiyini və niyə edildiyini deyir.',
     'notify.dRecordingReady':
       'Sizin və ya uşağınızın olduğu dərsə yazılış əlavə ediləndə. Bunu söndürmək onu dərsin səhifəsini açanda öyrənmək deməkdir. Yazılış yenə də oradadır və kursa yazılışınız qüvvədə olduqca ona baxmaq olar.',
+    'notify.mReason': 'Göstərilən səbəb: {reason}',
+    'notify.mStillOwed': 'Bu pul hələ də sizə çatmalıdır. Heç nə itməyib.',
+    'notify.mCancelledBy':
+      'Bu saytın işçiləri bu sorğunu ləğv etdi. Bu pul hələ də sizə çatmalıdır. Hazır olanda yenidən istəyin.',
+    'notify.mLessonEmpty': 'Bir dərsinizdə oxudulacaq heç nə yoxdur',
+    'notify.mRecording': 'Yazılış: {name}',
+    'notify.mNotPlayable':
+      'Onu oxutmaq üçün hazırlamaq mümkün olmadı. Yenidən cəhd edilənə qədər oxudula bilməyəcək.',
+    'notify.mEncoder': 'Onu hazırlayan proqramın bildirdiyi: {reason}',
+    'notify.mClass': 'Dərs: {title}',
+    'notify.mWasAt': 'Başlamalı olduğu vaxt: {date}',
+    'notify.mHeldAt': 'Dərsin keçirildiyi vaxt: {date}',
   },
   tg: {
     'notify.lead':
@@ -1253,7 +1508,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Нохонда',
     'notify.none': 'Ҳоло паёме нест.',
     'notify.inEnglish':
-      'Худи паёмҳо ҳоло бо забони англисӣ навишта шудаанд. Сатри болои ҳар кадом мегӯяд, ки он дар бораи чист.',
+      'Паёмҳои кӯҳнатар ҳамон тавре ки навишта шудаанд, бо забони англисӣ нишон дода мешаванд. Сатри болои ҳар кадом мегӯяд, ки он дар бораи чист.',
     'notify.classAt': 'Вақти оғози дарс: {date}',
     'notify.planNamed': 'Номи нақша: {name}',
     'notify.renewsOn': 'Оғози давраи навбатӣ: {date}',
@@ -1298,6 +1553,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Вақте ки дарси мустақиме, ки шумо ё фарзанди шумо ба он сабти ном шуда будед, бекор карда мешавад, бо сабабаш. Хомӯш кардани ин маънои онро дорад, ки шумо ҳангоми кушодани ҳуҷра огоҳ мешавед. Дарс ба ҳар ҳол мегӯяд, ки бекор шудааст ва чаро.',
     'notify.dRecordingReady':
       'Вақте ки ба дарсе, ки шумо ё фарзанди шумо дар он будед, сабт илова карда мешавад. Хомӯш кардани ин маънои онро дорад, ки шумо ҳангоми кушодани саҳифаи дарс огоҳ мешавед. Сабт ба ҳар ҳол дар ҳамон ҷост ва то даме ки сабти номи шумо эътибор дорад, онро тамошо кардан мумкин аст.',
+    'notify.mReason': 'Сабаби зикршуда: {reason}',
+    'notify.mStillOwed': 'Ин пул ҳанӯз ҳам ба шумо бояд дода шавад. Ҳеҷ чиз гум нашудааст.',
+    'notify.mCancelledBy':
+      'Кормандони ин сомона ин дархостро бекор карданд. Ин пул ҳанӯз ҳам ба шумо бояд дода шавад. Вақте ки омода шудед, дубора дархост кунед.',
+    'notify.mLessonEmpty': 'Як дарси шумо чизе барои пахш надорад',
+    'notify.mRecording': 'Сабт: {name}',
+    'notify.mNotPlayable':
+      'Онро барои пахш омода кардан муяссар нашуд. То дубора кӯшиш нашавад, он пахш намешавад.',
+    'notify.mEncoder': 'Он чи барномаи омодакунанда хабар дод: {reason}',
+    'notify.mClass': 'Дарс: {title}',
+    'notify.mWasAt': 'Он бояд дар ин вақт оғоз мешуд: {date}',
+    'notify.mHeldAt': 'Дарс дар ин вақт буд: {date}',
   },
   ky: {
     'notify.lead':
@@ -1310,7 +1577,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Окула элек',
     'notify.none': 'Азырынча билдирүү жок.',
     'notify.inEnglish':
-      'Билдирүүлөрдүн өзү азырынча англис тилинде жазылган. Ар биринин үстүндөгү сап анын эмне жөнүндө экенин айтат.',
+      'Эскирээк билдирүүлөр кандай жазылса, ошондой англис тилинде көрсөтүлөт. Ар биринин үстүндөгү сап анын эмне жөнүндө экенин айтат.',
     'notify.classAt': 'Сабактын башталуу убактысы: {date}',
     'notify.planNamed': 'Пландын аталышы: {name}',
     'notify.renewsOn': 'Кийинки мезгилдин башталышы: {date}',
@@ -1354,6 +1621,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Сиз же балаңыз катталган түз сабак жокко чыгарылганда, себеби менен кошо. Муну өчүрүү аны бөлмөнү ачканда билүүнү билдирет. Сабак баары бир жокко чыгарылганын жана эмне үчүн экенин айтып турат.',
     'notify.dRecordingReady':
       'Сиз же балаңыз катышкан сабакка жазуу кошулганда. Муну өчүрүү аны сабактын барагын ачканда билүүнү билдирет. Жазуу баары бир ошол жерде турат жана курска катталууңуз күчүндө турганда аны көрүүгө болот.',
+    'notify.mReason': 'Айтылган себеп: {reason}',
+    'notify.mStillOwed': 'Бул акча дагы эле сизге тийиштүү. Эч нерсе жоголгон жок.',
+    'notify.mCancelledBy':
+      'Бул сайттын кызматкерлери бул өтүнүчтү жокко чыгарды. Бул акча дагы эле сизге тийиштүү. Даяр болгондо кайра сураңыз.',
+    'notify.mLessonEmpty': 'Бир сабагыңызда ойното турган эч нерсе жок',
+    'notify.mRecording': 'Жазуу: {name}',
+    'notify.mNotPlayable':
+      'Аны ойнотууга даярдоо мүмкүн болгон жок. Кайра аракет кылынмайынча ал ойнотулбайт.',
+    'notify.mEncoder': 'Аны даярдаган программа билдиргени: {reason}',
+    'notify.mClass': 'Сабак: {title}',
+    'notify.mWasAt': 'Башталышы керек болгон убакыт: {date}',
+    'notify.mHeldAt': 'Сабак өткөн убакыт: {date}',
   },
   tk: {
     'notify.lead':
@@ -1365,7 +1644,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'Okalmadyk',
     'notify.none': 'Entek habar ýok.',
     'notify.inEnglish':
-      'Habarlaryň özi häzirlikçe iňlis dilinde ýazylýar. Her biriniň üstündäki setir onuň näme hakdadygyny aýdýar.',
+      'Köne habarlar ýazylyşy ýaly iňlis dilinde görkezilýär. Her biriniň üstündäki setir onuň näme hakdadygyny aýdýar.',
     'notify.classAt': 'Sapagyň başlanýan wagty: {date}',
     'notify.planNamed': 'Meýilnamanyň ady: {name}',
     'notify.renewsOn': 'Indiki döwrüň başlangyjy: {date}',
@@ -1408,6 +1687,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Siziň ýa-da çagaňyzyň ýazylan göni sapagy ýatyrylanda, sebäbi bilen bilelikde. Muny öçürmek ony otagy açanyňyzda bilmegi aňladýar. Sapak şonda-da ýatyrylandygyny we näme üçindigini aýdýar.',
     'notify.dRecordingReady':
       'Siziň ýa-da çagaňyzyň gatnaşan sapagyna ýazgy goşulanda. Muny öçürmek ony sapagyň sahypasyny açanyňyzda bilmegi aňladýar. Ýazgy şonda-da şol ýerde durýar we kursa ýazgyňyz güýjünde durka oňa tomaşa edip bolýar.',
+    'notify.mReason': 'Görkezilen sebäp: {reason}',
+    'notify.mStillOwed': 'Bu pul henizem size berilmeli. Hiç zat ýitmedi.',
+    'notify.mCancelledBy':
+      'Bu saýtyň işgärleri bu haýyşy ýatyrdy. Bu pul henizem size berilmeli. Taýýar bolanyňyzda täzeden soraň.',
+    'notify.mLessonEmpty': 'Bir sapagyňyzda oýnadyljak zat ýok',
+    'notify.mRecording': 'Ýazgy: {name}',
+    'notify.mNotPlayable':
+      'Ony oýnatmak üçin taýýarlap bolmady. Täzeden synanyşylýança ony oýnadyp bolmaz.',
+    'notify.mEncoder': 'Ony taýýarlaýan programmanyň habar bereni: {reason}',
+    'notify.mClass': 'Sapak: {title}',
+    'notify.mWasAt': 'Başlanmaly wagty: {date}',
+    'notify.mHeldAt': 'Sapagyň geçen wagty: {date}',
   },
   ta: {
     'notify.lead':
@@ -1420,7 +1711,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'படிக்காதது',
     'notify.none': 'இன்னும் செய்திகள் இல்லை.',
     'notify.inEnglish':
-      'செய்திகள் தற்போதைக்கு ஆங்கிலத்தில் எழுதப்பட்டுள்ளன. ஒவ்வொன்றின் மேலுள்ள வரி அது எதைப் பற்றியது என்று சொல்கிறது.',
+      'பழைய செய்திகள் எழுதப்பட்டபடியே ஆங்கிலத்தில் காட்டப்படுகின்றன. ஒவ்வொன்றின் மேலுள்ள வரி அது எதைப் பற்றியது என்று சொல்கிறது.',
     'notify.classAt': 'வகுப்பு தொடங்கும் நேரம்: {date}',
     'notify.planNamed': 'திட்டத்தின் பெயர்: {name}',
     'notify.renewsOn': 'அடுத்த காலம் தொடங்குவது: {date}',
@@ -1467,6 +1758,18 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'நீங்களோ உங்கள் குழந்தையோ சேர்ந்திருந்த நேரலை வகுப்பு ரத்து செய்யப்படும்போது, காரணத்துடன். இதை அணைத்தால் அறையைத் திறக்கும்போதுதான் தெரிந்துகொள்வீர்கள். வகுப்பு அப்போதும் தான் ரத்து செய்யப்பட்டதையும் ஏன் என்பதையும் சொல்கிறது.',
     'notify.dRecordingReady':
       'நீங்களோ உங்கள் குழந்தையோ இருந்த வகுப்புக்கு ஒரு பதிவு சேர்க்கப்படும்போது. இதை அணைத்தால் வகுப்பின் பக்கத்தைத் திறக்கும்போதுதான் தெரிந்துகொள்வீர்கள். பதிவு அப்போதும் அங்கேயே இருக்கும்; உங்கள் சேர்க்கை நீடிக்கும் வரை அதைப் பார்க்கலாம்.',
+    'notify.mReason': 'கூறப்பட்ட காரணம்: {reason}',
+    'notify.mStillOwed': 'அந்தப் பணம் இன்னும் உங்களுக்குச் சேர வேண்டியதே. எதுவும் இழக்கப்படவில்லை.',
+    'notify.mCancelledBy':
+      'இந்தத் தளத்தின் பணியாளர்கள் இந்தக் கோரிக்கையை ரத்து செய்தனர். அந்தப் பணம் இன்னும் உங்களுக்குச் சேர வேண்டியதே. தயாரானதும் மீண்டும் கோருங்கள்.',
+    'notify.mLessonEmpty': 'உங்கள் பாடம் ஒன்றில் இயக்க எதுவும் இல்லை',
+    'notify.mRecording': 'பதிவு: {name}',
+    'notify.mNotPlayable':
+      'அதை இயக்குவதற்குத் தயார் செய்ய முடியவில்லை. மீண்டும் முயலும் வரை அது இயங்காது.',
+    'notify.mEncoder': 'அதைத் தயார் செய்யும் நிரல் தெரிவித்தது: {reason}',
+    'notify.mClass': 'வகுப்பு: {title}',
+    'notify.mWasAt': 'அது தொடங்கவிருந்த நேரம்: {date}',
+    'notify.mHeldAt': 'வகுப்பு நடந்த நேரம்: {date}',
   },
   ne: {
     'notify.lead':
@@ -1478,7 +1781,7 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.unreadMark': 'नपढिएको',
     'notify.none': 'अहिलेसम्म कुनै सन्देश छैन।',
     'notify.inEnglish':
-      'सन्देशहरू आफैँ अहिलेका लागि अङ्ग्रेजीमा लेखिएका छन्। प्रत्येकको माथिको पङ्क्तिले त्यो के बारेमा हो भन्छ।',
+      'पुराना सन्देशहरू जसरी लेखिएका थिए त्यसरी नै अङ्ग्रेजीमा देखाइन्छन्। प्रत्येकको माथिको पङ्क्तिले त्यो के बारेमा हो भन्छ।',
     'notify.classAt': 'कक्षा सुरु हुने समय: {date}',
     'notify.planNamed': 'योजनाको नाम: {name}',
     'notify.renewsOn': 'अर्को अवधि सुरु हुने मिति: {date}',
@@ -1520,5 +1823,16 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'तपाईं वा तपाईंको बच्चा भर्ना भएको प्रत्यक्ष कक्षा रद्द भएको बेला, कारणसहित। यो बन्द गर्नुको अर्थ कोठा खोलेर मात्र थाहा पाउनु हो। कक्षाले त्यतिबेला पनि आफू रद्द भएको र किन भएको भन्छ।',
     'notify.dRecordingReady':
       'तपाईं वा तपाईंको बच्चा रहेको कक्षामा रेकर्डिङ थपिएको बेला। यो बन्द गर्नुको अर्थ कक्षाको पृष्ठ खोलेर मात्र थाहा पाउनु हो। रेकर्डिङ त्यतिबेला पनि त्यहीँ हुन्छ, र तपाईंको भर्ना कायम रहेसम्म हेर्न सकिन्छ।',
+    'notify.mReason': 'दिइएको कारण: {reason}',
+    'notify.mStillOwed': 'त्यो पैसा अझै तपाईंले पाउनुपर्ने नै छ। केही पनि हराएको छैन।',
+    'notify.mCancelledBy':
+      'यस साइटका कर्मचारीले यो अनुरोध रद्द गरे। त्यो पैसा अझै तपाईंले पाउनुपर्ने नै छ। तयार भएपछि फेरि माग्नुहोस्।',
+    'notify.mLessonEmpty': 'तपाईंको एउटा पाठमा बजाउने केही छैन',
+    'notify.mRecording': 'रेकर्डिङ: {name}',
+    'notify.mNotPlayable': 'यसलाई बजाउनका लागि तयार गर्न सकिएन। फेरि प्रयास नगरेसम्म यो बज्ने छैन।',
+    'notify.mEncoder': 'यसलाई तयार गर्ने प्रोग्रामले बताएको कुरा: {reason}',
+    'notify.mClass': 'कक्षा: {title}',
+    'notify.mWasAt': 'यो सुरु हुनुपर्ने समय: {date}',
+    'notify.mHeldAt': 'कक्षा भएको समय: {date}',
   },
 };

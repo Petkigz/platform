@@ -452,10 +452,13 @@ export async function run(ctx) {
     assert(await told(teacher) === 0, 'the teacher was told about their own attach');
 
     const note = await scalar(
-      `select title, href from public.notifications
+      `select title, href, facts from public.notifications
         where user_id = $1 and kind = 'live_recording_ready'`, [mother.userId]);
     assert(note.href === `/live/${session.id}`, `the message points at ${note.href}`);
     assert(note.title.includes('Recording ready'), `title ${note.title}`);
+    assert(note.facts && note.title.endsWith(note.facts.title), JSON.stringify(note.facts));
+    assert(typeof note.facts.zone === 'string' && !Number.isNaN(Date.parse(note.facts.startsAt)), JSON.stringify(note.facts));
+    assert(Object.keys(note.facts).sort().join() === 'startsAt,title,zone');
   });
 
   await test('silence is the default, and attaching twice never sends twice', async () => {

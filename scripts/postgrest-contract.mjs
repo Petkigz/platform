@@ -239,6 +239,8 @@ async function run() {
   };
   const closed = [
     ['notify_user', { p_user: id.stranger, p_kind: 'contract', p_title: 'Contract', p_body: 'This must never arrive.' }],
+    // The one that also keeps what the message is made of (migration 20261281148000): all eight names, so it is that one.
+    ['notify_user', { p_user: id.stranger, p_kind: 'contract', p_title: 'Contract', p_body: 'This must never arrive either.', p_href: null, p_severity: 'info', p_dedupe: null, p_facts: { amountMinor: '1' } }],
     ['reverse_earnings_for_refund', { p_order_id: id.course, p_actor_id: id.learner, p_reason: 'contract' }],
     ['accrue_instructor_earnings', { p_order_id: id.course, p_transaction_id: id.course, p_actor_id: id.learner }],
     ['instructor_payout_totals', { p_instructor: id.teacher, p_hold_days: 0 }],

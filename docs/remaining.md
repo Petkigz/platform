@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1854 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1864 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -550,8 +550,9 @@ still unreviewed and still saying so.
   the pages of sponsored seats, 12% of 1568 with my orders and of 1665 with the notification centre, 11%
   of 1707 with the two plans pages and of 1736 with the page an account's
   plans are kept on, of 1769 with the policy pages and of 1814 with the
-  institution page, of 1849 with the page that asks to teach, then this with
-  five sentences put back on the plans page),
+  institution page, of 1849 with the page that asks to teach, of 1854 with
+  five sentences put back on the plans page, then this with ten for
+  notifications),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -882,6 +883,23 @@ written: not a held draft, nothing.
   telling somebody at their next visit, or by a notification, that a policy
   has a new version, and never on a page that is already open; the database
   refusing an agreement to a version the reader was not shown.
+- *Notifications said in the reader's language (2026-11-24).* A message
+  written from now on is kept as what it is made of (migration 355) and
+  `/notifications` says it in the reader's language: ten more sentences in
+  `messages/notify.ts` and one rewritten, **read by no speaker**. An amount
+  is now said as money; the stored English sentence prints the figure in
+  minor units, which is a hundred times too many for a currency with cents.
+  **Not done:** the migration is not on the hosted test project; a message
+  already written stays English (its amount and its reason exist only
+  inside its sentences); a reason somebody typed is shown as typed, in
+  whatever language they typed it; the two reminders still take a plan's
+  name off the end of an English title; the export of a person's data
+  still carries the English sentences and not the facts. Checked by the
+  database suites (each writer's facts, the new function's privileges), a
+  test that each rewritten function is its earlier definition plus the
+  facts, and `scripts/notifications-route-smoke.mjs` on a stand-in in
+  English, Arabic and French. **Not checked:** against a real database
+  through PostgREST; the other twenty-four languages on the page.
 - *The plans page's specifics (2026-11-23).* Back on `/subscriptions` at the
   owner's word: when the paid period began, which kind of place each learner
   is in, a child's ages, and what Plus adds. Five more sentences in
@@ -1244,7 +1262,11 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-The existing Supabase test project has all 354 of the tree's migrations applied
+**The tree has 355 migrations and the test project has 354.** The 355th,
+`20261281148000_notification_facts.sql`, is not applied there: it needs a job
+of its own and the owner's approval of the run.
+
+The existing Supabase test project has the first 354 of the tree's migrations applied
 (the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
 `20261281147000_sponsorship_checkout.sql`, each by a job of its own on
 2026-11-19, runs `44505560049` and `44582224581`, both approved by the

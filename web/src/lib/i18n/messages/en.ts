@@ -2209,7 +2209,7 @@ export const en = {
   'notify.unreadMark': 'Unread',
   'notify.none': 'No messages yet.',
   'notify.inEnglish':
-    'The messages themselves are written in English for now. The line above each one says what it is about.',
+    'Older messages are shown in English, as they were written. The line above each one says what it is about.',
   'notify.classAt': 'A class starts on: {date}',
   'notify.planNamed': 'Plan: {name}',
   'notify.renewsOn': 'The next period starts on: {date}',
@@ -2251,6 +2251,20 @@ export const en = {
     'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead. The class still says it was cancelled, and why.',
   'notify.dRecordingReady':
     'When a recording is added for a class you or a child of yours was in. Turning this off means finding out by opening the class page instead. The recording is still there, and can still be watched while your enrolment lasts.',
+  // A kept message said from what it is made of (2026-11-24). The amount and
+  // the reference reuse the sponsor page's sentences.
+  'notify.mReason': 'The reason given: {reason}',
+  'notify.mStillOwed': 'The money is still owed to you. Nothing has been lost.',
+  'notify.mCancelledBy':
+    'The staff of this site cancelled this request. The money is still owed to you. Ask again when you are ready.',
+  'notify.mLessonEmpty': 'A lesson of yours has nothing to play',
+  'notify.mRecording': 'The recording: {name}',
+  'notify.mNotPlayable':
+    'It could not be prepared for playing. It will not play until it is tried again.',
+  'notify.mEncoder': 'What the program that prepares it reported: {reason}',
+  'notify.mClass': 'The class: {title}',
+  'notify.mWasAt': 'It was to start on: {date}',
+  'notify.mHeldAt': 'The class was on: {date}',
 
   // The plans page and the page a plan is paid for on (`plans.ts`), for the
   // same twenty-seven languages as the dashboard, 2026-11-23. A price is

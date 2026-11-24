@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-354 files in `supabase/migrations/`, applied in filename order — the 14-digit
+355 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -493,6 +493,13 @@ one file. At 353 it only repeats the comparison. It does not switch
 `platform.account_merge` on. The two earlier jobs are spent and unchanged.
 **Done:** run `44505560049`, approved by the owner on 2026-11-19, succeeded;
 the test project records 353. This job is now spent too.
+
+**The 355th, `20261281148000_notification_facts.sql`** (a notification kept
+as what it is made of, so that it can be said in the reader's language) is in
+the tree and **not on the test project**. It needs a job of its own, built
+the way the 354th's was, and the owner's approval of the run. It adds one
+nullable column and one function, and replaces seven functions with their
+earlier definitions plus the facts; it changes no row.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
 pledge through checkout). Its

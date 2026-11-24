@@ -8765,6 +8765,58 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## A notification is kept as what it is made of — **DECIDED 2026-11-24**
+
+The owner's word was "translate the notifications". A message could not be
+translated as it was kept: two English sentences with an amount, a reference,
+a title or somebody's reason inside them, and nothing saying which part was
+which.
+
+- *What is kept now.* Beside the two sentences, a message carries `facts`:
+  for a payout, the amount in minor units, the currency and the reference or
+  the reason; for a recording that will not play, whether the reader uploaded
+  it or wrote a lesson that uses it, its name if it has one, and what the
+  encoder reported; for a class, its title, its moment, its time zone and the
+  reason it was cancelled. `kind` already names which sentence to say.
+  Migration `20261281148000_notification_facts.sql`.
+- *The page says the sentence, in English too.* One way of saying a message,
+  not two. The amount is said as money: the stored sentence prints the figure
+  as it is kept, which for a currency with cents is a hundred times the
+  amount. A class's moment is said in the zone the class was scheduled in,
+  in the reader's way of writing a date.
+- *The English sentences are still written.* The export of a person's data
+  reads them, and so does any reader that does not know `facts`. Rejected:
+  dropping them, which would have made every older reader of the table wrong
+  on the day the migration ran.
+- *A message already written is not given facts.* Its amount and its reason
+  exist only inside its sentences. Taking a sentence apart to guess them
+  would be inventing a record. It is shown as before: named in the reader's
+  language, its English beneath, and one line above the list saying that
+  older messages are shown in English. That line appears only while something
+  on the page is English.
+- *Facts that are not whole are not said.* An amount that is not a whole
+  number, a currency that is not three capital letters, a moment that is not
+  one, a zone the runtime does not know, a missing reason: the message is
+  shown as its stored English, like an older one. "Amount:" with nothing
+  after it tells a teacher less than the sentence the database wrote.
+- *A reason is shown as written.* What staff typed about a payout, what a
+  teacher typed about a class, and what the encoder printed are not
+  translated by anything, here or anywhere. They are set apart so that they
+  find their own direction; the encoder's line reads left to right.
+- *Seven functions were copied whole.* PostgreSQL cannot wrap the function it
+  replaces. A test reads each beside the definition it replaces and allows
+  only the added facts; another holds that the names the page reads are the
+  names the database writes.
+- *A second `notify_user()`, not a changed one.* The new one takes one more
+  argument, which has no default, so every call with seven or fewer is still
+  the first. Rejected: dropping the first, which changes the signature the
+  hosted-migration checks and the PostgREST contract name. Neither is
+  granted to anybody.
+- *Not done.* The migration is not on the hosted test project. The two
+  reminders are untouched: a plan's name is still taken off the end of an
+  English title. The export does not carry the facts. Telling somebody that a
+  policy has a new version is not a kind of message yet.
+
 ## Five answers from the owner — **DECIDED 2026-11-23**
 
 Five questions had been waiting. The owner answered all five in one message.
@@ -9151,9 +9203,10 @@ a part of its own, `notify`; the nineteen held languages still read 12%.
   language, shows the stored text beneath it set apart and marked as English,
   and says once, above the list, that the messages themselves are in English
   for now. To a reader of English the stored text is the message and is shown
-  alone. **Not done, and not decided:** storing a message as a kind and its
-  values so that it can be said in any language. That is a change to four
-  database functions and to every row already written.
+  alone. **Changed on 2026-11-24 at the owner's word:** a message written
+  from then on is kept as a kind and its values and said in any language;
+  see "A notification is kept as what it is made of". What this bullet
+  describes is now how an older message is shown.
 - *A reminder is said whole.* The two reminders are worked out when the page
   is read and arrive with the moment they are about as a value, so the page
   says its own sentence for each. A plan's name is taken off the words the

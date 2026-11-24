@@ -459,9 +459,9 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // (Eighty-five and eighty-one since 2026-11-18: one sentence for asking
   // too often, and two on the buy page about which country a number is read
   // as one of and which currency a service collects.)
-  assert.equal(unwrittenKeys.length, 1582);
+  assert.equal(unwrittenKeys.length, 1592);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('receipt.')).length, 18);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 42);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 52);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 42);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('subs.')).length, 34);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('policy.')).length, 33);
@@ -580,7 +580,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1854 sentences, which is 10%. Nothing holds a floor under
+  // 192 of 1864 sentences, which is 10%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -622,11 +622,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // institution page a member opens added forty-five (10.58%, still 11%);
   // the page that asks to teach added thirty-five and it is 10% (10.38%);
   // five sentences put back on the page an account's plans are kept on
-  // (10.36%, still 10%).
+  // (10.36%, still 10%); ten more for a notification said from what it is
+  // made of (10.30%, still 10%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1854);
+    assert.equal(coverageOf(code).total, 1864);
     assert.equal(coverageOf(code).percent, 10, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

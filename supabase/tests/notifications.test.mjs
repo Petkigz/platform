@@ -88,6 +88,13 @@ export async function run(ctx) {
     assert(message.kind === 'payout_paid', `kind was ${message.kind}`);
     assert(message.href === '/teach/payouts', `href was ${message.href}`);
     assert(/REF-77/.test(message.body), `the body did not name the reference: ${message.body}`);
+    // What it is made of, by name: the page says the sentence from these.
+    const facts = message.facts;
+    assert(facts && facts.reference === 'REF-77', `facts were ${JSON.stringify(facts)}`);
+    assert(facts.currency === 'UGX', `currency was ${JSON.stringify(facts.currency)}`);
+    assert(/^[1-9][0-9]*$/.test(facts.amountMinor), `amountMinor was ${JSON.stringify(facts.amountMinor)}`);
+    assert(message.body.startsWith(`${facts.amountMinor} UGX `), 'the amount in the facts is not the amount in the sentence');
+    assert(Object.keys(facts).sort().join() === 'amountMinor,currency,reference', Object.keys(facts).join());
     assert(await badge(teacher) === 1);
   });
 
@@ -101,6 +108,9 @@ export async function run(ctx) {
     assert(message.severity === 'warning', `severity was ${message.severity}`);
     assert(/number was closed/i.test(message.body), `the reason was not in the body: ${message.body}`);
     assert(/still owed/i.test(message.body), `the body did not reassure: ${message.body}`);
+    assert(message.facts?.reason === 'The number was closed', `facts were ${JSON.stringify(message.facts)}`);
+    assert(message.facts.currency === 'UGX' && /^[1-9][0-9]*$/.test(message.facts.amountMinor));
+    assert(Object.keys(message.facts).sort().join() === 'amountMinor,currency,reason');
   });
 
   await test('cancelling your own request says nothing; staff cancelling it does', async () => {
@@ -115,6 +125,9 @@ export async function run(ctx) {
     const afterStaff = await centre(teacher);
     assert(afterStaff.recent[0].kind === 'payout_cancelled',
       `kind was ${afterStaff.recent[0].kind}`);
+    const facts = afterStaff.recent[0].facts;
+    assert(facts && Object.keys(facts).sort().join() === 'amountMinor,currency', `facts were ${JSON.stringify(facts)}`);
+    assert(facts.currency === 'UGX' && /^[1-9][0-9]*$/.test(facts.amountMinor));
   });
 
   // -------------------------------------------------------------------------

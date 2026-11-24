@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 354 migrations and 171 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 355 migrations and 172 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,30 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Notifications said in the reader's language, 2026-11-24
+
+- *Built.* Migration 355, `20261281148000_notification_facts.sql`: a
+  nullable `facts` column, a second `notify_user()` that fills it, the six
+  writers and `my_notifications()` copied whole with the facts added
+  (`tmp-words/u34/gen_migration.py` built it from the earlier definitions).
+  `lib/notifications.ts` reads them (`factsOf`); the page says each kind
+  from them. Ten new sentences and `notify.inEnglish` rewritten, 27
+  languages (`tmp-words/u34`); the amount and the reference reuse
+  `sponsor.amount` and `sponsor.reference`.
+- *Found on the way.* The stored sentence prints a payout's amount in minor
+  units ("8000000 KES" for eighty thousand shillings). The page now says it
+  as money. The stored sentence is unchanged, and the export still carries
+  it.
+- *Not on the hosted test project.* It needs a job like the 354th's
+  (`scripts/hosted-migration-354.mjs` is the pattern) and the owner's
+  approval of the run. Until then the tree has 355 and the project 354.
+- *Next.* A policy's new version told at the next visit and by a
+  notification, and `accept_policy()` taking the version the reader was
+  shown. That is another migration; one hosted job can carry both.
+- *Counts.* 1864 keys; server-only 1496; unwritten while held 1592
+  (`notify.` 52); held 192 of 1864, 10.30%, shown as 10%. 355 migrations,
+  172 database suites, 2708 database assertions.
 
 ### The owner's five answers, and the plans page's specifics, 2026-11-23
 

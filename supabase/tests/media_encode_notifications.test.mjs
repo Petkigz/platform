@@ -110,6 +110,12 @@ export async function run(ctx) {
       'and the link names a course');
 
     assert(toUploader[0].severity === 'action', 'there is something to do');
+
+    // The same thing by name, and which of the two each reader is.
+    const same = (facts, part) => facts && facts.part === part && facts.name === 'Recorded lesson'
+      && facts.reason === 'encoder exited 137 (out of memory)' && Object.keys(facts).length === 3;
+    assert(same(toUploader[0].facts, 'uploader'), JSON.stringify(toUploader[0].facts));
+    assert(same(toAuthor[0].facts, 'author'), JSON.stringify(toAuthor[0].facts));
   });
 
   await test('an author who also uploaded the file is told once', async () => {
@@ -219,6 +225,9 @@ export async function run(ctx) {
     assert(/could not be turned into/.test(mine[0].body),
       'an unnamed file is still described in words rather than empty quotation marks');
     assert(mine[0].href === '/teach/media');
+    // No name is null, not an empty one: the page says a different sentence.
+    assert(mine[0].facts && mine[0].facts.name === null && 'name' in mine[0].facts, JSON.stringify(mine[0].facts));
+    assert(mine[0].facts.part === 'uploader' && typeof mine[0].facts.reason === 'string' && mine[0].facts.reason.length > 0);
   });
 
   // -------------------------------------------------------------------------

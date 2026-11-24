@@ -50,6 +50,7 @@ import { run as accountMerge } from './account_merge.test.mjs';
 import { run as referrals } from './referrals.test.mjs';
 import { run as sponsorship } from './sponsorship.test.mjs';
 import { run as sponsorshipCheckout } from './sponsorship_checkout.test.mjs';
+import { run as notificationFacts } from './notification_facts.test.mjs';
 import { run as teachingApplications } from './teaching_applications.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -370,6 +371,7 @@ for (const [name, fn] of [
   ['referrals', referrals],
   ['sponsorship', sponsorship],
   ['sponsorship_checkout', sponsorshipCheckout],
+  ['notification facts', notificationFacts],
   ['teaching_applications', teachingApplications],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],

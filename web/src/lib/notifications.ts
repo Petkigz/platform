@@ -9,11 +9,17 @@
  * This file is the part of the new page with a rule in it. Kept free of
  * queries and of the catalogue, so a test and a client island can import it.
  *
- * **What it cannot do.** A stored message is English prose with a figure or
- * somebody's reason inside it, and the row says nothing about which part is
- * which. So a message's own text cannot be said in another language from
- * here; the page names its kind in the reader's language and shows the text
- * as English. Putting the parts in the row is a change to the database.
+ * **A kept message, said from what it is made of.** Since the migration
+ * `20261281148000_notification_facts.sql` a message arrives with `facts`:
+ * the amount, the reference, the title, the moment, somebody's reason, each
+ * by name. `factsOf` reads them, and the page says the sentence in the
+ * reader's language. A message written before that has none, and one whose
+ * facts are not all there is treated the same way: it is shown as the
+ * English it was written in, named in the reader's language above. Guessing
+ * an amount out of a sentence would be inventing a record.
+ *
+ * A reason is what a person typed or what a program reported. It is shown
+ * as written, in every language.
  */
 
 import { describeKind, type NotificationKind } from './notification-prefs.ts';
@@ -24,10 +30,101 @@ export type CentreMessage = {
   kind: NotificationKind | null;
   title: string;
   body: string;
+  /** What the message is made of, or null: then `title` and `body`, which are English, are the message. */
+  facts: MessageFacts | null;
   href: string | null;
   createdAt: string;
   read: boolean;
 };
+
+const text = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value : null);
+const moment = (value: unknown): string | null => (typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null);
+
+/** What each kind of kept message is made of. The names are the database's. */
+export type MessageFacts =
+  | { kind: 'payout_paid'; amountMinor: string; currency: string; reference: string }
+  | { kind: 'payout_failed'; amountMinor: string; currency: string; reason: string }
+  | { kind: 'payout_cancelled'; amountMinor: string; currency: string }
+  | { kind: 'media_encode_failed'; part: 'uploader' | 'author'; name: string | null; reason: string }
+  | { kind: 'live_cancelled'; title: string; startsAt: string; zone: string; reason: string }
+  | { kind: 'live_recording_ready'; title: string; startsAt: string; zone: string };
+
+const AMOUNT = /^(?:0|[1-9][0-9]{0,17})$/u;
+const CURRENCY = /^[A-Z]{3}$/u;
+/** Something a person or a program wrote: there, not only spaces, and not longer than the column that holds it. */
+const written = (value: unknown, most: number): string | null =>
+  typeof value === 'string' && value.trim() !== '' && value.length <= most ? value.trim() : null;
+/** A time zone this runtime can say a moment in. */
+function zoneOf(value: unknown): string | null {
+  if (typeof value !== 'string' || !value || value.length > 64) return null;
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: value });
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What a kept message is made of, or null when it cannot be said from it.
+ *
+ * Null is not an error. It is every message written before facts were
+ * kept, and any message whose facts are not whole: a kind this code has no
+ * sentence for, an amount that is not a whole number of minor units, a
+ * currency that is not three capital letters, a moment that is not one, a
+ * zone the runtime does not know. The page then shows the stored English.
+ * Half a set of facts is never said: "Amount:" with nothing after it tells
+ * a teacher less than the sentence the database wrote.
+ */
+export function factsOf(kind: unknown, value: unknown): MessageFacts | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const f = value as Record<string, unknown>;
+  const money = () => {
+    const amountMinor = typeof f.amountMinor === 'string' && AMOUNT.test(f.amountMinor) ? f.amountMinor : null;
+    const currency = typeof f.currency === 'string' && CURRENCY.test(f.currency) ? f.currency : null;
+    return amountMinor !== null && currency !== null ? { amountMinor, currency } : null;
+  };
+  const session = () => {
+    const title = written(f.title, 300);
+    const startsAt = moment(f.startsAt);
+    const zone = zoneOf(f.zone);
+    return title !== null && startsAt !== null && zone !== null ? { title, startsAt, zone } : null;
+  };
+  switch (kind) {
+    case 'payout_paid': {
+      const m = money();
+      const reference = written(f.reference, 300);
+      return m && reference !== null ? { kind, ...m, reference } : null;
+    }
+    case 'payout_failed': {
+      const m = money();
+      const reason = written(f.reason, 1000);
+      return m && reason !== null ? { kind, ...m, reason } : null;
+    }
+    case 'payout_cancelled': {
+      const m = money();
+      return m ? { kind, ...m } : null;
+    }
+    case 'media_encode_failed': {
+      const reason = written(f.reason, 1000);
+      if (f.part !== 'uploader' && f.part !== 'author') return null;
+      // A file with no name is said without one; a name that is not text is not a name.
+      if (f.name !== null && f.name !== undefined && written(f.name, 300) === null) return null;
+      return reason !== null ? { kind, part: f.part, name: written(f.name, 300), reason } : null;
+    }
+    case 'live_cancelled': {
+      const s = session();
+      const reason = written(f.reason, 1000);
+      return s && reason !== null ? { kind, ...s, reason } : null;
+    }
+    case 'live_recording_ready': {
+      const s = session();
+      return s ? { kind, ...s } : null;
+    }
+    default:
+      return null;
+  }
+}
 
 /** The two things `my_notifications()` works out rather than stores. */
 export const REMINDER_KINDS = ['class_starting', 'plan_renewing'] as const;
@@ -64,8 +161,6 @@ export function internalHrefOf(value: unknown): string | null {
   return value;
 }
 
-const text = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value : null);
-const moment = (value: unknown): string | null => (typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null);
 
 /**
  * The centre, or null when the reply cannot be trusted.
@@ -95,6 +190,7 @@ export function centreOf(value: unknown): Centre | null {
       kind: describeKind(m.kind)?.kind ?? null,
       title,
       body,
+      facts: factsOf(m.kind, m.facts),
       href: internalHrefOf(m.href),
       createdAt,
       read: typeof m.readAt === 'string',

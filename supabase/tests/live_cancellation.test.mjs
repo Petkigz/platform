@@ -188,12 +188,20 @@ export async function run(ctx) {
     assert(result.capped === false);
 
     const note = (await scalar(
-      `select title, body, href, severity, kind from public.notifications
+      `select title, body, href, severity, kind, facts from public.notifications
         where user_id = $1 and kind = 'live_cancelled'`, [learner.userId]));
     assert(note, 'the learner was not told');
     assert(/Tafsir circle/.test(note.title), `title does not name the class: ${note.title}`);
     assert(/Teacher is unwell/.test(note.body), `body does not carry the reason: ${note.body}`);
     assert(/Africa\/Kampala/.test(note.body), `body does not say when it was: ${note.body}`);
+    // By name: the page says when in the reader's language, in the class's zone.
+    assert(note.facts && note.facts.reason === 'Teacher is unwell' && note.facts.zone === 'Africa/Kampala',
+      JSON.stringify(note.facts));
+    assert(note.title.endsWith(note.facts.title), `the title in the facts is ${note.facts.title}`);
+    const stored = await scalar('select starts_at from public.live_sessions where id = $1', [session.id]);
+    assert(new Date(note.facts.startsAt).getTime() === new Date(stored.starts_at).getTime(),
+      `startsAt was ${note.facts.startsAt}`);
+    assert(Object.keys(note.facts).sort().join() === 'reason,startsAt,title,zone');
     assert(note.href === `/live/${session.id}`, `href ${note.href}`);
     assert(note.severity === 'warning', `severity ${note.severity}`);
     assert(await notifyCount(learner.userId) === before + 1, 'the learner was told more than once');
