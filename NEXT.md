@@ -2661,9 +2661,13 @@ claim external integrations work without credentials or provider callbacks.
   `scripts/teach-apply-route-smoke.mjs` over HTTP on their stand-ins, in
   English and Arabic. `scripts/hosted-migration-358.test.mjs` (5) runs the
   hosted step's plan against the real migrations in a local engine.
-- *Not shown.* Anything from a real database or a real applicant. The two
-  pages in a browser on this machine (the workflow that draws them runs
-  after the push). Twenty-five of the languages on a page.
+  `/notifications` drawn in a browser in English, Arabic, Tamil, Filipino
+  and French; the Arabic one was looked at. The first push failed the
+  browser workflow: the smoke counted seven messages said by the page in
+  a line only a browser reaches, and there are nine. Corrected.
+- *Not shown.* Anything from a real database or a real applicant. The
+  sentence on `/teach/apply` that promises a message, in a browser (it is
+  checked over HTTP). Twenty-two of the languages on any page.
 - *Not built.* The staff queue (`/admin/teachers`) in any language but
   English. Telling the owner that an application arrived. Any message
   outside the site: nothing is sent to an inbox or a phone.

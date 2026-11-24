@@ -586,7 +586,7 @@ try {
         // and a reason typed in Arabic reads right to left on an English one.
         assert.equal(await tab.locator(`[data-message="${N1}"] .told-said bdi`).first().evaluate((el) => getComputedStyle(el).direction), 'ltr');
         assert.equal(await tab.locator(`[data-message="${N6}"] .told-said bdi`).last().evaluate((el) => getComputedStyle(el).direction), 'rtl');
-        assert.equal(await tab.locator('[data-message][data-said="here"]').count(), 7);
+        assert.equal(await tab.locator('[data-message][data-said="here"]').count(), 9);
         // Nine switches, each a real checkbox with its words beside it, none wider than the card.
         assert.equal(await tab.locator('.told-switch input[type="checkbox"]').count(), 9);
         assert.equal(await tab.locator('.told-switch input:disabled').count(), 2);
