@@ -2698,6 +2698,21 @@ claim external integrations work without credentials or provider callbacks.
   repeated). 2686 web tests. 137 page routes, 36 smoke scripts. The client-bundle
   check looks for 1680 sentences in 123 scripts. 107 flag rows (87 flags,
   20 controls). Snapshot 194 relations, 438 foreign keys.
+- *Corrected after the first push.* The browser run in CI failed twice on
+  `22d7e1b`. One: `companion-browser-smoke.mjs` still expected 10% for a
+  held language where the page now says 9%; the pin was moved. Two: the
+  Translate script's thread page reloaded for ever. Reproduced here: a dev
+  server killed while writing `web/.next/dev/cache/turbopack` leaves a
+  cache that tells every page in a browser to reload ("HMR hash
+  mismatch"), in every later run. On such a cache the script failed; with
+  the cache removed it passed. The script now removes that directory
+  before it starts, unless a dev server holds the lock, and waits for its
+  own server's children before stopping them hard. That an earlier step's
+  hard stop was what spoiled the cache in CI is inferred from the same
+  log lines, not seen. The other 38 scripts stop their servers the old
+  way and were left alone. `FLAGS.md` said 111 rows (91 flags); measured
+  it is 107 (87 flags, 20 controls; 89 boolean, 15 integer, 3 text), and
+  the sentence was wrong before this unit too.
 
 ### Two discussion boards under usernames, 2026-11-24
 

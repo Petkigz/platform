@@ -195,8 +195,8 @@ money rules behave, and they shipped with values rather than being absent.
 | `platform.translate_monthly_characters` | integer | ADMIN | `400000` | The most everybody together may send in one calendar month. **Members stop at four fifths of it; the last fifth is kept for staff**, so a busy month cannot leave a report unreadable. Google's free allowance and price change; set this from what the bill may be, not from this number. `0` stops translation without touching the switch. |
 
 
-Measured, the register holds **111 rows: the 91 flags above plus these twenty.**
-Ninety-three are boolean switches, fifteen are integers and three are text (a
+Measured, the register holds **107 rows: the 87 flags above plus these twenty.**
+Eighty-nine are boolean switches, fifteen are integers and three are text (a
 currency, a room's base URL, and the safeguarding lead). The two
 governance policy controls have no gate because they are not features; the money
 controls are ADMIN, because a number that changes what a total says is changed

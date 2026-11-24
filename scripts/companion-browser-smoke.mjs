@@ -486,8 +486,11 @@ try {
     // written for a held
     // language
     // (`UNWRITTEN_WHILE_HELD`).
-    assert.ok(settings.includes('10%'), 'the language page does not show the lower number');
-    assert.ok(!settings.includes('10% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
+    // (2026-11-24: 192 of 2027 now, which is 9% and no longer 10%: seventy
+    // more sentences, for the Translate button, a child's first password and
+    // the staff page for teachers, are unwritten for a held language.)
+    assert.ok(settings.includes('9%'), 'the language page does not show the lower number');
+    assert.ok(!settings.includes('9% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);
     await reader.context.close();
     console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 10% in Hausa.`);

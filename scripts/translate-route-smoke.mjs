@@ -29,6 +29,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -130,6 +131,22 @@ const fake = createServer(async (req, res) => {
 await new Promise((r) => fake.listen(0, '127.0.0.1', r));
 const root = resolve(import.meta.dirname, '..');
 const rpcs = (name) => calls.filter((c) => c.path === `/rest/v1/rpc/${name}`);
+
+// Start from an empty compiler cache. A dev server that was killed while it
+// was writing its cache leaves one that makes every page in a browser reload
+// for ever ("HMR hash mismatch"), in this run and every run after it, and
+// the scripts that run before this one stop their servers hard. Found
+// 2026-11-24, when this script failed that way on its first run in CI and
+// again here after a server was killed. Not done while a dev server holds
+// the directory: that server is somebody's, and Next refuses a second one.
+{
+  const lock = resolve(root, 'web/.next/dev/lock');
+  let held = false;
+  if (existsSync(lock)) {
+    try { process.kill(JSON.parse(readFileSync(lock, 'utf8')).pid, 0); held = true; } catch { /* nobody holds it */ }
+  }
+  if (!held) rmSync(resolve(root, 'web/.next/dev/cache/turbopack'), { recursive: true, force: true });
+}
 
 const reservation = createServer(); await new Promise((r) => reservation.listen(0, '127.0.0.1', r));
 const port = reservation.address().port; await new Promise((r) => reservation.close(r));
@@ -472,6 +489,14 @@ finally {
   if (browser) await browser.close();
   try { process.kill(-next.pid, 'SIGTERM'); } catch { /* already exited */ }
   if (next.exitCode === null) await Promise.race([once(next, 'exit'), new Promise((r) => setTimeout(r, 5000))]);
+  // The process started here is not the one that compiles: that is its
+  // child, and it may still be writing its cache when its parent has gone.
+  // Wait for the whole group before stopping it hard, so that the script
+  // after this one is not left the cache described at the top.
+  for (let waited = 0; waited < 15000; waited += 200) {
+    try { process.kill(-next.pid, 0); } catch { break; }
+    await new Promise((r) => setTimeout(r, 200));
+  }
   try { process.kill(-next.pid, 'SIGKILL'); } catch { /* already exited */ }
   await new Promise((r) => fake.close(r));
 }
