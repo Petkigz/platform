@@ -1286,21 +1286,19 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-**The tree has 357 migrations and the test project has 356.** The 357th,
-`20261281150000_plan_refund_ends_plan.sql` (a plan ends when the order that
-paid for it is refunded in full), is not applied there. Its job is
-`scripts/hosted-migration-357.mjs`; it applies nothing until the owner
-approves the run. Until it has run, a plan refunded in full on the test
-project would run to the end of its period, and the application must not be
-deployed against it with plans switched on.
+**The tree and the test project are both at 357.** The application that
+matches them has not been deployed there, so nothing about Auth, a request
+through PostgREST or a page is shown by that. The next migration needs a
+job of its own, as each of these did.
 
-The existing Supabase test project has the first 356 of the tree's migrations applied
+The existing Supabase test project has all 357 of the tree's migrations applied
 (the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
 `20261281147000_sponsorship_checkout.sql`, each by a job of its own on
 2026-11-19, runs `44505560049` and `44582224581`; the 355th,
 `20261281148000_notification_facts.sql`, and the 356th,
 `20261281149000_policy_version_shown.sql`, by one job on 2026-11-24, run
-`45358527173`; all approved by the owner): the initial
+`45358527173`; the 357th, `20261281150000_plan_refund_ends_plan.sql`, by
+run `45386711064` the same day; all approved by the owner): the initial
 342 via the owner-approved GitHub run `43611493767`, and 1360–1450 via the
 owner-approved run `44131878224` on 2026-11-17. A read-only check after the
 first found 185 public base tables and zero Auth users; after the second, zero

@@ -2619,6 +2619,15 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The test project at 357, 2026-11-24
+
+- *Done.* The owner approved run `45386711064`; it succeeded. The test
+  project records the 357th migration, so a plan refunded in full ends
+  there too. Read through the connector afterwards: the history ends with
+  `plan_refund_ends_plan`. Tree and project are at the same 357.
+- *Not done.* The application has not been deployed. The refunds policy is
+  as it was; the paragraph proposed in `DECISIONS.md` waits for the owner.
+
 ### The test project at 356, 2026-11-24
 
 - *Done.* The owner approved run `45358527173`; it succeeded. The test

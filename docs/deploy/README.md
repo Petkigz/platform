@@ -409,8 +409,8 @@ project by a job reviewed for exactly that one file (below):
 above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
-and 356th, below). The hosted project is at 356. This tree has one more, the
-357th, whose job has not run.
+and 356th, below), and the 357th by a job of its own the same day. The
+hosted project is at 357, the same as this tree.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -538,7 +538,9 @@ the same approval. It starts only from exactly the 356, so it cannot run
 before the job above has; it rehearses on the hosted database and rolls
 back, compares the two roles' privileges with the tested database built from
 all 357, and applies only if the CLI's dry-run names exactly that one file.
-**Not run.** It applies nothing until the owner approves the run.
+**Done:** run `45386711064`, approved by the owner on 2026-11-24, succeeded;
+the test project records 357. Read through the connector afterwards, the
+history ends with `plan_refund_ends_plan`. This job is now spent too.
 
 **The application and the 357th go in that order too.** From this commit the
 plan pages tell a buyer in the EU, the EEA or the UK that the plan ends when
