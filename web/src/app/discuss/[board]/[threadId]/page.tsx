@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { formatDateTime, translator } from '@/lib/i18n';
 import { boardOf, boardReasonOf, isId, mayEnter, parseStanding, parseThread } from '@/lib/boards';
+import { TranslateButton } from '@/components/translate-button';
+import { translateFor } from '@/lib/translate-reader';
 import { PostActions, ReplyForm } from '../../board-forms';
 import { READ_FAILED, boardName, boardWords, kindName, readerLanguage } from '../../reader';
 
@@ -103,6 +105,8 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
   }
 
   const words = boardWords(t);
+  // Null when translation is off: then no button is drawn.
+  const translate = await translateFor(supabase);
   const written = { dir: 'auto', lang: '' } as const;
   const goneWords = (state: 'withdrawn' | 'removed') => t(state === 'removed' ? 'board.removed' : 'board.takenBack');
   const canWrite = standing.handle !== null && !standing.blocked && thread.state === 'visible';
@@ -129,6 +133,9 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
         <div className="board-written" {...written}>
           {thread.body}
         </div>
+        {thread.state === 'visible' ? (
+          <TranslateButton text={`${thread.title}\n\n${thread.body}`} words={translate} />
+        ) : null}
         {thread.state === 'visible' ? (
           <PostActions threadId={thread.id} replyId={null} mine={thread.mine} words={words} />
         ) : null}
@@ -161,6 +168,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
                   {reply.body}
                 </div>
               ) : null}
+              {reply.body && reply.state === 'visible' ? <TranslateButton text={reply.body} words={translate} /> : null}
               {reply.state === 'visible' && thread.state === 'visible' ? (
                 <PostActions threadId={thread.id} replyId={reply.id} mine={reply.mine} words={words} />
               ) : null}
@@ -180,7 +188,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
           {standing.blocked ? null : <Link href={`/discuss/${board}`}>{t('board.nameTitle')}</Link>}
         </div>
       ) : null}
-      <p className="muted">{t('board.asWritten')}</p>
+      <p className="muted">{translate ? t('translate.offered') : t('board.asWritten')}</p>
     </div>
   );
 }

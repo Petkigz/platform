@@ -5,25 +5,44 @@
  * the other system may have committed even though its response was lost.
  */
 export type ChildLoginCreatePorts = {
-  prepare: (learnerId: string, username: string) => Promise<string>;
+  /**
+   * `twelveOrOlder` is the guardian's yes for a child in the 11-13 band. The
+   * database decides whether it was needed (`prepare_child_login`).
+   */
+  prepare: (learnerId: string, username: string, twelveOrOlder?: boolean) => Promise<string>;
   findIdentity: (attemptId: string, guardianId: string) => Promise<string | null>;
   createIdentity: (input: { username: string; password: string; attemptId: string }) => Promise<string>;
   complete: (attemptId: string, guardianId: string, userId: string, expected: { learnerId: string; username: string }) => Promise<void>;
 };
 
+/**
+ * The database refused because of the child's age, before reserving anything:
+ * under twelve, or 11-13 without the guardian's yes (owner decision,
+ * 2026-11-24). Nothing was written, so this one refusal is certain.
+ */
+export class ChildLoginAgeRefusal extends Error {
+  readonly code: 'under_twelve' | 'confirm_twelve';
+  constructor(code: 'under_twelve' | 'confirm_twelve') {
+    super(`child_login:${code}`);
+    this.code = code;
+  }
+}
+
 export type ChildLoginCreateResult =
   | { ok: true; recovered: boolean }
+  | { ok: false; phase: 'age'; code: 'under_twelve' | 'confirm_twelve' }
   | { ok: false; phase: 'reservation' | 'unknown' };
 
 export async function createChildLogin(
   ports: ChildLoginCreatePorts,
-  input: { learnerId: string; guardianId: string; username: string; password: string },
+  input: { learnerId: string; guardianId: string; username: string; password: string; twelveOrOlder?: boolean },
 ): Promise<ChildLoginCreateResult> {
   let attemptId: string;
   try {
-    attemptId = await ports.prepare(input.learnerId, input.username);
+    attemptId = await ports.prepare(input.learnerId, input.username, input.twelveOrOlder === true);
     if (!attemptId) return { ok: false, phase: 'reservation' };
-  } catch {
+  } catch (error) {
+    if (error instanceof ChildLoginAgeRefusal) return { ok: false, phase: 'age', code: error.code };
     // Even a lost reservation reply is not proof that it did not commit.
     return { ok: false, phase: 'reservation' };
   }

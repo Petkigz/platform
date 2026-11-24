@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { TranslateButton } from '@/components/translate-button';
+import type { TranslateWords } from '@/lib/translate';
 import { BOARD_ENGLISH, LOOK_REASON_MIN, boardOutcomeOf, type PostAuthor, type ReportedPost } from '@/lib/boards';
 
 type Said = { tone: 'error' | 'warn' | 'info'; text: string };
@@ -21,7 +23,7 @@ const when = (value: string): string =>
  * The account is kept in this component's memory only. Reading the page
  * again forgets it, and looking again is another audit entry.
  */
-export function BoardReports({ reports }: { reports: ReportedPost[] }) {
+export function BoardReports({ reports, translate = null }: { reports: ReportedPost[]; translate?: TranslateWords | null }) {
   const router = useRouter();
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -125,6 +127,7 @@ export function BoardReports({ reports }: { reports: ReportedPost[] }) {
             <p style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }} dir="auto">
               {row.body}
             </p>
+            <TranslateButton text={`${row.title}\n\n${row.body}`} words={translate} />
             <p className="eyebrow" style={{ marginBottom: '0.25rem' }}>
               What the reporters wrote
             </p>
@@ -135,6 +138,7 @@ export function BoardReports({ reports }: { reports: ReportedPost[] }) {
                 </li>
               ))}
             </ul>
+            <TranslateButton text={row.reasons.join('\n\n')} words={translate} />
 
             <label htmlFor={`reason-${key}`}>Your reason (kept in the audit log)</label>
             <textarea

@@ -2670,6 +2670,91 @@ export const en = {
   'board.removed': 'Staff took this down.',
   'board.older': 'Older posts',
   'board.asWritten': 'Posts are shown as they were written. They are not translated.',
+
+  // The Translate button, a child's first password and the staff page for
+  // teachers (`translate.ts`), for the same twenty-seven languages as the
+  // dashboard, 2026-11-24.
+  'translate.button': 'Translate',
+  'translate.hide': 'Hide the translation',
+  'translate.by': 'A machine translated this. It can be wrong.',
+  'translate.same': 'This is already in your language.',
+  'translate.offered':
+    'Posts are shown as they were written. Press the button under a post and a machine translates it for you.',
+  'translate.writeYours':
+    'Write in your own language. Whoever reads it can ask a machine to translate it.',
+  'translate.closed': 'Translation is switched off.',
+  'translate.tooLong': 'This is too long to translate.',
+  'translate.tooMany':
+    'You have reached the most one person can translate in a day. Try again tomorrow.',
+  'translate.monthSpent': 'Translation has reached its limit for this month.',
+  'translate.unsupported': 'The translation service does not have your language.',
+  'translate.unavailable': 'The translation service did not answer. Try again in a moment.',
+  'translate.failed': 'That could not be translated.',
+  'kid.chooseTitle': 'Choose your own password',
+  'kid.chooseLede':
+    'Your parent or guardian set the password you signed in with. Choose a new one that only you know. If you forget it, they can set another for you.',
+  'tq.admin': 'Admin',
+  'tq.title': 'Teachers',
+  'tq.eyebrow': 'Directory',
+  'tq.lede':
+    'Everyone who may teach here, and what each of them has published. Teaching is by appointment. Nobody becomes a teacher by signing up.',
+  'tq.find': 'Find',
+  'tq.findHint': 'A name or an email address',
+  'tq.clear': 'Clear',
+  'tq.queueUnread': 'The applications could not be read. Nothing was changed.',
+  'tq.open': 'Applications to teach are open.',
+  'tq.shut': 'Applications to teach are closed. Nobody can send one.',
+  'tq.switch':
+    'The switch is {flag}. Closing it stops new applications. It changes no decision and removes no teacher.',
+  'tq.dashboard': 'Open the dashboard',
+  'tq.appointed': 'Everyone appointed',
+  'tq.none': 'No teachers match.',
+  'tq.countOne': '{count} teacher.',
+  'tq.countOther': '{count} teachers.',
+  'tq.showing': 'Showing {shown} of {total} teachers. Narrow the search to see the rest.',
+  'tq.counted':
+    'A course counts as published once one of its versions is published, and it is counted once. Learners are counted as people across all the courses of a teacher. It is a number and never a list.',
+  'tq.noMatch': 'No teacher matches {query}.',
+  'tq.nobody':
+    'Nobody holds the teacher role yet. Appoint one on the roles page, with a written reason, and they will appear here.',
+  'tq.noHeadline': 'No headline on their public page',
+  'tq.noEmail': 'No email address on file',
+  'tq.appointedOn': 'Appointed: {date}',
+  'tq.pageLive': 'Public page is live',
+  'tq.pageDraft': 'Public page is a draft',
+  'tq.pageNone': 'No public page',
+  'tq.published': 'Courses published',
+  'tq.publishedOf': '{done} of {all}',
+  'tq.theirPage': 'Their public page',
+  'tq.byHand':
+    'A teacher can also be appointed or removed by hand, with a written reason, on the roles page. What a teacher has earned is on the payouts page, by currency, and never here.',
+  'tq.roles': 'Roles',
+  'tq.payouts': 'Payouts',
+  'tq.needReason': 'Write a reason first. The applicant reads it.',
+  'tq.approved':
+    'Approved. They now hold the teacher role. Every course they write still goes through review.',
+  'tq.declined': 'Declined. They can read your reason on their page and apply again.',
+  'tq.waiting': 'Waiting to be read: {count}',
+  'tq.nobodyWaiting': 'Nobody is waiting. An application arrives here when somebody sends one.',
+  'tq.unnamed': 'Applicant with no name',
+  'tq.sentOn': 'Sent: {date}',
+  'tq.watch': 'Watch the sample lesson',
+  'tq.noSample': 'No usable link to a sample lesson was kept with this application.',
+  'tq.reason': 'Your reason (the applicant reads this)',
+  'tq.reasonHint': 'What you watched and what convinced you, or exactly what would have to change.',
+  'tq.approveMeans':
+    'Approving makes them a teacher here. The decision is recorded with your reason. It publishes nothing: every course they write still goes through review.',
+  'tq.approve': 'Approve as a teacher',
+  'tq.decline': 'Decline, with the reason',
+  'tq.decidedTitle': 'Recently decided',
+  'tq.noDecisions': 'No decisions yet.',
+  'tq.colApplicant': 'Applicant',
+  'tq.colTeach': 'Would teach',
+  'tq.colDecision': 'Decision',
+  'tq.colReason': 'Reason',
+  'tq.colWhen': 'When',
+  'tq.wasApproved': 'Approved',
+  'tq.wasDeclined': 'Declined',
 } as const;
 
 export type MessageKey = keyof typeof en;

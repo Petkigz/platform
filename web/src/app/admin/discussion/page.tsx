@@ -5,6 +5,8 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { fetchModerationQueue } from '@/lib/discussion';
 import { decodeDiscussionCursor } from '@/lib/discussion-queue-cursor';
+import { TranslateButton } from '@/components/translate-button';
+import { translateFor } from '@/lib/translate-reader';
 import { ModerateForm } from './moderate-form';
 
 export const dynamic = 'force-dynamic';
@@ -39,6 +41,8 @@ export default async function AdminDiscussionPage({ searchParams }: { searchPara
   if (privileged !== true) redirect('/');
 
   const enabled = await isFlagEnabled(supabase, 'learning.discussion');
+  // Null when translation is off: then no button is drawn.
+  const translate = await translateFor(supabase);
   const params=await searchParams;
   const rawCursor=typeof params.after==='string' ? params.after : undefined;
   const cursor=rawCursor ? decodeDiscussionCursor(rawCursor) : null;
@@ -99,10 +103,12 @@ export default async function AdminDiscussionPage({ searchParams }: { searchPara
             <p>{item.body}</p>
             <footer className="muted">— {item.authorName}</footer>
           </blockquote>
+          <TranslateButton text={item.body} words={translate} />
 
           {item.isReply && (item.parent ? (
             <div className="notice"><strong>Question being answered</strong>
               <p style={{ whiteSpace: 'pre-wrap' }}>{item.parent.body}</p>
+              <TranslateButton text={item.parent.body} words={translate} />
               <p className="muted">Question state: {item.parent.state}.</p>
             </div>
           ) : <p className="notice warn">The question is unavailable. Review the thread before deciding.</p>)}

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { LOCALE_COOKIE, chooseLocale, translator } from '@/lib/i18n';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { PasswordForm } from '../password-form';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +18,13 @@ export const dynamic = 'force-dynamic';
  *
  * The eyebrow says where this form sits, because a person who followed a link
  * from an inbox has no idea they are inside account settings.
+ *
+ * **A child's first password.** A guardian makes a child's login and chooses
+ * the password to hand over; the login is then the child's (owner decision,
+ * 2026-11-24). While the password in force is still the guardian's, this
+ * page says so, in the child's words (`kid.`), and asks the child to choose
+ * their own. The database notes whose password it is when it changes
+ * (`note_child_password_owner`); this page only reads that.
  */
 export default async function UpdatePasswordPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -34,11 +41,29 @@ export default async function UpdatePasswordPage() {
   });
   const t = translator(code);
 
+  const mine = await supabase.rpc('my_child_login').then(
+    (r) => (r.error ? null : (r.data as { isChild?: unknown; ownPassword?: unknown } | null)),
+    () => null,
+  );
+  const first = mine?.isChild === true && mine.ownPassword === false;
+  const kidShown = languageShownFor(code, 'kid');
+  const kid = translator(kidShown.code);
+  const kidFrame = kidShown.code !== code ? { lang: kidShown.code, dir: kidShown.dir } : {};
+
   return (
     <div className="container section">
       <p className="eyebrow"><Link href="/account">{t('auth.accountSettings')}</Link></p>
-      <h1>{t('auth.chooseTitle')}</h1>
-      <p className="lede">{t('auth.chooseLede')}</p>
+      {first ? (
+        <div {...kidFrame} data-first-password>
+          <h1>{kid('kid.chooseTitle')}</h1>
+          <p className="lede">{kid('kid.chooseLede')}</p>
+        </div>
+      ) : (
+        <>
+          <h1>{t('auth.chooseTitle')}</h1>
+          <p className="lede">{t('auth.chooseLede')}</p>
+        </>
+      )}
       <PasswordForm />
     </div>
   );

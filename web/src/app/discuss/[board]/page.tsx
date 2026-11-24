@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { formatDateTime, formatNumber, translator } from '@/lib/i18n';
 import { boardOf, mayEnter, parseStanding, parseThreadPage } from '@/lib/boards';
+import { translateButtonOn } from '@/lib/translate-server';
 import { HandleForm, ThreadForm } from '../board-forms';
 import { READ_FAILED, boardName, boardWords, kindName, readerLanguage } from '../reader';
 
@@ -129,6 +130,9 @@ export default async function BoardPage({
   const written = { dir: 'auto', lang: '' } as const;
   const last = page?.threads[page.threads.length - 1];
 
+  // Whether a reader can ask for a translation of a post, which changes the last line.
+  const translateOn = await translateButtonOn(supabase);
+
   return (
     <div className="page board-page" {...frame} data-board={board} data-board-state="in">
       {head}
@@ -222,7 +226,7 @@ export default async function BoardPage({
             </Link>
           </p>
         ) : null}
-        <p className="muted">{t('board.asWritten')}</p>
+        <p className="muted">{translateOn ? t('translate.offered') : t('board.asWritten')}</p>
       </section>
     </div>
   );

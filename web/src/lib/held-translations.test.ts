@@ -59,6 +59,7 @@ import { POLICY } from './i18n/messages/policy.ts';
 import { INST } from './i18n/messages/inst.ts';
 import { TAPPLY } from './i18n/messages/tapply.ts';
 import { BOARD } from './i18n/messages/board.ts';
+import { TRANSLATE } from './i18n/messages/translate.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -431,7 +432,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board', 'translate', 'kid', 'tq']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -469,8 +470,14 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // promised on the page that asks.)
   // (Fifty-two more on 2026-11-24, later again: the two discussion boards,
   // a part of their own.)
-  assert.equal(unwrittenKeys.length, 1685);
+  // (Seventy more on 2026-11-24, last: thirteen for the Translate button,
+  // two for a child's first password and fifty-five for the staff page for
+  // teachers, three parts of their own.)
+  assert.equal(unwrittenKeys.length, 1755);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('board.')).length, 52);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('translate.')).length, 13);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('kid.')).length, 2);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('tq.')).length, 55);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('receipt.')).length, 18);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 57);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 43);
@@ -532,6 +539,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(INST).sort(), written);
   assert.deepEqual(Object.keys(TAPPLY).sort(), written);
   assert.deepEqual(Object.keys(BOARD).sort(), written);
+  assert.deepEqual(Object.keys(TRANSLATE).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -556,6 +564,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
       ...INST[code],
       ...TAPPLY[code],
       ...BOARD[code],
+      ...TRANSLATE[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -593,7 +602,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1957 sentences, which is 10%. Nothing holds a floor under
+  // 192 of 2027 sentences, which is 9%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -641,12 +650,13 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // page a school's code is used on and the page of what an institution
   // bought (10.10%, still 10%), then four for an answer to an application
   // to teach (10.08%, still 10%), then fifty-two for the two discussion
-  // boards (9.81%, still 10%).
+  // boards (9.81%, still 10%), then seventy for the Translate button, a
+  // child's first password and the staff page for teachers (9.47%, now 9%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1957);
-    assert.equal(coverageOf(code).percent, 10, code);
+    assert.equal(coverageOf(code).total, 2027);
+    assert.equal(coverageOf(code).percent, 9, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');

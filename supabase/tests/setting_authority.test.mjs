@@ -58,15 +58,15 @@ export async function run(ctx) {
     const kinds = (await q(
       `select setting_kind, count(*)::int n from public.platform_settings group by 1`)).rows;
     const byKind = Object.fromEntries(kinds.map((r) => [r.setting_kind, r.n]));
-    assert(byKind.flag === 86, `${byKind.flag} flags`);
-    assert(byKind.control === 18, `${byKind.control} controls`);
+    assert(byKind.flag === 87, `${byKind.flag} flags`);
+    assert(byKind.control === 20, `${byKind.control} controls`);
   });
 
   await test('a support agent may read the register but not flip it', async () => {
     const before = await value('commerce.checkout');
 
     const read = await as(support, 'select count(*)::int n from public.platform_settings');
-    assert(read.rows[0].n === 104, `could read ${read.rows[0].n} rows`);
+    assert(read.rows[0].n === 107, `could read ${read.rows[0].n} rows`);
 
     await rejects(
       () => as(support, `update public.platform_settings set value_text = 'true'

@@ -375,6 +375,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Discussion boards responsive test::${s}`)' "$RUNNER_TEMP/boards-responsive.log"
             exit 1
           fi
+      - name: Check the Translate button and the staff page for teachers in three languages, and that a translation is shown under the original
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/translate-route-smoke.mjs > "$RUNNER_TEMP/translate-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/translate-responsive.log"
+          else
+            cat "$RUNNER_TEMP/translate-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Translate button and staff teachers page::${s}`)' "$RUNNER_TEMP/translate-responsive.log"
+            exit 1
+          fi
       - name: Check the page that pays a pledge, in four languages, and that its form offers one press
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

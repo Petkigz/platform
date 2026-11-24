@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { CHILD_LOGIN_DOMAIN } from './child-login.ts';
-import type { ChildLoginCreatePorts } from './child-login-create.ts';
+import { ChildLoginAgeRefusal, type ChildLoginCreatePorts } from './child-login-create.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -11,10 +11,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
  */
 export function childLoginCreatePorts(session: SupabaseClient, service: SupabaseClient): ChildLoginCreatePorts {
   return {
-    async prepare(learnerId, username) {
+    async prepare(learnerId, username, twelveOrOlder) {
       const { data, error } = await session.rpc('prepare_child_login', {
-        p_learner: learnerId, p_username: username,
+        p_learner: learnerId, p_username: username, p_twelve_or_older: twelveOrOlder === true,
       });
+      // The two age refusals are the database saying no before it wrote
+      // anything, so unlike a lost reply they can be told to the guardian.
+      const age = /child_login:(under_twelve|confirm_twelve)\b/.exec(error?.message ?? '');
+      if (age) throw new ChildLoginAgeRefusal(age[1] as 'under_twelve' | 'confirm_twelve');
       if (error || typeof data !== 'string' || !UUID.test(data)) throw new Error('reservation unavailable');
       return data;
     },

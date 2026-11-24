@@ -30,6 +30,7 @@ import { AddChild, type AddChildWords } from './add-child';
 import { AgeDeclarationCard } from './age-declaration';
 import { fetchDeclaration, type AdultDeclaration } from '@/lib/adult-declaration';
 import { CreateFamily } from './create-family';
+import { parseChildLoginAge } from '@/lib/child-login-age';
 import { ChildLoginCard, type ChildLoginState } from './child-login-card';
 import { SaidList } from './said-list';
 import {
@@ -256,6 +257,13 @@ async function FamilyBlock({
           const { data } = await supabase.rpc('child_login_state', { p_learner_id: c.id });
           return (data as ChildLoginState | null) ?? null;
         })().catch(() => null),
+        // What the child's age band means for a login, and whether the child
+        // has chosen their own password. A failure is null, and then the card
+        // draws the form and the database decides.
+        loginAge: await (async () => {
+          const { data } = await supabase.rpc('child_login_age', { p_learner: c.id });
+          return parseChildLoginAge(data);
+        })().catch(() => null),
       })),
     ),
     // Who learns here as an adult besides the children. A failure is silence:
@@ -351,7 +359,7 @@ async function FamilyBlock({
         </div>
       ) : (
         <div className="grid cols-2">
-          {childCourses.map(({ child, courses, engagement, login }) => (
+          {childCourses.map(({ child, courses, engagement, login, loginAge }) => (
             <div className="card" key={child.id}>
               <h3 style={{ marginTop: 0 }}><bdi>{child.displayName}</bdi></h3>
               <div className="badges">
@@ -423,6 +431,7 @@ async function FamilyBlock({
                     learnerId={child.id}
                     childName={child.displayName}
                     state={login}
+                    age={loginAge}
                   />
                 </div>
               )}

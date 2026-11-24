@@ -452,7 +452,7 @@ export async function run(ctx) {
     // size. This only catches a parser that lost the table altogether, which is
     // how a document silently stops being checked.
     assert(flags.size >= 80, `FLAGS.md documented only ${flags.size} flags`);
-    assert(controls.size === 18, `expected the 18 controls in FLAGS.md, found ${controls.size}`);
+    assert(controls.size === 20, `expected the 20 controls in FLAGS.md, found ${controls.size}`);
 
     // Neither side may hold a key the other lacks. Reported as a set rather
     // than a count, because a count hides a swap.

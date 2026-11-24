@@ -45,6 +45,7 @@ import { POLICY } from './policy.ts';
 import { INST } from './inst.ts';
 import { TAPPLY } from './tapply.ts';
 import { BOARD } from './board.ts';
+import { TRANSLATE } from './translate.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -890,6 +891,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   TAPPLY,
   // The two discussion boards, on the same rule.
   BOARD,
+  // The Translate button, a child's first password and the teachers' staff page, on the same rule.
+  TRANSLATE,
 );
 
 /**

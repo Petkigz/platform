@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { parseReportQueue } from '@/lib/boards';
+import { translateFor } from '@/lib/translate-reader';
 import { BoardReports } from './board-reports';
 
 export const metadata = { title: 'Discussion reports' };
@@ -39,6 +40,8 @@ export default async function AdminBoardsPage() {
 
   const { data, error } = await supabase.rpc('board_report_queue');
   const queue = error ? null : parseReportQueue(data);
+  // Null when translation is off: then no button is drawn.
+  const translate = await translateFor(supabase);
 
   return (
     <div className="page">
@@ -69,7 +72,7 @@ export default async function AdminBoardsPage() {
             hides it from its members and deletes nothing; you can still read and clear it here.{' '}
             <Link href="/discuss">Open the boards</Link>.
           </div>
-          <BoardReports reports={queue.reports} />
+          <BoardReports reports={queue.reports} translate={translate} />
         </>
       )}
     </div>

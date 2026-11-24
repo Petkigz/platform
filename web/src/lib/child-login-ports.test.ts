@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { childLoginCreatePorts } from './child-login-ports.ts';
+import { ChildLoginAgeRefusal } from './child-login-create.ts';
 
 const cast = (value: unknown) => value as SupabaseClient;
 const attempt='7e576ccc-1fa6-4ad3-9afd-3d74d9ee0f64';
@@ -93,4 +94,40 @@ test('a mismatched completion receipt reaches the guardian as unconfirmed', asyn
   assert.equal(result.body.ok,false);
   assert.match('message' in result.body ? result.body.message : '',/could not confirm/i);
   assert.doesNotMatch(JSON.stringify(result),/secret42|different/);
+});
+
+test("the guardian's yes travels to the database as a boolean, and only a true is a yes", async () => {
+  const inputs: unknown[] = [];
+  const session = cast({ rpc: async (_name: string, input: unknown) => { inputs.push(input); return { data: attempt, error: null }; } });
+  const ports = childLoginCreatePorts(session, cast({}));
+  await ports.prepare(learner, 'amina');
+  await ports.prepare(learner, 'amina', true);
+  await ports.prepare(learner, 'amina', 'yes' as unknown as boolean);
+  assert.deepEqual(inputs, [
+    { p_learner: learner, p_username: 'amina', p_twelve_or_older: false },
+    { p_learner: learner, p_username: 'amina', p_twelve_or_older: true },
+    { p_learner: learner, p_username: 'amina', p_twelve_or_older: false },
+  ]);
+});
+
+test('an age refusal is told apart from a lost reply, and nothing else in the message is', async () => {
+  for (const code of ['under_twelve', 'confirm_twelve'] as const) {
+    const session = cast({ rpc: async () => ({ data: null, error: { message: `child_login:${code}` } }) });
+    const ports = childLoginCreatePorts(session, cast({}));
+    await assert.rejects(() => ports.prepare(learner, 'amina'), (error: unknown) => {
+      assert.ok(error instanceof ChildLoginAgeRefusal);
+      assert.equal(error.code, code);
+      return true;
+    });
+  }
+  // A name that only looks like one, and every other refusal: generic.
+  for (const message of ['child_login:under_twelve_ish', 'child_login:disabled', 'child_login:verified_guardian_required']) {
+    const session = cast({ rpc: async () => ({ data: null, error: { message } }) });
+    const ports = childLoginCreatePorts(session, cast({}));
+    await assert.rejects(() => ports.prepare(learner, 'amina'), (error: unknown) => {
+      assert.ok(!(error instanceof ChildLoginAgeRefusal), message);
+      assert.match(String((error as Error).message), /reservation unavailable/);
+      return true;
+    });
+  }
 });

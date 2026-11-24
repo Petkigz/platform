@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-360 files in `supabase/migrations/`, applied in filename order — the 14-digit
+362 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -410,14 +410,16 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 357. This tree has 360. The 358th,
+hosted project is at 357. This tree has 362. The 358th,
 `20261281151000_teaching_answer_told.sql`, has a job written for it (below);
 the owner asked for it on 2026-11-24. Because the branch now holds two more
 migrations, that job checks out the commit it was reviewed at (`fbf6341`,
-which ends at that file) and applies from that tree. The 359th and 360th
-(`20261281152000_refunds_policy_plan_given_back.sql` and
-`20261281153000_discussion_boards.sql`) have **no job yet**: one is written
-when the 358th has gone, because each job starts from an exact history and
+which ends at that file) and applies from that tree. The 359th to the 362nd
+(`20261281152000_refunds_policy_plan_given_back.sql`,
+`20261281153000_discussion_boards.sql`,
+`20261281154000_translate_button.sql` and
+`20261281155000_child_login_from_twelve.sql`) have **no job yet**: one is
+written when the 358th has gone, because each job starts from an exact history and
 is reviewed against it.
 
 Read back afterwards through the read-only connector, separately from the job:
@@ -1684,6 +1686,25 @@ at most the recorded 25 MiB, scans only those bytes, and never releases quaranti
 or changes the file's status. A clean response means no configured signature
 was reported, not that the file is safe or that a future download is unchanged. Each inspection first checks that the local scanner detects the harmless EICAR test sample both directly and inside a ZIP. This does not prove its signatures are up to date, its scan limits are safe, or its coverage is adequate.
 For an explicitly configured local daemon, run `COURSEWORK_CLAMAV_SOCKET=/absolute/path/to/clamd.sock npm run test:clamav:integration` from the repository root. The opt-in probe sends only synthetic content: a clean sample, the EICAR test sample, EICAR inside a ZIP, and a 25 MiB clean stream. It fails if those expected results do not match. It does not test R2, prove that all bytes or archive types were scanned, validate daemon limits or freshness, or enable scanning in upload/download flows. Run it against the actual daemon and settings used by the deployment; do not send private files to a test daemon.
+
+### The Translate button's key
+
+`GOOGLE_TRANSLATE_API_KEY` is a Google Cloud Translation key (Basic, v2),
+read on the server only. In Google Cloud, restrict it to the Cloud
+Translation API. It must never be given a `NEXT_PUBLIC_` name. Without it
+the Translate button is drawn nowhere and `/api/translate` answers `closed`,
+whatever the `platform.translate` switch says; with it and the switch on, a
+signed-in reader who presses Translate sends that text to Google. Set the
+key, read the two limits in `FLAGS.md`, and publish a privacy notice that
+names Google before switching it on. Nothing has been sent to Google from
+this code yet: make the first request by hand on the test deployment and
+read what comes back, in a language with a region in its name
+(`zh-hans`, `fa-af`) as well as a plain one.
+
+`TRANSLATE_TEST_ENDPOINT` is for tests: where the request goes instead of
+Google. It is ignored when `NODE_ENV` is `production`, so setting it on a
+deployment does nothing. Leave it unset.
+
 
 Encrypted and unsupported contents, old signatures and compromised scanners can
 be missed. Scan output is not a permanent record. The in-process scan cap is not

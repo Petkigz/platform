@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { handleChildLoginCreation } from './child-login-handler.ts';
-import type { ChildLoginCreatePorts } from './child-login-create.ts';
+import { CHILD_LOGIN_AGE_ENGLISH, handleChildLoginCreation } from './child-login-handler.ts';
+import { ChildLoginAgeRefusal, type ChildLoginCreatePorts } from './child-login-create.ts';
 
 const learnerId = '1e576ccc-1fa6-4ad3-9afd-3d74d9ee0f64';
 function fixture() {
@@ -41,4 +41,35 @@ test('a missing completion response is not claimed as failure or success', async
   assert.equal(result.status, 409);
   assert.match('message' in result.body ? result.body.message : '', /could not confirm/);
   assert.doesNotMatch(JSON.stringify(result), /sensitive details|safepass1/);
+});
+
+test('an age refusal reaches the guardian by name, with nothing made', async () => {
+  for (const code of ['under_twelve', 'confirm_twelve'] as const) {
+    const calls: unknown[][] = [];
+    const ports: ChildLoginCreatePorts = {
+      async prepare(learner, username, twelve) { calls.push(['prepare', learner, username, twelve]); throw new ChildLoginAgeRefusal(code); },
+      async findIdentity() { calls.push(['find']); return null; },
+      async createIdentity() { calls.push(['create']); return 'child'; },
+      async complete() { calls.push(['complete']); },
+    };
+    const out = await handleChildLoginCreation(ports, 'guardian', { learnerId, username: 'amina.k', password: 'safepass1', twelveOrOlder: code === 'under_twelve' });
+    assert.equal(out.status, 400);
+    assert.deepEqual(out.body, { ok: false, code, message: CHILD_LOGIN_AGE_ENGLISH[code] });
+    // The yes is passed as the guardian gave it, and no identity was asked for.
+    assert.deepEqual(calls, [['prepare', learnerId, 'amina.k', code === 'under_twelve']]);
+  }
+});
+
+test('only a literal true is the yes', async () => {
+  for (const [given, passed] of [[true, true], ['true', false], [1, false], [undefined, false]] as const) {
+    let seen: unknown = 'unset';
+    const ports: ChildLoginCreatePorts = {
+      async prepare(_learner, _username, twelve) { seen = twelve; return 'attempt'; },
+      async findIdentity() { return null; },
+      async createIdentity() { return 'child'; },
+      async complete() {},
+    };
+    await handleChildLoginCreation(ports, 'guardian', { learnerId, username: 'amina.k', password: 'safepass1', twelveOrOlder: given });
+    assert.equal(seen, passed, String(given));
+  }
 });

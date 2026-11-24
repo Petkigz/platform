@@ -9,6 +9,8 @@ import { consoleSections, switchboardNotice, type StaffFacts } from '@/lib/admin
 import { emptyQueueLede, outstandingSteps } from '@/lib/setup';
 import { fetchSetupFacts } from './setup-query';
 import { SetupPanel } from './setup-panel';
+import { parseTranslationMonth, translationMonthLines } from '@/lib/translate';
+import { translationKey } from '@/lib/translate-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -188,6 +190,15 @@ export default async function AdminPage() {
   // reading ninety switches they cannot flip is ninety opportunities to believe
   // this page is broken.
   const flags = sections.switchboard ? await fetchFlags(supabase) : [];
+  // What the Translate button has sent this month, for the person who can
+  // switch it. A read that failed draws nothing rather than a zero.
+  const translationMonth = sections.switchboard
+    ? await supabase.rpc('translation_month').then(
+        (r) => (r.error ? null : parseTranslationMonth(r.data)),
+        () => null,
+      )
+    : null;
+  const translation = translationMonth ? translationMonthLines(translationMonth, translationKey() !== null) : null;
   const groups = groupFlags(flags);
   let revenueSharePercent = 0;
   if (sections.switchboard) {
@@ -303,6 +314,12 @@ export default async function AdminPage() {
           </p>
 
           <RevenueShareForm currentPercent={revenueSharePercent} />
+
+          {translation ? (
+            <div className={translation.warn ? 'notice warn' : 'notice'} data-translation-month>
+              <strong>Translation.</strong> {translation.state} {translation.used}
+            </div>
+          ) : null}
 
           <div className="stats">
             <div>

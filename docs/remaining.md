@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1957 sentences; it was 71% of 272, then
+  the nineteen reads 9% there (192 of 2027 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -554,8 +554,10 @@ still unreviewed and still saying so.
   five sentences put back on the plans page, of 1864 with ten for
   notifications, of 1869 with five for telling of a changed document, of
   1871 with two for a plan given back, of 1901 with thirty for a school's
-  code, of 1905 with four for an answer to an application to teach, then
-  this with fifty-two for the two discussion boards),
+  code, of 1905 with four for an answer to an application to teach, 10% of
+  1957 with fifty-two for the two discussion boards, then this with seventy
+  for the Translate button, a child's first password and the staff page for
+  teachers),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -945,16 +947,47 @@ written: not a held draft, nothing.
   reads an application untranslated. An owner who reads only English
   receives whatever language the applicant wrote in; nothing tells the
   applicant which languages the owner reads.
-  **Still English:** the staff queue that answers an application
-  (`/admin/teachers`) and its action in the route.
+  **The staff queue that answers an application (`/admin/teachers`) is in
+  twenty-seven languages since 2026-11-24**, fifty-five sentences read by no
+  speaker; a refusal from its route is still an English sentence, shown
+  beside a translated one and marked as English.
+  **A Translate button and a child's login from twelve (2026-11-24,
+  migrations 361 and 362, switched off, not on the hosted test project).**
+  Under a board post, a support message, a reported post, a held lesson
+  post, an application to teach and the answer to one, a signed-in reader
+  can press Translate; a machine's translation is drawn under the original
+  with a line that says so. The service is Google Cloud Translation, and
+  **no request has ever been made to it from this code**: the key, the shape
+  of the request and Google's names for the languages are unchecked against
+  Google. **Before the switch is turned on:** a key on the server; a privacy
+  notice that says text a reader asks to translate is sent to Google (not
+  written; a new version of a published policy is the owner's to word); a
+  look at the two limits. No translation is stored, so the same post
+  translated twice is paid for twice. Seventy sentences in twenty-seven
+  languages, **read by no speaker**: thirteen for the button, two for a
+  child choosing a password, fifty-five for `/admin/teachers`, the first
+  staff page in the reader's language. **The other staff pages are still
+  English.** A child's own login is now for twelve and over: `14-17` open,
+  `11-13` with the guardian's recorded yes and no date of birth, younger
+  refused; existing logins kept. The child is sent to choose their own
+  password at first sign-in, and that redirect **is not run by any test**:
+  no test here signs in through the form. The card on the family page that
+  makes a login is still in English. Whose password is in force is noted by
+  a trigger on Supabase Auth's own table, unchecked against hosted Auth.
+  Checked by `scripts/translate-route-smoke.mjs` and
+  `scripts/family-route-smoke.mjs` on synthetic backends (the first with a
+  stand-in for Google), over HTTP and in a browser, and by
+  `supabase/tests/translate_button.test.mjs` and `child_login.test.mjs`
+  against the real migrations.
   **Two discussion boards (2026-11-24, migrations 359 and 360, switched off,
   not on the hosted test project).** `/discuss`: one board for students
   with a class somebody paid for and one for teachers, each under a username
   of the writer's choosing, with a staff queue at `/admin/boards`. Fifty-two
   sentences in twenty-seven languages, **read by no speaker**; four of them
   are the promise the boards make about who can find out who wrote a post.
-  **Not translated, for any reader:** what people write. The staff queue is
-  in English.
+  **What people write** is shown as written; since migration 361 a reader
+  can ask for a machine translation of it when that switch is on. The staff
+  queue is in English.
   **Before either switch is turned on, these are not built:** what somebody
   wrote on a board is not in their data export (`export_my_data()`);
   nothing tells staff that a post was reported, so `/admin/boards` has to be

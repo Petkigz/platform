@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 360 migrations and 176 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 362 migrations and 177 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,86 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### A Translate button, a child's login from twelve, a staff page in every language, 2026-11-24
+
+- *Built.* Migration 361, `20261281154000_translate_button.sql`: the
+  switch `platform.translate` (off), two limits the owner can change
+  (20,000 characters a person a day, 400,000 everybody a month), a table of
+  counts with no text in it, `spend_translation()` which counts a request
+  before the service is asked, and `translation_month()` for the dashboard.
+  Migration 362, `20261281155000_child_login_from_twelve.sql`: a child's
+  login is refused under twelve, needs the guardian's recorded yes for
+  `11-13`, and is open for `14-17`; the database notes whether the password
+  in force is the child's own. `POST /api/translate`; a button component;
+  `/admin/teachers` rewritten to say everything from the catalogue.
+- *The owner's six answers.* Google Cloud Translation. A button the reader
+  presses, nothing automatic. The guardian confirms "twelve or older", no
+  date of birth. The guardian makes the login, the child sets their own
+  password, the guardian can still reset. Under twelve: through the
+  guardian's sign-in, as built. Staff pages in all twenty-seven languages.
+- *The words.* Seventy sentences in twenty-seven languages
+  (`messages/translate.ts`): thirteen for the button, two for a child
+  choosing a password, fifty-five for the staff page for teachers. **No
+  speaker has read any of them.** The line shown above every translation
+  says both that a machine made it and that it can be wrong.
+- *The pages.* The button is under: the first post and each readable reply
+  of a thread; a reported post and the reporters' reasons on
+  `/admin/boards`; a held lesson post and the question it answers; a
+  reported post and the report on `/admin/reports`; each message of a
+  support case the reader did not write; the answer to an application to
+  teach; each waiting application on `/admin/teachers`. Where a page said
+  that what people write is not translated, it now says a reader can ask,
+  while the switch is on. `/account/password` asks a child still on a
+  guardian's password to choose their own. The family page tells a guardian
+  why a child under twelve is offered no login, asks for the yes for
+  `11-13`, and says whether the child has chosen a password. The dashboard
+  says what the month has used and whether the switch and the key agree.
+- *Rules a test holds.* Signed out, a form, nothing to translate and too
+  long are refused with nothing counted and nothing sent. The database is
+  asked first and the service is not asked when it says no. The service is
+  sent the text, the language and how to read it, and nothing about who
+  asked. The language is the reader's own choice whatever the request
+  names. No answer holds the key, the service's words or the database's.
+  No button is drawn while the switch is off. A translation is drawn as
+  text, under the original, which stays. A child under twelve is refused a
+  login in the database, with nothing reserved; `11-13` without the yes is
+  refused; the yes is recorded once. Only a literal `true` is a yes.
+- *Found on the way.* The function that reads a child's age for the family
+  page was first exported from a file marked for the browser; a server page
+  cannot call such a function, the page caught the failure as "unread", and
+  the type checker said nothing. The family smoke found it. It lives in
+  `lib/child-login-age.ts` now. The teachers' page was a pixel wider than a
+  320px screen in Tamil: a badge that could not break held a sentence. The
+  number `/language` shows for a held language went from 10% to 9%, because
+  seventy more sentences are unwritten there.
+- *Checked.* `scripts/translate-route-smoke.mjs` (new) over HTTP and in a
+  browser at three widths in English, Arabic and Tamil, against a stand-in
+  for Google that this script runs; `scripts/family-route-smoke.mjs`
+  extended, the same way; the two database suites against the real
+  migrations; type check, lint, `check:repo`, build, bundle check.
+- *Not shown.* **Nothing has been sent to Google**: the key, the request
+  and Google's names for the languages are unchecked against the real
+  service. A server with no key was not started. The redirect that sends a
+  child to choose a password after signing in is run by no test, because no
+  test signs in through the form. The trigger that notes whose password it
+  is has not met hosted Auth. Nothing here is on the hosted test project.
+- *Not built.* A privacy notice that names Google, which has to exist
+  before the switch is turned on and is the owner's to word. Any stored
+  translation. The other staff pages in other languages. The guardian's
+  card that makes a login, in other languages. A way to change the two
+  limits from the dashboard (they are changed where the other numbers are).
+  Board posts in the data export, and telling staff a report arrived: both
+  asked of the owner and not yet answered.
+- *Counts.* 2027 keys; server-only 1659; unwritten while held 1755
+  (`translate.` 13, `kid.` 2, `tq.` 55); held 192 of 2027, 9.47%, shown as
+  9%. 362 migrations, 177 database suites, 2763 database assertions (a
+  full run passed 2761 and failed two: a pin in `flags.test.mjs`, and a
+  test of this unit's that took a new account to have no profile; both
+  were corrected and passed with their suites, and the full run was not
+  repeated). 2686 web tests. 137 page routes, 36 smoke scripts. The client-bundle
+  check looks for 1680 sentences in 123 scripts. 107 flag rows (87 flags,
+  20 controls). Snapshot 194 relations, 438 foreign keys.
 
 ### Two discussion boards under usernames, 2026-11-24
 

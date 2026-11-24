@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchReportQueue } from '@/lib/governance';
 import { decodeDiscussionCursor } from '@/lib/discussion-queue-cursor';
+import { TranslateButton } from '@/components/translate-button';
+import { translateFor } from '@/lib/translate-reader';
 import { ModerateForm } from '../discussion/moderate-form';
 import { ResolveForm } from './resolve-form';
 
@@ -39,6 +41,8 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const cursor=raw ? decodeDiscussionCursor(raw) : null;
   const invalidCursor=params.after !== undefined && !cursor;
   const {items:reports,nextCursor} = await fetchReportQueue(supabase,{cursor});
+  // Null when translation is off: then no button is drawn.
+  const translate = await translateFor(supabase);
 
   return (
     <div className="container section">
@@ -85,6 +89,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                   {r.discussionPost ? (
                     <>
                       <p style={{ whiteSpace: 'pre-wrap' }}>{r.discussionPost.body}</p>
+                      <TranslateButton text={r.discussionPost.body} words={translate} />
                       <p className="muted">Current state: {r.discussionPost.visibility_state}. Moderating the post and resolving the report are separate actions.</p>
                       {r.discussionPost.parent_id && (r.discussionPost.parent ? (
                         <div><strong>Question being answered</strong><p style={{ whiteSpace: 'pre-wrap' }}>{r.discussionPost.parent.body}</p>
@@ -96,6 +101,7 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
                 </div>
               )}
               <p style={{ margin: '0.5rem 0' }}>{r.description}</p>
+              <TranslateButton text={r.description ?? ''} words={translate} />
               <ResolveForm reportId={r.id} category={r.report_category} />
             </li>
           ))}

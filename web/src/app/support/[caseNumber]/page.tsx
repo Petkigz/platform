@@ -8,6 +8,8 @@ import {
   PRIORITY_LABEL,
   STATUS_LABEL,
 } from '@/lib/support';
+import { TranslateButton } from '@/components/translate-button';
+import { translateFor } from '@/lib/translate-reader';
 import { CaseActions } from './case-actions';
 import { CaseHistory } from './case-history';
 import { parseSupportCleanupHoldStatus, parseSupportCleanupHoldHistory, parseSupportHeldVersions, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
@@ -57,6 +59,9 @@ export default async function SupportCasePage({
 
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   const isStaff = privileged === true;
+  // The requester and staff may write in different languages: each can
+  // translate what the other wrote. Null when translation is off.
+  const translate = await translateFor(supabase);
 
   const { supportCase: supportCaseRow, messages } = found;
   const open = supportCaseRow.status !== 'closed';
@@ -137,6 +142,7 @@ export default async function SupportCasePage({
         <ol className="lessons" style={{ alignItems: 'flex-start' }}>
           <li style={{ display: 'grid', gap: '0.25rem', width: '100%' }}>
             <span className="t">{supportCaseRow.body}</span>
+            <TranslateButton text={`${supportCaseRow.subject}\n\n${supportCaseRow.body}`} words={translate} />
             <span className="muted">
               {supportCaseRow.requesterName ?? 'You'} ·{' '}
               {new Date(supportCaseRow.createdAt).toLocaleString()}
@@ -146,6 +152,7 @@ export default async function SupportCasePage({
           {messages.map((m) => (
             <li key={m.id} style={{ display: 'grid', gap: '0.25rem', width: '100%' }}>
               <span className="t">{m.body}</span>
+              {m.authorIsMe ? null : <TranslateButton text={m.body} words={translate} />}
               <span className="muted">
                 {m.authorIsMe
                   ? 'You'

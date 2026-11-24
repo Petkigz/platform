@@ -85,7 +85,14 @@ export function SignInForm({
           password,
         });
         if (err) throw err;
-        router.push(next);
+        // A child's login whose password is still the one a guardian set is
+        // sent to choose their own first (owner decision, 2026-11-24). A
+        // failed question is silence: nobody is kept out by it.
+        const mine = await supabase.rpc('my_child_login').then(
+          (r) => (r.error ? null : (r.data as { isChild?: unknown; ownPassword?: unknown } | null)),
+          () => null,
+        );
+        router.push(mine?.isChild === true && mine.ownPassword === false ? '/account/password?first=1' : next);
         router.refresh();
       } else if (sentPhone) {
         const { error: err } = await supabase.auth.verifyOtp({

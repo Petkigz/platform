@@ -67,7 +67,7 @@ export async function run(ctx) {
       [`Family ${name}`])).rows[0].id;
     const childId = (await q(
       `insert into public.learner_profiles (display_name, learner_type, age_band, family_id)
-       values ($1,'child','8-10',$2) returning id`, [name, familyId])).rows[0].id;
+       values ($1,'child','14-17',$2) returning id`, [name, familyId])).rows[0].id;
     if (verified) await q(`insert into public.guardian_relationships
       (guardian_user_id,learner_profile_id,relationship_type,status,can_manage_profile,verified_at,consent_expires_at)
       values($1,$2,'parent','active',true,now()-interval '1 day',now()+interval '1 year')`, [owner,childId]);
@@ -845,6 +845,104 @@ export async function run(ctx) {
           'the database did not link the intended identity and complete the attempt');
       }
     } finally { await setFlag('family.child_login', false); }
+  });
+
+  // ---------------------------------------------------------------------------
+  // From twelve (20261281155000_child_login_from_twelve.sql)
+  // ---------------------------------------------------------------------------
+
+  const band = (learner, value) => q('update public.learner_profiles set age_band=$2 where id=$1', [learner, value]);
+
+  await test('a child under twelve gets no login; 11-13 needs the guardian\'s yes, and the yes is recorded', async () => {
+    const guardian = await person('Twelve guardian');
+    const { childId } = await familyWithChild(guardian, 'Twelve child');
+    await setFlag('family.child_login', true);
+    try {
+      for (const young of ['5-7', '8-10']) {
+        await band(childId, young);
+        await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2,true)', [childId, 'twelve.child']), /child_login:under_twelve/);
+        const state = (await asActor(guardian, 'select public.child_login_age($1) r', [childId])).rows[0].r;
+        assert(state.gate === 'under_twelve', `${young} was not shown as under twelve: ${JSON.stringify(state)}`);
+      }
+      await band(childId, '11-13');
+      await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2)', [childId, 'twelve.child']), /child_login:confirm_twelve/);
+      await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2,false)', [childId, 'twelve.child']), /child_login:confirm_twelve/);
+      await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2,null)', [childId, 'twelve.child']), /child_login:confirm_twelve/);
+      assert((await q('select count(*)::int n from public.child_login_attempts where learner_profile_id=$1', [childId])).rows[0].n === 0,
+        'a refused request left a reservation');
+      assert((await asActor(guardian, 'select public.child_login_age($1) r', [childId])).rows[0].r.gate === 'confirm', '11-13 was not shown as needing the yes');
+
+      const first = (await asActor(guardian, 'select public.prepare_child_login($1,$2,true) id', [childId, 'twelve.child'])).rows[0].id;
+      const said = (await q('select twelve_declared_at, guardian_user_id from public.child_login_attempts where id=$1', [first])).rows[0];
+      assert(said.twelve_declared_at && said.guardian_user_id === guardian, 'the declaration was not recorded on the reservation');
+      const again = (await asActor(guardian, 'select public.prepare_child_login($1,$2,true) id', [childId, 'twelve.child'])).rows[0].id;
+      assert(again === first, 'a retry made a second reservation');
+      const audits = (await q("select actor, detail from public.governance_audit_events where action='child_login.twelve_declared' and target_id=$1", [childId])).rows;
+      assert(audits.length === 1 && audits[0].actor === guardian && audits[0].detail.age_band === '11-13',
+        `the declaration was not audited once: ${JSON.stringify(audits)}`);
+      const columns = (await q("select column_name from information_schema.columns where table_schema='public' and table_name in ('child_login_attempts','child_logins','learner_profiles')")).rows.map((r) => r.column_name);
+      assert(!columns.some((c) => /birth|dob/.test(c)), 'a date of birth column exists');
+    } finally { await setFlag('family.child_login', false); }
+  });
+
+  await test('14-17 is not asked, and somebody who is not the guardian learns nothing about the band', async () => {
+    const guardian = await person('Open guardian');
+    const stranger = await person('Open stranger');
+    const { childId } = await familyWithChild(guardian, 'Open child');
+    await band(childId, '5-7');
+    await rejects(() => asActor(guardian, 'select public.prepare_child_login($1,$2,true)', [childId, 'open.child']), /child_login:disabled/);
+    await setFlag('family.child_login', true);
+    try {
+      await rejects(() => asActor(stranger, 'select public.prepare_child_login($1,$2,true)', [childId, 'open.child']), /verified_guardian_required/);
+      assert((await asActor(stranger, 'select public.child_login_age($1) r', [childId])).rows[0].r === null, 'a stranger was told the age gate');
+      await band(childId, '14-17');
+      const attempt = (await asActor(guardian, 'select public.prepare_child_login($1,$2) id', [childId, 'open.child'])).rows[0].id;
+      assert((await q('select twelve_declared_at from public.child_login_attempts where id=$1', [attempt])).rows[0].twelve_declared_at === null,
+        'a declaration was recorded where nobody was asked');
+      // The reservation itself cannot be called round the age check.
+      await rejects(() => asActor(guardian, 'select public.child_login_reserve($1,$2)', [childId, 'open.child']), /permission denied/);
+    } finally { await setFlag('family.child_login', false); }
+  });
+
+  await test('the password is the child\'s once the child changes it, and the guardian\'s again after a reset', async () => {
+    const guardian = await person('Own guardian');
+    const { childId: learner } = await familyWithChild(guardian, 'Own learner');
+    await setFlag('family.child_login', true);
+    await setFlag('family.child_password_recovery', true);
+    try {
+      const creation = (await asActor(guardian, "select public.prepare_child_login($1,'own.child') id", [learner])).rows[0].id;
+      const child = await newUser('own.child@learners.ayahspring.com');
+      await q("update auth.users set raw_app_meta_data=jsonb_build_object('ayahspring_child_attempt',$2::text) where id=$1", [child, creation]);
+      await q('select public.complete_child_login_attempt($1,$2,$3)', [creation, guardian, child]);
+
+      const mine = async () => (await asActor(child, 'select public.my_child_login() r')).rows[0].r;
+      const theirs = async () => (await asActor(guardian, 'select public.child_login_age($1) r', [learner])).rows[0].r;
+      let me = await mine();
+      assert(me.isChild === true && me.username === 'own.child' && me.ownPassword === false, `a new login was not waiting for the child's password: ${JSON.stringify(me)}`);
+      assert((await theirs()).ownPassword === false, 'the guardian was told the child had chosen');
+
+      // The child changes it: no marker, no pending reset.
+      await q("update auth.users set encrypted_password='child-chose' where id=$1", [child]);
+      me = await mine();
+      assert(me.ownPassword === true, 'the child\'s own change was not noted');
+      assert((await theirs()).ownPassword === true, 'the guardian was not told');
+
+      // The guardian resets it: the marker path.
+      const reset = (await asActor(guardian, 'select public.prepare_child_password_recovery($1) r', [learner])).rows[0].r;
+      await committed(async () => {
+        await q('update auth.users set encrypted_password=$2 where id=$1', [child, 'guardian-set']);
+        await q("update auth.users set raw_app_meta_data=raw_app_meta_data||jsonb_build_object('ayahspring_child_password_recovery',$2::text) where id=$1", [child, reset.resetId]);
+      });
+      me = await mine();
+      assert(me.ownPassword === false, 'after a guardian\'s reset the password was still called the child\'s');
+
+      await q("update auth.users set encrypted_password='child-chose-again' where id=$1", [child]);
+      assert((await mine()).ownPassword === true, 'the child could not make it their own again');
+
+      // An ordinary account is not a child's login.
+      const adult = (await asActor(guardian, 'select public.my_child_login() r')).rows[0].r;
+      assert(adult.isChild === false && adult.ownPassword === false, `an adult was called a child's login: ${JSON.stringify(adult)}`);
+    } finally { await setFlag('family.child_password_recovery', false); await setFlag('family.child_login', false); }
   });
 
   // ---------------------------------------------------------------------------

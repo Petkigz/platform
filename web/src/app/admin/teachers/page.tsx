@@ -1,16 +1,33 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+
+import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { directorySummary, parseDirectory, DirectoryError } from '@/lib/directory';
+import { LOCALE_COOKIE, chooseLocale, countLabel, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { parseDirectory, DirectoryError } from '@/lib/directory';
 import { parseQueue } from '@/lib/teaching';
-import { TeachingQueue } from './teaching-queue';
+import { translateFor } from '@/lib/translate-reader';
+import { TeachingQueue, type TeachingQueueWords } from './teaching-queue';
 
-export const metadata = { title: 'Teachers' };
 export const dynamic = 'force-dynamic';
 
-function when(value: string): string {
-  return new Date(value).toLocaleDateString('en-GB', { timeZone: 'UTC', dateStyle: 'medium' });
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'tq') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('tq.title') };
 }
 
 /**
@@ -36,6 +53,12 @@ function when(value: string): string {
  *
  * The roster and the queue share a screen because they are one question — "who
  * may teach here?" — and an appointment changes both halves of it at once.
+ *
+ * **Written in the reader's language** (`tq.` in the catalogue), the first
+ * staff page that is: the owner asked on 2026-11-24 for the staff pages in
+ * all twenty-seven. What an applicant wrote stays as they wrote it, in no
+ * known language, with a Translate button under it when translation is on.
+ * The database's own sentence for a failed read is logged, not shown.
  */
 export default async function AdminTeachersPage({
   searchParams,
@@ -56,6 +79,12 @@ export default async function AdminTeachersPage({
   ]);
   if (platformRole !== true && governanceRole !== true) redirect('/admin');
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  // Typed by a person, in a language this page does not know.
+  const written = { dir: 'auto', lang: '' } as const;
+
   const { q } = await searchParams;
   const query = typeof q === 'string' ? q.trim() : '';
 
@@ -68,8 +97,11 @@ export default async function AdminTeachersPage({
     supabase.rpc('teaching_application_queue'),
   ]);
   if (error) throw new Error(error.message);
+  if (queueError) console.error('admin/teachers: the applications could not be read:', queueError.message);
 
   const queue = queueError ? null : parseQueue(queueData);
+  // Null when translation is off: then no button is drawn.
+  const translate = queue ? await translateFor(supabase) : null;
 
   let teachers;
   try {
@@ -81,123 +113,163 @@ export default async function AdminTeachersPage({
     throw e;
   }
 
+  const day = (value: string | null | undefined) => formatDay(locale, value) || '—';
+  const summary =
+    teachers.total === 0
+      ? t('tq.none')
+      : teachers.truncated
+        ? t('tq.showing', { shown: formatNumber(locale, teachers.shown), total: formatNumber(locale, teachers.total) })
+        : countLabel(shown.code, teachers.total, { one: 'tq.countOne', other: 'tq.countOther' });
+
+  const queueWords: TeachingQueueWords = {
+    needReason: t('tq.needReason'),
+    failed: t('inst.failed'),
+    unsent: t('auth.offline'),
+    approved: t('tq.approved'),
+    declined: t('tq.declined'),
+    waiting: t('tq.waiting', { count: formatNumber(locale, queue?.counts.waiting ?? 0) }),
+    nobodyWaiting: t('tq.nobodyWaiting'),
+    unnamed: t('tq.unnamed'),
+    noEmail: t('tq.noEmail'),
+    watch: t('tq.watch'),
+    noSample: t('tq.noSample'),
+    reason: t('tq.reason'),
+    reasonHint: t('tq.reasonHint'),
+    writeYours: translate ? t('translate.writeYours') : null,
+    approveMeans: t('tq.approveMeans'),
+    approve: t('tq.approve'),
+    decline: t('tq.decline'),
+    working: t('auth.working'),
+    decidedTitle: t('tq.decidedTitle'),
+    noDecisions: t('tq.noDecisions'),
+    colApplicant: t('tq.colApplicant'),
+    colTeach: t('tq.colTeach'),
+    colDecision: t('tq.colDecision'),
+    colReason: t('tq.colReason'),
+    colWhen: t('tq.colWhen'),
+    wasApproved: t('tq.wasApproved'),
+    wasDeclined: t('tq.wasDeclined'),
+  };
+  // Dates are written here, on the server, in the reader's language: the
+  // browser would write them in its own.
+  const dates: Record<string, string> = {};
+  for (const row of queue?.waiting ?? []) dates[row.id] = t('tq.sentOn', { date: day(row.submittedAt) });
+  for (const row of queue?.decided ?? []) dates[row.id] = day(row.decidedAt);
+
   return (
-    <div className="page wide">
+    <div className="page wide" {...frame} data-tq-page>
       <nav className="crumbs">
-        <Link href="/admin">Admin</Link>
+        <Link href="/admin">{t('tq.admin')}</Link>
         <span aria-hidden>›</span>
-        <span>Teachers</span>
+        <span>{t('tq.title')}</span>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">Directory</p>
-        <h1>Teachers</h1>
-        <p className="muted">
-          Everyone who may teach here, and what each of them has published.
-          Teaching is by appointment — nobody becomes a teacher by signing up.
-        </p>
+        <p className="eyebrow">{t('tq.eyebrow')}</p>
+        <h1>{t('tq.title')}</h1>
+        <p className="muted">{t('tq.lede')}</p>
       </div>
 
       <form method="get" className="row" style={{ gap: '0.5rem', marginBottom: '1rem' }}>
         <label className="eyebrow" htmlFor="q" style={{ alignSelf: 'center' }}>
-          Find
+          {t('tq.find')}
         </label>
         <input
           id="q"
           name="q"
           defaultValue={query}
-          placeholder="A name, or an email address"
+          placeholder={t('tq.findHint')}
           autoComplete="off"
           style={{ flex: '1 1 18rem' }}
         />
         <button type="submit" className="btn secondary">
-          Search
+          {t('catalogue.search')}
         </button>
         {query && (
           <Link className="btn ghost" href="/admin/teachers">
-            Clear
+            {t('tq.clear')}
           </Link>
         )}
       </form>
 
       {queueError && (
-        <div className="notice error">
-          The applications queue could not be read: {queueError.message}
+        <div className="notice error" role="alert" data-tq-state="unread">
+          {t('tq.queueUnread')}
         </div>
       )}
 
       {queue && (
         <section style={{ marginBottom: '2rem' }}>
-          <div className="notice">
-            <strong>
-              {queue.open
-                ? 'Applications to teach are open.'
-                : 'Applications to teach are closed — nobody can send one, and this queue only shrinks.'}
-            </strong>{' '}
-            The switch is <code>teaching.applications</code> on <Link href="/admin">the dashboard</Link>.
-            Closing it stops new applications; it changes no decision and removes no teacher.
+          <div className="notice" data-tq-state={queue.open ? 'open' : 'shut'}>
+            <strong>{queue.open ? t('tq.open') : t('tq.shut')}</strong>{' '}
+            <Say text={t('tq.switch')} parts={{ flag: <code dir="ltr">teaching.applications</code> }} />{' '}
+            <Link href="/admin">{t('tq.dashboard')}</Link>
           </div>
           <div style={{ marginTop: '1rem' }}>
-            <TeachingQueue queue={queue} />
+            <TeachingQueue queue={queue} words={queueWords} dates={dates} translate={translate} />
           </div>
         </section>
       )}
 
-      <h2>Everyone appointed</h2>
-      <p className="muted">{directorySummary(teachers, 'teacher')}</p>
+      <h2>{t('tq.appointed')}</h2>
+      <p className="muted" data-tq-summary>{summary}</p>
 
-      <div className="notice">
-        A course counts as published once one of its versions is, and is counted
-        once however many versions it has. Learners are distinct people across
-        everything the teacher has written — a number, never a list.
-      </div>
+      <div className="notice">{t('tq.counted')}</div>
 
       {teachers.rows.length === 0 ? (
         <p className="empty">
-          {query
-            ? `No teacher matches “${query}”.`
-            : 'Nobody holds the teacher role yet. Appoint one on Roles, with a written reason, and they will appear here.'}
+          {query ? (
+            <Say text={t('tq.noMatch')} parts={{ query: <bdi {...written}>{query}</bdi> }} />
+          ) : (
+            t('tq.nobody')
+          )}
         </p>
       ) : (
         <div className="stack">
           {teachers.rows.map((teacher) => (
-            <article className="card" key={teacher.userId}>
-              <div className="row" style={{ flexWrap: 'wrap' }}>
-                <div>
-                  <strong>{teacher.name}</strong>
+            <article className="card" key={teacher.userId} style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+              <div className="row" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ minWidth: 0, flex: '1 1 12rem' }}>
+                  <strong>
+                    <bdi {...written}>{teacher.name}</bdi>
+                  </strong>
                   <p className="meta">
-                    {teacher.headline ?? 'no headline on their public page'}
+                    {teacher.headline ? <bdi {...written}>{teacher.headline}</bdi> : t('tq.noHeadline')}
                   </p>
                   <p className="meta">
-                    {teacher.email ?? 'no email on file'} · appointed{' '}
-                    {when(teacher.joinedAt)}
+                    {teacher.email ? <bdi dir="ltr">{teacher.email}</bdi> : t('tq.noEmail')}
                   </p>
+                  <p className="meta">{t('tq.appointedOn', { date: day(teacher.joinedAt) })}</p>
                 </div>
-                <span className="badge neutral">
+                {/* A sentence in some languages, not a word: it has to be able to break. */}
+                <span className="badge neutral" style={{ whiteSpace: 'normal', alignSelf: 'flex-start' }}>
                   {teacher.profileStatus === 'published'
-                    ? 'public page live'
+                    ? t('tq.pageLive')
                     : teacher.profileStatus === 'draft'
-                      ? 'public page draft'
-                      : 'no public page'}
+                      ? t('tq.pageDraft')
+                      : t('tq.pageNone')}
                 </span>
               </div>
 
               <dl className="facts" style={{ marginTop: '0.6rem' }}>
                 <div>
-                  <dt>Published</dt>
+                  <dt>{t('tq.published')}</dt>
                   <dd>
-                    {teacher.publishedCourses} of {teacher.courses}
+                    {t('tq.publishedOf', {
+                      done: formatNumber(locale, teacher.publishedCourses),
+                      all: formatNumber(locale, teacher.courses),
+                    })}
                   </dd>
                 </div>
                 <div>
-                  <dt>Learners</dt>
-                  <dd>{teacher.learners}</dd>
+                  <dt>{t('inst.colLearners')}</dt>
+                  <dd>{formatNumber(locale, teacher.learners)}</dd>
                 </div>
               </dl>
 
               {teacher.slug && teacher.profileStatus === 'published' && (
                 <p className="meta">
-                  <Link href={`/teachers/${teacher.slug}`}>Their public page</Link>
+                  <Link href={`/teachers/${teacher.slug}`}>{t('tq.theirPage')}</Link>
                 </p>
               )}
             </article>
@@ -205,10 +277,10 @@ export default async function AdminTeachersPage({
         </div>
       )}
 
-      <p className="muted" style={{ marginTop: '1.5rem' }}>
-        A teacher may also be appointed by hand on <Link href="/admin/roles">Roles</Link>, with a
-        written reason, or removed there. What they have earned is on{' '}
-        <Link href="/admin/payouts">payouts</Link>, per currency — never here.
+      <p className="muted" style={{ marginTop: '1.5rem' }}>{t('tq.byHand')}</p>
+      <p className="board-go">
+        <Link className="btn ghost" href="/admin/roles">{t('tq.roles')}</Link>
+        <Link className="btn ghost" href="/admin/payouts">{t('tq.payouts')}</Link>
       </p>
     </div>
   );

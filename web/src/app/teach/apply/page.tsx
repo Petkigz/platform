@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { Say } from '@/components/say';
+import { TranslateButton } from '@/components/translate-button';
+import { translateFor } from '@/lib/translate-reader';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { formatDateTime, translator } from '@/lib/i18n';
@@ -121,6 +123,9 @@ export default async function TeachApplyPage() {
   }
 
   const application = board.application;
+  // Staff answer in their own language; the applicant can translate it.
+  // Null when translation is off: then no button is drawn.
+  const translate = await translateFor(supabase);
   // Typed by a person, in a language this page does not know.
   const written = { dir: 'auto', lang: '' } as const;
   const note = application?.decisionReason ? (
@@ -129,6 +134,7 @@ export default async function TeachApplyPage() {
       <blockquote className="tapply-written" data-tapply-note {...written}>
         {application.decisionReason}
       </blockquote>
+      <TranslateButton text={application.decisionReason} words={translate} />
     </>
   ) : null;
 
@@ -196,7 +202,7 @@ export default async function TeachApplyPage() {
                 <Say text={t('tapply.sentOn')} parts={{ date: <bdi>{sentAt}</bdi> }} />
               </li>
             )}
-            <li>{t('tapply.asWritten')}</li>
+            <li>{translate ? t('translate.writeYours') : t('tapply.asWritten')}</li>
             <li data-tapply-answer-told={answerTold ? 'yes' : 'no'}>
               {answerTold ? t('tapply.answerTold') : t('tapply.answerHere')}
             </li>
@@ -232,7 +238,7 @@ export default async function TeachApplyPage() {
       {board.open ? (
         <section className="card tapply-card" data-tapply-state="form">
           <h2>{t('tapply.formTitle')}</h2>
-          <p className="muted">{t('tapply.asWritten')}</p>
+          <p className="muted">{translate ? t('translate.writeYours') : t('tapply.asWritten')}</p>
           <TeachingApplyForm words={formWords(t)} />
         </section>
       ) : (

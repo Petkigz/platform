@@ -2558,3 +2558,14 @@ html[data-motion='reduce'] *::after {
 .board-form .notice { inline-size: 100%; }
 .board-actions { margin-top: 0.6rem; display: grid; gap: 0.5rem; justify-items: start; }
 .board-actions .notice, .board-actions .board-form { inline-size: 100%; }
+
+/* Translate, under something somebody wrote. The button is quiet: it sits
+   under every post and must not look like the thing to do. The translation
+   is set off by a line at its start edge and keeps the writer's line breaks. */
+.translate { margin-top: 0.5rem; display: grid; gap: 0.35rem; justify-items: start; min-width: 0; }
+.translate-press { background: none; border: 0; padding: 0.35rem 0; min-block-size: 2.25rem; color: var(--text-soft); font: inherit; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
+.translate-press:hover, .translate-press:focus-visible { color: var(--text); }
+.translate-press[disabled] { cursor: default; text-decoration: none; }
+.translate-result { inline-size: 100%; padding-inline-start: 0.75rem; border-inline-start: 3px solid var(--border); min-width: 0; }
+.translate-note { margin: 0; color: var(--text-soft); font-size: 0.85rem; overflow-wrap: anywhere; }
+.translate-text { margin: 0.25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }

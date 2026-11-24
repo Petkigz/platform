@@ -52,6 +52,8 @@ const state = {
     { id: 'm-3', family_id: FAMILY, user_id: 'u-3', membership_type: 'billing_manager', status: 'revoked', user_profiles: { display_name: 'Yusuf' } },
   ],
   declaration: { required: false },
+  // A child's own login, and what the child's age means for one, by learner. Empty: no card.
+  login: {}, age: {},
   // What each writer answers: 'ok', or [status, { code, message }].
   create: 'ok', add: 'ok', join: 'ok', leave: 'ok',
   joined: { learnerProfileId: 'own', created: true, joined: true, displayName: 'Synthetic learner' },
@@ -98,7 +100,8 @@ const fake = createServer(async (req, res) => {
   else if (path === '/rest/v1/course_enrolments') {
     send(q('learner_profile_id') === `eq.${AISHA}` ? [{ id: 'e-1', status: 'active', courses: { title: 'Synthetic reading course', slug: 'reading' } }] : []);
   } else if (path === '/rest/v1/rpc/enrolment_progress_summary') send([{ lessons_total: 4, lessons_done: 1, percent_complete: 25 }]);
-  else if (path === '/rest/v1/rpc/child_login_state') send(null);
+  else if (path === '/rest/v1/rpc/child_login_state') send(state.login[payload.p_learner_id] ?? null);
+  else if (path === '/rest/v1/rpc/child_login_age') send(state.age[payload.p_learner] ?? null);
   else if (path === '/rest/v1/rpc/family_adult_learners') send(state.adults);
   else if (path === '/rest/v1/rpc/my_adult_declaration') send(state.declaration);
   else if (path === '/rest/v1/rpc/learner_across_courses') send(payload.p_learner_profile_id === AISHA ? across : []);
@@ -397,6 +400,49 @@ try {
   assert.deepEqual(rpcs('release_family_adult_learner').map((c) => c.payload), [{ p_family_id: FAMILY }], 'leaving names something besides the family');
   console.log('Family routes: create, add a child, join and leave each answer signed out 401, malformed 400, a typing mistake 400 with nothing sent, every database refusal under its own name and status without the database’s sentence, no answer from the database 502 "unconfirmed" rather than a refusal, and a good write with trimmed arguments and nothing extra. The stand-in enforces nothing: not real Auth or RLS.');
 
+  // ------------------------------------------- a login of their own, from twelve
+  // (Owner decision, 2026-11-24.) Under twelve: no form, and a sentence that
+  // says the child learns through this sign-in. Eleven to thirteen: the form
+  // with a box to tick. Fourteen and over: the form and no box. A login that
+  // exists says whose password is in force. The database holds the rule; this
+  // is what the page draws.
+  {
+    const saved = state.children; const savedFamilies = state.families;
+    state.families = [family()];
+    const kid = (band) => [{ ...saved[0], age_band: band }];
+    const may = { learnerProfileId: AISHA, hasLogin: false, username: null, createdAt: null, canManage: true, canCreate: true, canReset: false };
+    const card = (html) => html.replace(/<script[\s\S]*?<\/script>/g, '').replaceAll('<!-- -->', '').replaceAll('&#x27;', "'");
+    const UNDER = 'Aisha learns through your sign-in. A child can have a login of their own from the age of twelve.';
+    const OFFER = 'Give Aisha their own login';
+
+    state.children = kid('8-10'); state.login = { [AISHA]: may }; state.age = { [AISHA]: { gate: 'under_twelve', ownPassword: null } };
+    let drawn = card(await page('/family'));
+    assert.ok(drawn.includes(`<p class="muted" data-child-login-age="under_twelve">${UNDER}</p>`), 'under twelve is not told why there is no login');
+    assert.ok(!drawn.includes(OFFER), 'a child under twelve is offered a login');
+
+    for (const [band, gate] of [['11-13', 'confirm'], ['14-17', 'open']]) {
+      state.children = kid(band); state.age = { [AISHA]: { gate, ownPassword: null } };
+      drawn = card(await page('/family'));
+      assert.ok(drawn.includes(OFFER), `${band} is not offered a login`);
+      assert.ok(!drawn.includes(UNDER), `${band} is told they are under twelve`);
+    }
+    // The age could not be read: the form is offered and the database decides.
+    state.age = {};
+    assert.ok(card(await page('/family')).includes(OFFER), 'an unread age hid the form');
+
+    // A login that exists is shown whatever the age, with whose password it is.
+    const exists = { ...may, hasLogin: true, username: 'synthetic.aisha', createdAt: '2026-11-01T10:00:00Z', canCreate: false, canReset: true };
+    state.children = kid('8-10'); state.login = { [AISHA]: exists };
+    for (const [own, sentence] of [[false, 'Aisha is still using a password a guardian set. They are asked to choose their own when they next sign in.'], [true, 'Aisha has chosen their own password. You cannot see it.']]) {
+      state.age = { [AISHA]: { gate: 'under_twelve', ownPassword: own } };
+      drawn = card(await page('/family'));
+      assert.ok(drawn.includes(`data-child-own-password="${own ? 'yes' : 'no'}">${sentence}</p>`), `own password ${own}: ${sentence}`);
+      assert.ok(drawn.includes('synthetic.aisha') && !drawn.includes(UNDER), 'a login that exists was hidden by the age rule');
+    }
+    state.children = saved; state.families = savedFamilies; state.login = {}; state.age = {};
+    console.log('A child’s own login: under twelve is told they learn through the guardian’s sign-in and is offered no form; 11-13 and 14-17 are offered one; an unread age still offers it; a login that exists is shown at any age and says whether the child has chosen their own password.');
+  }
+
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -525,6 +571,42 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
       console.log('Synthetic create-a-family form in French: "could not confirm" and a refusal each said in French without the database’s sentence; a good create shows the family.');
+    }
+
+    // A login for a child of eleven to thirteen: the box has to be ticked, and
+    // until it is nothing is sent. The route itself is not run here: it needs
+    // the service key, which this server does not have.
+    {
+      const saved = state.children;
+      state.families = [family()]; state.declaration = { required: false };
+      state.children = [{ ...saved[0], age_band: '11-13' }];
+      state.login = { [AISHA]: { learnerProfileId: AISHA, hasLogin: false, username: null, createdAt: null, canManage: true, canCreate: true, canReset: false } };
+      state.age = { [AISHA]: { gate: 'confirm', ownPassword: null } };
+      const { context, tab, errors, sent } = await open('en', 390);
+      await tab.getByRole('button', { name: 'Give Aisha their own login' }).click();
+      const box = tab.getByRole('checkbox', { name: 'I confirm that Aisha is twelve or older. We do not ask for a date of birth; your answer is recorded.' });
+      assert.equal(await box.isChecked(), false, 'the box arrived ticked');
+      await tab.locator(`#username-${AISHA}`).fill('synthetic.aisha');
+      await tab.locator(`#password-${AISHA}`).fill('synthetic-pass-1');
+      await tab.getByRole('button', { name: 'Make Aisha\'s login' }).click();
+      await tab.getByText('Confirm that this child is twelve or older first.').waitFor();
+      assert.deepEqual(sent.filter((s) => s.includes('child-login')), [], 'a login was asked for without the guardian’s yes');
+      await box.check();
+      const asked = tab.waitForRequest((r) => r.url().endsWith('/api/family/child-login') && r.method() === 'POST');
+      await tab.getByRole('button', { name: 'Make Aisha\'s login' }).click();
+      assert.deepEqual((await asked).postDataJSON(), { learnerId: AISHA, username: 'synthetic.aisha', password: 'synthetic-pass-1', twelveOrOlder: true });
+      assert.equal(await tab.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'the login form is wider than the screen');
+      if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/family-child-login-twelve-390.png`, fullPage: true });
+      assert.deepEqual(errors, []);
+      await context.close();
+      // No box for fourteen and over, and the yes is not sent as one.
+      state.children = [{ ...saved[0], age_band: '14-17' }]; state.age = { [AISHA]: { gate: 'open', ownPassword: null } };
+      const older = await open('en', 390);
+      await older.tab.getByRole('button', { name: 'Give Aisha their own login' }).click();
+      assert.equal(await older.tab.getByRole('checkbox').count(), 0, 'fourteen and over is asked about twelve');
+      await older.context.close();
+      state.children = saved; state.login = {}; state.age = {};
+      console.log('Synthetic child login form: for 11-13 nothing is sent until the guardian ticks that the child is twelve or older, and then the yes goes with the request; 14-17 is not asked.');
     }
   }
   console.log('Family HTTP smoke passed. Not real Auth or RLS.');

@@ -180,6 +180,9 @@ jobs:
       - name: Discussion boards synthetic HTTP regression
         run: node scripts/boards-route-smoke.mjs
 
+      - name: Translate button and staff teachers page synthetic HTTP regression
+        run: node scripts/translate-route-smoke.mjs
+
       - name: Catalogue synthetic HTTP regression
         run: node scripts/catalogue-route-smoke.mjs
 

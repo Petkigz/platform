@@ -206,6 +206,13 @@ for (const [file, key] of [
   ['board.ts', 'board.ruleStaff'],
   ['board.ts', 'board.notStudent'],
   ['board.ts', 'board.unread'],
+  // The Translate button is a client component that is handed its words; a
+  // child's first password and the staff page for teachers are server pages.
+  // None of the three parts may be in what every page downloads.
+  ['translate.ts', 'translate.by'],
+  ['translate.ts', 'translate.offered'],
+  ['translate.ts', 'kid.chooseLede'],
+  ['translate.ts', 'tq.approveMeans'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { childLoginSentence, passwordProblem, usernameProblem } from '@/lib/child-login';
+import type { ChildLoginAge } from '@/lib/child-login-age';
 
 export type ChildLoginState = {
   learnerProfileId: string;
@@ -33,15 +34,29 @@ export type ChildLoginState = {
  *
  * Creation follows the dashboard switch and current guardian verification.
  * Detachment stays visible even while creation is off.
+ *
+ * **From twelve** (owner decision, 2026-11-24). A child under twelve has no
+ * login of their own and the card says so instead of offering a form. For
+ * the 11-13 band the guardian ticks a box saying the child is twelve or
+ * older; no date of birth is asked for. The database holds the rule
+ * (`prepare_child_login`); this card only stops a guardian filling in a form
+ * that would be refused. When `age` could not be read the form is drawn and
+ * the database still decides.
+ *
+ * **The password becomes the child's.** The guardian chooses the first one
+ * to hand over; the child is asked to choose their own when they sign in,
+ * and the card says whether they have.
  */
 export function ChildLoginCard({
   learnerId,
   childName,
   state,
+  age = null,
 }: {
   learnerId: string;
   childName: string;
   state: ChildLoginState;
+  age?: ChildLoginAge | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -54,6 +69,10 @@ export function ChildLoginCard({
   const [resetDone, setResetDone] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [reason, setReason] = useState('');
+  const [twelve, setTwelve] = useState(false);
+  // What the database said about the child's age when this page could not read it.
+  const [told, setTold] = useState<'confirm' | 'under_twelve' | null>(null);
+  const gate = told ?? age?.gate ?? null;
   const [, startTransition] = useTransition();
 
   if (!state.canManage) return null;
@@ -70,18 +89,24 @@ export function ChildLoginCard({
       setError(weak);
       return;
     }
+    if (gate === 'confirm' && !twelve) {
+      setError('Confirm that this child is twelve or older first.');
+      return;
+    }
 
     setBusy(true);
     try {
       const res = await fetch('/api/family/child-login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ learnerId, username, password }),
+        body: JSON.stringify({ learnerId, username, password, twelveOrOlder: twelve }),
       });
       const json = (await res.json().catch(() => null)) as
         | { ok?: boolean; username?: string; recovered?: boolean; message?: string; error?: string; code?: string }
         | null;
       if (!res.ok || json?.ok !== true || typeof json.username !== 'string' || typeof json.recovered !== 'boolean') {
+        if (json?.code === 'confirm_twelve') setTold('confirm');
+        if (json?.code === 'under_twelve') setTold('under_twelve');
         setError(json?.message ?? childLoginSentence(json?.code ?? json?.error));
         return;
       }
@@ -144,7 +169,7 @@ export function ChildLoginCard({
           <strong>{childName}&rsquo;s learner profile is linked.</strong> The username is{' '}
           <strong>{made.username}</strong>. {made.recovered
             ? 'This was recovered from an earlier attempt. The password set in that earlier attempt remains in effect; the password entered on this retry did not replace it.'
-            : 'Use the password you chose for this login.'}
+            : 'Give them the password you chose. They are asked to choose their own, which you will not see, the first time they sign in.'}
         </div>
         <p className="muted">The username is a sign-in identifier, not an email mailbox.
           Contact privacy@ayahspring.com if you need help with the password.</p>
@@ -173,6 +198,14 @@ export function ChildLoginCard({
             : '.'}{' '}
           {state.canReset ? 'A verified guardian can request a new password for a trusted child login. Existing sessions may remain active.' : 'Password recovery is not available here right now.'}
         </p>
+
+        {age && age.ownPassword !== null && (
+          <p className="muted" style={{ fontSize: '0.85rem', marginTop: 0 }} data-child-own-password={age.ownPassword ? 'yes' : 'no'}>
+            {age.ownPassword
+              ? `${childName} has chosen their own password. You cannot see it.`
+              : `${childName} is still using a password a guardian set. They are asked to choose their own when they next sign in.`}
+          </p>
+        )}
 
         {state.canReset && (!resetOpen ? (
           <button type="button" className="btn ghost" disabled={busy} onClick={() => {setResetOpen(true);setResetDone(false);setError(null);}}>Set a new password</button>
@@ -225,6 +258,14 @@ export function ChildLoginCard({
     );
   }
 
+  if (gate === 'under_twelve') {
+    return (
+      <p className="muted" data-child-login-age="under_twelve">
+        {childName} learns through your sign-in. A child can have a login of their own from the age of twelve.
+      </p>
+    );
+  }
+
   if (!state.canCreate) {
     return <p className="muted">A new child login is not available for this profile. It may be switched off or an earlier login may need review. Contact privacy@ayahspring.com for help.</p>;
   }
@@ -265,10 +306,25 @@ export function ChildLoginCard({
             minLength={8}
           />
           <p className="muted" style={{ fontSize: '0.85rem' }}>
-            Write the password down somewhere safe. It is sent straight to the sign-in
-            service and nobody — including us — can read it back afterwards. Letters,
-            numbers, dots, dashes and underscores; no spaces.
+            This first password is yours to hand to {childName}. It is sent straight to the
+            sign-in service and nobody — including us — can read it back afterwards. When
+            they sign in they are asked to choose their own.
           </p>
+          {gate === 'confirm' && (
+            <label htmlFor={`twelve-${learnerId}`} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }} data-child-login-age="confirm">
+              <input
+                id={`twelve-${learnerId}`}
+                type="checkbox"
+                checked={twelve}
+                onChange={(e) => setTwelve(e.target.checked)}
+                style={{ inlineSize: 'auto', marginBlockStart: '0.25rem' }}
+              />
+              <span>
+                I confirm that {childName} is twelve or older. We do not ask for a date of birth;
+                your answer is recorded.
+              </span>
+            </label>
+          )}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="button" className="btn" onClick={make} disabled={busy}>
               {busy ? 'Making the login…' : `Make ${childName}'s login`}

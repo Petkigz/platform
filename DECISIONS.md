@@ -5862,7 +5862,9 @@ privacy note has to be read once, not after a flicker.
 
 **What is still refused.** No machine translation at request time: it costs a
 card, and a machine's sentence presented as the platform's words is a claim
-nobody reviewed. No language toggle hidden behind an account. No claim that a
+nobody reviewed. *(Lifted on 2026-11-24 for what people write to each
+other, and only for that: see "A reader may ask a machine to translate what
+somebody wrote". The platform's own sentences are still hand-written.)* No language toggle hidden behind an account. No claim that a
 course is available in a language its author did not write it in. And no flag:
 this is not a feature gate that can be switched off into a broken site — the
 English catalogue is the fallback, so the feature cannot be half-on.
@@ -8764,6 +8766,98 @@ read 12%.
 **Not decided here:** whether `my_statement()` should stop writing a
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
+
+## A reader may ask a machine to translate what somebody wrote — **DECIDED 2026-11-24**
+
+**The owner's answers.** Six questions were put on 2026-11-24 and answered:
+people write in their own language and a reader presses a **Translate**
+button; nothing is translated on its own. The service is **Google Cloud
+Translation**. The staff pages are to be in all twenty-seven languages, as
+the members' pages are.
+
+**What this reverses, and what it does not.** "The reader's language is
+chosen once" (above) refused machine translation at request time, for two
+reasons: it costs a card, and a machine's sentence shown as the platform's
+words is a claim nobody reviewed. The second reason still holds and is kept:
+**the platform's own sentences are hand-written and stay so.** What changed
+is that people now write to each other here (two boards, support, reports,
+applications to teach) in twenty-seven languages, and a moderator who cannot
+read a reported post cannot moderate it. So the refusal is lifted for
+**people's writing only**, and the machine's sentence is never shown as
+anybody's: it is drawn **under** the original, which stays, with a line that
+says a machine translated it and it can be wrong.
+
+**The cost is answered with a count taken first.** Google bills by the
+character. Each press is counted in the database *before* the service is
+asked, and stays counted if the service fails, because a count taken
+afterwards is a limit that a crash removes. One request is at most 5,000
+characters; one person 20,000 a day; everybody 400,000 a month, of which the
+last fifth is kept for staff. The two larger numbers are the owner's to
+change. Staff are exempt from the daily limit and only from that.
+
+**What leaves the platform.** The text and the language wanted. Not who
+wrote it, not who asked, no account, no cookie. The language is read from
+the reader's own choice on the server; a request cannot name another. The
+key is sent in a header, is server-only, and is in nothing a browser
+downloads. **No translation is stored**: a stored translation is a second
+copy of somebody's words that their withdrawal or deletion would have to
+find. The price is that the same post translated twice is paid for twice.
+
+**Two switches, both needed.** `platform.translate` and a key on the
+server. Either one missing draws no button at all, rather than a button
+that fails. The dashboard says which is missing.
+
+**Not done, and it has to be before this is switched on.** The privacy
+notice does not yet say that text a reader asks to translate is sent to
+Google. That is a new version of a published policy and is the owner's to
+word. Nothing has been sent to Google from this code: the key, the request
+and Google's names for the languages are untested against the real service.
+
+**The staff pages.** `/admin/teachers` is the first staff page written in
+the reader's language (fifty-five sentences, `tq.`). The other staff pages
+are still English. None of the new sentences has been read by a speaker.
+
+## A child has a login of their own from twelve — **DECIDED 2026-11-24**
+
+**The owner's answers.** A child's own login is for children of **twelve
+and over**. The guardian **confirms** "twelve or older"; no date of birth is
+asked for. The guardian creates the login; **the child then sets their own
+password**, and the guardian can still reset it. A child under twelve uses
+the students' board, and everything else, through the guardian's sign-in.
+
+**Why a yes and not a birthday.** The platform stores an age band, not an
+age: `5-7`, `8-10`, `11-13`, `14-17`. Twelve falls inside `11-13`. A date of
+birth for every child would settle it and would be the most sensitive thing
+the platform holds about a child, collected to answer one question once. So
+`14-17` is open, `5-7` and `8-10` are refused, and for `11-13` the guardian
+says yes. The yes is recorded with the attempt and in the audit log, with
+the band and nothing else. It is a declaration by a verified guardian, and
+the platform does not check it.
+
+**The rule is in the database.** `prepare_child_login` refuses before it
+reserves anything, and the reservation itself is now an inner function
+that members cannot call around it. The page only avoids offering a form that would be refused, and
+when it cannot read the age it offers the form and lets the database say
+no.
+
+**Logins that exist are kept.** A child under twelve who already has a
+login keeps it. Taking away a child's sign-in because a rule changed is a
+decision about that child, for the owner to make one at a time; nothing in
+this change makes it.
+
+**Whose password it is.** The guardian chooses the first one, because
+somebody has to hand the child a way in. From then on the database notes
+whose password is in force: the child's once the child changes it, the
+guardian's again after a guardian's reset. A child still on a guardian's
+password is sent to choose their own when they sign in, and the family page
+tells the guardian which it is. The guardian never sees the child's
+password. **This is asked, not forced:** a child who navigates away keeps
+the guardian's password and is asked again at the next sign-in.
+
+**Not checked.** The trigger that notes whose password it is reads Supabase
+Auth's own table; it passes against the test database's copy of that table
+and has not been run against hosted Auth. Both switches
+(`family.child_login`, `family.child_password_recovery`) stay off.
 
 ## Two discussion boards, under usernames — **DECIDED 2026-11-24**
 

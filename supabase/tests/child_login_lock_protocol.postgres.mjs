@@ -63,7 +63,7 @@ try {
   await a.query("select set_config('request.jwt.claims',$1,true)",[JSON.stringify({sub:guardian,role:'authenticated'})]);
   const family=(await a.query("select public.create_family('Lock test') id")).rows[0].id;
   await a.query('commit');
-  const learner=(await a.query("insert into public.learner_profiles(display_name,learner_type,age_band,family_id) values('Test child','child','8-10',$1) returning id",[family])).rows[0].id;
+  const learner=(await a.query("insert into public.learner_profiles(display_name,learner_type,age_band,family_id) values('Test child','child','14-17',$1) returning id",[family])).rows[0].id;
   await a.query("insert into public.guardian_relationships(guardian_user_id,learner_profile_id,relationship_type,status,can_manage_profile,verified_at,consent_expires_at) values($1,$2,'parent','active',true,now()-interval '1 day',now()+interval '1 year')",[guardian,learner]);
   await b.query('begin');
   await b.query("update public.guardian_relationships set status='revoked',can_manage_profile=false,can_manage_learning=false,can_view_progress=false where guardian_user_id=$1 and learner_profile_id=$2",[guardian,learner]);
