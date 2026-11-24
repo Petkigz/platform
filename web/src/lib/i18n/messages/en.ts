@@ -2237,6 +2237,7 @@ export const en = {
   'notify.kPlanRenewing': 'A plan renews soon',
   'notify.kLiveCancelled': 'A class you were going to was cancelled',
   'notify.kRecordingReady': 'A recording of a class is ready',
+  'notify.kTeachAnswered': 'Your application to teach was answered',
   'notify.dPayoutPaid': 'When money owed to you has been sent.',
   'notify.dPayoutFailed':
     'When a transfer did not go through. Always on: it is how you find out, and the fix is usually yours to make.',
@@ -2251,6 +2252,8 @@ export const en = {
     'When a live class you or a child of yours was enrolled in is called off, with the reason. Turning this off means finding out by opening the room instead. The class still says it was cancelled, and why.',
   'notify.dRecordingReady':
     'When a recording is added for a class you or a child of yours was in. Turning this off means finding out by opening the class page instead. The recording is still there, and can still be watched while your enrolment lasts.',
+  'notify.dTeachAnswered':
+    'When an application to teach that you sent is approved or not approved. Turning this off means finding out by opening the application page instead. The answer is still there.',
   // A kept message said from what it is made of (2026-11-24). The amount and
   // the reference reuse the sponsor page's sentences.
   'notify.mReason': 'The reason given: {reason}',
@@ -2265,6 +2268,9 @@ export const en = {
   'notify.mClass': 'The class: {title}',
   'notify.mWasAt': 'It was to start on: {date}',
   'notify.mHeldAt': 'The class was on: {date}',
+  // An answer to an application to teach (2026-11-24). The outcome reuses
+  // `tapply.approved` and `tapply.declined`.
+  'notify.mTeachNote': 'What was written to you with the answer is on the application page.',
   // The same thing on the notifications page: a section, not a kept message.
   'notify.policyHead': 'Documents that have changed',
   'notify.policyLead':
@@ -2566,6 +2572,9 @@ export const en = {
   'tapply.sentOn': 'Sent on: {date}',
   'tapply.answerHere':
     'The answer will be shown on this page. No message is sent when it comes, so look here again.',
+  // Said instead of `answerHere` when the database says this person will be told.
+  'tapply.answerTold':
+    'The answer will be shown on this page. A message is also put in your notifications when it comes.',
   'tapply.sampleLink': 'The sample lesson you sent',
   'tapply.withdrawDo': 'Take this application back',
   'tapply.withdrawNote':

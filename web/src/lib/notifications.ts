@@ -11,8 +11,8 @@
  *
  * **A kept message, said from what it is made of.** Since the migration
  * `20261281148000_notification_facts.sql` a message arrives with `facts`:
- * the amount, the reference, the title, the moment, somebody's reason, each
- * by name. `factsOf` reads them, and the page says the sentence in the
+ * the amount, the reference, the title, the moment, somebody's reason, the
+ * answer to an application, each by name. `factsOf` reads them, and the page says the sentence in the
  * reader's language. A message written before that has none, and one whose
  * facts are not all there is treated the same way: it is shown as the
  * English it was written in, named in the reader's language above. Guessing
@@ -47,7 +47,9 @@ export type MessageFacts =
   | { kind: 'payout_cancelled'; amountMinor: string; currency: string }
   | { kind: 'media_encode_failed'; part: 'uploader' | 'author'; name: string | null; reason: string }
   | { kind: 'live_cancelled'; title: string; startsAt: string; zone: string; reason: string }
-  | { kind: 'live_recording_ready'; title: string; startsAt: string; zone: string };
+  | { kind: 'live_recording_ready'; title: string; startsAt: string; zone: string }
+  /** An answer to an application to teach. What the owner wrote is not in it: it is on the application. */
+  | { kind: 'teaching_answered'; outcome: 'approved' | 'declined' };
 
 const AMOUNT = /^(?:0|[1-9][0-9]{0,17})$/u;
 const CURRENCY = /^[A-Z]{3}$/u;
@@ -121,6 +123,9 @@ export function factsOf(kind: unknown, value: unknown): MessageFacts | null {
       const s = session();
       return s ? { kind, ...s } : null;
     }
+    case 'teaching_answered':
+      // One of the two answers there are. Anything else is shown as the stored English.
+      return f.outcome === 'approved' || f.outcome === 'declined' ? { kind, outcome: f.outcome } : null;
     default:
       return null;
   }

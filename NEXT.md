@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 357 migrations and 174 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 358 migrations and 175 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,60 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### An applicant is told when the answer comes, 2026-11-24
+
+- *Built.* Migration 358, `20261281151000_teaching_answer_told.sql`:
+  `decide_teaching_application()` writes the applicant one message of a new
+  kind, `teaching_answered`, kept as its outcome (approved or declined) and
+  nothing else. The owner's reason is not copied into it; it stays on the
+  application, where the page already shows it. `my_teaching_application()`
+  also answers `answerTold`: whether this person has the kind switched on.
+  The kind joins the closed list in its four places. No table, column,
+  function, grant or switch is added, and no row changes. **Not on the
+  hosted test project**: nobody has asked, and the tree is now one
+  migration ahead of it (358 against 357).
+- *The words.* Four sentences in twenty-seven languages, **read by no
+  speaker** (`tmp-words/u38`): the kind's name and what its switch says,
+  one line under a message, and `tapply.answerTold`. The outcome is said
+  with `tapply.approved` and `tapply.declined`, the sentences the
+  application page uses.
+- *The pages.* `/notifications` says an answer in the reader's language
+  and has a ninth switch. `/teach/apply` says "a message is also put in
+  your notifications" only when the database answered `answerTold: true`;
+  otherwise it says what it said before, that no message is sent. So a
+  database without the migration, and a reader who switched the kind off,
+  are both told the truth.
+- *Rules a test holds.* `supabase/tests/teaching_answer_told.test.mjs`
+  (11): one message for each answer and none for a refused decision or a
+  taking back; the reason is in neither the facts nor the stored text;
+  nobody else sees it; a second application gets its own message; switched
+  off, it is written and not shown or counted; who may call what.
+  `lib/teaching-outcome.test.ts` (17, two more): each of the four replaced
+  functions is its earlier definition, every line in order, with a counted
+  number of lines added and none of them a write or a grant.
+- *Found on the way.* The order of going live is the other way round from
+  the last two migrations. An application older than this one, on a
+  database that has the 358th, cannot draw the switches on
+  `/notifications` (a kind it has no name for makes it say the choices
+  could not be read) and shows an answer as an unnamed English message.
+  The application goes first, then the migration. `docs/deploy/README.md`
+  says so.
+- *Checked.* `scripts/notifications-route-smoke.mjs` and
+  `scripts/teach-apply-route-smoke.mjs` over HTTP on their stand-ins, in
+  English and Arabic. `scripts/hosted-migration-358.test.mjs` (5) runs the
+  hosted step's plan against the real migrations in a local engine.
+- *Not shown.* Anything from a real database or a real applicant. The two
+  pages in a browser on this machine (the workflow that draws them runs
+  after the push). Twenty-five of the languages on a page.
+- *Not built.* The staff queue (`/admin/teachers`) in any language but
+  English. Telling the owner that an application arrived. Any message
+  outside the site: nothing is sent to an inbox or a phone.
+- *Counts.* 1905 keys; server-only 1537; unwritten while held 1633
+  (`notify.` 57, `tapply.` 36); held 192 of 1905, 10.08%, shown as 10%.
+  358 migrations, 175 database suites, 2741 database assertions, all
+  passing on this machine. 2662 web tests. 133 page routes, 34 smoke
+  scripts. The client-bundle check looks for 1523 sentences.
 
 ### A school's code in the reader's language, 2026-11-24
 

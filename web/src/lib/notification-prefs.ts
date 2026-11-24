@@ -33,7 +33,8 @@ export type NotificationKind =
   | 'class_starting'
   | 'plan_renewing'
   | 'live_cancelled'
-  | 'live_recording_ready';
+  | 'live_recording_ready'
+  | 'teaching_answered';
 
 export type KindInfo = {
   kind: NotificationKind;
@@ -44,11 +45,13 @@ export type KindInfo = {
    */
   labelKey:
     | 'notify.kPayoutPaid' | 'notify.kPayoutFailed' | 'notify.kPayoutCancelled' | 'notify.kMediaFailed'
-    | 'notify.kClassStarting' | 'notify.kPlanRenewing' | 'notify.kLiveCancelled' | 'notify.kRecordingReady';
+    | 'notify.kClassStarting' | 'notify.kPlanRenewing' | 'notify.kLiveCancelled' | 'notify.kRecordingReady'
+    | 'notify.kTeachAnswered';
   /** What the kind is for, and what switching it off costs. */
   descriptionKey:
     | 'notify.dPayoutPaid' | 'notify.dPayoutFailed' | 'notify.dPayoutCancelled' | 'notify.dMediaFailed'
-    | 'notify.dClassStarting' | 'notify.dPlanRenewing' | 'notify.dLiveCancelled' | 'notify.dRecordingReady';
+    | 'notify.dClassStarting' | 'notify.dPlanRenewing' | 'notify.dLiveCancelled' | 'notify.dRecordingReady'
+    | 'notify.dTeachAnswered';
   locked: boolean;
 };
 
@@ -63,6 +66,9 @@ export const NOTIFICATION_KINDS: KindInfo[] = [
   { kind: 'plan_renewing', labelKey: 'notify.kPlanRenewing', descriptionKey: 'notify.dPlanRenewing', locked: false },
   { kind: 'live_cancelled', labelKey: 'notify.kLiveCancelled', descriptionKey: 'notify.dLiveCancelled', locked: false },
   { kind: 'live_recording_ready', labelKey: 'notify.kRecordingReady', descriptionKey: 'notify.dRecordingReady', locked: false },
+  // An answer to an application to teach (20261281151000). It can be switched
+  // off: the answer is on the application page either way.
+  { kind: 'teaching_answered', labelKey: 'notify.kTeachAnswered', descriptionKey: 'notify.dTeachAnswered', locked: false },
 ];
 
 export type Preference = {

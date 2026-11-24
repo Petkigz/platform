@@ -8765,6 +8765,47 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Telling an applicant their application to teach was answered — **DECIDED 2026-11-24**
+
+Somebody who applied to teach had to keep opening `/teach/apply` to find
+out, and the page said so. From migration 358 an answer writes them one
+message on `/notifications`. None of this was asked for by name; it is the
+builder's reading of what was missing, and can be changed. The migration is
+not on the hosted test project.
+
+- *The message says the outcome and not the reason.* The owner must write a
+  reason for every decision, and the applicant already reads it on the
+  application page. The message holds `approved` or `declined`, and says
+  that what was written is on that page. A second copy in the notifications
+  table would outlive the application it belongs to, and would be shown in
+  a list that is glanced at.
+- *It can be switched off.* Only the two money failures are locked, because
+  nobody else can tell a teacher their money did not arrive. An answer to an
+  application is on the application page whether or not a message is shown.
+  Switched off, the message is still written and is not shown or counted,
+  like every other kind.
+- *The page promises a message only to somebody who will get one.* The
+  database answers `answerTold` with the application. The page says "a
+  message is also put in your notifications" when that is true, and
+  otherwise the older sentence, that no message is sent. A page that always
+  promised would be wrong for a reader who switched the kind off and for a
+  database without the migration.
+- *Taking an application back tells nobody,* because the applicant did it.
+  *An application answered before the migration gets no message:* writing
+  one now would date an old answer today.
+- *The switch is marked "not in use" while applications are closed,* unless
+  the reader has one waiting. That is the database's `available`, not a
+  choice made on the page.
+- *Nothing leaves the site.* No e-mail and no text message. The lead on
+  `/notifications` says so and a test holds it: no function that writes a
+  notification writes to the outbox.
+- *The application goes live before the migration.* An older application
+  against a database with the ninth kind cannot draw its switches. See
+  `docs/deploy/README.md`.
+
+**Not decided here:** whether the owner should be told that an application
+arrived; whether an answer should also be sent by e-mail.
+
 ## Using a school's code: who it is for, and what the school sees — **DECIDED 2026-11-24**
 
 `/institution/claim` and `/institution/seats` were English pages. The first

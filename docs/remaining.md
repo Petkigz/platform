@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1901 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1905 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -553,8 +553,8 @@ still unreviewed and still saying so.
   institution page, of 1849 with the page that asks to teach, of 1854 with
   five sentences put back on the plans page, of 1864 with ten for
   notifications, of 1869 with five for telling of a changed document, of
-  1871 with two for a plan given back, then this with thirty for a school's
-  code),
+  1871 with two for a plan given back, of 1901 with thirty for a school's
+  code, then this with four for an answer to an application to teach),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -946,9 +946,16 @@ written: not a held draft, nothing.
   applicant which languages the owner reads.
   **Still English:** the staff queue that answers an application
   (`/admin/teachers`) and its action in the route.
-  **Not built:** telling the applicant when an answer comes. Deciding writes
-  no notification, so the page says to look again; nothing was added to the
-  database in this piece. Keeping what was typed if the page is left before
+  **Telling the applicant when an answer comes (2026-11-24, migration 358,
+  not on the hosted test project):** deciding now writes the applicant one
+  message on `/notifications`, said in the reader's language: the outcome,
+  and that what was written with it is on the application page. The owner's
+  reason is not copied into the message. The page promises a message only
+  when the database says this person will get one; a reader who switched the
+  kind off, or a database without the migration, is told no message is sent.
+  Four more sentences, **read by no speaker**. Nothing is sent outside the
+  site. **Not built:** telling the owner that an application arrived.
+  Keeping what was typed if the page is left before
   sending. A limit on the box for qualifications in the database (the form
   stops at 4,000 characters; the table has only a minimum).
   Checked by `scripts/teach-apply-route-smoke.mjs` on a synthetic backend in

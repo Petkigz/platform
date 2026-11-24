@@ -106,6 +106,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'وثائق تغيّرت',
     'notify.policyLead':
       'وافقت على إصدار سابق من كل وثيقة من هذه، وتلك الموافقة محفوظة. الإصدار الجديد لا يُعدّ موافَقًا عليه حتى توافق عليه في صفحته.',
+    'notify.kTeachAnswered': 'جاء الرد على طلبك للتدريس',
+    'notify.dTeachAnswered':
+      'عندما يُقبل طلب للتدريس أرسلته أو لا يُقبل. إيقاف هذا يعني أن تعرف ذلك عند فتح صفحة الطلب. الرد يبقى موجودًا هناك.',
+    'notify.mTeachNote': 'ما كُتب لك مع الرد موجود في صفحة الطلب.',
   },
   ur: {
     'notify.lead':
@@ -176,6 +180,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'بدلی ہوئی دستاویزات',
     'notify.policyLead':
       'آپ نے ان میں سے ہر ایک کے پہلے نسخے سے اتفاق کیا تھا، اور وہ اتفاق محفوظ ہے۔ نئے نسخے سے اتفاق تب تک نہیں مانا جاتا جب تک آپ اس کے صفحے پر اتفاق نہ کریں۔',
+    'notify.kTeachAnswered': 'پڑھانے کی آپ کی درخواست کا جواب آ گیا',
+    'notify.dTeachAnswered':
+      'جب پڑھانے کی آپ کی بھیجی ہوئی درخواست منظور ہو یا منظور نہ ہو۔ اسے بند کرنے کا مطلب ہے کہ آپ کو یہ درخواست کا صفحہ کھولنے پر پتا چلے گا۔ جواب پھر بھی وہیں رہتا ہے۔',
+    'notify.mTeachNote': 'جواب کے ساتھ آپ کے لیے جو لکھا گیا وہ درخواست کے صفحے پر ہے۔',
   },
   fa: {
     'notify.lead':
@@ -245,6 +253,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'سندهای تغییرکرده',
     'notify.policyLead':
       'شما با نسخه‌ای پیشین از هر یک از این سندها موافقت کرده بودید و آن موافقت نگه داشته می‌شود. تا وقتی در صفحه سند موافقت نکنید، با نسخه جدید موافقت نشده است.',
+    'notify.kTeachAnswered': 'به درخواست تدریس شما پاسخ داده شد',
+    'notify.dTeachAnswered':
+      'وقتی درخواست تدریسی که فرستاده‌اید پذیرفته شود یا پذیرفته نشود. خاموش کردن این یعنی با باز کردن صفحه درخواست باخبر می‌شوید. پاسخ همچنان آنجاست.',
+    'notify.mTeachNote': 'آنچه همراه پاسخ برای شما نوشته شده در صفحه درخواست است.',
   },
   'fa-af': {
     'notify.lead':
@@ -313,6 +325,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'سندهای تغییرکرده',
     'notify.policyLead':
       'شما با نسخه‌ای قبلی از هر یک از این سندها موافقت کرده بودید و آن موافقت نگهداری می‌شود. تا وقتی که در صفحه سند موافقت نکنید، با نسخه نو موافقت نشده است.',
+    'notify.kTeachAnswered': 'به درخواست تدریس شما پاسخ داده شد',
+    'notify.dTeachAnswered':
+      'وقتی درخواست تدریسی که فرستاده‌اید پذیرفته شود یا پذیرفته نشود. خاموش کردن این یعنی با باز کردن صفحه درخواست خبر می‌شوید. پاسخ همچنان آنجاست.',
+    'notify.mTeachNote': 'آنچه همراه پاسخ برای شما نوشته شده در صفحه درخواست است.',
   },
   tr: {
     'notify.lead':
@@ -384,6 +400,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Değişen belgeler',
     'notify.policyLead':
       'Bunların her birinin önceki bir sürümünü onaylamıştınız ve o onay saklanıyor. Yeni sürüm, siz belgenin sayfasında onaylayana kadar onaylanmış sayılmaz.',
+    'notify.kTeachAnswered': 'Öğretmek için başvurunuz yanıtlandı',
+    'notify.dTeachAnswered':
+      'Gönderdiğiniz öğretme başvurusu onaylandığında ya da onaylanmadığında. Bunu kapatmak, durumu başvuru sayfasını açınca öğrenmek demektir. Yanıt yine oradadır.',
+    'notify.mTeachNote': 'Yanıtla birlikte size yazılanlar başvuru sayfasındadır.',
   },
   id: {
     'notify.lead':
@@ -456,6 +476,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Dokumen yang berubah',
     'notify.policyLead':
       'Anda telah menyetujui versi sebelumnya dari setiap dokumen ini, dan persetujuan itu tetap disimpan. Versi baru belum disetujui sampai Anda menyetujuinya di halamannya.',
+    'notify.kTeachAnswered': 'Lamaran Anda untuk mengajar telah dijawab',
+    'notify.dTeachAnswered':
+      'Ketika lamaran mengajar yang Anda kirim disetujui atau tidak disetujui. Mematikan ini berarti Anda mengetahuinya saat membuka halaman lamaran. Jawabannya tetap ada di sana.',
+    'notify.mTeachNote': 'Apa yang ditulis untuk Anda bersama jawaban itu ada di halaman lamaran.',
   },
   ms: {
     'notify.lead':
@@ -528,6 +552,11 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Dokumen yang telah berubah',
     'notify.policyLead':
       'Anda telah bersetuju dengan versi terdahulu bagi setiap dokumen ini, dan persetujuan itu disimpan. Versi baharu belum dipersetujui sehingga anda bersetuju di halamannya.',
+    'notify.kTeachAnswered': 'Permohonan anda untuk mengajar telah dijawab',
+    'notify.dTeachAnswered':
+      'Apabila permohonan mengajar yang anda hantar diluluskan atau tidak diluluskan. Mematikan ini bermakna anda mengetahuinya apabila membuka halaman permohonan. Jawapan itu tetap ada di sana.',
+    'notify.mTeachNote':
+      'Apa yang ditulis kepada anda bersama jawapan itu ada di halaman permohonan.',
   },
   bn: {
     'notify.lead':
@@ -598,6 +627,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'বদলে যাওয়া নথি',
     'notify.policyLead':
       'আপনি এগুলোর প্রতিটির আগের একটি সংস্করণে সম্মতি দিয়েছিলেন, এবং সেই সম্মতি রাখা আছে। নথির পাতায় আপনি সম্মতি না দেওয়া পর্যন্ত নতুন সংস্করণে সম্মতি দেওয়া হয়নি।',
+    'notify.kTeachAnswered': 'পড়ানোর জন্য আপনার আবেদনের উত্তর এসেছে',
+    'notify.dTeachAnswered':
+      'যখন আপনার পাঠানো পড়ানোর আবেদন অনুমোদিত হয় বা অনুমোদিত হয় না। এটি বন্ধ করার মানে হলো আবেদনের পাতা খুলে জানতে পারা। উত্তরটি তখনো সেখানে থাকে।',
+    'notify.mTeachNote': 'উত্তরের সঙ্গে আপনার জন্য যা লেখা হয়েছে তা আবেদনের পাতায় আছে।',
   },
   hi: {
     'notify.lead':
@@ -666,6 +699,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'बदले हुए दस्तावेज़',
     'notify.policyLead':
       'आपने इनमें से हर एक के पिछले संस्करण पर सहमति दी थी, और वह सहमति सुरक्षित है। जब तक आप दस्तावेज़ के पृष्ठ पर सहमति नहीं देते, नए संस्करण पर सहमति नहीं मानी जाती।',
+    'notify.kTeachAnswered': 'पढ़ाने के आपके आवेदन का उत्तर आ गया',
+    'notify.dTeachAnswered':
+      'जब आपका भेजा हुआ पढ़ाने का आवेदन स्वीकृत हो या स्वीकृत न हो। इसे बंद करने का मतलब है कि आपको यह आवेदन का पृष्ठ खोलने पर पता चलेगा। उत्तर फिर भी वहीं रहता है।',
+    'notify.mTeachNote': 'उत्तर के साथ आपके लिए जो लिखा गया वह आवेदन के पृष्ठ पर है।',
   },
   fr: {
     'notify.lead':
@@ -738,6 +775,11 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Documents modifiés',
     'notify.policyLead':
       'Vous avez accepté une version antérieure de chacun de ces documents, et cet accord est conservé. La nouvelle version n’est pas acceptée tant que vous ne l’avez pas fait sur sa page.',
+    'notify.kTeachAnswered': 'Votre candidature pour enseigner a reçu une réponse',
+    'notify.dTeachAnswered':
+      'Quand une candidature pour enseigner que vous avez envoyée est acceptée ou n’est pas acceptée. Désactiver cet avis, c’est l’apprendre en ouvrant la page de la candidature. La réponse reste là.',
+    'notify.mTeachNote':
+      'Ce qui vous a été écrit avec la réponse se trouve sur la page de la candidature.',
   },
   es: {
     'notify.lead':
@@ -811,6 +853,11 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Documentos que han cambiado',
     'notify.policyLead':
       'Usted aceptó una versión anterior de cada uno de estos documentos, y esa conformidad se conserva. La versión nueva no está aceptada hasta que usted lo haga en su página.',
+    'notify.kTeachAnswered': 'Su solicitud para enseñar recibió respuesta',
+    'notify.dTeachAnswered':
+      'Cuando una solicitud para enseñar que usted envió es aprobada o no es aprobada. Desactivar esto significa enterarse al abrir la página de la solicitud. La respuesta sigue ahí.',
+    'notify.mTeachNote':
+      'Lo que se le escribió con la respuesta está en la página de la solicitud.',
   },
   pt: {
     'notify.lead':
@@ -883,6 +930,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Documentos que mudaram',
     'notify.policyLead':
       'Concordou com uma versão anterior de cada um destes documentos, e essa concordância mantém-se. A nova versão não fica aceite enquanto não concordar na página do documento.',
+    'notify.kTeachAnswered': 'A sua candidatura a ensinar teve resposta',
+    'notify.dTeachAnswered':
+      'Quando uma candidatura a ensinar que enviou é aprovada ou não é aprovada. Desligar isto significa ficar a saber ao abrir a página da candidatura. A resposta continua lá.',
+    'notify.mTeachNote': 'O que lhe foi escrito com a resposta está na página da candidatura.',
   },
   sw: {
     'notify.lead':
@@ -953,6 +1004,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Hati zilizobadilika',
     'notify.policyLead':
       'Ulikubali toleo la awali la kila moja ya hati hizi, na ukubali huo umehifadhiwa. Toleo jipya halijakubaliwa hadi ukubali kwenye ukurasa wake.',
+    'notify.kTeachAnswered': 'Ombi lako la kufundisha limejibiwa',
+    'notify.dTeachAnswered':
+      'Ombi la kufundisha ulilotuma linapokubaliwa au kutokubaliwa. Kuzima hii kunamaanisha utajua kwa kufungua ukurasa wa ombi. Jibu bado lipo hapo.',
+    'notify.mTeachNote': 'Ulichoandikiwa pamoja na jibu kipo kwenye ukurasa wa ombi.',
   },
   af: {
     'notify.lead':
@@ -1025,6 +1080,11 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Dokumente wat verander het',
     'notify.policyLead':
       'Jy het tot ’n vroeëre weergawe van elk van hierdie dokumente ingestem, en daardie instemming word gehou. Daar is nie tot die nuwe weergawe ingestem voordat jy dit op sy bladsy doen nie.',
+    'notify.kTeachAnswered': 'Jou aansoek om te onderrig is beantwoord',
+    'notify.dTeachAnswered':
+      'Wanneer ’n aansoek om te onderrig wat jy gestuur het, goedgekeur word of nie goedgekeur word nie. As jy dit afskakel, vind jy eerder uit wanneer jy die aansoek se bladsy oopmaak. Die antwoord is steeds daar.',
+    'notify.mTeachNote':
+      'Wat saam met die antwoord vir jou geskryf is, is op die aansoek se bladsy.',
   },
   'zh-hans': {
     'notify.lead': '来自平台的消息，显示在应用内。它们不会发送到任何收件箱或手机。本页是它们唯一出现的地方。',
@@ -1081,6 +1141,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mHeldAt': '这节课的时间：{date}',
     'notify.policyHead': '已更改的文件',
     'notify.policyLead': '您曾同意过这些文件各自的较早版本，该同意仍被保留。在您于文件页面上表示同意之前，新版本不算已同意。',
+    'notify.kTeachAnswered': '你的任教申请已有答复',
+    'notify.dTeachAnswered': '你发送的任教申请获得批准或未获批准时。关闭它意味着你要打开申请页面才会得知。答复仍在那里。',
+    'notify.mTeachNote': '随答复写给你的内容在申请页面上。',
   },
   'zh-hant': {
     'notify.lead': '來自平台的訊息，顯示在應用程式內。它們不會傳送到任何收件匣或手機。本頁是它們唯一出現的地方。',
@@ -1137,6 +1200,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.mHeldAt': '這堂課的時間：{date}',
     'notify.policyHead': '已變更的文件',
     'notify.policyLead': '您曾同意過這些文件各自的較早版本，該同意仍被保留。在您於文件頁面上表示同意之前，新版本不算已同意。',
+    'notify.kTeachAnswered': '你的任教申請已有答覆',
+    'notify.dTeachAnswered': '你傳送的任教申請獲得批准或未獲批准時。關閉它表示你要打開申請頁面才會得知。答覆仍在那裡。',
+    'notify.mTeachNote': '隨答覆寫給你的內容在申請頁面上。',
   },
   vi: {
     'notify.lead':
@@ -1208,6 +1274,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Văn bản đã thay đổi',
     'notify.policyLead':
       'Bạn đã đồng ý với một phiên bản trước của từng văn bản này, và sự đồng ý đó vẫn được lưu. Phiên bản mới chưa được đồng ý cho đến khi bạn đồng ý trên trang của văn bản.',
+    'notify.kTeachAnswered': 'Đơn đăng ký giảng dạy của bạn đã có câu trả lời',
+    'notify.dTeachAnswered':
+      'Khi đơn đăng ký giảng dạy bạn đã gửi được chấp thuận hoặc không được chấp thuận. Tắt mục này nghĩa là bạn sẽ biết khi mở trang của đơn. Câu trả lời vẫn ở đó.',
+    'notify.mTeachNote': 'Những gì được viết cho bạn kèm câu trả lời nằm trên trang của đơn.',
   },
   th: {
     'notify.lead':
@@ -1275,6 +1345,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'เอกสารที่เปลี่ยนไป',
     'notify.policyLead':
       'คุณเคยยอมรับฉบับก่อนหน้าของเอกสารแต่ละฉบับนี้ และการยอมรับนั้นยังเก็บไว้ ฉบับใหม่ยังไม่ถือว่ายอมรับจนกว่าคุณจะยอมรับในหน้าของเอกสาร',
+    'notify.kTeachAnswered': 'คำขอเป็นผู้สอนของคุณได้รับคำตอบแล้ว',
+    'notify.dTeachAnswered':
+      'เมื่อคำขอเป็นผู้สอนที่คุณส่งได้รับอนุมัติหรือไม่ได้รับอนุมัติ การปิดรายการนี้หมายความว่าคุณจะรู้เมื่อเปิดหน้าคำขอแทน คำตอบยังอยู่ที่นั่น',
+    'notify.mTeachNote': 'สิ่งที่เขียนถึงคุณพร้อมคำตอบอยู่ในหน้าคำขอ',
   },
   fil: {
     'notify.lead':
@@ -1348,6 +1422,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Mga dokumentong nagbago',
     'notify.policyLead':
       'Sumang-ayon ka sa mas naunang bersyon ng bawat isa sa mga dokumentong ito, at iniingatan ang pagsang-ayong iyon. Hindi pa nasasang-ayunan ang bagong bersyon hanggang sumang-ayon ka sa pahina nito.',
+    'notify.kTeachAnswered': 'May sagot na ang aplikasyon mo para magturo',
+    'notify.dTeachAnswered':
+      'Kapag naaprubahan o hindi naaprubahan ang aplikasyon para magturo na ipinadala mo. Kapag pinatay ito, malalaman mo na lang sa pagbukas ng pahina ng aplikasyon. Naroon pa rin ang sagot.',
+    'notify.mTeachNote': 'Nasa pahina ng aplikasyon ang isinulat para sa iyo kasama ng sagot.',
   },
   uz: {
     'notify.lead':
@@ -1419,6 +1497,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Oʻzgargan hujjatlar',
     'notify.policyLead':
       'Siz bu hujjatlarning har birining oldingi versiyasiga rozi boʻlgansiz va oʻsha rozilik saqlanadi. Hujjat sahifasida rozi boʻlmaguningizcha yangi versiyaga rozilik berilmagan hisoblanadi.',
+    'notify.kTeachAnswered': 'Dars berishga arizangizga javob berildi',
+    'notify.dTeachAnswered':
+      'Siz yuborgan dars berish arizasi tasdiqlanganda yoki tasdiqlanmaganda. Buni oʻchirish buni ariza sahifasini ochganda bilib olishni anglatadi. Javob baribir oʻsha yerda turadi.',
+    'notify.mTeachNote': 'Javob bilan birga sizga yozilgan narsa ariza sahifasida turadi.',
   },
   kk: {
     'notify.lead':
@@ -1490,6 +1572,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Өзгерген құжаттар',
     'notify.policyLead':
       'Сіз осы құжаттардың әрқайсысының бұрынғы нұсқасына келіскенсіз, және ол келісім сақталады. Құжат бетінде келіспейінше, жаңа нұсқаға келісім берілген болып саналмайды.',
+    'notify.kTeachAnswered': 'Сабақ беруге өтініміңізге жауап берілді',
+    'notify.dTeachAnswered':
+      'Сіз жіберген сабақ беру өтінімі мақұлданғанда немесе мақұлданбағанда. Мұны өшіру оны өтінім бетін ашқанда білуді білдіреді. Жауап бәрібір сол жерде тұрады.',
+    'notify.mTeachNote': 'Жауаппен бірге сізге жазылған нәрсе өтінім бетінде тұр.',
   },
   az: {
     'notify.lead':
@@ -1560,6 +1646,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Dəyişən sənədlər',
     'notify.policyLead':
       'Siz bu sənədlərin hər birinin əvvəlki versiyası ilə razılaşmısınız və həmin razılıq saxlanılır. Sənədin səhifəsində razılaşmayınca yeni versiya ilə razılaşılmış sayılmır.',
+    'notify.kTeachAnswered': 'Dərs demək üçün müraciətinizə cavab verildi',
+    'notify.dTeachAnswered':
+      'Göndərdiyiniz dərs demək müraciəti təsdiqlənəndə və ya təsdiqlənməyəndə. Bunu söndürmək onu müraciət səhifəsini açanda öyrənmək deməkdir. Cavab yenə də oradadır.',
+    'notify.mTeachNote': 'Cavabla birlikdə sizə yazılanlar müraciət səhifəsindədir.',
   },
   tg: {
     'notify.lead':
@@ -1632,6 +1722,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Ҳуҷҷатҳои тағйирёфта',
     'notify.policyLead':
       'Шумо ба нусхаи пештараи ҳар яке аз ин ҳуҷҷатҳо розӣ шуда будед ва он розигӣ нигоҳ дошта мешавад. То даме ки дар саҳифаи ҳуҷҷат розӣ нашавед, ба нусхаи нав розигӣ дода нашудааст.',
+    'notify.kTeachAnswered': 'Ба аризаи шумо барои дарс додан ҷавоб дода шуд',
+    'notify.dTeachAnswered':
+      'Вақте ки аризаи дарс додан, ки шумо фиристодаед, тасдиқ мешавад ё тасдиқ намешавад. Хомӯш кардани ин маънои онро дорад, ки шумо ҳангоми кушодани саҳифаи ариза огоҳ мешавед. Ҷавоб ба ҳар ҳол дар ҳамон ҷост.',
+    'notify.mTeachNote': 'Он чи ҳамроҳи ҷавоб ба шумо навишта шудааст, дар саҳифаи ариза аст.',
   },
   ky: {
     'notify.lead':
@@ -1703,6 +1797,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Өзгөргөн документтер',
     'notify.policyLead':
       'Сиз бул документтердин ар биринин мурунку версиясына макул болгонсуз жана ал макулдук сакталат. Документтин барагында макул болмоюнча, жаңы версияга макулдук берилген деп эсептелбейт.',
+    'notify.kTeachAnswered': 'Сабак берүүгө арызыңызга жооп берилди',
+    'notify.dTeachAnswered':
+      'Сиз жөнөткөн сабак берүү арызы жактырылганда же жактырылбаганда. Муну өчүрүү аны арыздын барагын ачканда билүүнү билдирет. Жооп баары бир ошол жерде турат.',
+    'notify.mTeachNote': 'Жооп менен кошо сизге жазылган нерсе арыздын барагында турат.',
   },
   tk: {
     'notify.lead':
@@ -1772,6 +1870,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'Üýtgän resminamalar',
     'notify.policyLead':
       'Siz bu resminamalaryň her biriniň öňki wersiýasyna razy bolupdyňyz we şol razylyk saklanýar. Resminamanyň sahypasynda razy bolýançaňyz, täze wersiýa razylyk berlen hasaplanmaýar.',
+    'notify.kTeachAnswered': 'Sapak bermek üçin ýüz tutmaňyza jogap berildi',
+    'notify.dTeachAnswered':
+      'Iberen sapak bermek ýüz tutmaňyz tassyklananda ýa-da tassyklanmanda. Muny öçürmek ony ýüz tutma sahypasyny açanyňyzda bilmegi aňladýar. Jogap şonda-da şol ýerde durýar.',
+    'notify.mTeachNote': 'Jogap bilen bilelikde size ýazylan zat ýüz tutma sahypasynda durýar.',
   },
   ta: {
     'notify.lead':
@@ -1846,6 +1948,10 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'மாறிய ஆவணங்கள்',
     'notify.policyLead':
       'இவை ஒவ்வொன்றின் முந்தைய பதிப்புக்கு நீங்கள் ஒப்புக்கொண்டீர்கள், அந்த ஒப்புதல் வைக்கப்பட்டுள்ளது. ஆவணத்தின் பக்கத்தில் நீங்கள் ஒப்புக்கொள்ளும் வரை புதிய பதிப்புக்கு ஒப்புதல் அளிக்கப்படவில்லை.',
+    'notify.kTeachAnswered': 'கற்பிக்க நீங்கள் அனுப்பிய விண்ணப்பத்துக்குப் பதில் வந்துள்ளது',
+    'notify.dTeachAnswered':
+      'நீங்கள் அனுப்பிய கற்பித்தல் விண்ணப்பம் அங்கீகரிக்கப்படும்போது அல்லது அங்கீகரிக்கப்படாதபோது. இதை அணைத்தால் விண்ணப்பத்தின் பக்கத்தைத் திறக்கும்போதுதான் தெரிந்துகொள்வீர்கள். பதில் அப்போதும் அங்கேயே இருக்கும்.',
+    'notify.mTeachNote': 'பதிலுடன் உங்களுக்கு எழுதப்பட்டது விண்ணப்பத்தின் பக்கத்தில் உள்ளது.',
   },
   ne: {
     'notify.lead':
@@ -1913,5 +2019,9 @@ export const NOTIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'notify.policyHead': 'बदलिएका कागजात',
     'notify.policyLead':
       'तपाईं यीमध्ये प्रत्येकको अघिल्लो संस्करणमा सहमत हुनुभएको थियो, र त्यो सहमति राखिएको छ। कागजातको पृष्ठमा तपाईं सहमत नभएसम्म नयाँ संस्करणमा सहमति दिइएको मानिँदैन।',
+    'notify.kTeachAnswered': 'पढाउने तपाईंको आवेदनको जवाफ आयो',
+    'notify.dTeachAnswered':
+      'तपाईंले पठाएको पढाउने आवेदन स्वीकृत हुँदा वा स्वीकृत नहुँदा। यो बन्द गर्नुको अर्थ आवेदनको पृष्ठ खोलेर मात्र थाहा पाउनु हो। जवाफ त्यतिबेला पनि त्यहीँ रहन्छ।',
+    'notify.mTeachNote': 'जवाफसँगै तपाईंका लागि लेखिएको कुरा आवेदनको पृष्ठमा छ।',
   },
 };

@@ -48,6 +48,8 @@ const N5 = '75555555-5555-4555-8555-555555555555';
 const N6 = '76666666-6666-4666-8666-666666666666';
 const N7 = '77777777-7777-4777-8777-777777777777';
 const N8 = '78888888-8888-4888-8888-888888888888';
+const N9 = '79999999-9999-4999-8999-999999999999';
+const N10 = '7aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const COURSE = '88888888-8888-4888-8888-888888888888';
 const STARTS = '2026-11-21T06:00:00+00:00';
 const READ = '2026-11-15T12:00:00Z';
@@ -87,11 +89,16 @@ const CENTRE = {
     // Facts that are not whole: nothing is said from them, and the message is shown as it was written.
     said(N8, 'payout_paid', 'Your payout has been sent', 'SYNTHETIC stored sentence.', '/teach/payouts',
       { amountMinor: 'lots', currency: 'KES', reference: 'REF-78' }, '2026-11-15T03:00:00Z'),
+    // An answer to an application to teach: the outcome, and nothing of what the owner wrote.
+    said(N9, 'teaching_answered', 'Your application to teach was approved', 'Your application to teach was approved. You can teach on this site now. What was written to you with the answer is on the application page.', '/teach/apply',
+      { outcome: 'approved' }, '2026-11-15T02:00:00Z'),
+    said(N10, 'teaching_answered', 'Your application to teach was not approved', 'Your application to teach was not approved this time. What was written to you with the answer is on the application page.', '/teach/apply',
+      { outcome: 'declined' }, '2026-11-15T01:00:00Z'),
   ],
 };
-const KINDS = ['payout_paid', 'payout_failed', 'payout_cancelled', 'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled', 'live_recording_ready'];
+const KINDS = ['payout_paid', 'payout_failed', 'payout_cancelled', 'media_encode_failed', 'class_starting', 'plan_renewing', 'live_cancelled', 'live_recording_ready', 'teaching_answered'];
 const LOCKED = ['payout_failed', 'payout_cancelled'];
-const prefsOf = (off = []) => KINDS.map((kind) => ({ kind, enabled: !off.includes(kind), locked: LOCKED.includes(kind), available: !['class_starting', 'plan_renewing'].includes(kind) }));
+const prefsOf = (off = []) => KINDS.map((kind) => ({ kind, enabled: !off.includes(kind), locked: LOCKED.includes(kind), available: !['class_starting', 'plan_renewing', 'teaching_answered'].includes(kind) }));
 const copy = (value) => JSON.parse(JSON.stringify(value));
 // What the stand-in answers. Each is 'ok', 'broken', or a payload.
 let centre = 'ok';
@@ -228,8 +235,8 @@ try {
 
     // A stored message, in English: the stored text is the message, said once, with when and where it leads.
     const messages = items(seen.main, '<li data-message=');
-    assert.equal(messages.length, 13);
-    assert.deepEqual(messages.map((m) => /data-said="([a-z]+)"/.exec(m)?.[1]), ['stored', 'stored', 'stored', 'stored', 'stored', 'here', 'here', 'here', 'here', 'here', 'here', 'here', 'stored']);
+    assert.equal(messages.length, 15);
+    assert.deepEqual(messages.map((m) => /data-said="([a-z]+)"/.exec(m)?.[1]), ['stored', 'stored', 'stored', 'stored', 'stored', 'here', 'here', 'here', 'here', 'here', 'here', 'here', 'stored', 'here', 'here']);
     none(seen.main, ['told-stored'], 'the English page');
     none(messages.slice(0, 5).join(''), ['A payout was sent to you</strong></div>', 'A class you were going to was cancelled</strong></div>'], 'the English page names an older message above itself');
     assert.equal(seen.main.split('A payout did not go through').length - 1, 3, 'once as the older message, once as the heading of the newer one, once beside its switch');
@@ -270,6 +277,11 @@ try {
     // Facts that are not whole are not said: the stored sentences are, and nothing reads "lots".
     has(messages[12], [`"${N8}" data-kind="payout_paid" data-read="yes" data-said="stored"><div class="told-text" lang="en"><p dir="auto"><strong>Your payout has been sent</strong></p><p dir="auto">SYNTHETIC stored sentence.</p></div>`], 'a message whose facts are not whole');
     none(seen.main, ['lots', 'REF-78', 'NaN', 'Invalid Date'], 'a message whose facts are not whole');
+    // An answer to an application to teach, in the words the application page uses, and led there.
+    has(messages[13], [`"${N9}" data-kind="teaching_answered" data-read="yes" data-said="here"><div class="told-kind"><strong>Your application to teach was answered</strong></div>`,
+      '<div class="told-said"><p>Your application was approved.</p><p>What was written to you with the answer is on the application page.</p></div>', '<a href="/teach/apply">Open</a>'], 'an application approved, said');
+    has(messages[14], ['<strong>Your application to teach was answered</strong></div><div class="told-said"><p>Not approved this time.</p><p>What was written to you with the answer is on the application page.</p></div>', '<a href="/teach/apply">Open</a>'], 'an application not approved, said');
+    none(messages.slice(13).join(''), ['You can teach on this site now', 'was not approved this time', 'told-text', 'told-stored', 'lang="en"'], 'an answer said by the page');
     // Unread beside the heading the page says.
     const unreadSaid = copy(CENTRE); unreadSaid.recent = unreadSaid.recent.filter((m) => m.id === N1).map((m) => ({ ...m, readAt: null })); unreadSaid.unreadCount = 1; unreadSaid.reminders = [];
     centre = unreadSaid;
@@ -279,7 +291,7 @@ try {
     seen = await get('/notifications');
     has(seen.main, ['<div class="told-mark" data-mark-all="true"><button class="btn secondary" type="button">Mark all as read</button></div>'], 'the button');
 
-    // The switches: eight, in the database's order, the two money failures on and held.
+    // The switches: nine, in the database's order, the two money failures on and held.
     has(seen.main, ['<div id="preferences" class="told-anchor"><section class="card told-prefs" data-preferences="read" data-off="0"><h2>What you are told</h2><p class="muted">These switches decide what appears on this page.</p><p class="muted" role="status" data-summary="sumAllOn">Everything you can choose is on.</p>'], 'the switches');
     const switches = items(seen.main, '<label class="told-switch" data-kind=');
     assert.deepEqual(switches.map((s) => s.slice(1, s.indexOf('"', 1))), KINDS);
@@ -289,7 +301,10 @@ try {
     has(switches[0], ['<strong>A payout was sent to you</strong><span class="muted told-what">When money owed to you has been sent.</span>'], 'a switch');
     none(switches[0], ['Always on', 'Not in use'], 'a switch');
     has(switches[4], ['<span class="muted told-note">Not in use on this platform yet. Your choice is saved and applies if it is switched on.</span>'], 'a kind not in use');
-    assert.equal(seen.main.split('told-note').length - 1, 2);
+    // Applications to teach are closed here, so an answer to one is a choice made in advance.
+    has(switches[8], ['<strong>Your application to teach was answered</strong><span class="muted told-what">When an application to teach that you sent is approved or not approved. Turning this off means finding out by opening the application page instead. The answer is still there.</span>',
+      '<span class="muted told-note">Not in use on this platform yet.'], 'the switch for an answer');
+    assert.equal(seen.main.split('told-note').length - 1, 3);
 
     // Some switched off: counted, after a colon.
     off = ['payout_paid', 'live_cancelled'];
@@ -350,6 +365,8 @@ try {
       '<strong>درس لك ليس فيه ما يُشغَّل</strong></div><div class="told-said"><p>التسجيل: <bdi>Surah &lt;one&gt;</bdi></p>',
       `<strong>أُلغيت حصة كنت ستحضرها</strong></div><div class="told-said"><p>الحصة: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>كان موعد بدئها: <bdi>${dateIn('ar', STARTS, 'Africa/Kampala')}</bdi></p><p>السبب المذكور: <bdi>المعلم مريض اليوم</bdi></p></div>`,
       `<strong>تسجيل حصة صار جاهزًا</strong></div><div class="told-said"><p>الحصة: <bdi>Tajweed &lt;circle&gt;</bdi></p><p>كانت الحصة في: <bdi>${dateIn('ar', STARTS, 'Africa/Kampala')}</bdi></p></div>`,
+      '<strong>جاء الرد على طلبك للتدريس</strong></div><div class="told-said"><p>قُبل طلبك.</p><p>ما كُتب لك مع الرد موجود في صفحة الطلب.</p></div>',
+      '<strong>جاء الرد على طلبك للتدريس</strong></div><div class="told-said"><p>لم يُقبل هذه المرة.</p><p>ما كُتب لك مع الرد موجود في صفحة الطلب.</p></div>',
       // The one whose facts are not whole is named in Arabic and shown as stored, like an older message.
       'data-said="stored"><div class="told-kind"><strong>أُرسلت إليك دفعة</strong></div><div class="told-stored" lang="en"><p dir="auto"><strong>Your payout has been sent</strong></p><p dir="auto">SYNTHETIC stored sentence.</p></div>',
       '<strong>حصة على وشك أن تبدأ</strong>', `<p>موعد بدء الحصة: <bdi>${date('ar', '2026-11-24T09:00:00Z')}</bdi></p>`,
@@ -371,10 +388,10 @@ try {
     has(seen.main, ['<p class="empty">لا توجد رسائل بعد.</p>'], 'Arabic, nothing yet');
     none(seen.main, ['data-in-english'], 'Arabic, nothing yet');
     // Only messages the page can say: nothing on it is English, so nothing says that some of it is.
-    const onlySaid = copy(CENTRE); onlySaid.recent = onlySaid.recent.filter((m) => [N1, N2, N3, N4, N5, N6, N7].includes(m.id)); onlySaid.unreadCount = 0; onlySaid.reminders = [];
+    const onlySaid = copy(CENTRE); onlySaid.recent = onlySaid.recent.filter((m) => [N1, N2, N3, N4, N5, N6, N7, N9, N10].includes(m.id)); onlySaid.unreadCount = 0; onlySaid.reminders = [];
     centre = onlySaid;
     seen = await get('/notifications', 'ar');
-    assert.equal(items(seen.main, '<li data-message=').length, 7);
+    assert.equal(items(seen.main, '<li data-message=').length, 9);
     none(seen.main, ['data-in-english', 'told-stored', 'lang="en"', 'data-said="stored"'], 'Arabic, only messages the page says');
     none(own(seen.main), ENGLISH, 'Arabic, only messages the page says');
     reset();
@@ -401,7 +418,7 @@ try {
     has(seen.main, ['<h1>Notifications</h1>', '<strong>A class is about to start</strong>', 'Everything you can choose is on.', '<div class="told-text" lang="en">'], 'the Hausa page');
     none(seen.main, ['data-in-english', 'told-stored'], 'the Hausa page');
   }
-  console.log('Notifications: signed out goes to sign in and reads nothing; three reminders, a class and a renewal said whole by the page and one with no word shown as stored; thirteen messages: seven kept with what they are made of and said by the page in English, Arabic and French (an amount as money, a class’s moment in its own zone, a reason as typed, a file with no name said without one), five older ones in English shown as the message and in another language each under its kind’s name with the stored text set apart as English, one whose facts are not whole shown as stored, one with no word shown with no name; the note about English only while something on the page is English; an address that leaves the site not followed; what somebody typed kept as typed; eight switches in the database’s order, two held on, two marked not in use; none, some and all off said; nothing yet said as nothing; six kinds of unread centre and four of unread switches, each said as itself and neither taking the other with it; Arabic and French by the reader’s choice, saying once that the messages are English; Hausa in English, marked.');
+  console.log('Notifications: signed out goes to sign in and reads nothing; three reminders, a class and a renewal said whole by the page and one with no word shown as stored; fifteen messages: nine kept with what they are made of and said by the page in English, Arabic and French (an amount as money, a class’s moment in its own zone, a reason as typed, a file with no name said without one, an answer to an application to teach without what the owner wrote), five older ones in English shown as the message and in another language each under its kind’s name with the stored text set apart as English, one whose facts are not whole shown as stored, one with no word shown with no name; the note about English only while something on the page is English; an address that leaves the site not followed; what somebody typed kept as typed; nine switches in the database’s order, two held on, three marked not in use; none, some and all off said; nothing yet said as nothing; six kinds of unread centre and four of unread switches, each said as itself and neither taking the other with it; Arabic and French by the reader’s choice, saying once that the messages are English; Hausa in English, marked.');
 
   // =================================================== documents that changed
   {
@@ -570,8 +587,8 @@ try {
         assert.equal(await tab.locator(`[data-message="${N1}"] .told-said bdi`).first().evaluate((el) => getComputedStyle(el).direction), 'ltr');
         assert.equal(await tab.locator(`[data-message="${N6}"] .told-said bdi`).last().evaluate((el) => getComputedStyle(el).direction), 'rtl');
         assert.equal(await tab.locator('[data-message][data-said="here"]').count(), 7);
-        // Eight switches, each a real checkbox with its words beside it, none wider than the card.
-        assert.equal(await tab.locator('.told-switch input[type="checkbox"]').count(), 8);
+        // Nine switches, each a real checkbox with its words beside it, none wider than the card.
+        assert.equal(await tab.locator('.told-switch input[type="checkbox"]').count(), 9);
         assert.equal(await tab.locator('.told-switch input:disabled').count(), 2);
         const small = await tab.locator('.told-switch input').evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().width > 40).length);
         assert.equal(small, 0, `/notifications ${code} ${width}: a checkbox is stretched`);
@@ -582,7 +599,7 @@ try {
         assert.deepEqual(errors, [], `/notifications ${code} ${width}: ${errors.join(' | ')}`);
         await context.close();
       }
-      console.log(`Synthetic notifications in ${code}: fits a phone with no sideways scroll; stored English reads left to right and a typed Arabic name right to left; in a message the page says, an amount reads left to right and a reason typed in Arabic right to left; eight checkboxes, two held; no link leaves the site; no page error`);
+      console.log(`Synthetic notifications in ${code}: fits a phone with no sideways scroll; stored English reads left to right and a typed Arabic name right to left; in a message the page says, an amount reads left to right and a reason typed in Arabic right to left; nine checkboxes, two held; no link leaves the site; no page error`);
     }
 
     // A switch moves when the database says it did, and only then.

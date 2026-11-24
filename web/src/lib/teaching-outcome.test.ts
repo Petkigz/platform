@@ -85,9 +85,63 @@ describe('what the database and the page are held to', () => {
     assert.equal(later.length, 0, 'a later migration alters teaching_applications: read its rules again');
   });
 
-  it('tells nobody when an application is answered, which is why the page says to look again', () => {
+  it('tells the applicant once when an application is answered, and not what the owner wrote', () => {
     const decide = newest('decide_teaching_application');
-    assert.doesNotMatch(decide, /notification/iu);
+    assert.equal(decide.match(/public\.notify_user\(/gu)?.length, 1);
+    const call = decide.slice(decide.indexOf('perform public.notify_user('), decide.indexOf("'outcome'"));
+    assert.match(call, /v_row\.applicant_id,\n\s+'teaching_answered',/u);
+    assert.match(call, /'\/teach\/apply',\n\s+'info',\n\s+'teaching-answer:' \|\| p_application::text,/u);
+    // The reason stays on the application; the message has the outcome only.
+    assert.doesNotMatch(call, /reason/iu);
+    assert.match(decide, /jsonb_build_object\('outcome', case when p_approve then 'approved' else 'declined' end\)\);/u);
+    // Asking and taking back tell nobody: the applicant did those.
+    assert.doesNotMatch(newest('submit_teaching_application'), /notify_user/u);
+    assert.doesNotMatch(newest('withdraw_teaching_application'), /notify_user/u);
+  });
+
+  it('is each earlier function with the message, the word or the one field added, and nothing else', () => {
+    // PostgreSQL cannot wrap the function it replaces, so each was copied
+    // whole into 20261281151000. A copy can lose a line. Every earlier line
+    // must still be there, in order, and what was added is counted.
+    const TOLD = '20261281151000_teaching_answer_told.sql';
+    const inFile = (file: string, name: string): string[] => {
+      const sql = readFileSync(new URL(file, MIGRATIONS), 'utf8');
+      const at = sql.lastIndexOf(`create or replace function public.${name}(`);
+      assert.notEqual(at, -1, `${file} does not define ${name}`);
+      return sql.slice(at, sql.indexOf('\n$$;', at)).split('\n');
+    };
+    const cases: [string, string, number, (now: string) => string][] = [
+      ['decide_teaching_application', '20261281001100_teaching_applications.sql', 18, (now) => now],
+      ['my_teaching_application', '20261281001100_teaching_applications.sql', 3, (now) => now.replace('    ) end,\n', '    ) end\n')],
+      ['set_notification_preference', '20261281009000_live_recording.sql', 0,
+        (now) => now.replace("'live_recording_ready', 'teaching_answered') then", "'live_recording_ready') then")],
+      ['my_notification_preferences', '20261281009000_live_recording.sql', 8,
+        (now) => now.replace("'live_cancelled', 'live_recording_ready',\n", "'live_cancelled', 'live_recording_ready'\n")],
+    ];
+    for (const [name, file, expected, undo] of cases) {
+      const old = inFile(file, name);
+      const now = undo(inFile(TOLD, name).join('\n')).split('\n');
+      let i = 0;
+      const added: string[] = [];
+      for (const line of now) {
+        if (line === old[i]) i += 1;
+        else added.push(line);
+      }
+      assert.equal(i, old.length, `${name}(): the earlier definition has ${old.length - i} lines the new one lost`);
+      assert.equal(added.length, expected, `${name}(): ${added.length} lines were added:\n${added.join('\n')}`);
+      // Nothing added changes a row, a grant or who may call.
+      assert.doesNotMatch(added.join('\n'), /\b(?:update|insert|delete|grant|revoke|alter|drop)\b/iu, name);
+      assert.equal(newest(name), inFile(TOLD, name).join('\n'), `${name}() is defined again after ${TOLD}`);
+    }
+    // The page is told whether this person will be told, by the function that knows.
+    assert.match(newest('my_teaching_application'), /'answerTold', public\.notification_enabled\(v_actor, 'teaching_answered'\)/u);
+  });
+
+  it('says a message will come only when the database says this person will be told', () => {
+    const page = read('app/teach/apply/page.tsx');
+    assert.match(page, /const answerTold = !mine\.error && said\?\.answerTold === true;/u);
+    assert.match(page, /\{answerTold \? t\('tapply\.answerTold'\) : t\('tapply\.answerHere'\)\}/u);
+    assert.equal(page.match(/tapply\.answerTold/gu)?.length, 1);
   });
 
   it('answers sending and taking back by name, and never with the database’s sentence', () => {

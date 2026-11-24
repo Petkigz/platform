@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-357 files in `supabase/migrations/`, applied in filename order — the 14-digit
+358 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -410,7 +410,9 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 357, the same as this tree.
+hosted project is at 357. This tree has 358: the last one,
+`20261281151000_teaching_answer_told.sql`, has a job written for it (below)
+that nobody has asked to run.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -547,6 +549,30 @@ plan pages tell a buyer in the EU, the EEA or the UK that the plan ends when
 all of the money has been returned. On a database without the 357th a
 refunded plan runs to the end of its period, and that sentence is not true.
 Plans are switched off; apply the migration before they are switched on.
+
+**The 358th, `20261281151000_teaching_answer_told.sql`** (somebody who
+applied to teach is written a message when the application is answered).
+**Not applied, and not asked for.** It adds one word to the closed list of
+notification kinds (two check constraints, two functions) and replaces
+`decide_teaching_application()` and `my_teaching_application()` with their
+earlier definitions plus the message and one field. No table, column,
+function or grant is added and no row changes. Its job is
+`scripts/hosted-migration-358.mjs`, run by the workflow "Apply Supabase test
+migration 358" on a commit whose message starts
+`test: apply ayahspring test migration 358`, behind the same environment and
+the same approval. It starts only from exactly the 357, rehearses on the
+hosted database and rolls back, compares the two roles' privileges with the
+tested database built from all 358, and applies only if the CLI's dry-run
+names exactly that one file.
+
+**The application goes before the 358th, not after.** This is the other way
+round from the 356th and 357th. An application built before this commit
+knows eight kinds of notification. Against a database that has the 358th it
+is handed nine: `/notifications` then says the switches could not be read,
+and an answer to an application is shown as a message with no name, in its
+stored English. An application built from this commit works against either
+database: without the 358th it lists eight switches and `/teach/apply` says,
+truthfully, that no message is sent when the answer comes.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
 pledge through checkout). Its

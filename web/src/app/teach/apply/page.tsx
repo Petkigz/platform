@@ -44,8 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
  * said to somebody refused or who took theirs back only while applications
  * are open; a closed page says closed and nothing else.
  *
- * **Nobody is told when the answer comes**: deciding writes no notification.
- * The card for a waiting application says to look here again.
+ * **Whether the answer is told is asked, not assumed.** Since the migration
+ * `20261281151000_teaching_answer_told.sql` a decision writes the applicant
+ * a message, and the reply says `answerTold` when this person has that kind
+ * switched on. Only then does the waiting card say a message will come. A
+ * database without the migration, or a person who switched the kind off,
+ * gets the older sentence: no message, look here again.
  */
 export default async function TeachApplyPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -66,7 +70,9 @@ export default async function TeachApplyPage() {
     (r) => r,
     () => READ_FAILED,
   );
-  const said = mine.data as { open?: unknown; isInstructor?: unknown } | null;
+  const said = mine.data as { open?: unknown; isInstructor?: unknown; answerTold?: unknown } | null;
+  // True only when the database says so. Absent is "not told".
+  const answerTold = !mine.error && said?.answerTold === true;
   const board =
     !mine.error && said && typeof said.open === 'boolean' && typeof said.isInstructor === 'boolean'
       ? parseOwnApplication(said)
@@ -191,7 +197,9 @@ export default async function TeachApplyPage() {
               </li>
             )}
             <li>{t('tapply.asWritten')}</li>
-            <li>{t('tapply.answerHere')}</li>
+            <li data-tapply-answer-told={answerTold ? 'yes' : 'no'}>
+              {answerTold ? t('tapply.answerTold') : t('tapply.answerHere')}
+            </li>
             <li>{t('tapply.withdrawNote')}</li>
           </ul>
           <WithdrawApplication words={withdrawWords(t)} />

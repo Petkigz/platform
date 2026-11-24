@@ -194,6 +194,11 @@ for (const [file, key] of [
   ['tapply.ts', 'tapply.byAppointment'],
   ['tapply.ts', 'tapply.unread'],
   ['tapply.ts', 'tapply.closed'],
+  // An answer to an application to teach (2026-11-24): the promise on the
+  // page that asks, and what its switch and its message say.
+  ['tapply.ts', 'tapply.answerTold'],
+  ['notify.ts', 'notify.dTeachAnswered'],
+  ['notify.ts', 'notify.mTeachNote'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

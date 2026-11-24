@@ -196,6 +196,13 @@ export default async function NotificationsPage() {
         };
       case 'live_recording_ready':
         return { heading: t('notify.kRecordingReady'), lines: [theClass(f.title), moment(t('notify.mHeldAt'), f.startsAt, f.zone)] };
+      case 'teaching_answered':
+        // The outcome in the words the application page uses for it. What the
+        // owner wrote is not in the message; the page it links to shows it.
+        return {
+          heading: t('notify.kTeachAnswered'),
+          lines: [t(f.outcome === 'approved' ? 'tapply.approved' : 'tapply.declined'), t('notify.mTeachNote')],
+        };
     }
   };
 

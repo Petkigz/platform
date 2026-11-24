@@ -17,22 +17,22 @@ import {
 
 const en = translator('en');
 const here = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
-const LATEST = here('../../../supabase/migrations/20261281009000_live_recording.sql');
+const LATEST = here('../../../supabase/migrations/20261281151000_teaching_answer_told.sql');
 
-test('the eight kinds are the eight the database can send, in its order', () => {
+test('the nine kinds are the nine the database can send, in its order', () => {
   // The order is the database's (`my_notification_preferences()`), not a choice
   // made here: a screen that reorders the list is a screen whose next kind is
   // forgotten in the other list. Read out of the function itself.
   const fn = LATEST.slice(LATEST.indexOf('create or replace function public.my_notification_preferences('));
   const list = /foreach v_kind in array array\[([^\]]+)\]/u.exec(fn)?.[1] ?? '';
   const inDatabase = [...list.matchAll(/'([a-z_]+)'/gu)].map((m) => m[1]);
-  assert.equal(inDatabase.length, 8);
+  assert.equal(inDatabase.length, 9);
   assert.deepEqual(NOTIFICATION_KINDS.map((k) => k.kind), inDatabase);
 });
 
 test('every kind has a name and a description, and no two share one', () => {
   const keys = NOTIFICATION_KINDS.flatMap((k) => [k.labelKey, k.descriptionKey]);
-  assert.equal(new Set(keys).size, 16);
+  assert.equal(new Set(keys).size, 18);
   for (const key of keys) {
     const said = en(key);
     assert.notEqual(said, key, `${key} is not in the catalogue`);
@@ -48,7 +48,9 @@ test('a kind’s name reads as something that happened, in both places it is sai
   // It is the label beside a switch and the line above a message, so it is
   // not a category ("Payouts") and not an instruction ("Tell me when…").
   for (const k of NOTIFICATION_KINDS) {
-    assert.match(en(k.labelKey), /^A /u, k.kind);
+    // "A …" for something that happened on the site; "Your …" for the one
+    // that is an answer to something the reader sent.
+    assert.match(en(k.labelKey), /^(?:A|Your) /u, k.kind);
     assert.doesNotMatch(en(k.labelKey), /[.:!?]$/u, k.kind);
   }
 });

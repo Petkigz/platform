@@ -463,14 +463,17 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // as one of and which currency a service collects.)
   // (Fifty-four and thirty-six since 2026-11-24: telling a reader that a
   // document they agreed to has changed.)
-  assert.equal(unwrittenKeys.length, 1629);
+  // (Fifty-seven and thirty-six since 2026-11-24, later the same day: an
+  // answer to an application to teach, said in the notification centre and
+  // promised on the page that asks.)
+  assert.equal(unwrittenKeys.length, 1633);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('receipt.')).length, 18);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 54);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('notify.')).length, 57);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('plans.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('subs.')).length, 35);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('policy.')).length, 36);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('inst.')).length, 75);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('tapply.')).length, 35);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('tapply.')).length, 36);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('billing.')).length, 37);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('orders.')).length, 54);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('sponsor.')).length, 80);
@@ -584,7 +587,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 1901 sentences, which is 10%. Nothing holds a floor under
+  // 192 of 1905 sentences, which is 10%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -630,11 +633,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // made of (10.30%, still 10%); five for a policy that changed (10.27%)
   // two for a plan given back (10.26%, still 10%); and thirty for the
   // page a school's code is used on and the page of what an institution
-  // bought (10.10%, still 10%).
+  // bought (10.10%, still 10%), then four for an answer to an application
+  // to teach (10.08%, still 10%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 1901);
+    assert.equal(coverageOf(code).total, 1905);
     assert.equal(coverageOf(code).percent, 10, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

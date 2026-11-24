@@ -20,8 +20,11 @@ import type { Messages } from './en.ts';
  * The owner reads it as it was typed. The note the owner leaves on a refusal
  * is shown the same way, under `noteLeft`.
  *
- * **Nobody is told when the answer comes.** Deciding an application writes
- * no notification, so `answerHere` says to look at this page again.
+ * **Whether the answer is told depends on the database and the reader.**
+ * `answerTold` is said when the reply says a message will be put in this
+ * person's notifications; `answerHere` (no message, look at this page again)
+ * is said otherwise: a database without the migration, or the kind switched
+ * off.
  *
  * **A refusal is a name with a sentence**: `whyTeach`, `whyKnow`,
  * `whySample` and `whyLong` for what was typed, `whyClosed`, `whyApplied`
@@ -73,6 +76,7 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'التقدّم للتدريس مغلق حاليًا. لم يُرسل شيء.',
     'tapply.whyApplied': 'لديك طلب عند المالك بالفعل. انتظر الرد.',
     'tapply.whyNothing': 'لا يوجد طلب قيد الانتظار لتسحبه. ربما تم الرد عليه بالفعل.',
+    'tapply.answerTold': 'سيظهر الرد في هذه الصفحة. وتوضع أيضًا رسالة في إشعاراتك عند وصوله.',
   },
   ur: {
     'tapply.byAppointment':
@@ -119,6 +123,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'پڑھانے کی درخواستیں اس وقت بند ہیں۔ کچھ نہیں بھیجا گیا۔',
     'tapply.whyApplied': 'آپ کی ایک درخواست پہلے ہی مالک کے پاس ہے۔ جواب کا انتظار کریں۔',
     'tapply.whyNothing': 'واپس لینے کے لیے کوئی منتظر درخواست نہیں۔ ممکن ہے اس کا جواب آ چکا ہو۔',
+    'tapply.answerTold':
+      'جواب اسی صفحے پر دکھایا جائے گا۔ جواب آنے پر آپ کی اطلاعات میں ایک پیغام بھی رکھا جاتا ہے۔',
   },
   fa: {
     'tapply.byAppointment':
@@ -166,6 +172,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'شما هم‌اکنون یک درخواست نزد مالک دارید. منتظر پاسخ بمانید.',
     'tapply.whyNothing':
       'درخواستی در انتظار نیست که پس بگیرید. شاید پیش‌تر به آن پاسخ داده شده باشد.',
+    'tapply.answerTold':
+      'پاسخ در همین صفحه نشان داده می‌شود. هنگام رسیدن پاسخ، پیامی هم در اعلان‌های شما گذاشته می‌شود.',
   },
   'fa-af': {
     'tapply.byAppointment':
@@ -213,6 +221,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'شما همین حالا یک درخواست نزد مالک دارید. منتظر پاسخ بمانید.',
     'tapply.whyNothing':
       'درخواستی در انتظار نیست که پس بگیرید. شاید پیش از این به آن پاسخ داده شده باشد.',
+    'tapply.answerTold':
+      'پاسخ در همین صفحه نشان داده می‌شود. هنگام رسیدن پاسخ، پیامی هم در اطلاعیه‌های شما گذاشته می‌شود.',
   },
   tr: {
     'tapply.byAppointment':
@@ -259,6 +269,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'Öğretmenlik başvuruları şu anda kapalı. Hiçbir şey gönderilmedi.',
     'tapply.whyApplied': 'Platform sahibinde zaten bir başvurunuz var. Yanıtı bekleyin.',
     'tapply.whyNothing': 'Geri alınacak, bekleyen bir başvuru yok. Yanıtlanmış olabilir.',
+    'tapply.answerTold':
+      'Yanıt bu sayfada gösterilecek. Yanıt geldiğinde bildirimlerinize de bir ileti konur.',
   },
   id: {
     'tapply.byAppointment':
@@ -309,6 +321,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Anda sudah mempunyai lamaran pada pemilik. Tunggu jawabannya.',
     'tapply.whyNothing':
       'Tidak ada lamaran yang sedang menunggu untuk ditarik kembali. Mungkin sudah dijawab.',
+    'tapply.answerTold':
+      'Jawabannya akan ditampilkan di halaman ini. Sebuah pesan juga ditaruh di notifikasi Anda saat jawaban datang.',
   },
   ms: {
     'tapply.byAppointment':
@@ -360,6 +374,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Anda sudah mempunyai permohonan dengan pemilik. Tunggu jawapannya.',
     'tapply.whyNothing':
       'Tiada permohonan yang sedang menunggu untuk ditarik balik. Mungkin ia sudah dijawab.',
+    'tapply.answerTold':
+      'Jawapan akan ditunjukkan di halaman ini. Satu mesej juga diletakkan dalam pemberitahuan anda apabila jawapan tiba.',
   },
   bn: {
     'tapply.byAppointment':
@@ -406,6 +422,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'মালিকের কাছে আপনার একটি আবেদন ইতিমধ্যে আছে। উত্তরের জন্য অপেক্ষা করুন।',
     'tapply.whyNothing':
       'ফিরিয়ে নেওয়ার মতো অপেক্ষমাণ কোনো আবেদন নেই। হয়তো এর উত্তর ইতিমধ্যে দেওয়া হয়েছে।',
+    'tapply.answerTold':
+      'উত্তর এই পাতায় দেখানো হবে। উত্তর এলে আপনার বিজ্ঞপ্তিতেও একটি বার্তা রাখা হয়।',
   },
   hi: {
     'tapply.byAppointment':
@@ -454,6 +472,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'आपका एक आवेदन पहले से मालिक के पास है। उत्तर की प्रतीक्षा करें।',
     'tapply.whyNothing':
       'वापस लेने के लिए कोई प्रतीक्षारत आवेदन नहीं है। हो सकता है उसका उत्तर दिया जा चुका हो।',
+    'tapply.answerTold':
+      'उत्तर इसी पृष्ठ पर दिखाया जाएगा। उत्तर आने पर आपकी सूचनाओं में एक संदेश भी रखा जाता है।',
   },
   fr: {
     'tapply.byAppointment':
@@ -506,6 +526,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Vous avez déjà une candidature chez le propriétaire. Attendez la réponse.',
     'tapply.whyNothing':
       'Aucune candidature en attente ne peut être retirée. Elle a peut-être déjà reçu une réponse.',
+    'tapply.answerTold':
+      'La réponse sera affichée sur cette page. Un message est aussi déposé dans vos notifications quand elle arrive.',
   },
   es: {
     'tapply.byAppointment':
@@ -554,6 +576,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Ya tiene una solicitud en manos del propietario. Espere la respuesta.',
     'tapply.whyNothing':
       'No hay ninguna solicitud en espera que retirar. Puede que ya haya sido respondida.',
+    'tapply.answerTold':
+      'La respuesta se mostrará en esta página. También se deja un mensaje en sus notificaciones cuando llega.',
   },
   pt: {
     'tapply.byAppointment':
@@ -601,6 +625,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Já tem uma candidatura com o proprietário. Aguarde a resposta.',
     'tapply.whyNothing':
       'Não há nenhuma candidatura à espera para retirar. Pode já ter sido respondida.',
+    'tapply.answerTold':
+      'A resposta será mostrada nesta página. Também é deixada uma mensagem nas suas notificações quando ela chega.',
   },
   sw: {
     'tapply.byAppointment':
@@ -648,6 +674,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'Maombi ya kufundisha yamefungwa kwa sasa. Hakuna kilichotumwa.',
     'tapply.whyApplied': 'Tayari una ombi kwa mmiliki. Subiri jibu.',
     'tapply.whyNothing': 'Hakuna ombi linalosubiri la kuondoa. Huenda limeshajibiwa.',
+    'tapply.answerTold':
+      'Jibu litaonyeshwa kwenye ukurasa huu. Ujumbe pia huwekwa kwenye arifa zako jibu linapofika.',
   },
   af: {
     'tapply.byAppointment':
@@ -698,6 +726,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Jy het reeds ’n aansoek by die eienaar. Wag vir die antwoord.',
     'tapply.whyNothing':
       'Daar is geen aansoek wat wag om teruggetrek te word nie. Dit is dalk reeds beantwoord.',
+    'tapply.answerTold':
+      'Die antwoord sal op hierdie bladsy gewys word. ’n Boodskap word ook in jou kennisgewings gesit wanneer dit kom.',
   },
   'zh-hans': {
     'tapply.byAppointment':
@@ -736,6 +766,7 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': '目前不接受任教申请。没有提交任何内容。',
     'tapply.whyApplied': '你已有一份申请在所有者那里。请等待答复。',
     'tapply.whyNothing': '没有等待中的申请可以撤回。它可能已经得到答复。',
+    'tapply.answerTold': '答复会显示在本页面。答复到来时，你的通知里也会放入一条消息。',
   },
   'zh-hant': {
     'tapply.byAppointment':
@@ -774,6 +805,7 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': '目前不接受任教申請。沒有提交任何內容。',
     'tapply.whyApplied': '你已有一份申請在擁有者那裡。請等待答覆。',
     'tapply.whyNothing': '沒有等待中的申請可以撤回。它可能已經得到答覆。',
+    'tapply.answerTold': '答覆會顯示在本頁面。答覆到來時，你的通知裡也會放入一則訊息。',
   },
   vi: {
     'tapply.byAppointment':
@@ -821,6 +853,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'Hiện không nhận đơn đăng ký giảng dạy. Không có gì được gửi.',
     'tapply.whyApplied': 'Bạn đã có một đơn ở chỗ chủ sở hữu. Hãy chờ câu trả lời.',
     'tapply.whyNothing': 'Không có đơn nào đang chờ để rút lại. Có thể đơn đã được trả lời.',
+    'tapply.answerTold':
+      'Câu trả lời sẽ được hiển thị trên trang này. Một tin nhắn cũng được đặt vào thông báo của bạn khi có câu trả lời.',
   },
   th: {
     'tapply.byAppointment':
@@ -864,6 +898,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'ขณะนี้ปิดรับคำขอเป็นผู้สอน ยังไม่มีการส่งอะไร',
     'tapply.whyApplied': 'คุณมีคำขออยู่ที่เจ้าของแล้ว โปรดรอคำตอบ',
     'tapply.whyNothing': 'ไม่มีคำขอที่รออยู่ให้ถอน อาจได้รับคำตอบไปแล้ว',
+    'tapply.answerTold':
+      'คำตอบจะแสดงในหน้านี้ และจะมีข้อความใส่ไว้ในการแจ้งเตือนของคุณเมื่อมีคำตอบด้วย',
   },
   fil: {
     'tapply.byAppointment':
@@ -913,6 +949,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyClosed': 'Sarado ang mga aplikasyon sa pagtuturo sa ngayon. Walang ipinadala.',
     'tapply.whyApplied': 'May aplikasyon ka na sa may-ari. Hintayin ang sagot.',
     'tapply.whyNothing': 'Walang naghihintay na aplikasyong mababawi. Maaaring nasagot na ito.',
+    'tapply.answerTold':
+      'Ipapakita ang sagot sa pahinang ito. May mensahe ring inilalagay sa mga abiso mo kapag dumating ito.',
   },
   uz: {
     'tapply.byAppointment':
@@ -963,6 +1001,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Platforma egasida allaqachon arizangiz bor. Javobni kuting.',
     'tapply.whyNothing':
       'Qaytarib olinadigan, kutayotgan ariza yoʻq. Unga allaqachon javob berilgan boʻlishi mumkin.',
+    'tapply.answerTold':
+      'Javob shu sahifada koʻrsatiladi. Javob kelganda bildirishnomalaringizga ham xabar qoʻyiladi.',
   },
   kk: {
     'tapply.byAppointment':
@@ -1011,6 +1051,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Платформа иесінде өтініміңіз онсыз да бар. Жауапты күтіңіз.',
     'tapply.whyNothing':
       'Қайтарып алатын, күтіп тұрған өтінім жоқ. Оған жауап берілген болуы мүмкін.',
+    'tapply.answerTold':
+      'Жауап осы бетте көрсетіледі. Жауап келгенде хабарламаларыңызға да хабар қойылады.',
   },
   az: {
     'tapply.byAppointment':
@@ -1060,6 +1102,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Platformanın sahibində artıq müraciətiniz var. Cavabı gözləyin.',
     'tapply.whyNothing':
       'Geri götürüləcək, gözləyən müraciət yoxdur. Ola bilsin, ona artıq cavab verilib.',
+    'tapply.answerTold':
+      'Cavab bu səhifədə göstəriləcək. Cavab gələndə bildirişlərinizə də bir mesaj qoyulur.',
   },
   tg: {
     'tapply.byAppointment':
@@ -1110,6 +1154,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Шумо аллакай назди соҳиб ариза доред. Мунтазири ҷавоб шавед.',
     'tapply.whyNothing':
       'Аризаи мунтазире нест, ки бозпас гиред. Шояд ба он аллакай ҷавоб дода шуда бошад.',
+    'tapply.answerTold':
+      'Ҷавоб дар ҳамин саҳифа нишон дода мешавад. Ҳангоми омадани ҷавоб ба огоҳиномаҳои шумо низ паём гузошта мешавад.',
   },
   ky: {
     'tapply.byAppointment':
@@ -1160,6 +1206,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Платформанын ээсинде арызыңыз ансыз да бар. Жоопту күтүңүз.',
     'tapply.whyNothing':
       'Кайтарып ала турган, күтүп турган арыз жок. Ага жооп берилген болушу мүмкүн.',
+    'tapply.answerTold':
+      'Жооп ушул баракта көрсөтүлөт. Жооп келгенде билдирүүлөрүңүзгө да билдирүү коюлат.',
   },
   tk: {
     'tapply.byAppointment':
@@ -1210,6 +1258,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'Platformanyň eýesinde eýýäm ýüz tutmaňyz bar. Jogaba garaşyň.',
     'tapply.whyNothing':
       'Yzyna alar ýaly garaşýan ýüz tutma ýok. Oňa eýýäm jogap berlen bolmagy mümkin.',
+    'tapply.answerTold':
+      'Jogap şu sahypada görkeziler. Jogap gelende bildirişleriňize hem habar goýulýar.',
   },
   ta: {
     'tapply.byAppointment':
@@ -1264,6 +1314,8 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'உங்கள் விண்ணப்பம் ஒன்று ஏற்கனவே உரிமையாளரிடம் உள்ளது. பதிலுக்காகக் காத்திருங்கள்.',
     'tapply.whyNothing':
       'திரும்பப் பெறக் காத்திருக்கும் விண்ணப்பம் எதுவும் இல்லை. அதற்கு ஏற்கனவே பதில் அளிக்கப்பட்டிருக்கலாம்.',
+    'tapply.answerTold':
+      'பதில் இந்தப் பக்கத்தில் காட்டப்படும். பதில் வரும்போது உங்கள் அறிவிப்புகளிலும் ஒரு செய்தி வைக்கப்படும்.',
   },
   ne: {
     'tapply.byAppointment':
@@ -1311,5 +1363,7 @@ export const TAPPLY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'tapply.whyApplied': 'तपाईंको एउटा आवेदन पहिले नै मालिकसँग छ। जवाफको प्रतीक्षा गर्नुहोस्।',
     'tapply.whyNothing':
       'फिर्ता लिन प्रतीक्षामा रहेको कुनै आवेदन छैन। त्यसको जवाफ पहिले नै दिइएको हुन सक्छ।',
+    'tapply.answerTold':
+      'जवाफ यही पृष्ठमा देखाइनेछ। जवाफ आउँदा तपाईंका सूचनाहरूमा एउटा सन्देश पनि राखिन्छ।',
   },
 };

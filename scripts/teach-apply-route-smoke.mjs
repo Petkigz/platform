@@ -223,10 +223,22 @@ try {
     `<dl class="tapply-sent"><dt>What would you teach, in one line?</dt><dd dir="auto" lang="">Synthetic tajwid for children</dd><dt>What you know, and who you learned it from</dt><dd class="tapply-written" dir="auto" lang="">${KNOW_HTML}</dd>`,
     // The link opens somewhere else and hands that site nothing.
     `<dt>The sample lesson you sent</dt><dd><a href="${LONG_LINK}" rel="noreferrer noopener" target="_blank" dir="ltr">${LONG_LINK}</a></dd><dt>Anything else</dt><dd class="tapply-written" dir="auto" lang="">Synthetic note: evenings, UTC+3</dd></dl>`,
-    `<ul class="tapply-facts"><li>Sent on: <bdi>${moment('en', SENT_AT)}</bdi></li><li>${AS_WRITTEN}</li><li>The answer will be shown on this page. No message is sent when it comes, so look here again.</li><li>You can take it back at any time before it is answered. You do not have to say why.</li></ul>`,
+    `<ul class="tapply-facts"><li>Sent on: <bdi>${moment('en', SENT_AT)}</bdi></li><li>${AS_WRITTEN}</li><li data-tapply-answer-told="no">The answer will be shown on this page. No message is sent when it comes, so look here again.</li><li>You can take it back at any time before it is answered. You do not have to say why.</li></ul>`,
     `<div class="tapply-ask" data-tapply-ask="withdraw"><button type="button" class="btn secondary" aria-busy="false" data-tapply-button="withdraw">Take this application back</button></div></section>${WAYS}</div>`,
   ], 'a waiting application');
-  hasNot(en, ['<form', 'Send to the owner', '<b>children</b>'], 'a waiting application');
+  hasNot(en, ['<form', 'Send to the owner', '<b>children</b>', 'A message is also put'], 'a waiting application');
+  // A message is promised only when the database says this person will be told:
+  // a database that has the kind, and a reader who has not switched it off.
+  state.board = { ...board(true, false, application('submitted')), answerTold: true };
+  en = await page();
+  has(en, ['<li data-tapply-answer-told="yes">The answer will be shown on this page. A message is also put in your notifications when it comes.</li>'], 'an answer that will be told');
+  hasNot(en, ['No message is sent', 'look here again'], 'an answer that will be told');
+  for (const notTrue of [false, 'true', 1, null, 'yes']) {
+    state.board = { ...board(true, false, application('submitted')), answerTold: notTrue };
+    en = await page();
+    has(en, ['<li data-tapply-answer-told="no">The answer will be shown on this page. No message is sent when it comes, so look here again.</li>'], `answerTold ${JSON.stringify(notTrue)}`);
+    hasNot(en, ['A message is also put'], `answerTold ${JSON.stringify(notTrue)}`);
+  }
   // No note, and a link a browser should not be sent to: the address is text.
   state.board = board(true, false, application('submitted', { note: null, sampleUrl: 'javascript:alert(1)' }));
   en = await page();
@@ -319,10 +331,14 @@ try {
     // What was typed stays as typed, in whatever it was typed in.
     '<dd dir="auto" lang="">Synthetic tajwid for children</dd>',
     `<dt>الدرس النموذجي الذي أرسلته</dt><dd><a href="${LONG_LINK}" rel="noreferrer noopener" target="_blank" dir="ltr">`,
-    `<li>أُرسل في: <bdi>${moment('ar', SENT_AT)}</bdi></li><li>${AR.asWritten}</li><li>سيظهر الرد في هذه الصفحة. لا تُرسَل رسالة عند وصوله، فعُد إلى هنا لتراه.</li><li>يمكنك سحبه في أي وقت قبل الرد عليه. ولا يلزمك ذكر السبب.</li>`,
+    `<li>أُرسل في: <bdi>${moment('ar', SENT_AT)}</bdi></li><li>${AR.asWritten}</li><li data-tapply-answer-told="no">سيظهر الرد في هذه الصفحة. لا تُرسَل رسالة عند وصوله، فعُد إلى هنا لتراه.</li><li>يمكنك سحبه في أي وقت قبل الرد عليه. ولا يلزمك ذكر السبب.</li>`,
     '>اسحب هذا الطلب</button>',
   ], 'waiting in Arabic');
   hasNot(ar.replaceAll(KNOW_HTML, '').replaceAll('Synthetic note: evenings, UTC+3', '').replaceAll('Synthetic tajwid for children', ''), ENGLISH_ONLY, 'waiting in Arabic');
+  state.board = { ...board(true, false, application('submitted')), answerTold: true };
+  ar = await page('ar');
+  has(ar, ['<li data-tapply-answer-told="yes">سيظهر الرد في هذه الصفحة. وتوضع أيضًا رسالة في إشعاراتك عند وصوله.</li>'], 'an answer that will be told, in Arabic');
+  hasNot(ar, ['لا تُرسَل رسالة'], 'an answer that will be told, in Arabic');
   state.board = board(true, false, application('declined', { decisionReason: REASON }));
   ar = await page('ar');
   has(ar, [`<div class="notice warn" data-tapply-answer="declined"><p><strong>لم يُقبل هذه المرة.</strong> يمكنك إرسال طلب آخر.</p><p class="tapply-note-head">الملاحظة التي تُركت لك، كما كُتبت:</p><blockquote class="tapply-written" data-tapply-note="true" dir="auto" lang="">${REASON_HTML}</blockquote></div>`], 'refused in Arabic');

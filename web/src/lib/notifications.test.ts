@@ -137,7 +137,7 @@ test('a notification is shown here and is not sent: nothing that writes one writ
   // The other way round: nothing that writes a notification queues a message
   // through the function that fills the outbox.
   const writesNotification = names.filter((name) => /public\.notify_user\(/u.test(read(name)));
-  assert.equal(writesNotification.length, 5);
+  assert.equal(writesNotification.length, 6);
   for (const name of writesNotification) {
     assert.doesNotMatch(read(name), /queue_message\(|insert into public\.outbound_messages/u, `${name} writes a notification and queues a message`);
   }
@@ -168,6 +168,12 @@ test('each kind of kept message is read from what it is made of', () => {
   assert.deepEqual(factsOf('media_encode_failed', { part: 'uploader', reason: 'x' }), { kind: 'media_encode_failed', part: 'uploader', name: null, reason: 'x' });
   assert.deepEqual(factsOf('live_cancelled', { ...CLASS, reason: 'Teacher is unwell' }), { kind: 'live_cancelled', ...CLASS, reason: 'Teacher is unwell' });
   assert.deepEqual(factsOf('live_recording_ready', CLASS), { kind: 'live_recording_ready', ...CLASS });
+  // An answer to an application is one of two words, and nothing else is kept with it.
+  assert.deepEqual(factsOf('teaching_answered', { outcome: 'approved' }), { kind: 'teaching_answered', outcome: 'approved' });
+  assert.deepEqual(factsOf('teaching_answered', { outcome: 'declined', reason: 'not kept' }), { kind: 'teaching_answered', outcome: 'declined' });
+  for (const bad of [{}, { outcome: 'withdrawn' }, { outcome: true }, { outcome: 'Approved' }, { outcome: null }]) {
+    assert.equal(factsOf('teaching_answered', bad), null, JSON.stringify(bad));
+  }
   // Something extra in the row is not said and does no harm.
   assert.deepEqual(factsOf('payout_cancelled', { amountMinor: '1', currency: 'UGX', note: 'x' }), { kind: 'payout_cancelled', amountMinor: '1', currency: 'UGX' });
 });
