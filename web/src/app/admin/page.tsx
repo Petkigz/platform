@@ -85,6 +85,7 @@ const sharedLinks: ConsoleLink[] = [
   { href: '/admin/media', label: 'Uploaded media', note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason' },
   { href: '/admin/course-reviews', label: 'Course review queue', note: 'learner ratings that include words, held until someone reads them' },
   { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
+  { href: '/admin/boards', label: 'Discussion board reports', note: 'posts on the students’ and the teachers’ boards that somebody reported. A post there is shown at once, so this is where one is taken down. Seeing who is behind a username needs a reason and is recorded' },
   { href: '/admin/ai-support', label: 'Study assistant', note: 'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing' },
   { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
   { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },

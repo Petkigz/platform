@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 10% there (192 of 1905 sentences; it was 71% of 272, then
+  the nineteen reads 10% there (192 of 1957 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -554,7 +554,8 @@ still unreviewed and still saying so.
   five sentences put back on the plans page, of 1864 with ten for
   notifications, of 1869 with five for telling of a changed document, of
   1871 with two for a plan given back, of 1901 with thirty for a school's
-  code, then this with four for an answer to an application to teach),
+  code, of 1905 with four for an answer to an application to teach, then
+  this with fifty-two for the two discussion boards),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -946,6 +947,29 @@ written: not a held draft, nothing.
   applicant which languages the owner reads.
   **Still English:** the staff queue that answers an application
   (`/admin/teachers`) and its action in the route.
+  **Two discussion boards (2026-11-24, migrations 359 and 360, switched off,
+  not on the hosted test project).** `/discuss`: one board for students
+  with a class somebody paid for and one for teachers, each under a username
+  of the writer's choosing, with a staff queue at `/admin/boards`. Fifty-two
+  sentences in twenty-seven languages, **read by no speaker**; four of them
+  are the promise the boards make about who can find out who wrote a post.
+  **Not translated, for any reader:** what people write. The staff queue is
+  in English.
+  **Before either switch is turned on, these are not built:** what somebody
+  wrote on a board is not in their data export (`export_my_data()`);
+  nothing tells staff that a post was reported, so `/admin/boards` has to be
+  opened to find out; there is no search, no editing of a post, and no way
+  to follow a thread; a username cannot be changed after the first post, and
+  one family sign-in has one username whoever is typing.
+  **Under 18:** a child without a login of their own gets in through the
+  family account that looks after them, when the child has a paid class.
+  That is the builder's reading of "the same as adults" and has not been
+  put to the owner as a question; `DECISIONS.md` says what follows from it.
+  Checked by `scripts/boards-route-smoke.mjs` on a synthetic backend in
+  which every username, post and reason is invented, over HTTP and in a
+  browser, and by `supabase/tests/discussion_boards.test.mjs` against the
+  real migration. Not checked: anything on a hosted database; a real
+  second person; twenty-four of the languages on any page.
   **Telling the applicant when an answer comes (2026-11-24, migration 358,
   not on the hosted test project):** deciding now writes the applicant one
   message on `/notifications`, said in the reader's language: the outcome,

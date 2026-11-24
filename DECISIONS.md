@@ -8765,6 +8765,81 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Two discussion boards, under usernames — **DECIDED 2026-11-24**
+
+Two discussion boards, one for students and one for teachers, in which
+people write under a username instead of their name. Four things were put to
+the owner as questions on 2026-11-24 and answered the same day:
+
+1. **Who can find out who wrote a post.** Staff only, and each look is
+   recorded. Built as `board_author()`: owner and governance, a reason of at
+   least ten characters, and a row in the audit log
+   (`board.author_opened`) written before the answer is given. No member's
+   page, and nothing a member's page is sent, holds an account or a name.
+2. **Students under 18.** The same as adults.
+3. **When a post is seen.** At once. Nobody reads it first; a post is taken
+   down after somebody reports it. This is the other way round from the
+   per-lesson discussion, where a learner's post is held.
+4. **Which students.** Those in any class somebody paid for.
+
+**What was built that nobody asked for by name**, each of which the owner can
+change:
+
+- **One board each**, not one per course. Threads with one level of replies.
+- **A username per board**, chosen by the writer, fixed once written under.
+  Three to twenty-four letters or digits of any script, and the underscore.
+- **"A class somebody paid for"** is an active grant for a course that came
+  from a purchase, a plan, a family plan, a sponsored seat (`scholarship`,
+  which is what a sponsor's paid pledge creates) or a school's seat. A free
+  course, a grant staff gave by hand and a promotion do not open the board.
+  Access is asked of the database at every call, so it ends when the class
+  or plan does. After that nothing is read; one's own posts can still be
+  taken back.
+- **Teachers** (the `instructor` role) are in both boards. The teachers'
+  board is closed to students. Staff are in both, also while a board is
+  switched off, so that it can be cleared.
+- **Moderators** are the owner and governance. A support agent is not one.
+- **Limits**: five threads, sixty replies and ten reports in a day; a title
+  to 140 characters and a post to 6,000.
+- **A closed account** leaves the boards: its words are replaced, a thread
+  nobody answered is taken back whole, the username is replaced and cut from
+  the account, and a report it made no longer names it.
+
+**"The same as adults", and a child with no login.** This is a reading, not
+an answer, and it changed during the work. A child here usually has no login:
+`family.child_login` is off, and the child studies through the family's
+sign-in. The first version let in only an account that is itself the
+learner, which would have left every such child out while the owner had said
+they are to be in. As built, **the family account that looks after a child
+is let in on the child's paid class**, on the same test a lesson uses: an
+active member of the family who is not there only to pay, and, where
+guardian verification is enforced, the child's verified guardian with
+current consent. What follows from that, and was not put to the owner:
+
+- An adult in the family can read and write on the students' board under
+  the same username, and is shown as a student. Adult students are on that
+  board anyway; this adds parents of paying children to them.
+- One sign-in has one username. Two children of one family write as one.
+- The software cannot tell who is typing.
+
+If the owner would rather children wait for logins of their own, it is one
+condition in `board_standing()`.
+
+**What the page promises** is four sentences shown before a first post
+(`board.ruleName`, `ruleStaff`, `ruleCare`, `ruleShown`). They say what the
+software does and no more: a username is not anonymity from staff, and what
+somebody writes can identify them whatever name is above it.
+
+**Not built**, and to be weighed before a switch is turned on: board posts
+in the data export; telling staff a report arrived; search; editing; a list
+of one's own posts. Posts are not translated. Both switches are off.
+
+**The refunds policy** was republished as version 3 in the same work
+(migration 359): the paragraph about giving a plan back within fourteen days
+in the EU, the EEA and the UK (decided below, and already what the software
+does) is now in the policy's text. No lawyer has read it. Publishing a
+version asks every account that must agree to that policy to agree again.
+
 ## Telling an applicant their application to teach was answered — **DECIDED 2026-11-24**
 
 Somebody who applied to teach had to keep opening `/teach/apply` to find

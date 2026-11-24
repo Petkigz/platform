@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 358 migrations and 175 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 360 migrations and 176 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -2618,6 +2618,77 @@ claim external integrations work without credentials or provider callbacks.
 ---
 
 ## Implementation history (counts below are historical snapshots)
+
+### Two discussion boards under usernames, 2026-11-24
+
+- *Built.* Migration 360, `20261281153000_discussion_boards.sql`: one board
+  for students with a class somebody paid for and one for teachers. Two
+  switches, `community.student_board` and `community.teacher_board`, both
+  off. Four tables with row security on and no policy or grant; everything
+  goes through functions, and each asks at every call whether the caller is
+  let in. A username per board; threads with one level of replies; a post
+  is shown at once, can be taken back by its writer, reported by anybody
+  else, and taken down by the owner or governance. `board_author()` is the
+  one function that answers with an account: staff only, a reason of ten
+  characters, audited before it answers. A closed account's words leave the
+  boards by a trigger on `user_profiles`. Migration 359,
+  `20261281152000_refunds_policy_plan_given_back.sql`: refunds policy
+  version 3, with the paragraph about giving a plan back in fourteen days.
+  **Neither is on the hosted test project, and no job is written for
+  them**: the tree is three migrations ahead of it (360 against 357).
+- *The words.* Fifty-two sentences in twenty-seven languages
+  (`messages/board.ts`), **read by no speaker**. Four are what a reader is
+  told before a first post, and are the promise: a username and not a name
+  is shown; staff can find out who wrote a post when it is reported or
+  somebody may be in danger, and each look is recorded; what you write can
+  still show who you are; a post is shown at once.
+- *The pages.* `/discuss` (which board opens, and why one does not),
+  `/discuss/[board]`, `/discuss/[board]/[threadId]`, one route
+  `/api/boards`, and the staff queue `/admin/boards` in English. A card on
+  `/account` while either switch is on, and an entry on `/admin`.
+- *Rules a test holds.* `supabase/tests/discussion_boards.test.mjs` (15):
+  who is let in by each kind of grant and who is not; that access ends with
+  the grant; a child without a login through the family account, not
+  through somebody who only pays, and only a verified guardian where
+  verification is enforced; that nothing a member can call answers with an
+  account; that the look is refused without a reason, refused to a support
+  agent, and audited; the limits; taking back, reporting, taking down,
+  stopping a username; a closed account. `lib/boards.test.ts` (10): every
+  refusal has one status and is believed only with it; the parsers refuse
+  an unreadable reply; only the staff desk's code reads the account behind
+  a post.
+- *Found on the way.* The first version let in only an account that is
+  itself the learner. With `family.child_login` off that leaves out every
+  child, while the owner's answer was that under-18s use the board as
+  adults do. It now lets in the family account that looks after the child,
+  on the test a lesson uses. That is a reading of the answer and
+  `DECISIONS.md` says what follows from it. Closing an account did nothing
+  to board posts until the trigger was added. The parsers were run against
+  what the real functions answer, once, by hand, and agree.
+  `setting_authority.test.mjs` pins the number of flags and failed the full
+  run until raised (86 flags, 104 rows).
+- *Checked.* `scripts/boards-route-smoke.mjs` on a stand-in, over HTTP in
+  English, Arabic and one held language, and in a browser: three pages at
+  three widths in English, Arabic and Tamil; in Arabic at 390 a username
+  refused and then chosen, a thread started, answered, the answer taken
+  back, another post reported; the staff desk's look refused without a
+  reason and shown with one. The English board and the Arabic thread were
+  looked at. In `ci.yml` and the browser workflow.
+- *Not shown.* Anything from a real database, a real second person, or a
+  hosted project. Twenty-four of the languages on any page.
+- *Not built.* Board posts in the data export. Telling staff a report
+  arrived. Search, editing a post, a list of one's own posts, following a
+  thread. The staff queue in any language but English. A hosted job for
+  359 and 360. Still not built from before: `/admin/teachers` in any
+  language but English.
+- *Counts.* 1957 keys; server-only 1589; unwritten while held 1685
+  (`board.` 52); held 192 of 1957, 9.81%, shown as 10%. 360 migrations, 176
+  database suites, 2756 database assertions (a full run passed 2754 and
+  failed the two pinned counts in `setting_authority`, which were corrected
+  and passed in that suite by itself). 2672 web tests. 137 page routes, 35
+  smoke scripts. The client-bundle check looks for 1589 sentences (it was
+  1523; that it equals the server-only count is a coincidence). 104 flag
+  rows.
 
 ### An applicant is told when the answer comes, 2026-11-24
 

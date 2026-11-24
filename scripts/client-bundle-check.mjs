@@ -199,6 +199,13 @@ for (const [file, key] of [
   ['tapply.ts', 'tapply.answerTold'],
   ['notify.ts', 'notify.dTeachAnswered'],
   ['notify.ts', 'notify.mTeachNote'],
+  // The discussion boards are server pages and hand their forms the words
+  // they say. What a reader is told before they write, who is let in and
+  // what a board says when it could not be read must be in nothing a
+  // browser downloads.
+  ['board.ts', 'board.ruleStaff'],
+  ['board.ts', 'board.notStudent'],
+  ['board.ts', 'board.unread'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -115,6 +115,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'policy',
   'inst',
   'tapply',
+  'board',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

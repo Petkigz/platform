@@ -113,8 +113,10 @@ export async function run(ctx) {
       // the withdrawal waiver, and the children's policy on 2026-11-02 when the
       // paragraphs saying the verification switch was off stopped being true.
       // A correction is a new version, never an edit to the one people agreed to.
+      // The refunds policy again on 2026-11-24: a plan can be given back within
+      // fourteen days in the EU, the EEA and the UK, and then ends.
       const expected = doc.slug === 'refunds'
-        ? '2026-11-01'
+        ? '2026-11-24'
         : doc.slug === 'children' ? '2026-11-05' : doc.slug === 'privacy' ? '2026-11-02' : '2026-10-28';
       eq(new Date(doc.effective).toISOString().slice(0, 10), expected,
         `${doc.slug} effective date`);
@@ -137,7 +139,8 @@ export async function run(ctx) {
     // about a switched-off verification stopped being true (2026-11-02), and the
     // children's policy again the same day when the handover it had just stopped
     // promising was built.
-    const corrected = { refunds: 2, privacy: 2, children: 4 };
+    // …and the refunds policy a third time on 2026-11-24, for a plan given back.
+    const corrected = { refunds: 3, privacy: 2, children: 4 };
     for (const row of live) {
       eq(row.versionNumber, corrected[row.slug] ?? 1,
         `${row.slug} is version ${row.versionNumber}`);

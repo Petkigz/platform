@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-358 files in `supabase/migrations/`, applied in filename order — the 14-digit
+360 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -410,9 +410,13 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 357. This tree has 358: the last one,
+hosted project is at 357. This tree has 360. The 358th,
 `20261281151000_teaching_answer_told.sql`, has a job written for it (below)
-that nobody has asked to run.
+that nobody has asked to run. The 359th and 360th
+(`20261281152000_refunds_policy_plan_given_back.sql` and
+`20261281153000_discussion_boards.sql`) have **no job yet**: one is written
+when the 358th has gone, because each job starts from an exact history and
+is reviewed against it.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -573,6 +577,22 @@ and an answer to an application is shown as a message with no name, in its
 stored English. An application built from this commit works against either
 database: without the 358th it lists eight switches and `/teach/apply` says,
 truthfully, that no message is sent when the answer comes.
+
+**The 359th and 360th. Not applied, not asked for, and no job written.**
+`20261281152000_refunds_policy_plan_given_back.sql` publishes version 3 of
+the refunds policy (one paragraph: a plan bought in the EU, Iceland,
+Liechtenstein, Norway or the UK can be given back within fourteen days). It
+retires version 2, so on a project with accounts, every account that must
+agree to that policy is asked again at its next opening.
+`20261281153000_discussion_boards.sql` adds the two discussion boards: two
+switches (`community.student_board`, `community.teacher_board`, both off),
+four tables with row security on and no policy or grant, the board
+functions, and a trigger on `user_profiles` that takes a closed account's
+words off the boards. It changes no existing function and no existing row.
+The application can go before or after it: with the switches off no page
+asks the database for a board except `/discuss` itself, which says the
+discussion could not be read on a database that does not have the functions.
+`/admin/boards` needs the migration.
 
 **The 354th, `20261281147000_sponsorship_checkout.sql`** (a sponsor pays a
 pledge through checkout). Its

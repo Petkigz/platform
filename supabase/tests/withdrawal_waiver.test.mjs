@@ -136,8 +136,23 @@ export async function run(ctx) {
       'the policy still says no waiver is offered');
     assert(!live.body.includes('[OWNER DECISION'),
       'a published policy still carries an open decision');
-    assert(live.effective_at.toISOString().slice(0, 10) === '2026-11-01',
+    // The version in force is the third (2026-11-24): the second, of
+    // 2026-11-01, with one paragraph added about a plan given back. The
+    // checkout's paragraph is in it word for word, which is what is held above.
+    assert(live.effective_at.toISOString().slice(0, 10) === '2026-11-24',
       `the published version is dated ${String(live.effective_at).slice(0, 10)}`);
+    assert(Number(live.version_number) === 3, `the version in force is ${live.version_number}`);
+    assert(live.body.includes('can be given back within 14 days of paying')
+      && live.body.includes('The plan ends for everyone learning on it when the money has been returned.'),
+      'the policy does not say a plan can be given back, or that it then ends');
+    const second = (await q(
+      `select v.body from public.policy_versions v join public.policy_documents d on d.id = v.document_id
+        where d.slug = 'refunds' and v.version_number = 2`)).rows[0].body;
+    // One paragraph was added and nothing else moved.
+    const added = live.body.split('\n\n').filter((p) => !second.split('\n\n').includes(p));
+    assert(added.length === 1 && added[0].startsWith('A plan bought in the European Union'),
+      `the third version differs from the second by more than one paragraph: ${added.length}`);
+    assert(second.split('\n\n').every((p) => live.body.split('\n\n').includes(p)), 'a paragraph of the second version is gone from the third');
   });
 
   await test('publishing the correction retired the version it replaced rather than deleting it', async () => {

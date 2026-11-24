@@ -2606,6 +2606,70 @@ export const en = {
   'tapply.whyApplied': 'You already have an application with the owner. Wait for the answer.',
   'tapply.whyNothing':
     'There is no application waiting to be taken back. It may already have been answered.',
+
+  // The two discussion boards (`board.ts`), for the same twenty-seven
+  // languages as the dashboard, 2026-11-24. What people write on a board is
+  // not translated, and the page says so.
+  'board.title': 'Discussion',
+  'board.lede':
+    'A place to ask and to answer. Everybody here writes under a username, not under their own name.',
+  'board.students': 'Students’ discussion',
+  'board.studentsLead': 'For students with a paid class, and for teachers.',
+  'board.teachers': 'Teachers’ discussion',
+  'board.teachersLead': 'For teachers only. Students cannot open it.',
+  'board.enter': 'Open the discussion',
+  'board.closed': 'This discussion is not open yet.',
+  'board.notStudent':
+    'The students’ discussion is for students with a paid class. It opens when a class that was paid for is active on your account: one that was bought, one on a plan, a sponsored seat or a seat from a school. A free course does not open it. It closes again when that class or plan ends.',
+  'board.notTeacher': 'The teachers’ discussion is for teachers appointed here.',
+  'board.unread': 'The discussion could not be read. This page sent nothing and changed nothing.',
+  'board.until': 'You can use this discussion until {date}. That is when your paid class ends.',
+  'board.rulesTitle': 'Before you write',
+  'board.ruleName':
+    'Other people see your username and whether you are a student, a teacher or staff. They do not see your name.',
+  'board.ruleStaff':
+    'Staff can find out who wrote a post when it has been reported or when somebody may be in danger. Every time they look, it is recorded.',
+  'board.ruleCare':
+    'What you write can still show who you are. Do not put a name, a phone number or an address in a post, whether yours or anybody else’s.',
+  'board.ruleShown':
+    'A post is shown as soon as you send it. Nobody reads it first. If a post should not be here, report it.',
+  'board.nameTitle': 'Your username',
+  'board.nameLead':
+    'Choose the name you will write under here. Do not use your real name. Use letters, digits and the underscore, with no spaces.',
+  'board.nameField': 'Username',
+  'board.nameSave': 'Use this name',
+  'board.nameNow': 'You write here as {name}.',
+  'board.nameFixed': 'A username cannot be changed once you have written under it.',
+  'board.whyShape':
+    'A username is three to twenty-four letters or digits, with no spaces and no marks other than the underscore.',
+  'board.whyTaken': 'That username is taken or cannot be used. Choose another.',
+  'board.whyBlocked': 'Staff have stopped this username from writing. You can still read.',
+  'board.whyTooMany': 'You have written a lot today. Try again tomorrow.',
+  'board.whyGone': 'That post is no longer here.',
+  'board.whyOwn': 'That is your own post. You can take it back instead.',
+  'board.whyReported': 'You have already reported this post. Staff will look at it.',
+  'board.whyEmpty': 'Write a title of a few words and something to say, then send it.',
+  'board.whyOut': 'This discussion is not open to you now. Your paid class may have ended.',
+  'board.newTitle': 'Ask or say something',
+  'board.fieldTitle': 'Title',
+  'board.fieldBody': 'What you want to say',
+  'board.send': 'Post it',
+  'board.empty': 'Nothing has been written here yet.',
+  'board.replies': 'Replies',
+  'board.replyTitle': 'Write a reply',
+  'board.kindStudent': 'Student',
+  'board.kindTeacher': 'Teacher',
+  'board.kindStaff': 'Staff',
+  'board.yours': 'Yours',
+  'board.report': 'Report this post',
+  'board.reportField': 'Say in a few words what is wrong with this post.',
+  'board.reportSend': 'Send the report',
+  'board.reported': 'Reported. Staff will look at it.',
+  'board.takeBack': 'Take this back',
+  'board.takenBack': 'The writer took this back.',
+  'board.removed': 'Staff took this down.',
+  'board.older': 'Older posts',
+  'board.asWritten': 'Posts are shown as they were written. They are not translated.',
 } as const;
 
 export type MessageKey = keyof typeof en;

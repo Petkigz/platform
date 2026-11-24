@@ -88,7 +88,8 @@ export default async function AccountPage() {
 
   const [referralsOn, sponsorshipOn, { data, error }, { data: learnerRows }, { data: methodsData },
          { data: badgeData }, { data: phoneData }, { data: mergeData },
-         applicationsOn, { data: teachesHere }, { data: standingData }] = await Promise.all([
+         applicationsOn, { data: teachesHere }, { data: standingData },
+         studentBoardOn, teacherBoardOn] = await Promise.all([
     // Inviting a friend is a link, not a form, so the card is only worth showing
     // when there is something at the other end of it.
     isFlagEnabled(supabase, 'commerce.referrals').catch(() => false),
@@ -129,6 +130,11 @@ export default async function AccountPage() {
     // What this account still owes in agreements. A failure here must not take
     // the settings page down with it, so it is read last and read leniently.
     supabase.rpc('my_policy_standing'),
+    // The discussion boards. The card is a way in, shown while either board is
+    // switched on; whether this account is let in is the discussion page's to
+    // say, with the reason.
+    isFlagEnabled(supabase, 'community.student_board').catch(() => false),
+    isFlagEnabled(supabase, 'community.teacher_board').catch(() => false),
   ]);
   if (error) throw new Error(error.message);
   if (!data) redirect('/learn');
@@ -400,6 +406,15 @@ export default async function AccountPage() {
           <p className="muted">
             {t('account.teachBody')}{' '}
             <Link href="/teach/apply">{t('account.teachLink')}</Link>
+          </p>
+        </section>
+      )}
+
+      {(studentBoardOn || teacherBoardOn) && (
+        <section className="card" style={CARD} data-account-card="discussion">
+          <h2 style={{ marginTop: 0 }}>{t('board.title')}</h2>
+          <p className="muted">
+            {t('board.lede')} <Link href="/discuss">{t('board.enter')}</Link>
           </p>
         </section>
       )}
