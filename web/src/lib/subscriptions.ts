@@ -39,14 +39,22 @@ export type SubLearner = {
   id: string;
   /** Null when the row policy does not show this reader the learner's name. */
   name: string | null;
+  /** The kind of place they are in. */
   type: 'adult' | 'child';
+  /** The learner's age band as stored ('8-10', '18+'), when the row shows it. */
+  band: string | null;
 };
+
+/** A learner who could be put on a plan, with the age band to tell two children apart. */
+export type SubAddable = PlanLearner & { band: string | null };
 
 export type SubCard = {
   id: string;
   standing: SubStanding;
   /** The end of the paid period, as stored, when there is one. */
   until: string | null;
+  /** The start of the paid period, as stored. Null for a plan never paid for. */
+  from: string | null;
   /** The plan's own name, or null when nothing the page read holds it. */
   name: string | null;
   tier: 'basic' | 'plus' | null;
@@ -62,6 +70,13 @@ export type SubCard = {
   takesLearners: boolean;
   /** Whether cancelling is offered, and which kind. */
   cancel: 'order' | 'plan' | null;
+  /**
+   * Whether to say what the other shelf adds: a Basic plan that is running or
+   * waiting, while saving lessons is switched on. Saving lessons is the one
+   * thing the database gives only to Plus (`may_download_lesson()`), so it is
+   * the one thing this can say and be right.
+   */
+  plusAdds: boolean;
 };
 
 type Row = Record<string, unknown>;
@@ -117,6 +132,9 @@ export function subscriptionCards(
     const periodEnd = row.current_period_end === null || row.current_period_end === undefined ? null : text(row.current_period_end);
     if (periodEnd !== null && Number.isNaN(Date.parse(periodEnd))) return null;
     const standing = standingOfSubscription(status, periodEnd, options.now);
+    // A start that is not a date is left out; the card is still drawn.
+    const started = text(row.current_period_start);
+    const periodStart = started !== null && !Number.isNaN(Date.parse(started)) ? started : null;
 
     const plan = one(row.plans);
     const version = one(row.plan_versions);
@@ -132,7 +150,13 @@ export function subscriptionCards(
       if (allocation.status !== 'active') continue;
       const learnerId = text(allocation.learner_profile_id);
       if (learnerId === null || (allocation.slot_type !== 'adult' && allocation.slot_type !== 'child')) return null;
-      learners.push({ id: learnerId, name: text(one(allocation.learner_profiles)?.display_name), type: allocation.slot_type });
+      const profile = one(allocation.learner_profiles);
+      learners.push({
+        id: learnerId,
+        name: text(profile?.display_name),
+        type: allocation.slot_type,
+        band: text(profile?.age_band),
+      });
     }
 
     let includes: PlanInclusion[] | null = null;
@@ -160,12 +184,15 @@ export function subscriptionCards(
           child: Math.max(0, places.child - learners.filter((l) => l.type === 'child').length),
         };
 
+    const tier = tierOf(plan?.tier) ?? tierOf(known?.tier);
     cards.push({
       id,
       standing,
       until: periodEnd,
+      // A plan that was never paid for has no paid period to have begun.
+      from: standing === 'waiting' || standing === 'withdrawn' ? null : periodStart,
       name: text(plan?.name) ?? text(known?.planName),
-      tier: tierOf(plan?.tier) ?? tierOf(known?.tier),
+      tier,
       places,
       includes,
       learners,
@@ -175,6 +202,7 @@ export function subscriptionCards(
       // `cancel_subscription()` does nothing to one already cancelled. One
       // whose period is over has nothing left to cancel.
       cancel: standing === 'waiting' ? 'order' : standing === 'running' ? 'plan' : null,
+      plusAdds: tier === 'basic' && options.offlineOn && (standing === 'waiting' || standing === 'running'),
     });
   }
   return cards;
@@ -187,22 +215,23 @@ export function subscriptionCards(
  * the places are not known: the page then offers no form and says part of it
  * is missing.
  */
-export function addableLearners(card: SubCard, learners: unknown, userId: string): PlanLearner[] | null {
+export function addableLearners(card: SubCard, learners: unknown, userId: string): SubAddable[] | null {
   const list = rows(learners);
   if (!list || card.left === null) return null;
   if (!card.takesLearners) return [];
   const on = new Set(card.learners.map((l) => l.id));
-  const fits: PlanLearner[] = [];
+  const fits: SubAddable[] = [];
   for (const learner of list) {
     const id = text(learner.id);
     const name = text(learner.display_name);
     if (id === null || name === null) return null;
     if (learner.learner_type !== 'adult' && learner.learner_type !== 'child') return null;
     if (on.has(id)) continue;
+    const band = text(learner.age_band);
     if (learner.learner_type === 'adult') {
-      if (card.left.adult > 0 && learner.linked_user_id === userId) fits.push({ id, name, type: 'adult' });
+      if (card.left.adult > 0 && learner.linked_user_id === userId) fits.push({ id, name, type: 'adult', band });
     } else if (card.left.child > 0) {
-      fits.push({ id, name, type: 'child' });
+      fits.push({ id, name, type: 'child', band });
     }
   }
   return fits;

@@ -8765,6 +8765,70 @@ read 12%.
 sentence nobody prints; the receipt, which every line links to and which is
 still English.
 
+## Five answers from the owner — **DECIDED 2026-11-23**
+
+Five questions had been waiting. The owner answered all five in one message.
+The words in quotation marks are the owner's.
+
+1. *A plan asks nothing about the 14-day right to withdraw.* "For
+   withdrawals ask nothing." The plan page stays as it is. A buyer in the EU,
+   EEA or UK therefore starts a plan with that right intact and nothing
+   recorded about it. **Not said by the owner, and not assumed:** that such a
+   buyer is promised a refund within fourteen days. No page says so. Plans
+   are switched off, and this is to be settled before they are switched on
+   for those countries.
+2. *Launch free, and register a business in parallel.* Nothing that takes
+   money through the site is switched on until there is a registered business
+   and a live payment account. Every paid feature stays behind its switch.
+   **It is not launching yet**: "there are still a lot of things that need to
+   be adjusted and added on so it's not ready for clients yet." Nothing here
+   is to be described as ready for the public.
+3. *Notifications are to be translated.* A message is to be stored as what
+   happened and its values, and said in the reader's language when shown.
+   That is a migration to four database functions and is the next piece of
+   work; it is not in this commit.
+4. *Everything taken off the plans page goes back.* "They make it easier for
+   people who don't know what to do, let's say a grandma who enrols their
+   grandson. They need all specifics." Done in this commit; see the next
+   entry. **The rule this sets for other pages:** when in doubt, say the
+   specific thing (which date, which kind of place, how old, what the other
+   choice adds) rather than leave the reader to work it out.
+5. *A change of policy is told at the next opening, or by a notification,
+   and never sprung on a page that is open.* "If the app is open they wait
+   until you close it and open again." What exists today: a document changed
+   while somebody is reading it is said only when they press the button to
+   agree, and what is waiting is listed on `/account`. **Not built yet:**
+   telling somebody at their next visit that a document has a new version,
+   and a notification of it. Both go with the notifications work. The
+   builder's reading, to be corrected if wrong: the database should still
+   refuse to record an agreement to a version the reader was not shown,
+   because that is a record of something that did not happen; the page then
+   shows the new version only because the reader pressed a button on it.
+
+## The plans page says the specifics again — **DECIDED 2026-11-23**
+
+Four things were left off `/subscriptions` when it was rewritten. The owner
+asked for all of them back.
+
+- *When the paid period began.* "Paid for from", under the sentence that
+  says when it ends, on a plan that is running, cancelled or over. A plan
+  that was never paid for has no paid period and says none, whatever its row
+  holds. A stored start that is not a date is left out.
+- *Which kind of place each learner is in.* Each name in the list is said as
+  in a place for an adult or in a place for a child.
+- *A child's ages.* After the child's name on the card and in the list to
+  choose from, in the words the family page uses. An adult in the list to
+  choose from is marked as an adult. Two children with one name can now be
+  told apart.
+- *What Plus adds.* On a Basic plan that is running or waiting to be paid:
+  saving lessons to watch with no connection comes with Plus, and a link to
+  compare the plans. It is said only while saving lessons is switched on,
+  because that is the one thing the database gives to Plus alone
+  (`may_download_lesson()`), and a page should not promise what is off.
+  Somebody who has Plus, or whose plan is over or cancelled, is not told.
+- *Five new sentences* in the part `subs`, in twenty-seven languages, read
+  by no speaker. The ages and the word for an adult reuse the family page's.
+
 ## Applying to teach, in the reader's language, and what is said under a box — **DECIDED 2026-11-23**
 
 `/teach/apply` was an English page with a button that stayed grey until three
@@ -8999,7 +9063,9 @@ builder's reading of what the two writers do, and can be changed.
 - *A success says nothing of its own.* The page is read again and the card
   changes; that part of the card is marked to be read out when it changes.
   There is no "added" or "cancelled" sentence.
-- *Left out on purpose.* The start of the paid period, the kind of place each
+- *Left out on purpose* (**reversed the same day at the owner's word; all
+  four are back, see "The plans page says the specifics again"**). The start
+  of the paid period, the kind of place each
   learner holds, a child's age band in the list, and the line that told a
   Basic subscriber what Plus adds. In its place the plans page's sentence
   about the two shelves is shown above the cards, with the link to the plans.
@@ -9068,7 +9134,8 @@ is the builder's reading of what the order writer does, and can be changed.
   decides.
 - *Not asked: the 14-day withdrawal question.* The course buy page asks it
   of a buyer in the EU, EEA or UK. The plan page does not, and the page it
-  replaces did not. `docs/remaining.md` lists it as undecided.
+  replaces did not. **Decided by the owner on 2026-11-23: a plan asks
+  nothing.** See "Five answers from the owner".
 
 ## Notifications, in the reader's language as far as the record allows — **DECIDED 2026-11-23**
 

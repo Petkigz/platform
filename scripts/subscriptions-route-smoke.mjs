@@ -48,14 +48,16 @@ const HIDDEN = '89898989-8989-4898-8989-898989898989';
 const DATABASE_SENTENCE = 'SYNTHETIC-DATABASE new row for relation "subscriptions" violates check constraint';
 const LATER = '2099-03-01T09:30:00Z';
 const EARLIER = '2020-01-01T00:00:00Z';
+// When each paid period began.
+const START = '2026-11-01T08:00:00Z';
 
-const own = { id: OWN, display_name: 'Synthetic learner', learner_type: 'adult', linked_user_id: user.id };
-const aisha = { id: AISHA, display_name: 'Aisha', learner_type: 'child', linked_user_id: null };
-const bilal = { id: BILAL, display_name: 'Bilal', learner_type: 'child', linked_user_id: null };
+const own = { id: OWN, display_name: 'Synthetic learner', learner_type: 'adult', linked_user_id: user.id, age_band: '18+' };
+const aisha = { id: AISHA, display_name: 'Aisha', learner_type: 'child', linked_user_id: null, age_band: '8-10' };
+const bilal = { id: BILAL, display_name: 'Bilal', learner_type: 'child', linked_user_id: null, age_band: '11-13' };
 // Another adult in the family: readable, and not somebody this account can place.
 const spouse = { id: SPOUSE, display_name: 'Synthetic spouse', learner_type: 'adult', linked_user_id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' };
 
-const on = (learner, name = learner.display_name) => ({ status: 'active', learner_profile_id: learner.id, slot_type: learner.learner_type, learner_profiles: name === null ? null : { display_name: name } });
+const on = (learner, name = learner.display_name) => ({ status: 'active', learner_profile_id: learner.id, slot_type: learner.learner_type, learner_profiles: name === null ? null : { display_name: name, age_band: learner.age_band ?? null } });
 const family = { plans: { name: 'Synthetic family', tier: 'plus' }, plan_versions: { adult_allowance: 1, child_allowance: 2 } };
 const solo = { plans: { name: 'Synthetic solo', tier: 'basic' }, plan_versions: { adult_allowance: 1, child_allowance: 0 } };
 
@@ -64,20 +66,20 @@ const fresh = () => ({
   // Newest first, as the page asks for them.
   subscriptions: [
     // Paid and running: the buyer is on it, one child is, one child's place is free.
-    { id: RUN, status: 'active', plan_version_id: V_FAMILY, current_period_end: LATER, ...family,
+    { id: RUN, status: 'active', plan_version_id: V_FAMILY, current_period_start: START, current_period_end: LATER, ...family,
       family_plan_allocations: [on(own), on(aisha), { status: 'released', learner_profile_id: BILAL, slot_type: 'child', learner_profiles: { display_name: 'Bilal' } }] },
     // Ordered and not paid.
-    { id: WAIT, status: 'pending', plan_version_id: V_SOLO, current_period_end: null, ...solo, family_plan_allocations: [] },
+    { id: WAIT, status: 'pending', plan_version_id: V_SOLO, current_period_start: null, current_period_end: null, ...solo, family_plan_allocations: [] },
     // Cancelled after it was paid: what was paid for stays.
-    { id: STOP, status: 'cancelled', plan_version_id: V_SOLO, current_period_end: LATER, ...solo,
+    { id: STOP, status: 'cancelled', plan_version_id: V_SOLO, current_period_start: START, current_period_end: LATER, ...solo,
       // A learner whose name the row policy does not show this reader.
       family_plan_allocations: [{ status: 'active', learner_profile_id: HIDDEN, slot_type: 'adult', learner_profiles: null }] },
     // The period is over. Its row still says active: nothing writes "expired".
-    { id: END, status: 'active', plan_version_id: V_SOLO, current_period_end: EARLIER, ...solo, family_plan_allocations: [on(own)] },
+    { id: END, status: 'active', plan_version_id: V_SOLO, current_period_start: 'SYNTHETIC-not-a-date', current_period_end: EARLIER, ...solo, family_plan_allocations: [on(own)] },
     // Cancelled before it was ever paid.
-    { id: GONE, status: 'cancelled', plan_version_id: V_SOLO, current_period_end: null, ...solo, family_plan_allocations: [] },
+    { id: GONE, status: 'cancelled', plan_version_id: V_SOLO, current_period_start: START, current_period_end: null, ...solo, family_plan_allocations: [] },
     // A plan that is no longer on sale: the plain read is shown neither its name nor its places.
-    { id: OLD, status: 'active', plan_version_id: V_OLD, current_period_end: LATER, plans: null, plan_versions: null, family_plan_allocations: [] },
+    { id: OLD, status: 'active', plan_version_id: V_OLD, current_period_start: START, current_period_end: LATER, plans: null, plan_versions: null, family_plan_allocations: [] },
   ],
   summary: [{ subscriptionId: OLD, planName: 'Synthetic retired plan', tier: 'basic', adultAllowance: 1, childAllowance: 0 }],
   entitlements: [
@@ -177,7 +179,7 @@ const date = (code, iso) => new Intl.DateTimeFormat(code, { year: 'numeric', mon
 const card = (html, id) => { const from = html.indexOf(`data-sub="${id}"`); assert.ok(from > 0, `no card for ${id}`); return html.slice(from, html.indexOf('</article>', from)); };
 // English a translated page must not hold. (`Basic` and `Plus` are the
 // shelves' names and are marked as English; a plan's own name is its own.)
-const ENGLISH_ONLY = ['VIP package', 'opens the lessons', 'Your plans', 'Each plan', 'could not be read', 'no plan', 'no longer on sale', 'Waiting for payment', 'Runs until', 'Ended', 'Cancelled', 'Paid for', 'Learning on', 'Nobody', 'A learner', 'Add a learner', 'Add to this plan', 'Every place', 'Cancel this', 'Cancelling', 'Why are you', 'Places for', 'What it opens', 'Every course', 'Saving lessons', 'Choose a learner', '(child)', 'Subscriptions', 'My family', '>Plans<'];
+const ENGLISH_ONLY = ['VIP package', 'opens the lessons', 'Your plans', 'Each plan', 'could not be read', 'no plan', 'no longer on sale', 'Waiting for payment', 'Runs until', 'Ended', 'Cancelled', 'Paid for', 'Learning on', 'Nobody', 'A learner', 'Add a learner', 'Add to this plan', 'Every place', 'Cancel this', 'Cancelling', 'Why are you', 'Places for', 'What it opens', 'Every course', 'Saving lessons', 'Choose a learner', '(child)', 'Subscriptions', 'My family', '>Plans<', 'In a place', 'comes with', 'Compare the plans', 'Ages ', '· Adult'];
 // What the database calls things. None of it is a sentence.
 const STORED = ['offline_downloads', 'something_new', 'catalogue', 'SYNTHETIC-DATABASE', 'pending', 'past_due', 'trialing', '>active', 'active<', 'cancelled', 'expired', 'released', 'Bilal</bdi>'];
 const PAGE = '/subscriptions';
@@ -246,7 +248,7 @@ try {
   // The switch for saving lessons unread is treated as off: not promised, and nothing is said to be missing.
   state.broken = new Set(['/rest/v1/rpc/setting_bool']);
   part = await page({ 'accept-language': 'en' });
-  hasNot(part, ['Saving lessons', 'data-subs-state="partial"'], 'the page with the offline switch unread');
+  hasNot(part, ['Saving lessons', 'data-sub-plus', 'data-subs-state="partial"'], 'the page with the offline switch unread');
   state = fresh();
 
   // ------------------------------------------------------------------ no plan
@@ -264,6 +266,8 @@ try {
   // It does not ask whether plans are on sale: somebody who has one keeps the page.
   assert.deepEqual([...new Set(rpcs('setting_bool').map((c) => c.payload.p_key))], ['learning.offline'], 'the page read a switch it should not depend on');
   const later = date('en', LATER);
+  const start = date('en', START);
+  const PLUS_ADDS = '<p class="muted sub-plus" data-sub-plus="true">Saving lessons in the app, to watch with no connection, comes with: <bdi lang="en" dir="ltr">Plus</bdi> <a href="/plans">Compare the plans</a></p>';
   has(en, ['<div class="page">', '<p class="lede">Each plan on your account: what it opens, who is learning on it and when it ends.</p>', 'data-subs-state="open"',
     // What the two shelves are, in the plans page's sentence: a Basic subscriber is told what Plus is.
     '<p class="muted"><bdi lang="en" dir="ltr">Basic</bdi> opens the lessons. <bdi lang="en" dir="ltr">Plus</bdi> is the VIP package: the same lessons, and more besides. Each plan lists what it opens.</p>'], 'the page');
@@ -275,43 +279,48 @@ try {
   has(run, [
     'data-standing="running"',
     '<p class="eyebrow"><bdi lang="en" dir="ltr">Plus</bdi></p><h2 dir="auto">Synthetic family</h2>',
-    `<p class="sub-standing">Runs until: <bdi>${later}</bdi></p>`,
-    '<h3 class="eyebrow">Learning on this plan</h3><ul class="plan-lines" data-sub-learners="true"><li><bdi>Synthetic learner</bdi></li><li><bdi>Aisha</bdi></li></ul>',
+    // Both ends of the paid period.
+    `<p class="sub-standing">Runs until: <bdi>${later}</bdi></p><p class="muted sub-from">Paid for from: <bdi>${start}</bdi></p>`,
+    // Which kind of place each is in, and a child's ages.
+    '<h3 class="eyebrow">Learning on this plan</h3><ul class="plan-lines" data-sub-learners="true"><li>In a place for an adult: <bdi>Synthetic learner</bdi></li><li>In a place for a child: <bdi>Aisha</bdi><span class="muted sub-band"> · Ages 8–10</span></li></ul>',
     '<li>Places for adults: 1</li><li>Places for children: 2</li>',
     '<h3 class="eyebrow">What it opens</h3><ul class="plan-lines"><li>Every course in this subject: <bdi>Synthetic tajwid</bdi></li><li><bdi>Synthetic Arabic year one</bdi></li><li>Saving lessons in the app, to watch with no connection</li></ul>',
     // One child's place is free, and one child is not on it: that child, and nobody else.
     `<label for="sub-add-${RUN}" class="eyebrow">Add a learner</label>`,
-    `<option value="" selected="">Choose a learner</option><option value="${BILAL}">\u2068Bilal\u2069 (child)</option></select>`,
+    `<option value="" selected="">Choose a learner</option><option value="${BILAL}">\u2068Bilal\u2069 (child) · Ages 11–13</option></select>`,
     '>Add to this plan</button>',
     '<details class="sub-cancel" data-sub-cancel="plan"><summary>Cancel this plan</summary>',
     `Cancelling returns no money and does not end the plan early. Nothing is taken again whether you cancel or not. After cancelling, nobody else can be added to it. This plan is paid for until: <bdi>${later}</bdi>`,
     `<label for="sub-reason-${RUN}" class="eyebrow">Why are you cancelling?</label>`,
     'maxLength="500"',
   ], 'the running plan');
-  hasNot(run, ['Every place on this plan is taken.', 'Cancel this order', `value="${OWN}"`, `value="${SPOUSE}"`, `value="${AISHA}"`], 'the running plan');
+  // Somebody who has Plus is not told what Plus adds.
+  hasNot(run, ['data-sub-plus', 'Every place on this plan is taken.', 'Cancel this order', `value="${OWN}"`, `value="${SPOUSE}"`, `value="${AISHA}"`], 'the running plan');
 
   // Ordered and not paid: one press, and no question.
   const wait = card(en, WAIT);
-  has(wait, ['data-standing="waiting"', '<bdi lang="en" dir="ltr">Basic</bdi>', '<p class="sub-standing">Waiting for payment. It has not started.</p>', 'Nobody is learning on this plan yet.', 'data-sub-cancel="order"', 'This cancels the order before it is paid, so that you can start again. If a payment request is still waiting on a phone, do not approve it.', '>Cancel this order</button>'], 'the order waiting');
-  hasNot(wait, ['<textarea', 'Why are you cancelling?', 'data-sub-add', 'Cancel this plan'], 'the order waiting');
+  has(wait, ['data-standing="waiting"', '<bdi lang="en" dir="ltr">Basic</bdi>', '<p class="sub-standing">Waiting for payment. It has not started.</p>', 'Nobody is learning on this plan yet.', PLUS_ADDS, 'data-sub-cancel="order"', 'This cancels the order before it is paid, so that you can start again. If a payment request is still waiting on a phone, do not approve it.', '>Cancel this order</button>'], 'the order waiting');
+  // Not paid for: no paid period has begun.
+  hasNot(wait, ['Paid for from', 'sub-from', '<textarea', 'Why are you cancelling?', 'data-sub-add', 'Cancel this plan'], 'the order waiting');
 
   // Cancelled after it was paid: what was paid for is still dated, and nothing can be done to it.
   const stop = card(en, STOP);
-  has(stop, ['data-standing="stopped"', `<p class="sub-standing">Cancelled. Paid for until: <bdi>${later}</bdi></p>`, '<li>A learner whose name is not shown to you</li>'], 'the cancelled plan');
-  hasNot(stop, ['data-sub-forms', '<button'], 'the cancelled plan');
+  has(stop, ['data-standing="stopped"', `<p class="sub-standing">Cancelled. Paid for until: <bdi>${later}</bdi></p><p class="muted sub-from">Paid for from: <bdi>${start}</bdi></p>`, '<li>In a place for an adult: A learner whose name is not shown to you</li>'], 'the cancelled plan');
+  hasNot(stop, ['data-sub-plus', 'data-sub-forms', '<button'], 'the cancelled plan');
 
   // The period is over, whatever the row says.
   const end = card(en, END);
   has(end, ['data-standing="ended"', `<p class="sub-standing">Ended: <bdi>${date('en', EARLIER)}</bdi></p>`], 'the plan that ended');
-  hasNot(end, ['Runs until', 'Learning on this plan', 'data-sub-forms', '<button'], 'the plan that ended');
+  // Its start is not a date: left out, and nothing is drawn in its place.
+  hasNot(end, ['Paid for from', 'Invalid Date', 'data-sub-plus', 'Runs until', 'Learning on this plan', 'data-sub-forms', '<button'], 'the plan that ended');
 
   const gone = card(en, GONE);
   has(gone, ['data-standing="withdrawn"', '<p class="sub-standing">Cancelled before it was paid for.</p>'], 'the order that was cancelled');
-  hasNot(gone, ['Learning on this plan', 'data-sub-forms'], 'the order that was cancelled');
+  hasNot(gone, ['Paid for from', 'data-sub-plus', 'Learning on this plan', 'data-sub-forms'], 'the order that was cancelled');
 
   // No longer on sale: named and counted from the summary; the buyer can still take its place.
   const old = card(en, OLD);
-  has(old, ['<h2 dir="auto">Synthetic retired plan</h2>', '<bdi lang="en" dir="ltr">Basic</bdi>', '<li>Places for adults: 1</li>', `<option value="${OWN}">Synthetic learner</option>`], 'the plan no longer on sale');
+  has(old, ['<h2 dir="auto">Synthetic retired plan</h2>', '<bdi lang="en" dir="ltr">Basic</bdi>', '<li>Places for adults: 1</li>', `<option value="${OWN}">Synthetic learner · Adult</option>`, `Paid for from: <bdi>${start}</bdi>`, PLUS_ADDS], 'the plan no longer on sale');
   hasNot(old, ['Places for children', `value="${AISHA}"`], 'the plan no longer on sale');
 
   // Every place taken is said, and no list is offered.
@@ -336,14 +345,18 @@ try {
     '<li>كل دورة في هذا المجال: <bdi>Synthetic tajwid</bdi></li>',
     '<li>حفظ الدروس داخل التطبيق لمشاهدتها بلا اتصال</li>',
     `<label for="sub-add-${RUN}" class="eyebrow">إضافة متعلّم</label>`,
-    `<option value="" selected="">اختر متعلّمًا</option><option value="${BILAL}">\u2068Bilal\u2069 (طفل)</option>`,
+    `<option value="" selected="">اختر متعلّمًا</option><option value="${BILAL}">\u2068Bilal\u2069 (طفل) · الأعمار 11–13</option>`,
+    `<p class="muted sub-from">مدفوعة ابتداءً من: <bdi>${date('ar', START)}</bdi></p>`,
+    '<li>في مكان للبالغين: <bdi>Synthetic learner</bdi></li><li>في مكان للأطفال: <bdi>Aisha</bdi><span class="muted sub-band"> · الأعمار 8–10</span></li>',
+    '<p class="muted sub-plus" data-sub-plus="true">حفظ الدروس داخل التطبيق لمشاهدتها بلا اتصال متاح مع: <bdi lang="en" dir="ltr">Plus</bdi> <a href="/plans">قارن بين الخطط</a></p>',
+    `<option value="${OWN}">Synthetic learner · بالغ</option>`,
     '>أضف إلى هذه الخطة</button>',
     '<summary>إلغاء هذه الخطة</summary>',
     `الإلغاء لا يعيد أي مبلغ ولا ينهي الخطة قبل موعدها. لا يُخصم شيء مرة أخرى سواء ألغيت أم لا. بعد الإلغاء لا يمكن إضافة أحد آخر إليها. هذه الخطة مدفوعة حتى: <bdi>${laterAr}</bdi>`,
     'لماذا تلغي؟',
     '<p class="sub-standing">في انتظار الدفع. لم تبدأ بعد.</p>', 'لا أحد يتعلّم على هذه الخطة بعد.',
     'هذا يلغي الطلب قبل دفعه لتتمكّن من البدء من جديد. إذا كان طلب دفع ما زال ينتظر على هاتف، فلا توافق عليه.', '>إلغاء هذا الطلب</button>',
-    `<p class="sub-standing">أُلغيت. مدفوعة حتى: <bdi>${laterAr}</bdi></p>`, '<li>متعلّم لا يظهر لك اسمه</li>',
+    `<p class="sub-standing">أُلغيت. مدفوعة حتى: <bdi>${laterAr}</bdi></p>`, '<li>في مكان للبالغين: متعلّم لا يظهر لك اسمه</li>',
     `<p class="sub-standing">انتهت في: <bdi>${date('ar', EARLIER)}</bdi></p>`,
     '<p class="sub-standing">أُلغيت قبل أن تُدفع.</p>',
     '<a href="/plans">الخطط</a> · <a href="/family">عائلتي</a>',

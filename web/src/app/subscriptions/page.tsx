@@ -7,6 +7,7 @@ import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { ageBandLabel } from '@/lib/age-band';
 import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { addableLearners, subscriptionCards, type SubCard } from '@/lib/subscriptions';
 import { SubscriptionManager, type SubscriptionWords } from './subscription-manager';
@@ -53,6 +54,13 @@ export async function generateMetadata(): Promise<Metadata> {
  * plan whose period is over is still `active` in its row, so the word was
  * wrong as well as English. See `lib/subscriptions.ts`.
  *
+ * **The specifics are on the card.** When the paid period began, which kind
+ * of place each learner is in, a child's ages, and what Plus adds were left
+ * off this page when it was rewritten and were put back at the owner's word
+ * (2026-11-23): somebody enrolling a grandchild should not have to work any
+ * of them out. What Plus adds is said only on a Basic plan that is running
+ * or waiting, and only while saving lessons is switched on.
+ *
  * **Who can be added is only who the writer would take**: the reader's own
  * adult profile for an adult place and a child for a child's, while a place
  * of that kind is free. The old list offered every learner the reader could
@@ -78,13 +86,13 @@ export default async function SubscriptionsPage() {
     supabase
       .from('subscriptions')
       .select(
-        'id,status,plan_version_id,current_period_end,plans(name,tier),plan_versions(adult_allowance,child_allowance),family_plan_allocations(status,learner_profile_id,slot_type,learner_profiles(display_name))',
+        'id,status,plan_version_id,current_period_start,current_period_end,plans(name,tier),plan_versions(adult_allowance,child_allowance),family_plan_allocations(status,learner_profile_id,slot_type,learner_profiles(display_name,age_band))',
       )
       .order('created_at', { ascending: false })
       .then((r) => r, () => failed),
     supabase
       .from('learner_profiles')
-      .select('id,display_name,learner_type,linked_user_id')
+      .select('id,display_name,learner_type,linked_user_id,age_band')
       .eq('status', 'active')
       .is('deleted_at', null)
       .order('display_name')
@@ -178,6 +186,12 @@ export default async function SubscriptionsPage() {
   };
 
   const said = (iso: string) => <bdi>{formatDateTime(locale, iso, 'UTC')}</bdi>;
+  // "Ages 8–10" or "Adult", as the family page says it.
+  const band = (code: string) =>
+    ageBandLabel(code, {
+      ages: (from, to) => t('family.ages', { from: formatNumber(locale, from), to: formatNumber(locale, to) }),
+      adult: t('family.bandAdult'),
+    });
   // Something a card would have shown was not read: said once, above them.
   // The summary is only missed by a card the plain read could not fill in.
   let partial =
@@ -224,6 +238,12 @@ export default async function SubscriptionsPage() {
               <Say text={t('subs.ended')} parts={{ date: said(card.until) }} />
             </p>
           )}
+          {/* When the paid period began: with the line above, the whole period. */}
+          {card.from && (
+            <p className="muted sub-from">
+              <Say text={t('subs.started')} parts={{ date: said(card.from) }} />
+            </p>
+          )}
 
           {listed && (
             <>
@@ -233,7 +253,17 @@ export default async function SubscriptionsPage() {
               ) : (
                 <ul className="plan-lines" data-sub-learners>
                   {card.learners.map((learner) => (
-                    <li key={learner.id}>{learner.name !== null ? <bdi>{learner.name}</bdi> : t('subs.someone')}</li>
+                    // Which kind of place they are in, then who, then how old:
+                    // enough to tell two grandchildren apart.
+                    <li key={learner.id}>
+                      <Say
+                        text={t(learner.type === 'child' ? 'subs.inChild' : 'subs.inAdult')}
+                        parts={{ name: learner.name !== null ? <bdi>{learner.name}</bdi> : t('subs.someone') }}
+                      />
+                      {learner.type === 'child' && learner.band !== null && (
+                        <span className="muted sub-band"> · {band(learner.band)}</span>
+                      )}
+                    </li>
                   ))}
                 </ul>
               )}
@@ -276,10 +306,24 @@ export default async function SubscriptionsPage() {
           </>
         )}
 
+        {/* What the other shelf adds, said only while it is true. */}
+        {card.plusAdds && (
+          <p className="muted sub-plus" data-sub-plus>
+            <Say text={t('subs.plusAdds')} parts={{ plus: <bdi lang="en" dir="ltr">Plus</bdi> }} />{' '}
+            <Link href="/plans">{t('subs.compare')}</Link>
+          </p>
+        )}
+
         {((addable !== null && addable.length > 0) || card.cancel !== null) && (
           <SubscriptionManager
             subscriptionId={card.id}
-            addable={addable ?? []}
+            addable={(addable ?? []).map((learner) => ({
+              id: learner.id,
+              name: learner.name,
+              type: learner.type,
+              // A child's ages, or "Adult": said after the name in the list.
+              note: learner.type === 'adult' ? t('family.bandAdult') : learner.band !== null ? band(learner.band) : null,
+            }))}
             cancel={card.cancel}
             until={card.until ? formatDateTime(locale, card.until, 'UTC') : null}
             words={words}

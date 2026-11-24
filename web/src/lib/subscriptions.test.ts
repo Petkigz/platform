@@ -72,13 +72,16 @@ test('a list that makes no sense is not read, and is not a shorter list', () => 
 test('a card says who is on the plan, what is left, and what can be done', () => {
   const [card] = cards([row({
     family_plan_allocations: [
-      { status: 'active', learner_profile_id: 'l-1', slot_type: 'child', learner_profiles: { display_name: 'Aisha' } },
+      { status: 'active', learner_profile_id: 'l-1', slot_type: 'child', learner_profiles: { display_name: 'Aisha', age_band: '8-10' } },
       { status: 'released', learner_profile_id: 'l-2', slot_type: 'child', learner_profiles: { display_name: 'Bilal' } },
       // A learner whose name the row policy does not show.
       { status: 'active', learner_profile_id: 'l-3', slot_type: 'adult', learner_profiles: null },
     ],
   })])!;
-  assert.deepEqual(card!.learners, [{ id: 'l-1', name: 'Aisha', type: 'child' }, { id: 'l-3', name: null, type: 'adult' }]);
+  assert.deepEqual(card!.learners, [
+    { id: 'l-1', name: 'Aisha', type: 'child', band: '8-10' },
+    { id: 'l-3', name: null, type: 'adult', band: null },
+  ]);
   assert.deepEqual(card!.places, { adult: 1, child: 2 });
   assert.deepEqual(card!.left, { adult: 0, child: 1 });
   assert.equal(card!.standing, 'running');
@@ -146,7 +149,7 @@ test('who can be added is the caller’s own adult profile and a child, while a 
   const learners = [
     { id: 'me', display_name: 'Me', learner_type: 'adult', linked_user_id: ME },
     { id: 'spouse', display_name: 'Spouse', learner_type: 'adult', linked_user_id: 'user-2' },
-    { id: 'aisha', display_name: 'Aisha', learner_type: 'child', linked_user_id: null },
+    { id: 'aisha', display_name: 'Aisha', learner_type: 'child', linked_user_id: null, age_band: '5-7' },
     { id: 'bilal', display_name: 'Bilal', learner_type: 'child', linked_user_id: null },
   ];
   const on = (allocations: unknown[], more: Record<string, unknown> = {}) => cards([row({ family_plan_allocations: allocations, ...more })])![0]!;
@@ -166,4 +169,48 @@ test('who can be added is the caller’s own adult profile and a child, while a 
   assert.equal(addableLearners(on([]), null, ME), null);
   assert.equal(addableLearners(on([]), [{ id: 'x', display_name: 'X', learner_type: 'robot' }], ME), null);
   assert.equal(addableLearners(on([], { plans: null, plan_versions: null }), learners, ME), null);
+});
+
+test('the specifics a card carries: when the paid period began, and what the other shelf adds', () => {
+  const START = '2026-11-01T00:00:00+00:00';
+  const of = (more: Record<string, unknown>, offlineOn = true) => cards([row({ current_period_start: START, ...more })], { offlineOn })![0]!;
+  // Running, cancelled and over: each was paid for from a day, and says it.
+  assert.equal(of({}).from, START);
+  assert.equal(of({ status: 'cancelled' }).from, START);
+  assert.equal(of({ current_period_end: EARLIER }).from, START);
+  // Never paid for: no paid period began, whatever the row holds.
+  assert.equal(of({ status: 'pending', current_period_end: null }).from, null);
+  assert.equal(of({ status: 'cancelled', current_period_end: null }).from, null);
+  // A start that is missing or is not a date is left out; the card is still drawn.
+  assert.equal(of({ current_period_start: null }).from, null);
+  assert.equal(of({ current_period_start: 'not a date' }).from, null);
+
+  // What Plus adds is said on a Basic plan that is running or waiting, while saving lessons is on.
+  const basic = { plans: { name: 'Starter', tier: 'basic' } };
+  assert.equal(of(basic).plusAdds, true);
+  assert.equal(of({ ...basic, status: 'pending', current_period_end: null }).plusAdds, true);
+  assert.equal(of(basic, false).plusAdds, false, 'said while saving lessons is switched off');
+  assert.equal(of({}).plusAdds, false, 'said to somebody who has Plus');
+  assert.equal(of({ ...basic, status: 'cancelled' }).plusAdds, false);
+  assert.equal(of({ ...basic, current_period_end: EARLIER }).plusAdds, false);
+  assert.equal(of({ plans: null }).plusAdds, false, 'said about a plan whose shelf is not known');
+  // Saving lessons is the one thing the database gives only to Plus.
+  const offline = readFileSync(new URL('20261251000100_offline_downloads.sql', MIGRATIONS), 'utf8');
+  assert.match(offline, /tier is plus AND whose live version carries the offline_downloads feature/u);
+});
+
+test('a learner who can be added carries their age band, to tell two children apart', () => {
+  const card = cards([row({ family_plan_allocations: [] })])![0]!;
+  const found = addableLearners(card, [
+    { id: 'me', display_name: 'Me', learner_type: 'adult', linked_user_id: 'user-1', age_band: '18+' },
+    { id: 'a', display_name: 'Yusuf', learner_type: 'child', linked_user_id: null, age_band: '5-7' },
+    { id: 'b', display_name: 'Yusuf', learner_type: 'child', linked_user_id: null, age_band: '11-13' },
+    { id: 'c', display_name: 'Maryam', learner_type: 'child', linked_user_id: null },
+  ], 'user-1');
+  assert.deepEqual(found, [
+    { id: 'me', name: 'Me', type: 'adult', band: '18+' },
+    { id: 'a', name: 'Yusuf', type: 'child', band: '5-7' },
+    { id: 'b', name: 'Yusuf', type: 'child', band: '11-13' },
+    { id: 'c', name: 'Maryam', type: 'child', band: null },
+  ]);
 });

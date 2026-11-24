@@ -2619,6 +2619,32 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The owner's five answers, and the plans page's specifics, 2026-11-23
+
+- *Answered.* A plan asks nothing about withdrawal. Free first, a business
+  registered in parallel, and **not ready for clients yet**. Translate the
+  notifications. Put everything back on the plans page. A policy change is
+  told at the next opening or by a notification, not on an open page. All
+  five are in `DECISIONS.md` in the owner's words.
+- *Built.* The four things back on `/subscriptions`: `subs.started`,
+  `subs.inAdult`, `subs.inChild`, `subs.plusAdds`, `subs.compare`
+  (`tmp-words/u33`), with a child's ages and "Adult" reused from the family
+  page. `lib/subscriptions.ts` carries the start of the period, each
+  learner's age band and whether to say what Plus adds; its test holds each
+  (10).
+- *Found on the way.* A child's ages broke across two lines at "8–" on a
+  narrow screen; they now stay together.
+- *Next, in this order.* (1) Notifications as what happened and its values:
+  a migration to the four functions that write them, the page saying each
+  in the reader's language, old rows left as they are. (2) With it, a
+  notice at the next visit and a notification when a policy has a new
+  version, and `accept_policy()` taking the version the reader was shown.
+  Both touch the hosted test project and are applied the way 353 and 354
+  were.
+- *Counts.* 1854 keys; server-only 1486; unwritten while held 1582; held
+  192 of 1854, 10.36%, shown as 10%. The translation audit stayed at 195 of
+  200.
+
 ### Applying to teach in the reader's language, 2026-11-23
 
 - *The words.* Thirty-five sentences in a new part, `messages/tapply.ts`,

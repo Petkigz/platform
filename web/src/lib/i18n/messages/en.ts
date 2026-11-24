@@ -2350,6 +2350,14 @@ export const en = {
   'subs.failed': 'That could not be done. Nothing was changed.',
   'subs.unsure':
     'We could not confirm that this was done. Look at this page again before trying once more.',
+  // Put back on 2026-11-23 at the owner's word: when the paid period began,
+  // which kind of place each learner is in, and what the other shelf adds.
+  // Somebody enrolling a grandchild should not have to work any of it out.
+  'subs.started': 'Paid for from: {date}',
+  'subs.inAdult': 'In a place for an adult: {name}',
+  'subs.inChild': 'In a place for a child: {name}',
+  'subs.plusAdds': 'Saving lessons in the app, to watch with no connection, comes with: {plus}',
+  'subs.compare': 'Compare the plans',
 
   // The policy register, one document's page and the button that records an
   // agreement (`policy.ts`), for the same twenty-seven languages as the

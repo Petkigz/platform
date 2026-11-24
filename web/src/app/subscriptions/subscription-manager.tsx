@@ -62,7 +62,8 @@ export function SubscriptionManager({
 }: {
   subscriptionId: string;
   /** Who the writer would take now. Empty when nobody, or when that was not read. */
-  addable: { id: string; name: string; type: 'adult' | 'child' }[];
+  /** `note` is a child's ages or the word for an adult, already in the reader's language. */
+  addable: { id: string; name: string; type: 'adult' | 'child'; note: string | null }[];
   cancel: 'order' | 'plan' | null;
   /** The end of the paid period, already said in the reader's language. */
   until: string | null;
@@ -148,9 +149,9 @@ export function SubscriptionManager({
             <option value="">{words.choose}</option>
             {addable.map((learner) => (
               <option key={learner.id} value={learner.id}>
-                {learner.type === 'child'
+                {(learner.type === 'child'
                   ? words.learnerChild.replace('{name}', `\u2068${learner.name}\u2069`)
-                  : learner.name}
+                  : learner.name) + (learner.note !== null ? ` · ${learner.note}` : '')}
               </option>
             ))}
           </select>

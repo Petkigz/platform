@@ -67,6 +67,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'تعذّر تنفيذ ذلك. لم يتغيّر شيء.',
     'subs.unsure':
       'لم نتمكّن من التأكّد من تنفيذ ذلك. راجع هذه الصفحة من جديد قبل المحاولة مرة أخرى.',
+    'subs.started': 'مدفوعة ابتداءً من: {date}',
+    'subs.inAdult': 'في مكان للبالغين: {name}',
+    'subs.inChild': 'في مكان للأطفال: {name}',
+    'subs.plusAdds': 'حفظ الدروس داخل التطبيق لمشاهدتها بلا اتصال متاح مع: {plus}',
+    'subs.compare': 'قارن بين الخطط',
   },
   ur: {
     'subs.title': 'آپ کے پلان',
@@ -103,6 +108,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.whySlot': 'وہ جگہ ابھی ابھی بھر گئی ہے۔ کسی کو شامل نہیں کیا گیا۔',
     'subs.failed': 'یہ نہیں ہو سکا۔ کچھ تبدیل نہیں ہوا۔',
     'subs.unsure': 'ہم تصدیق نہیں کر سکے کہ یہ ہو گیا۔ دوبارہ کوشش سے پہلے یہ صفحہ پھر دیکھیں۔',
+    'subs.started': 'اس تاریخ سے ادا شدہ ہے: {date}',
+    'subs.inAdult': 'بالغوں کے لیے جگہ میں: {name}',
+    'subs.inChild': 'بچوں کے لیے جگہ میں: {name}',
+    'subs.plusAdds':
+      'اسباق ایپ میں محفوظ کرنا، تاکہ کنکشن کے بغیر دیکھے جا سکیں، اس کے ساتھ ملتا ہے: {plus}',
+    'subs.compare': 'پلانوں کا موازنہ کریں',
   },
   fa: {
     'subs.title': 'طرح‌های شما',
@@ -140,6 +151,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'این کار انجام نشد. چیزی تغییر نکرد.',
     'subs.unsure':
       'نتوانستیم مطمئن شویم که این کار انجام شد. پیش از تلاش دوباره، این صفحه را دوباره ببینید.',
+    'subs.started': 'پرداخت‌شده از: {date}',
+    'subs.inAdult': 'در جای ویژهٔ بزرگسالان: {name}',
+    'subs.inChild': 'در جای ویژهٔ کودکان: {name}',
+    'subs.plusAdds': 'ذخیرهٔ درس‌ها در برنامه، برای تماشا بدون اتصال، همراه این است: {plus}',
+    'subs.compare': 'مقایسهٔ طرح‌ها',
   },
   'fa-af': {
     'subs.title': 'پلان‌های شما',
@@ -177,6 +193,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'این کار انجام نشد. چیزی تغییر نکرد.',
     'subs.unsure':
       'نتوانستیم مطمئن شویم که این کار انجام شد. پیش از کوشش دوباره، این صفحه را دوباره ببینید.',
+    'subs.started': 'پرداخت‌شده از: {date}',
+    'subs.inAdult': 'در جای ویژهٔ بزرگسالان: {name}',
+    'subs.inChild': 'در جای ویژهٔ اطفال: {name}',
+    'subs.plusAdds': 'ذخیرهٔ درس‌ها در اپلیکیشن، برای دیدن بدون اتصال، همراه این است: {plus}',
+    'subs.compare': 'مقایسهٔ پلان‌ها',
   },
   tr: {
     'subs.title': 'Planlarınız',
@@ -213,6 +234,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Bu yapılamadı. Hiçbir şey değişmedi.',
     'subs.unsure':
       'Bunun yapıldığını doğrulayamadık. Yeniden denemeden önce bu sayfaya tekrar bakın.',
+    'subs.started': 'Şu tarihten itibaren ödenmiş: {date}',
+    'subs.inAdult': 'Yetişkinler için yerde: {name}',
+    'subs.inChild': 'Çocuklar için yerde: {name}',
+    'subs.plusAdds': 'Dersleri uygulamaya kaydedip bağlantı olmadan izleme şununla gelir: {plus}',
+    'subs.compare': 'Planları karşılaştır',
   },
   id: {
     'subs.title': 'Paket Anda',
@@ -250,6 +276,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Itu tidak dapat dilakukan. Tidak ada yang berubah.',
     'subs.unsure':
       'Kami tidak dapat memastikan bahwa itu sudah dilakukan. Lihat halaman ini lagi sebelum mencoba sekali lagi.',
+    'subs.started': 'Sudah dibayar mulai: {date}',
+    'subs.inAdult': 'Di tempat untuk orang dewasa: {name}',
+    'subs.inChild': 'Di tempat untuk anak: {name}',
+    'subs.plusAdds':
+      'Menyimpan pelajaran di aplikasi untuk ditonton tanpa koneksi tersedia dengan: {plus}',
+    'subs.compare': 'Bandingkan paket',
   },
   ms: {
     'subs.title': 'Pelan anda',
@@ -287,6 +319,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Itu tidak dapat dilakukan. Tiada apa-apa yang berubah.',
     'subs.unsure':
       'Kami tidak dapat mengesahkan bahawa itu sudah dilakukan. Lihat halaman ini semula sebelum mencuba sekali lagi.',
+    'subs.started': 'Sudah dibayar mulai: {date}',
+    'subs.inAdult': 'Di tempat untuk dewasa: {name}',
+    'subs.inChild': 'Di tempat untuk kanak-kanak: {name}',
+    'subs.plusAdds':
+      'Menyimpan pelajaran dalam aplikasi untuk ditonton tanpa sambungan disertakan dengan: {plus}',
+    'subs.compare': 'Bandingkan pelan',
   },
   bn: {
     'subs.title': 'আপনার প্ল্যান',
@@ -324,6 +362,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'এটি করা যায়নি। কিছুই বদলায়নি।',
     'subs.unsure':
       'এটি হয়েছে কি না আমরা নিশ্চিত হতে পারিনি। আবার চেষ্টার আগে এই পাতাটি আবার দেখুন।',
+    'subs.started': 'এই তারিখ থেকে পরিশোধ করা আছে: {date}',
+    'subs.inAdult': 'প্রাপ্তবয়স্কদের জন্য জায়গায়: {name}',
+    'subs.inChild': 'শিশুদের জন্য জায়গায়: {name}',
+    'subs.plusAdds':
+      'পাঠ অ্যাপে সংরক্ষণ করা, যাতে সংযোগ ছাড়াই দেখা যায়, পাওয়া যায় এর সঙ্গে: {plus}',
+    'subs.compare': 'প্ল্যানগুলো তুলনা করুন',
   },
   hi: {
     'subs.title': 'आपकी योजनाएँ',
@@ -361,6 +405,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'यह नहीं हो सका। कुछ नहीं बदला।',
     'subs.unsure':
       'हम पुष्टि नहीं कर सके कि यह हो गया। दोबारा कोशिश करने से पहले यह पृष्ठ फिर देखें।',
+    'subs.started': 'इस तारीख से भुगतान किया हुआ है: {date}',
+    'subs.inAdult': 'वयस्कों के लिए स्थान में: {name}',
+    'subs.inChild': 'बच्चों के लिए स्थान में: {name}',
+    'subs.plusAdds':
+      'पाठ ऐप में सहेजना, ताकि बिना कनेक्शन के देखे जा सकें, इसके साथ मिलता है: {plus}',
+    'subs.compare': 'योजनाओं की तुलना करें',
   },
   fr: {
     'subs.title': 'Vos formules',
@@ -399,6 +449,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Cela n’a pas pu être fait. Rien n’a été modifié.',
     'subs.unsure':
       'Nous n’avons pas pu confirmer que cela a été fait. Regardez de nouveau cette page avant de réessayer.',
+    'subs.started': 'Payée à partir du : {date}',
+    'subs.inAdult': 'Sur une place pour adulte : {name}',
+    'subs.inChild': 'Sur une place pour enfant : {name}',
+    'subs.plusAdds':
+      'Enregistrer des leçons dans l’application, pour les regarder sans connexion, est compris avec : {plus}',
+    'subs.compare': 'Comparer les formules',
   },
   es: {
     'subs.title': 'Sus planes',
@@ -435,6 +491,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'No se pudo hacer. No se cambió nada.',
     'subs.unsure':
       'No pudimos confirmar que se haya hecho. Vuelva a mirar esta página antes de intentarlo otra vez.',
+    'subs.started': 'Pagado desde: {date}',
+    'subs.inAdult': 'En una plaza para adulto: {name}',
+    'subs.inChild': 'En una plaza para niño: {name}',
+    'subs.plusAdds':
+      'Guardar lecciones en la aplicación para verlas sin conexión viene con: {plus}',
+    'subs.compare': 'Comparar los planes',
   },
   pt: {
     'subs.title': 'Os seus planos',
@@ -472,6 +534,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Não foi possível fazer isso. Nada foi alterado.',
     'subs.unsure':
       'Não conseguimos confirmar que isso foi feito. Volte a ver esta página antes de tentar outra vez.',
+    'subs.started': 'Pago desde: {date}',
+    'subs.inAdult': 'Num lugar para adulto: {name}',
+    'subs.inChild': 'Num lugar para criança: {name}',
+    'subs.plusAdds': 'Guardar lições na aplicação, para ver sem ligação, vem com: {plus}',
+    'subs.compare': 'Comparar os planos',
   },
   sw: {
     'subs.title': 'Mipango yako',
@@ -509,6 +576,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Hilo halikuweza kufanyika. Hakuna kilichobadilika.',
     'subs.unsure':
       'Hatukuweza kuthibitisha kwamba hilo limefanyika. Tazama ukurasa huu tena kabla ya kujaribu mara nyingine.',
+    'subs.started': 'Umelipiwa kuanzia: {date}',
+    'subs.inAdult': 'Katika nafasi ya watu wazima: {name}',
+    'subs.inChild': 'Katika nafasi ya watoto: {name}',
+    'subs.plusAdds':
+      'Kuhifadhi masomo ndani ya programu, ili kuyatazama bila mtandao, kunapatikana na: {plus}',
+    'subs.compare': 'Linganisha mipango',
   },
   af: {
     'subs.title': 'Jou planne',
@@ -547,6 +620,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Dit kon nie gedoen word nie. Niks is verander nie.',
     'subs.unsure':
       'Ons kon nie bevestig dat dit gedoen is nie. Kyk weer na hierdie bladsy voordat jy nog ’n keer probeer.',
+    'subs.started': 'Betaal vanaf: {date}',
+    'subs.inAdult': 'In ’n plek vir volwassenes: {name}',
+    'subs.inChild': 'In ’n plek vir kinders: {name}',
+    'subs.plusAdds':
+      'Lesse in die toepassing stoor, om sonder verbinding te kyk, kom saam met: {plus}',
+    'subs.compare': 'Vergelyk die planne',
   },
   'zh-hans': {
     'subs.title': '您的方案',
@@ -578,6 +657,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.whySlot': '该名额刚刚被占用。没有添加任何人。',
     'subs.failed': '无法完成此操作。没有任何更改。',
     'subs.unsure': '我们无法确认此操作是否已完成。再次尝试前，请重新查看本页。',
+    'subs.started': '付费起始时间：{date}',
+    'subs.inAdult': '占用成人名额：{name}',
+    'subs.inChild': '占用儿童名额：{name}',
+    'subs.plusAdds': '将课程保存在应用内、无需联网即可观看的功能包含于：{plus}',
+    'subs.compare': '比较各方案',
   },
   'zh-hant': {
     'subs.title': '您的方案',
@@ -609,6 +693,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.whySlot': '該名額剛剛被占用。沒有加入任何人。',
     'subs.failed': '無法完成此操作。沒有任何變更。',
     'subs.unsure': '我們無法確認此操作是否已完成。再次嘗試前，請重新查看本頁。',
+    'subs.started': '付費起始時間：{date}',
+    'subs.inAdult': '佔用成人名額：{name}',
+    'subs.inChild': '佔用兒童名額：{name}',
+    'subs.plusAdds': '將課程儲存在應用程式內、無需連線即可觀看的功能包含於：{plus}',
+    'subs.compare': '比較各個方案',
   },
   vi: {
     'subs.title': 'Các gói của bạn',
@@ -646,6 +735,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Không thực hiện được. Không có gì thay đổi.',
     'subs.unsure':
       'Chúng tôi chưa xác nhận được việc này đã xong hay chưa. Hãy xem lại trang này trước khi thử lần nữa.',
+    'subs.started': 'Đã thanh toán từ: {date}',
+    'subs.inAdult': 'Ở chỗ cho người lớn: {name}',
+    'subs.inChild': 'Ở chỗ cho trẻ em: {name}',
+    'subs.plusAdds': 'Lưu bài học trong ứng dụng để xem khi không có kết nối đi kèm với: {plus}',
+    'subs.compare': 'So sánh các gói',
   },
   th: {
     'subs.title': 'แพ็กเกจของคุณ',
@@ -682,6 +776,11 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.whySlot': 'ที่นั้นเพิ่งมีคนใช้ไป ไม่มีการเพิ่มใคร',
     'subs.failed': 'ทำรายการนั้นไม่ได้ ไม่มีอะไรเปลี่ยนแปลง',
     'subs.unsure': 'เรายืนยันไม่ได้ว่ารายการนั้นสำเร็จแล้ว โปรดดูหน้านี้อีกครั้งก่อนลองใหม่',
+    'subs.started': 'ชำระเงินไว้ตั้งแต่: {date}',
+    'subs.inAdult': 'อยู่ในที่สำหรับผู้ใหญ่: {name}',
+    'subs.inChild': 'อยู่ในที่สำหรับเด็ก: {name}',
+    'subs.plusAdds': 'การบันทึกบทเรียนไว้ในแอปเพื่อดูโดยไม่ต้องเชื่อมต่อมาพร้อมกับ: {plus}',
+    'subs.compare': 'เปรียบเทียบแพ็กเกจ',
   },
   fil: {
     'subs.title': 'Ang iyong mga plano',
@@ -720,6 +819,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Hindi iyon nagawa. Walang nabago.',
     'subs.unsure':
       'Hindi namin nakumpirma na nagawa iyon. Tingnan muli ang pahinang ito bago sumubok ulit.',
+    'subs.started': 'Bayad mula: {date}',
+    'subs.inAdult': 'Nasa puwesto para sa nasa hustong gulang: {name}',
+    'subs.inChild': 'Nasa puwesto para sa mga bata: {name}',
+    'subs.plusAdds':
+      'Ang pag-save ng mga aralin sa app, para mapanood nang walang koneksyon, ay kasama sa: {plus}',
+    'subs.compare': 'Ihambing ang mga plano',
   },
   uz: {
     'subs.title': 'Tariflaringiz',
@@ -757,6 +862,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Buni bajarib boʻlmadi. Hech narsa oʻzgarmadi.',
     'subs.unsure':
       'Bu bajarilganini tasdiqlay olmadik. Qayta urinishdan oldin bu sahifaga yana qarang.',
+    'subs.started': 'Shu vaqtdan boshlab toʻlangan: {date}',
+    'subs.inAdult': 'Kattalar uchun oʻrinda: {name}',
+    'subs.inChild': 'Bolalar uchun oʻrinda: {name}',
+    'subs.plusAdds':
+      'Darslarni ilovada saqlab, aloqasiz tomosha qilish shu bilan birga beriladi: {plus}',
+    'subs.compare': 'Tariflarni solishtirish',
   },
   kk: {
     'subs.title': 'Тарифтеріңіз',
@@ -794,6 +905,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Мұны орындау мүмкін болмады. Ештеңе өзгерген жоқ.',
     'subs.unsure':
       'Мұның орындалғанын растай алмадық. Қайта әрекет етпес бұрын осы бетті тағы қараңыз.',
+    'subs.started': 'Мына уақыттан бастап төленген: {date}',
+    'subs.inAdult': 'Ересектерге арналған орында: {name}',
+    'subs.inChild': 'Балаларға арналған орында: {name}',
+    'subs.plusAdds':
+      'Сабақтарды қолданбада сақтап, байланыссыз көру мынамен бірге беріледі: {plus}',
+    'subs.compare': 'Тарифтерді салыстыру',
   },
   az: {
     'subs.title': 'Tarifləriniz',
@@ -830,6 +947,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Bunu etmək mümkün olmadı. Heç nə dəyişmədi.',
     'subs.unsure':
       'Bunun edildiyini təsdiqləyə bilmədik. Yenidən cəhd etməzdən əvvəl bu səhifəyə bir də baxın.',
+    'subs.started': 'Bu vaxtdan ödənilib: {date}',
+    'subs.inAdult': 'Böyüklər üçün yerdə: {name}',
+    'subs.inChild': 'Uşaqlar üçün yerdə: {name}',
+    'subs.plusAdds':
+      'Dərsləri tətbiqdə saxlayıb bağlantısız izləmək bununla birlikdə verilir: {plus}',
+    'subs.compare': 'Tarifləri müqayisə et',
   },
   tg: {
     'subs.title': 'Нақшаҳои шумо',
@@ -868,6 +991,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Инро иҷро кардан муяссар нашуд. Чизе тағйир наёфт.',
     'subs.unsure':
       'Мо тасдиқ карда натавонистем, ки ин иҷро шуд. Пеш аз кӯшиши дубора ин саҳифаро боз бинед.',
+    'subs.started': 'Аз ин вақт пардохт шудааст: {date}',
+    'subs.inAdult': 'Дар ҷой барои калонсолон: {name}',
+    'subs.inChild': 'Дар ҷой барои кӯдакон: {name}',
+    'subs.plusAdds':
+      'Нигоҳ доштани дарсҳо дар барнома барои тамошо бе пайвастшавӣ ҳамроҳи ин дода мешавад: {plus}',
+    'subs.compare': 'Муқоисаи нақшаҳо',
   },
   ky: {
     'subs.title': 'Тарифтериңиз',
@@ -905,6 +1034,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Муну аткаруу мүмкүн болгон жок. Эч нерсе өзгөргөн жок.',
     'subs.unsure':
       'Мунун аткарылганын ырастай алган жокпуз. Кайра аракет кылардан мурда бул баракты дагы бир карап көрүңүз.',
+    'subs.started': 'Ушул убактан тартып төлөнгөн: {date}',
+    'subs.inAdult': 'Чоңдор үчүн орунда: {name}',
+    'subs.inChild': 'Балдар үчүн орунда: {name}',
+    'subs.plusAdds':
+      'Сабактарды колдонмодо сактап, байланышсыз көрүү мунун менен кошо берилет: {plus}',
+    'subs.compare': 'Тарифтерди салыштыруу',
   },
   tk: {
     'subs.title': 'Meýilnamalaryňyz',
@@ -942,6 +1077,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'Muny ýerine ýetirip bolmady. Hiç zat üýtgemedi.',
     'subs.unsure':
       'Munuň ýerine ýetirilendigini tassyklap bilmedik. Gaýtadan synanyşmazdan öň bu sahypa ýene bir gezek serediň.',
+    'subs.started': 'Şu wagtdan bäri tölenen: {date}',
+    'subs.inAdult': 'Ulular üçin orunda: {name}',
+    'subs.inChild': 'Çagalar üçin orunda: {name}',
+    'subs.plusAdds':
+      'Sapaklary programmada saklap, baglanyşyksyz görmek şunuň bilen bilelikde berilýär: {plus}',
+    'subs.compare': 'Meýilnamalary deňeşdirmek',
   },
   ta: {
     'subs.title': 'உங்கள் திட்டங்கள்',
@@ -979,6 +1120,12 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'அதைச் செய்ய முடியவில்லை. எதுவும் மாறவில்லை.',
     'subs.unsure':
       'அது செய்யப்பட்டதா என்பதை எங்களால் உறுதிப்படுத்த முடியவில்லை. மீண்டும் முயலும் முன் இந்தப் பக்கத்தை மறுபடியும் பார்க்கவும்.',
+    'subs.started': 'இதிலிருந்து கட்டணம் செலுத்தப்பட்டுள்ளது: {date}',
+    'subs.inAdult': 'பெரியவர்களுக்கான இடத்தில்: {name}',
+    'subs.inChild': 'குழந்தைகளுக்கான இடத்தில்: {name}',
+    'subs.plusAdds':
+      'பாடங்களைச் செயலியில் சேமித்து, இணைப்பின்றிப் பார்த்தல் இதனுடன் கிடைக்கும்: {plus}',
+    'subs.compare': 'திட்டங்களை ஒப்பிடுக',
   },
   ne: {
     'subs.title': 'तपाईंका योजनाहरू',
@@ -1015,5 +1162,10 @@ export const SUBS: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'subs.failed': 'त्यो गर्न सकिएन। केही परिवर्तन भएन।',
     'subs.unsure':
       'त्यो भयो भनेर हामीले पुष्टि गर्न सकेनौँ। फेरि प्रयास गर्नुअघि यो पृष्ठ फेरि हेर्नुहोस्।',
+    'subs.started': 'यस समयदेखि भुक्तानी गरिएको छ: {date}',
+    'subs.inAdult': 'वयस्कका लागि स्थानमा: {name}',
+    'subs.inChild': 'बालबालिकाका लागि स्थानमा: {name}',
+    'subs.plusAdds': 'पाठहरू एपमा सुरक्षित गरेर जडानबिना हेर्ने सुविधा यससँग आउँछ: {plus}',
+    'subs.compare': 'योजनाहरू तुलना गर्नुहोस्',
   },
 };
