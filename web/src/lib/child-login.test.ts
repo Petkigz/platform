@@ -103,8 +103,15 @@ test('child login creation uses the trusted handler and detachment does not clai
   assert.doesNotMatch(route, /CHILD_LOGIN_CREATION_READY = false/);
   assert.match(route, /handleChildLoginCreation/);
   assert.match(route, /A JSON request is required/);
-  assert.match(card, /does not delete the sign-in or revoke/);
   assert.match(card, /!state.canCreate/);
-  assert.match(card, /password set in that earlier attempt remains in effect/);
-  assert.match(card, /We could not confirm this login/);
+  // The card is handed its words (2026-11-25); the sentences are the
+  // catalogue's, and the card says each in the place it used to write it.
+  const words = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url), 'utf8');
+  assert.match(words, /'family\.loginDetachMeans':\s+'This detaches the learner profile but does not delete the sign-in or revoke/);
+  assert.match(words, /'family\.loginRecovered':\s+'[^']*password set in that earlier attempt remains in effect/);
+  assert.match(words, /'family\.loginUnconfirmedMake':\s+'We could not confirm this login\./);
+  assert.match(card, /\{words\.detachMeans\}/);
+  assert.match(card, /made\.recovered \? words\.recovered : words\.handOver/);
+  // A request that could not be made may still have arrived.
+  assert.match(card, /\} catch \{[\s\S]*?setError\(words\.unconfirmed\.make\);/);
 });

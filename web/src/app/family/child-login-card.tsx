@@ -3,8 +3,10 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { childLoginSentence, passwordProblem, usernameProblem } from '@/lib/child-login';
+import { Say } from '@/components/say';
+import { passwordCode, usernameCode } from '@/lib/child-login';
 import type { ChildLoginAge } from '@/lib/child-login-age';
+import { childLoginOutcomeOf, type ChildLoginCode } from '@/lib/child-login-outcome';
 
 export type ChildLoginState = {
   learnerProfileId: string;
@@ -14,6 +16,57 @@ export type ChildLoginState = {
   canManage: boolean;
   canCreate?: boolean;
   canReset?: boolean;
+};
+
+/**
+ * Every sentence the card says, in the reader's language.
+ *
+ * A sentence arrives whole with its gaps in it: `{name}` for the child,
+ * `{username}`, and `{date}` in `signsInSince`. The card fills them with
+ * markup (`Say`), so a name keeps its own direction inside an Arabic
+ * sentence. The address to write to is already in the sentences that have
+ * one.
+ */
+export type ChildLoginWords = {
+  linked: string;
+  usernameIs: string;
+  recovered: string;
+  handOver: string;
+  notMailbox: string;
+  done: string;
+  title: string;
+  signsIn: string;
+  signsInSince: string;
+  canReset: string;
+  noReset: string;
+  ownYes: string;
+  ownNo: string;
+  setNew: string;
+  newPassword: string;
+  resetNote: string;
+  checking: string;
+  change: string;
+  resetDone: string;
+  detach: string;
+  detachMeans: string;
+  why: string;
+  detaching: string;
+  detachYes: string;
+  keep: string;
+  underTwelve: string;
+  notOffered: string;
+  give: string;
+  username: string;
+  password: string;
+  firstPassword: string;
+  confirmTwelve: string;
+  making: string;
+  make: string;
+  cancel: string;
+  /** A refusal, by the name `childLoginOutcomeOf` gives it. */
+  refusals: Record<Exclude<ChildLoginCode, 'unconfirmed'>, string>;
+  /** An answer that is not plainly a refusal, by what was being done. */
+  unconfirmed: Record<'make' | 'reset' | 'detach', string>;
 };
 
 /**
@@ -46,17 +99,33 @@ export type ChildLoginState = {
  * **The password becomes the child's.** The guardian chooses the first one
  * to hand over; the child is asked to choose their own when they sign in,
  * and the card says whether they have.
+ *
+ * **The words are handed in** by the family page, in the reader's language
+ * (`ChildLoginWords`). There is no English of its own in this file.
+ *
+ * **A refusal is said by its name** (`lib/child-login-outcome.ts`). The card
+ * used to print the sentence the route sent, which was English. A login is
+ * made in two places, so an answer that is not plainly a refusal is not
+ * "try again": the sentence for it sends the guardian to look first, and a
+ * request that could not be made at all is said the same way.
+ *
+ * `madeOn` is the day the login was made, already written in the reader's
+ * language by the page; empty when it is not known.
  */
 export function ChildLoginCard({
   learnerId,
   childName,
   state,
   age = null,
+  words,
+  madeOn = '',
 }: {
   learnerId: string;
   childName: string;
   state: ChildLoginState;
   age?: ChildLoginAge | null;
+  words: ChildLoginWords;
+  madeOn?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -77,20 +146,26 @@ export function ChildLoginCard({
 
   if (!state.canManage) return null;
 
+  const sentenceFor = (code: ChildLoginCode, doing: 'make' | 'reset' | 'detach') =>
+    code === 'unconfirmed' ? words.unconfirmed[doing] : words.refusals[code];
+  // What goes into a sentence's gaps. A name and a username are isolated: each
+  // keeps its own direction whatever the sentence around it is written in.
+  const name = <bdi>{childName}</bdi>;
+  const parts = (shownUsername: string | null) => ({
+    name,
+    username: <strong><bdi>{shownUsername ?? ''}</bdi></strong>,
+    date: madeOn,
+  });
+
   async function make() {
     setError(null);
-    const shape = usernameProblem(username);
+    const shape = usernameCode(username) ?? passwordCode(password);
     if (shape) {
-      setError(shape);
-      return;
-    }
-    const weak = passwordProblem(password);
-    if (weak) {
-      setError(weak);
+      setError(words.refusals[shape]);
       return;
     }
     if (gate === 'confirm' && !twelve) {
-      setError('Confirm that this child is twelve or older first.');
+      setError(words.refusals.confirm_twelve);
       return;
     }
 
@@ -102,12 +177,13 @@ export function ChildLoginCard({
         body: JSON.stringify({ learnerId, username, password, twelveOrOlder: twelve }),
       });
       const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; username?: string; recovered?: boolean; message?: string; error?: string; code?: string }
+        | { ok?: boolean; username?: string; recovered?: boolean; code?: unknown }
         | null;
       if (!res.ok || json?.ok !== true || typeof json.username !== 'string' || typeof json.recovered !== 'boolean') {
-        if (json?.code === 'confirm_twelve') setTold('confirm');
-        if (json?.code === 'under_twelve') setTold('under_twelve');
-        setError(json?.message ?? childLoginSentence(json?.code ?? json?.error));
+        const code = childLoginOutcomeOf(res.status, json?.code);
+        if (code === 'confirm_twelve') setTold('confirm');
+        if (code === 'under_twelve') setTold('under_twelve');
+        setError(sentenceFor(code, 'make'));
         return;
       }
       setMade({ username: json.username, recovered: json.recovered });
@@ -115,24 +191,41 @@ export function ChildLoginCard({
       setPassword('');
       startTransition(() => router.refresh());
     } catch {
-      setError('We could not confirm this login. Refresh the family page or contact privacy@ayahspring.com before retrying. If you retry, use the original password.');
+      // The request may have arrived and its answer been lost.
+      setError(words.unconfirmed.make);
     } finally {
       setBusy(false);
     }
   }
 
   async function resetPassword() {
-    setError(null); setResetDone(false);
-    const issue=passwordProblem(password);
-    if (issue) {setError(issue); return;}
+    setError(null);
+    setResetDone(false);
+    const weak = passwordCode(password);
+    if (weak) {
+      setError(words.refusals[weak]);
+      return;
+    }
     setBusy(true);
     try {
-      const res=await fetch('/api/family/child-login',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({learnerId,password})});
-      const json=await res.json().catch(()=>null) as {ok?:unknown;message?:unknown}|null;
-      if (!res.ok || json?.ok !== true) setError(typeof json?.message==='string' ? json.message : 'We could not confirm the change. Try the new password before retrying.');
-      else {setPassword(''); setResetOpen(false); setResetDone(true);}
-    } catch {setError('We could not confirm the change. Try the new password before retrying.');}
-    finally {setBusy(false);}
+      const res = await fetch('/api/family/child-login', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ learnerId, password }),
+      });
+      const json = (await res.json().catch(() => null)) as { ok?: unknown; code?: unknown } | null;
+      if (!res.ok || json?.ok !== true) {
+        setError(sentenceFor(childLoginOutcomeOf(res.status, json?.code), 'reset'));
+        return;
+      }
+      setPassword('');
+      setResetOpen(false);
+      setResetDone(true);
+    } catch {
+      setError(words.unconfirmed.reset);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function remove() {
@@ -145,36 +238,41 @@ export function ChildLoginCard({
         body: JSON.stringify({ learnerId, reason }),
       });
       const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; code?: string; message?: string; removed?: { removed?: boolean } }
+        | { ok?: boolean; code?: unknown; removed?: { removed?: boolean } }
         | null;
       if (!res.ok || json?.ok !== true || json.removed?.removed !== true) {
-        setError(json?.message ?? (json?.code ? childLoginSentence(json.code) :
-          'We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.'));
+        setError(sentenceFor(childLoginOutcomeOf(res.status, json?.code), 'detach'));
         return;
       }
       setConfirmRemove(false);
       setReason('');
       startTransition(() => router.refresh());
     } catch {
-      setError('We could not confirm detachment. Refresh the page or contact privacy@ayahspring.com before trying again.');
+      setError(words.unconfirmed.detach);
     } finally {
       setBusy(false);
     }
   }
 
+  const problem = error && (
+    <p className="muted" role="alert" style={{ color: 'var(--danger, #b3261e)' }}>
+      {error}
+    </p>
+  );
+
   if (made) {
     return (
       <div className="card" style={{ marginTop: '0.75rem' }}>
         <div className="notice">
-          <strong>{childName}&rsquo;s learner profile is linked.</strong> The username is{' '}
-          <strong>{made.username}</strong>. {made.recovered
-            ? 'This was recovered from an earlier attempt. The password set in that earlier attempt remains in effect; the password entered on this retry did not replace it.'
-            : 'Give them the password you chose. They are asked to choose their own, which you will not see, the first time they sign in.'}
+          <strong>
+            <Say text={words.linked} parts={parts(made.username)} />
+          </strong>{' '}
+          <Say text={words.usernameIs} parts={parts(made.username)} />{' '}
+          {made.recovered ? words.recovered : words.handOver}
         </div>
-        <p className="muted">The username is a sign-in identifier, not an email mailbox.
-          Contact privacy@ayahspring.com if you need help with the password.</p>
+        <p className="muted">{words.notMailbox}</p>
         <button type="button" className="btn ghost" onClick={() => { setMade(null); startTransition(() => router.refresh()); }}>
-          Done
+          {words.done}
         </button>
       </div>
     );
@@ -184,54 +282,46 @@ export function ChildLoginCard({
     return (
       <div className="card" style={{ marginTop: '0.75rem' }}>
         <div className="outline-h">
-          <strong style={{ fontSize: '0.95rem' }}>Their own login</strong>
-          <span className="badge">{state.username}</span>
+          <strong style={{ fontSize: '0.95rem' }}>{words.title}</strong>
+          <span className="badge"><bdi>{state.username}</bdi></span>
         </div>
         <p className="muted" style={{ fontSize: '0.85rem', marginTop: 0 }}>
-          {childName} signs in with the username <strong>{state.username}</strong>
-          {state.createdAt
-            ? ` — made on ${new Date(state.createdAt).toLocaleDateString(undefined, {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}.`
-            : '.'}{' '}
-          {state.canReset ? 'A verified guardian can request a new password for a trusted child login. Existing sessions may remain active.' : 'Password recovery is not available here right now.'}
+          <Say text={madeOn ? words.signsInSince : words.signsIn} parts={parts(state.username)} />{' '}
+          {state.canReset ? words.canReset : words.noReset}
         </p>
 
         {age && age.ownPassword !== null && (
           <p className="muted" style={{ fontSize: '0.85rem', marginTop: 0 }} data-child-own-password={age.ownPassword ? 'yes' : 'no'}>
-            {age.ownPassword
-              ? `${childName} has chosen their own password. You cannot see it.`
-              : `${childName} is still using a password a guardian set. They are asked to choose their own when they next sign in.`}
+            <Say text={age.ownPassword ? words.ownYes : words.ownNo} parts={parts(state.username)} />
           </p>
         )}
 
         {state.canReset && (!resetOpen ? (
-          <button type="button" className="btn ghost" disabled={busy} onClick={() => {setResetOpen(true);setResetDone(false);setError(null);}}>Set a new password</button>
-        ) : <div>
-          <label htmlFor={`reset-password-${learnerId}`}>New password</label>
-          <input id={`reset-password-${learnerId}`} type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e)=>setPassword(e.target.value)} />
-          <p className="muted">Use at least eight characters. Shared or older sign-ins may require review. Existing sessions may remain active.</p>
-          <button type="button" className="btn" disabled={busy} onClick={() => void resetPassword()}>{busy ? 'Checking…' : 'Change password'}</button>{' '}
-          <button type="button" className="btn ghost" disabled={busy} onClick={() => {setResetOpen(false);setPassword('');setError(null);}}>Cancel</button>
-        </div>)}
-        {resetDone && <p role="status">The password change was recorded. Existing sessions may remain active.</p>}
-        {!confirmRemove ? (
-          <button type="button" className="btn ghost" onClick={() => setConfirmRemove(true)}>
-            Detach this learner
+          <button type="button" className="btn ghost" disabled={busy} onClick={() => { setResetOpen(true); setResetDone(false); setError(null); }}>
+            {words.setNew}
           </button>
         ) : (
           <div>
-            <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-              This detaches the learner profile but does not delete the sign-in or revoke
-              provider sessions. A trusted identity may also be blocked on database paths that
-              use the platform identity check; other access can remain. Contact privacy@ayahspring.com to arrange separate sign-in
-              removal. Lessons, progress and certificates remain with the learner.
-            </p>
-            <label htmlFor={`reason-${learnerId}`}>
-              Why (optional — kept for the record)
-            </label>
+            <label htmlFor={`reset-password-${learnerId}`}>{words.newPassword}</label>
+            <input id={`reset-password-${learnerId}`} type="password" autoComplete="new-password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <p className="muted">{words.resetNote}</p>
+            <button type="button" className="btn" disabled={busy} onClick={() => void resetPassword()}>
+              {busy ? words.checking : words.change}
+            </button>{' '}
+            <button type="button" className="btn ghost" disabled={busy} onClick={() => { setResetOpen(false); setPassword(''); setError(null); }}>
+              {words.cancel}
+            </button>
+          </div>
+        ))}
+        {resetDone && <p role="status">{words.resetDone}</p>}
+        {!confirmRemove ? (
+          <button type="button" className="btn ghost" onClick={() => setConfirmRemove(true)}>
+            {words.detach}
+          </button>
+        ) : (
+          <div>
+            <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>{words.detachMeans}</p>
+            <label htmlFor={`reason-${learnerId}`}>{words.why}</label>
             <input
               id={`reason-${learnerId}`}
               value={reason}
@@ -240,7 +330,7 @@ export function ChildLoginCard({
             />
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
               <button type="button" className="btn" onClick={remove} disabled={busy}>
-                {busy ? 'Detaching…' : 'Detach the learner'}
+                {busy ? words.detaching : words.detachYes}
               </button>
               <button
                 type="button"
@@ -248,12 +338,12 @@ export function ChildLoginCard({
                 onClick={() => setConfirmRemove(false)}
                 disabled={busy}
               >
-                Keep it
+                {words.keep}
               </button>
             </div>
           </div>
         )}
-        {error && <p className="muted" style={{ color: 'var(--danger, #b3261e)' }}>{error}</p>}
+        {problem}
       </div>
     );
   }
@@ -261,44 +351,37 @@ export function ChildLoginCard({
   if (gate === 'under_twelve') {
     return (
       <p className="muted" data-child-login-age="under_twelve">
-        {childName} learns through your sign-in. A child can have a login of their own from the age of twelve.
+        <Say text={words.underTwelve} parts={parts(null)} />
       </p>
     );
   }
 
   if (!state.canCreate) {
-    return <p className="muted">A new child login is not available for this profile. It may be switched off or an earlier login may need review. Contact privacy@ayahspring.com for help.</p>;
+    return <p className="muted">{words.notOffered}</p>;
   }
-
-
 
   return (
     <div style={{ marginTop: '0.75rem' }}>
       {!open ? (
         <button type="button" className="btn ghost" onClick={() => setOpen(true)}>
-          Give {childName} their own login
+          <Say text={words.give} parts={parts(null)} />
         </button>
       ) : (
         <div className="card">
-          <label htmlFor={`username-${learnerId}`}>
-            Username
-          </label>
+          <label htmlFor={`username-${learnerId}`}>{words.username}</label>
           <input
             id={`username-${learnerId}`}
-            
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
+            dir="ltr"
             placeholder="amina.k"
           />
-          <label htmlFor={`password-${learnerId}`}>
-            Password
-          </label>
+          <label htmlFor={`password-${learnerId}`}>{words.password}</label>
           <input
             id={`password-${learnerId}`}
-            
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -306,9 +389,7 @@ export function ChildLoginCard({
             minLength={8}
           />
           <p className="muted" style={{ fontSize: '0.85rem' }}>
-            This first password is yours to hand to {childName}. It is sent straight to the
-            sign-in service and nobody — including us — can read it back afterwards. When
-            they sign in they are asked to choose their own.
+            <Say text={words.firstPassword} parts={parts(null)} />
           </p>
           {gate === 'confirm' && (
             <label htmlFor={`twelve-${learnerId}`} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }} data-child-login-age="confirm">
@@ -317,17 +398,17 @@ export function ChildLoginCard({
                 type="checkbox"
                 checked={twelve}
                 onChange={(e) => setTwelve(e.target.checked)}
-                style={{ inlineSize: 'auto', marginBlockStart: '0.25rem' }}
+                // Not squeezed by a long sentence beside it: in Tamil it shrank to a dot.
+                style={{ inlineSize: 'auto', flex: 'none', marginBlockStart: '0.25rem' }}
               />
               <span>
-                I confirm that {childName} is twelve or older. We do not ask for a date of birth;
-                your answer is recorded.
+                <Say text={words.confirmTwelve} parts={parts(null)} />
               </span>
             </label>
           )}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button type="button" className="btn" onClick={make} disabled={busy}>
-              {busy ? 'Making the login…' : `Make ${childName}'s login`}
+              {busy ? words.making : <Say text={words.make} parts={parts(null)} />}
             </button>
             <button
               type="button"
@@ -338,10 +419,10 @@ export function ChildLoginCard({
               }}
               disabled={busy}
             >
-              Cancel
+              {words.cancel}
             </button>
           </div>
-          {error && <p className="muted" style={{ color: 'var(--danger, #b3261e)' }}>{error}</p>}
+          {problem}
         </div>
       )}
     </div>

@@ -60,6 +60,7 @@ import { INST } from './i18n/messages/inst.ts';
 import { TAPPLY } from './i18n/messages/tapply.ts';
 import { BOARD } from './i18n/messages/board.ts';
 import { TRANSLATE } from './i18n/messages/translate.ts';
+import { CHILD_LOGIN } from './i18n/messages/child-login.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -473,7 +474,9 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // (Seventy more on 2026-11-24, last: thirteen for the Translate button,
   // two for a child's first password and fifty-five for the staff page for
   // teachers, three parts of their own.)
-  assert.equal(unwrittenKeys.length, 1755);
+  // (A hundred and fifty-one for the family page since 2026-11-25: fifty-one
+  // for a child's own login, the card that makes, resets and detaches it.)
+  assert.equal(unwrittenKeys.length, 1806);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('board.')).length, 52);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('translate.')).length, 13);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('kid.')).length, 2);
@@ -497,7 +500,8 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('export.')).length, 58);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('close.')).length, 43);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('buy.')).length, 81);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 100);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.')).length, 151);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('family.login')).length, 51);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('account.')).length, 98);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('player.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('broke.')).length, 10);
@@ -540,6 +544,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(TAPPLY).sort(), written);
   assert.deepEqual(Object.keys(BOARD).sort(), written);
   assert.deepEqual(Object.keys(TRANSLATE).sort(), written);
+  assert.deepEqual(Object.keys(CHILD_LOGIN).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -565,6 +570,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
       ...TAPPLY[code],
       ...BOARD[code],
       ...TRANSLATE[code],
+      ...CHILD_LOGIN[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -602,7 +608,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 2027 sentences, which is 9%. Nothing holds a floor under
+  // 192 of 2078 sentences, which is 9%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -651,11 +657,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // bought (10.10%, still 10%), then four for an answer to an application
   // to teach (10.08%, still 10%), then fifty-two for the two discussion
   // boards (9.81%, still 10%), then seventy for the Translate button, a
-  // child's first password and the staff page for teachers (9.47%, now 9%).
+  // child's first password and the staff page for teachers (9.47%, now 9%),
+  // then fifty-one for a child's own login on the family page (9.24%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 2027);
+    assert.equal(coverageOf(code).total, 2078);
     assert.equal(coverageOf(code).percent, 9, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
@@ -1596,11 +1603,45 @@ test('the family pages are in the reader’s language, and their forms say a ref
   assert.match(page, /<span className="badge neutral">\{t\('family\.archived'\)\}<\/span>/u);
   assert.doesNotMatch(page, /\{child\.status\}/u);
 
-  // What is still English is marked as English: the streak strip and the
-  // child's sign-in card by the page, the declaration by itself.
+  // What is still English is marked as English: the streak strip by the
+  // page, the declaration by itself.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
-  assert.match(page, /<div \{\.\.\.english\}>\s*<ChildLoginCard/u);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
+
+  // A child's own login is the fourth form (2026-11-25). It was the one card
+  // on this page still in English, wrapped as English by the page.
+  const login = read('../app/family/child-login-card.tsx');
+  assert.doesNotMatch(page, /<div \{\.\.\.english\}>\s*<ChildLoginCard/u);
+  assert.match(page, /<ChildLoginCard[\s\S]*?words=\{loginWords\}\s+madeOn=\{formatDay\(shown\.code, login\.createdAt\)\}/u);
+  assert.match(login, /^'use client';/u);
+  assert.doesNotMatch(login, /useT\(|@\/lib\/i18n/u);
+  assert.match(login, /words: ChildLoginWords;/u);
+  // No English of its own: nothing between tags, and no sentence in quotes.
+  const inline = [...login.matchAll(/>\s*([A-Z][a-z]+(?: [a-z’']+){1,}[^<{]*)</gu)].map((m) => m[1]);
+  assert.deepEqual(inline, [], `the login card still writes English inline: ${inline.join(' | ')}`);
+  const quoted = [...login.slice(login.indexOf('export function ChildLoginCard')).matchAll(/'([A-Z][a-z]+(?: [a-z]+){2,}[^']*)'/gu)].map((m) => m[1]);
+  assert.deepEqual(quoted, [], `the login card still holds an English sentence: ${quoted.join(' | ')}`);
+  // A refusal reaches it as a name, three times, and the server's sentence is
+  // never shown. The helpers that return English are not asked.
+  assert.equal((login.match(/setError\(sentenceFor\(childLoginOutcomeOf\(res\.status, json\?\.code\), '(?:make|reset|detach)'\)\);|const code = childLoginOutcomeOf\(res\.status, json\?\.code\);/gu) ?? []).length, 3);
+  assert.doesNotMatch(login, /\.message\b/u);
+  assert.doesNotMatch(login, /childLoginSentence|usernameProblem|passwordProblem/u);
+  // An answer that is lost is not a failure: each of the three says to look first.
+  for (const doing of ['make', 'reset', 'detach']) {
+    assert.match(login, new RegExp(`\\} catch \\{[\\s\\S]*?setError\\(words\\.unconfirmed\\.${doing}\\);`, 'u'), doing);
+  }
+  assert.match(login, /role="alert"/u);
+  // The day is written by the page in the reader's language, and a name and
+  // a username keep their own direction inside the sentence.
+  assert.doesNotMatch(login, /toLocaleDateString/u);
+  assert.match(login, /const name = <bdi>\{childName\}<\/bdi>;/u);
+  assert.match(login, /username: <strong><bdi>\{shownUsername \?\? ''\}<\/bdi><\/strong>,/u);
+  // Every name the route can send has a sentence, and each is its own.
+  const refusals = page.slice(page.indexOf('    refusals: {'), page.indexOf('    unconfirmed: {'));
+  const named = [...refusals.matchAll(/^      ([a-z_]+): t\('([a-zA-Z.]+)'/gmu)].map((m) => [m[1], m[2]] as const);
+  assert.equal(named.length, 17);
+  assert.equal(new Set(named.map(([, key]) => en[key as keyof typeof en])).size, 17);
+  assert.match(page, /const email = \{ email: `\\u2066\$\{PRIVACY_CONTACT\}\\u2069` \};/u);
   assert.match(declaration, /const ENGLISH = \{ lang: 'en', dir: 'ltr' \} as const;/u);
   assert.equal(declaration.match(/\{\.\.\.ENGLISH\}/gu)?.length, 2);
   // Its date is said with a zone, the same on the server and in the browser.

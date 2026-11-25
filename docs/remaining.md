@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 9% there (192 of 2027 sentences; it was 71% of 272, then
+  the nineteen reads 9% there (192 of 2078 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -555,9 +555,10 @@ still unreviewed and still saying so.
   notifications, of 1869 with five for telling of a changed document, of
   1871 with two for a plan given back, of 1901 with thirty for a school's
   code, of 1905 with four for an answer to an application to teach, 10% of
-  1957 with fifty-two for the two discussion boards, then this with seventy
+  1957 with fifty-two for the two discussion boards, of 2027 with seventy
   for the Translate button, a child's first password and the staff page for
-  teachers),
+  teachers, then this with fifty-one for a child's own login on the family
+  page),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -1200,9 +1201,20 @@ written: not a held draft, nothing.
   that was revoked, and the counts in Arabic, Urdu and others, which are
   written "label: number" so that one sentence serves every plural form.
   **Still English on them for every reader, and marked:** the declaration
-  card (see `DECISIONS.md` for why it is not simply translated), a child's
-  sign-in card and the streak strip; all three are behind switches that are
-  off. A course with no title reads "Untitled course", which is English.
+  card (see `DECISIONS.md` for why it is not simply translated) and the
+  streak strip; both are behind switches that are off. A course with no
+  title reads "Untitled course", which is English.
+  **A child's own login is in the twenty-seven languages since 2026-11-25**
+  (`child-login-card.tsx`, fifty-one sentences, `family.login*`, read by no
+  speaker): making a login, setting a new password, detaching it, and
+  seventeen refusals said by name; the card no longer prints a sentence the
+  server wrote. Behind `family.child_login`, off. The sentence a guardian
+  declares a child's age with (`family.loginConfirmTwelve`) should be read
+  by a speaker of each language before that switch is turned on. Checked
+  over HTTP in English, Arabic and Tamil and in a browser at 390 px in
+  Arabic and Tamil up to the route's "no service key" answer; **not
+  checked:** a login made, reset or detached, because no script has the
+  service key.
   **Still English, every one of them:** `/family/guardians`, `/handover`,
   `/progress` and a certificate's page, each linked from here.
   Checked by `scripts/family-route-smoke.mjs` on a synthetic backend: HTTP in
@@ -1216,8 +1228,7 @@ written: not a held draft, nothing.
   good write; a lost connection on the add-a-child form. **Not checked:** a
   real database or row-level security (the stand-in enforces nothing; that a
   billing-only member sees no children is the database's rule and was not
-  exercised here); the streak strip and the child's sign-in card, which the
-  stand-in never returns; a family with more than one household on the
+  exercised here); the streak strip, which the stand-in never returns; a family with more than one household on the
   account; the declaration button pressed; the other twenty-four languages
   in a browser; and whether the database really raises the sentences the
   codes are chosen from in every case — that is read from the migrations by

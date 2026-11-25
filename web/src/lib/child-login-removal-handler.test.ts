@@ -49,5 +49,8 @@ test('route and card require a JSON request and an explicit detachment receipt',
   assert.match(deletion,/application\\\/json/);
   assert.match(deletion,/handleChildLoginRemoval/);
   assert.match(card,/json\.removed\?\.removed !== true/);
-  assert.match(card,/does not delete the sign-in or revoke/);
+  // The card is handed its words; the sentence is the catalogue's.
+  const words=readFileSync(new URL('./i18n/messages/en.ts',import.meta.url),'utf8');
+  assert.match(card,/\{words\.detachMeans\}/);
+  assert.match(words,/'family\.loginDetachMeans':\s+'This detaches the learner profile but does not delete the sign-in or revoke/);
 });

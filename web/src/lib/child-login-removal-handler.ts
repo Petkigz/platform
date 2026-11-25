@@ -11,17 +11,17 @@ export async function handleChildLoginRemoval(
   body: unknown,
 ): Promise<RemovalResult> {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return {status:400,body:{ok:false,message:'The form could not be read. Please try again.'}};
+    return {status:400,body:{ok:false,code:'malformed',message:'The form could not be read. Please try again.'}};
   }
   const raw=body as Record<string,unknown>;
   if (typeof raw.learnerId !== 'string' || !UUID.test(raw.learnerId)) {
-    return {status:400,body:{ok:false,message:'That is not a child we can find.'}};
+    return {status:400,body:{ok:false,code:'no_child',message:'That is not a child we can find.'}};
   }
   if (raw.reason !== undefined && raw.reason !== null && typeof raw.reason !== 'string') {
-    return {status:400,body:{ok:false,message:'The reason must be text.'}};
+    return {status:400,body:{ok:false,code:'malformed',message:'The reason must be text.'}};
   }
   const reason=typeof raw.reason==='string' ? raw.reason.trim() : '';
-  if (reason.length>200) return {status:400,body:{ok:false,message:'The reason can be at most 200 characters.'}};
+  if (reason.length>200) return {status:400,body:{ok:false,code:'malformed',message:'The reason can be at most 200 characters.'}};
   try {
     const result=await remove(raw.learnerId,reason || null);
     if (result.error) {

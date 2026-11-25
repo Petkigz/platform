@@ -31,12 +31,14 @@ import { AgeDeclarationCard } from './age-declaration';
 import { fetchDeclaration, type AdultDeclaration } from '@/lib/adult-declaration';
 import { CreateFamily } from './create-family';
 import { parseChildLoginAge } from '@/lib/child-login-age';
-import { ChildLoginCard, type ChildLoginState } from './child-login-card';
+import { ChildLoginCard, type ChildLoginState, type ChildLoginWords } from './child-login-card';
+import { PRIVACY_CONTACT } from '@/lib/erase-outcome';
 import { SaidList } from './said-list';
 import {
   LOCALE_COOKIE,
   chooseLocale,
   countLabel,
+  formatDay,
   formatNumber,
   languageShownFor,
   translator,
@@ -81,11 +83,15 @@ const isolate = (value: string) => `\u2068${value}\u2069`;
  * browser and are handed their words, so the page's sentences are left out of
  * the script every page carries.
  *
+ * **A child's own login** (`child-login-card.tsx`) is the fourth form and is
+ * handed its words the same way, fifty-one sentences of them, since
+ * 2026-11-25. A refusal reaches it as a name and it never prints a sentence
+ * the server wrote.
+ *
  * **What is still English on a translated page**, each marked as English so it
  * is laid out and read aloud as English: the declaration card (it marks
- * itself; see `age-declaration.tsx` for why it is not simply translated), a
- * child's sign-in card, and the streak strip. All three are behind switches
- * that are off.
+ * itself; see `age-declaration.tsx` for why it is not simply translated) and
+ * the streak strip. Both are behind switches that are off.
  */
 export default async function FamilyPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -322,6 +328,72 @@ async function FamilyBlock({
     unconfirmed: t('family.childUnconfirmed'),
   };
 
+  // A child's own login. The address is isolated left to right, so it reads
+  // the same inside an Arabic sentence; the child's name, the username and
+  // the day are put in by the card, which draws them as markup.
+  const email = { email: `\u2066${PRIVACY_CONTACT}\u2069` };
+  const loginWords: ChildLoginWords = {
+    linked: t('family.loginLinked'),
+    usernameIs: t('family.loginUsernameIs'),
+    recovered: t('family.loginRecovered'),
+    handOver: t('family.loginHandOver'),
+    notMailbox: t('family.loginNotMailbox', email),
+    done: t('family.loginDone'),
+    title: t('family.loginTitle'),
+    signsIn: t('family.loginSignsIn'),
+    signsInSince: t('family.loginSignsInSince'),
+    canReset: t('family.loginCanReset'),
+    noReset: t('family.loginNoReset'),
+    ownYes: t('family.loginOwnYes'),
+    ownNo: t('family.loginOwnNo'),
+    setNew: t('family.loginSetNew'),
+    newPassword: t('family.loginNewPassword'),
+    resetNote: t('family.loginResetNote'),
+    checking: t('family.loginChecking'),
+    change: t('family.loginChange'),
+    resetDone: t('family.loginResetDone'),
+    detach: t('family.loginDetach'),
+    detachMeans: t('family.loginDetachMeans', email),
+    why: t('family.loginWhy'),
+    detaching: t('family.loginDetaching'),
+    detachYes: t('family.loginDetachYes'),
+    keep: t('family.loginKeep'),
+    underTwelve: t('family.loginUnderTwelve'),
+    notOffered: t('family.loginNotOffered', email),
+    give: t('family.loginGive'),
+    username: t('family.loginUsername'),
+    password: t('auth.password'),
+    firstPassword: t('family.loginFirstPassword'),
+    confirmTwelve: t('family.loginConfirmTwelve'),
+    making: t('family.loginMaking'),
+    make: t('family.loginMake'),
+    cancel: t('action.cancel'),
+    refusals: {
+      signed_out: t('family.signedOut'),
+      malformed: t('family.loginMalformed'),
+      no_child: t('family.loginNoChild'),
+      username_missing: t('family.loginUsernameMissing'),
+      username_short: t('family.loginUsernameShort'),
+      username_long: t('family.loginUsernameLong'),
+      username_start: t('family.loginUsernameStart'),
+      username_chars: t('family.loginUsernameChars'),
+      password_missing: t('family.loginPasswordMissing'),
+      password_short: t('family.loginPasswordShort'),
+      under_twelve: t('family.loginTooYoung'),
+      confirm_twelve: t('family.loginTickFirst'),
+      unavailable: t('family.loginUnavailable'),
+      reset_unavailable: t('family.loginNoReset'),
+      guardian_required: t('family.loginGuardianRequired', email),
+      not_your_child: t('family.loginNotYourChild'),
+      no_login: t('family.loginNoLogin'),
+    },
+    unconfirmed: {
+      make: t('family.loginUnconfirmedMake', email),
+      reset: t('family.loginUnconfirmedReset'),
+      detach: t('family.loginUnconfirmedDetach', email),
+    },
+  };
+
   const [alsoBefore = '', alsoAfter = ''] = t('family.alsoHere').split('{names}');
   const [adultsBefore = '', adultsAfter = ''] = t('family.adultsLine').split('{list}');
   const [openBefore = '', openAfter = ''] = t('family.openLearning').split('{name}');
@@ -426,14 +498,14 @@ async function FamilyBlock({
               </p>
 
               {login && (
-                <div {...english}>
-                  <ChildLoginCard
-                    learnerId={child.id}
-                    childName={child.displayName}
-                    state={login}
-                    age={loginAge}
-                  />
-                </div>
+                <ChildLoginCard
+                  learnerId={child.id}
+                  childName={child.displayName}
+                  state={login}
+                  age={loginAge}
+                  words={loginWords}
+                  madeOn={formatDay(shown.code, login.createdAt)}
+                />
               )}
             </div>
           ))}

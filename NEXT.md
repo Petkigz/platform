@@ -2619,6 +2619,69 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### A child's own login on the family page, in twenty-seven languages, 2026-11-25
+
+- *Built.* The card on a child's card on `/family` that makes a login for
+  the child, sets a new password and detaches the login
+  (`app/family/child-login-card.tsx`) is handed its words by the page and
+  has no English of its own. It was the one card on that page still in
+  English, wrapped and marked as English. Fifty-one new sentences,
+  `family.login*`, in English and in the twenty-seven languages with
+  nothing held (`messages/child-login.ts`); the other languages read the
+  card in English with the rest of the page, as before. The card also uses
+  three sentences that existed: Cancel, Password, and "You are signed out".
+- *A refusal by name.* Every refusal of `/api/family/child-login` now
+  carries a `code` beside its English sentence, and the card says the code
+  in the reader's language (`lib/child-login-outcome.ts`): seventeen names.
+  The card never prints a sentence the server wrote. An answer with no
+  name, a name nobody knows, or a five hundred is "we could not confirm",
+  said three ways by what was being done, because a login is made in two
+  places and a request can finish after its answer is lost. The two "no
+  service key" answers are 503 and are certain: nothing was tried.
+- *Smaller things.* The day a login was made is written by the page as the
+  reader's language writes a day (it was the browser's own language). The
+  child's name and the username are isolated inside a sentence so each
+  keeps its own direction; the address to write to is isolated left to
+  right. The username box is left to right in every language. An error is
+  announced as one (`role="alert"`). The browser's own checks of a
+  username and a password are said by name too (`usernameCode`,
+  `passwordCode`).
+- *Wording that changed in English.* "Make Aisha's login" has a
+  typographic apostrophe. The unticked box says "Nothing was made." after
+  its sentence. The two sentences about a username's letters say "a to z",
+  which is the rule the database holds; in a language written in another
+  script, or with letters beyond those twenty-six, they say English or
+  Latin letters.
+- *Sentences a speaker should read first.* `family.loginConfirmTwelve` is
+  what a guardian declares: the child is twelve or older, no date of birth
+  is asked, the answer is recorded. `family.loginDetachMeans` says what
+  detaching does not do. The three `family.loginUnconfirmed*` say that we
+  do not know, not that it failed. **No speaker has read any of the
+  fifty-one in any language.**
+- *Checked.* `scripts/family-route-smoke.mjs`, extended: over HTTP the
+  card under twelve and with a login that exists, in English, Arabic and
+  Tamil, with no English sentence left beside the translated one; in a
+  browser at 390 px in Arabic and Tamil the form, a username that is too
+  short, the unticked box, and the route's 503 (this server has no service
+  key) each said in the reader's language. Type check, lint, web tests,
+  `check:repo`, build, bundle check.
+- *Not shown.* A login really made, a password really reset, a login
+  really detached: no smoke has the service key, so the route's other
+  refusals reach the card only in unit tests of the name, and the "made"
+  notice and the reset and detach forms were drawn in no browser. The
+  other twenty-five languages in a browser. Whether hosted Auth and the
+  database send the names this card expects was not tried against the
+  hosted project.
+- *Not built.* The declaration card (`age-declaration.tsx`) stays English
+  on purpose. `/family/guardians`, `/handover`, `/progress` and a
+  certificate's page stay English. The database's other refusals of a
+  login (a username taken, a login that exists, creation paused) are still
+  answered as "we could not confirm": the route hides them, as it did.
+- *Counts.* 2078 keys; server-only 1710; unwritten while held 1806
+  (`family.` 151, of which `family.login` 51); held 192 of 2078, 9.24%,
+  shown as 9%. 2690 web tests. Lint 1026 files. The client-bundle check
+  looks for 1726 sentences in 123 scripts. No migration: 362, as before.
+
 ### A Translate button, a child's login from twelve, a staff page in every language, 2026-11-24
 
 - *Built.* Migration 361, `20261281154000_translate_button.sql`: the
@@ -2685,7 +2748,8 @@ claim external integrations work without credentials or provider callbacks.
 - *Not built.* A privacy notice that names Google, which has to exist
   before the switch is turned on and is the owner's to word. Any stored
   translation. The other staff pages in other languages. The guardian's
-  card that makes a login, in other languages. A way to change the two
+  card that makes a login, in other languages (done 2026-11-25; see the
+  entry above). A way to change the two
   limits from the dashboard (they are changed where the other numbers are).
   Board posts in the data export, and telling staff a report arrived: both
   asked of the owner and not yet answered.

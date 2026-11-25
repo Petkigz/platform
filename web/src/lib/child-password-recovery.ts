@@ -1,4 +1,4 @@
-import { passwordProblem } from './child-login.ts';
+import { passwordCode, passwordProblem, type PasswordCode } from './child-login.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const uncertain = 'We could not confirm the password change. Try signing in with the new password before trying again. A request may still complete for a few minutes.';
@@ -7,12 +7,13 @@ export type RecoveryPorts = {
   change: (identityId: string, resetId: string, password: string) => Promise<void>;
   status: (resetId: string) => Promise<unknown>;
 };
-export async function recoverChildPassword(ports: RecoveryPorts, input: unknown): Promise<{ok: true} | {ok: false; message: string; status: 400 | 409}> {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) return {ok:false,status:400,message:'Choose a child and a new password.'};
+export async function recoverChildPassword(ports: RecoveryPorts, input: unknown): Promise<{ok: true} | {ok: false; message: string; status: 400 | 409; code?: 'malformed' | PasswordCode}> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {ok:false,status:400,code:'malformed',message:'Choose a child and a new password.'};
   const body=input as Record<string,unknown>;
-  if (typeof body.learnerId !== 'string' || !UUID.test(body.learnerId) || typeof body.password !== 'string') return {ok:false,status:400,message:'Choose a child and a new password.'};
+  if (typeof body.learnerId !== 'string' || !UUID.test(body.learnerId) || typeof body.password !== 'string') return {ok:false,status:400,code:'malformed',message:'Choose a child and a new password.'};
   const issue=passwordProblem(body.password);
-  if (issue) return {ok:false,status:400,message:issue};
+  const weak=passwordCode(body.password);
+  if (issue && weak) return {ok:false,status:400,code:weak,message:issue};
   let resetId:string; let userId:string;
   try {
     const value=await ports.prepare(body.learnerId);

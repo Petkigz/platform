@@ -213,6 +213,11 @@ for (const [file, key] of [
   ['translate.ts', 'translate.offered'],
   ['translate.ts', 'kid.chooseLede'],
   ['translate.ts', 'tq.approveMeans'],
+  // A child's own login is a client component handed its words by the family
+  // page. What a guardian declares about a child's age, and what detaching
+  // does not do, must be in that page and in no script.
+  ['child-login.ts', 'family.loginConfirmTwelve'],
+  ['child-login.ts', 'family.loginDetachMeans'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

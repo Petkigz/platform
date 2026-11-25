@@ -29,23 +29,50 @@ export function normaliseUsername(input: string): string {
  * because a browser is not a rule.
  */
 export function usernameProblem(input: string): string | null {
-  const username = normaliseUsername(input);
-  if (username.length === 0) return 'Choose a username for your child.';
-  if (username.length < 3) return 'A username needs at least three characters.';
-  if (username.length > 30) return 'A username can be at most thirty characters.';
-  if (!/^[a-z0-9]/.test(username)) {
-    return 'A username starts with a letter or a number.';
-  }
-  if (!/^[a-z0-9._-]+$/.test(username)) {
-    return 'Use only letters, numbers, dots, dashes and underscores — no spaces.';
-  }
-  return null;
+  const code = usernameCode(input);
+  return code ? SHAPE_ENGLISH[code] : null;
 }
 
 /** Passwords are the platform's own rule, not a new one: eight characters. */
 export function passwordProblem(input: string): string | null {
-  if (input.length === 0) return 'Set a password for your child.';
-  if (input.length < 8) return 'A password needs at least eight characters.';
+  const code = passwordCode(input);
+  return code ? SHAPE_ENGLISH[code] : null;
+}
+
+/**
+ * The same two checks, by name.
+ *
+ * The card on the family page is written in the reader's language and is
+ * handed its sentences, so it needs to know which thing is wrong and not an
+ * English sentence about it. The routes send the name beside the sentence.
+ */
+export type UsernameCode =
+  | 'username_missing' | 'username_short' | 'username_long' | 'username_start' | 'username_chars';
+export type PasswordCode = 'password_missing' | 'password_short';
+
+const SHAPE_ENGLISH: Record<UsernameCode | PasswordCode, string> = {
+  username_missing: 'Choose a username for your child.',
+  username_short: 'A username needs at least three characters.',
+  username_long: 'A username can be at most thirty characters.',
+  username_start: 'A username starts with a letter or a number.',
+  username_chars: 'Use only letters, numbers, dots, dashes and underscores — no spaces.',
+  password_missing: 'Set a password for your child.',
+  password_short: 'A password needs at least eight characters.',
+};
+
+export function usernameCode(input: string): UsernameCode | null {
+  const username = normaliseUsername(input);
+  if (username.length === 0) return 'username_missing';
+  if (username.length < 3) return 'username_short';
+  if (username.length > 30) return 'username_long';
+  if (!/^[a-z0-9]/.test(username)) return 'username_start';
+  if (!/^[a-z0-9._-]+$/.test(username)) return 'username_chars';
+  return null;
+}
+
+export function passwordCode(input: string): PasswordCode | null {
+  if (input.length === 0) return 'password_missing';
+  if (input.length < 8) return 'password_short';
   return null;
 }
 
@@ -70,6 +97,10 @@ export function signInAddress(input: string): string {
  * Every one of these is something a guardian did or can fix. A code that is not
  * recognised never leaks to the screen: an unknown refusal is treated as a
  * failure we do not understand, and that is said plainly rather than dressed up.
+ *
+ * English, for a caller with no words of its own. The card on the family
+ * page stopped using it on 2026-11-25: it is handed its sentences in the
+ * reader's language and names a refusal with `child-login-outcome.ts`.
  */
 export function childLoginSentence(code: string | null | undefined): string {
   const value = (code ?? '').toLowerCase();

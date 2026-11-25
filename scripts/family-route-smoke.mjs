@@ -411,7 +411,11 @@ try {
     state.families = [family()];
     const kid = (band) => [{ ...saved[0], age_band: band }];
     const may = { learnerProfileId: AISHA, hasLogin: false, username: null, createdAt: null, canManage: true, canCreate: true, canReset: false };
-    const card = (html) => html.replace(/<script[\s\S]*?<\/script>/g, '').replaceAll('<!-- -->', '').replaceAll('&#x27;', "'");
+    // The card is handed its words (2026-11-25) and puts the child's name
+    // into a sentence as markup, so that it keeps its own direction. The
+    // sentences below are read with that markup taken out, and one check
+    // further down says it is there.
+    const card = (html) => html.replace(/<script[\s\S]*?<\/script>/g, '').replaceAll('<!-- -->', '').replaceAll('&#x27;', "'").replace(/<\/?bdi>/g, '');
     const UNDER = 'Aisha learns through your sign-in. A child can have a login of their own from the age of twelve.';
     const OFFER = 'Give Aisha their own login';
 
@@ -419,6 +423,18 @@ try {
     let drawn = card(await page('/family'));
     assert.ok(drawn.includes(`<p class="muted" data-child-login-age="under_twelve">${UNDER}</p>`), 'under twelve is not told why there is no login');
     assert.ok(!drawn.includes(OFFER), 'a child under twelve is offered a login');
+    assert.ok((await page('/family')).includes('data-child-login-age="under_twelve"><bdi>Aisha</bdi>'), 'the child’s name is not isolated inside the sentence');
+    // The same card in Arabic and in Tamil, by the reader's choice: the
+    // sentence is theirs and no English one is left beside it.
+    for (const [code, under] of [
+      ['ar', 'تعلُّم Aisha يجري عبر تسجيل دخولك أنت. يمكن أن يكون للطفل تسجيل دخول خاص به من سنّ الثانية عشرة.'],
+      ['ta', 'Aisha உங்கள் உள்நுழைவின் வழியாகக் கற்கிறார். பன்னிரண்டு வயது முதல் ஒரு குழந்தைக்குச் சொந்த உள்நுழைவு இருக்கலாம்.'],
+    ]) {
+      const theirs = card(await page('/family', { cookie: `${cookie}; ayahspring_locale=${code}` }));
+      assert.ok(theirs.includes(`<p class="muted" data-child-login-age="under_twelve">${under}</p>`), `${code}: under twelve is not said in the reader’s language`);
+      assert.ok(!theirs.includes('learns through your sign-in'), `${code}: the English sentence is still on the page`);
+      assert.ok(!/<div lang="en" dir="ltr">\s*<p class="muted" data-child-login-age/.test(theirs), `${code}: the card is still marked as English`);
+    }
 
     for (const [band, gate] of [['11-13', 'confirm'], ['14-17', 'open']]) {
       state.children = kid(band); state.age = { [AISHA]: { gate, ownPassword: null } };
@@ -439,8 +455,23 @@ try {
       assert.ok(drawn.includes(`data-child-own-password="${own ? 'yes' : 'no'}">${sentence}</p>`), `own password ${own}: ${sentence}`);
       assert.ok(drawn.includes('synthetic.aisha') && !drawn.includes(UNDER), 'a login that exists was hidden by the age rule');
     }
+    // The day it was made is written by the page, the way the reader's
+    // language writes a day, and the username is bold wherever the sentence
+    // puts it.
+    assert.ok(drawn.includes('Aisha signs in with the username <strong>synthetic.aisha</strong> — made on Nov 1, 2026. A verified guardian can request a new password'), 'the day a login was made is not said');
+    for (const [code, since, own] of [
+      ['ar', /اسم المستخدم الذي يُسجَّل به دخول Aisha هو <strong>synthetic\.aisha<\/strong>، وقد أُنشئ في 1 نوفمبر 2026\./u, 'كلمة مرور Aisha الآن من اختيار الطفل نفسه. لا يمكنك رؤيتها.'],
+      ['ta', /Aisha உள்நுழையும் பயனர்பெயர் <strong>synthetic\.aisha<\/strong>\. உருவாக்கிய நாள்: [^<]*2026\./u, 'Aisha தனக்கென ஒரு கடவுச்சொல்லைத் தேர்ந்தெடுத்தாயிற்று. அதை நீங்கள் பார்க்க முடியாது.'],
+    ]) {
+      const theirs = card(await page('/family', { cookie: `${cookie}; ayahspring_locale=${code}` }));
+      assert.match(theirs, since, `${code}: a login that exists is not described in the reader’s language`);
+      assert.ok(theirs.includes(own), `${code}: whose password it is is not said in the reader’s language`);
+      for (const english of ['Their own login', 'Set a new password', 'Detach this learner', 'has chosen their own password']) {
+        assert.ok(!theirs.includes(english), `${code}: “${english}” is still on the page`);
+      }
+    }
     state.children = saved; state.families = savedFamilies; state.login = {}; state.age = {};
-    console.log('A child’s own login: under twelve is told they learn through the guardian’s sign-in and is offered no form; 11-13 and 14-17 are offered one; an unread age still offers it; a login that exists is shown at any age and says whether the child has chosen their own password.');
+    console.log('A child’s own login: under twelve is told they learn through the guardian’s sign-in and is offered no form; 11-13 and 14-17 are offered one; an unread age still offers it; the card is in Arabic and Tamil for a reader who chose them, with the child’s name isolated and the day the login was made written as the reader’s language writes it; a login that exists is shown at any age and says whether the child has chosen their own password.');
   }
 
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
@@ -588,12 +619,12 @@ try {
       assert.equal(await box.isChecked(), false, 'the box arrived ticked');
       await tab.locator(`#username-${AISHA}`).fill('synthetic.aisha');
       await tab.locator(`#password-${AISHA}`).fill('synthetic-pass-1');
-      await tab.getByRole('button', { name: 'Make Aisha\'s login' }).click();
-      await tab.getByText('Confirm that this child is twelve or older first.').waitFor();
+      await tab.getByRole('button', { name: 'Make Aisha’s login' }).click();
+      await tab.getByRole('alert').filter({ hasText: 'Confirm that this child is twelve or older first. Nothing was made.' }).waitFor();
       assert.deepEqual(sent.filter((s) => s.includes('child-login')), [], 'a login was asked for without the guardian’s yes');
       await box.check();
       const asked = tab.waitForRequest((r) => r.url().endsWith('/api/family/child-login') && r.method() === 'POST');
-      await tab.getByRole('button', { name: 'Make Aisha\'s login' }).click();
+      await tab.getByRole('button', { name: 'Make Aisha’s login' }).click();
       assert.deepEqual((await asked).postDataJSON(), { learnerId: AISHA, username: 'synthetic.aisha', password: 'synthetic-pass-1', twelveOrOlder: true });
       assert.equal(await tab.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'the login form is wider than the screen');
       if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/family-child-login-twelve-390.png`, fullPage: true });
@@ -605,8 +636,47 @@ try {
       await older.tab.getByRole('button', { name: 'Give Aisha their own login' }).click();
       assert.equal(await older.tab.getByRole('checkbox').count(), 0, 'fourteen and over is asked about twelve');
       await older.context.close();
+      // The same form in Arabic and in Tamil (2026-11-25). The browser's own
+      // check, the box and the route's refusal are each said in the reader's
+      // language. This server has no service key, so the route answers 503
+      // with a name, and the card says that name; the English sentence the
+      // route used to send is never drawn.
+      state.children = [{ ...saved[0], age_band: '11-13' }]; state.age = { [AISHA]: { gate: 'confirm', ownPassword: null } };
+      for (const [code, give, confirm, make, short, tick, unavailable] of [
+        ['ar', 'إنشاء تسجيل دخول خاص لـ Aisha', 'أؤكّد أن عمر Aisha اثنتا عشرة سنة أو أكثر. لا نطلب تاريخ الميلاد، وإجابتك تُسجَّل.', 'إنشاء تسجيل دخول Aisha', 'اسم المستخدم يحتاج إلى ثلاثة أحرف على الأقل.', 'أكّد أولًا أن عمر هذا الطفل اثنتا عشرة سنة أو أكثر. لم يُنشأ شيء.', 'لا يمكن إنشاء تسجيلات دخول للأطفال في هذا الموقع بعد: مفتاح الخادم الذي يُنشئ الحسابات غير مضبوط. لم يتغيّر شيء.'],
+        ['ta', 'Aisha என்பவருக்குச் சொந்த உள்நுழைவை உருவாக்கு', 'Aisha பன்னிரண்டு வயது அல்லது அதற்கு மேற்பட்டவர் என்பதை உறுதிப்படுத்துகிறேன். நாங்கள் பிறந்த தேதியைக் கேட்பதில்லை; உங்கள் பதில் பதிவு செய்யப்படுகிறது.', 'Aisha என்பவரின் உள்நுழைவை உருவாக்கு', 'பயனர்பெயரில் குறைந்தது மூன்று எழுத்துக்குறிகள் தேவை.', 'இந்தக் குழந்தை பன்னிரண்டு வயது அல்லது அதற்கு மேற்பட்டவர் என்பதை முதலில் உறுதிப்படுத்துங்கள். எதுவும் உருவாக்கப்படவில்லை.', 'இந்த நிறுவலில் குழந்தை உள்நுழைவுகளை இன்னும் உருவாக்க முடியாது: கணக்கை உருவாக்கும் சேவையக விசை அமைக்கப்படவில்லை. எதுவும் மாறவில்லை.'],
+      ]) {
+        const theirs = await open(code, 390);
+        await theirs.tab.getByRole('button', { name: give, exact: true }).click();
+        const yes = theirs.tab.getByRole('checkbox', { name: confirm, exact: true });
+        const press = theirs.tab.getByRole('button', { name: make, exact: true });
+        // A username of two letters: the browser answers, in the reader's language.
+        await theirs.tab.locator(`#username-${AISHA}`).fill('ai');
+        await press.click();
+        await theirs.tab.getByRole('alert').filter({ hasText: short }).waitFor();
+        await theirs.tab.locator(`#username-${AISHA}`).fill('synthetic.aisha');
+        await theirs.tab.locator(`#password-${AISHA}`).fill('synthetic-pass-1');
+        await press.click();
+        await theirs.tab.getByRole('alert').filter({ hasText: tick }).waitFor();
+        assert.deepEqual(theirs.sent.filter((x) => x.includes('child-login')), [], `${code}: a login was asked for without the guardian’s yes`);
+        await yes.check();
+        const answered = theirs.tab.waitForResponse((r) => r.url().endsWith('/api/family/child-login') && r.request().method() === 'POST');
+        await press.click();
+        const response = await answered;
+        assert.equal(response.status(), 503, `${code}: this server has no service key`);
+        assert.equal((await response.json()).code, 'child_login_unavailable');
+        await theirs.tab.getByRole('alert').filter({ hasText: unavailable }).waitFor();
+        const text = await theirs.tab.locator('main').textContent();
+        for (const english of ['Child logins cannot be created', 'We could not confirm', 'Username', 'twelve or older']) {
+          assert.equal(text.includes(english), false, `${code}: “${english}” is on the page`);
+        }
+        assert.equal(await theirs.tab.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${code}: the login form is wider than the screen`);
+        if (process.env.RESPONSIVE_SCREENSHOTS) await theirs.tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/family-child-login-${code}-390.png`, fullPage: true });
+        assert.deepEqual(theirs.errors, []);
+        await theirs.context.close();
+      }
       state.children = saved; state.login = {}; state.age = {};
-      console.log('Synthetic child login form: for 11-13 nothing is sent until the guardian ticks that the child is twelve or older, and then the yes goes with the request; 14-17 is not asked.');
+      console.log('Synthetic child login form: for 11-13 nothing is sent until the guardian ticks that the child is twelve or older, and then the yes goes with the request; 14-17 is not asked. In Arabic and Tamil the form, the browser’s own check, the unticked box and the route’s refusal (503, no service key) are each said in the reader’s language at 390 px, with no English sentence drawn.');
     }
   }
   console.log('Family HTTP smoke passed. Not real Auth or RLS.');

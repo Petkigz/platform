@@ -1174,6 +1174,75 @@ export const en = {
   'family.cert': 'Certificate {number}',
   'family.certRevoked': 'Certificate {number} — revoked',
   'family.again': 'Look again',
+  'family.loginLinked': '{name}’s learner profile is linked.',
+  'family.loginUsernameIs': 'The username is {username}.',
+  'family.loginRecovered':
+    'This was recovered from an earlier attempt. The password set in that earlier attempt remains in effect; the password entered on this retry did not replace it.',
+  'family.loginHandOver':
+    'Give them the password you chose. They are asked to choose their own, which you will not see, the first time they sign in.',
+  'family.loginNotMailbox':
+    'The username is a sign-in identifier, not an email mailbox. Contact {email} if you need help with the password.',
+  'family.loginDone': 'Done',
+  'family.loginTitle': 'Their own login',
+  'family.loginSignsIn': '{name} signs in with the username {username}.',
+  'family.loginSignsInSince': '{name} signs in with the username {username} — made on {date}.',
+  'family.loginCanReset':
+    'A verified guardian can request a new password for a trusted child login. Existing sessions may remain active.',
+  'family.loginNoReset': 'Password recovery is not available here right now.',
+  'family.loginOwnYes': '{name} has chosen their own password. You cannot see it.',
+  'family.loginOwnNo':
+    '{name} is still using a password a guardian set. They are asked to choose their own when they next sign in.',
+  'family.loginSetNew': 'Set a new password',
+  'family.loginNewPassword': 'New password',
+  'family.loginResetNote':
+    'Use at least eight characters. Shared or older sign-ins may require review. Existing sessions may remain active.',
+  'family.loginChecking': 'Checking…',
+  'family.loginChange': 'Change password',
+  'family.loginResetDone': 'The password change was recorded. Existing sessions may remain active.',
+  'family.loginDetach': 'Detach this learner',
+  'family.loginDetachMeans':
+    'This detaches the learner profile but does not delete the sign-in or revoke provider sessions. A trusted identity may also be blocked on database paths that use the platform identity check; other access can remain. Contact {email} to arrange separate sign-in removal. Lessons, progress and certificates remain with the learner.',
+  'family.loginWhy': 'Why (optional — kept for the record)',
+  'family.loginDetaching': 'Detaching…',
+  'family.loginDetachYes': 'Detach the learner',
+  'family.loginKeep': 'Keep it',
+  'family.loginUnderTwelve':
+    '{name} learns through your sign-in. A child can have a login of their own from the age of twelve.',
+  'family.loginNotOffered':
+    'A new child login is not available for this profile. It may be switched off or an earlier login may need review. Contact {email} for help.',
+  'family.loginGive': 'Give {name} their own login',
+  'family.loginUsername': 'Username',
+  'family.loginFirstPassword':
+    'This first password is yours to hand to {name}. It is sent straight to the sign-in service and nobody — including us — can read it back afterwards. When they sign in they are asked to choose their own.',
+  'family.loginConfirmTwelve':
+    'I confirm that {name} is twelve or older. We do not ask for a date of birth; your answer is recorded.',
+  'family.loginMaking': 'Making the login…',
+  'family.loginMake': 'Make {name}’s login',
+  'family.loginTickFirst': 'Confirm that this child is twelve or older first. Nothing was made.',
+  'family.loginTooYoung':
+    'A child under twelve does not have a login of their own. They learn through your sign-in. Nothing was made.',
+  'family.loginUnconfirmedMake':
+    'We could not confirm this login. Refresh the family page or contact {email} before retrying. If you retry, use the original password.',
+  'family.loginUnconfirmedReset':
+    'We could not confirm the password change. Try signing in with the new password before trying again. A request may still complete for a few minutes.',
+  'family.loginUnconfirmedDetach':
+    'We could not confirm detachment. Refresh the page or contact {email} before trying again.',
+  'family.loginUsernameMissing': 'Choose a username for your child.',
+  'family.loginUsernameShort': 'A username needs at least three characters.',
+  'family.loginUsernameLong': 'A username can be at most thirty characters.',
+  'family.loginUsernameStart': 'A username starts with a letter from a to z or a number.',
+  'family.loginUsernameChars':
+    'Use only the letters a to z, numbers, dots, dashes and underscores — no spaces.',
+  'family.loginPasswordMissing': 'Set a password for your child.',
+  'family.loginPasswordShort': 'A password needs at least eight characters.',
+  'family.loginUnavailable':
+    'Child logins cannot be created on this deployment yet: the server key that makes an account is not configured. Nothing was changed.',
+  'family.loginNoChild': 'That child could not be identified.',
+  'family.loginGuardianRequired':
+    'A current verified guardian with permission to manage this child is needed. Contact {email} for help.',
+  'family.loginNotYourChild': 'Only an adult in this child’s family can change their login.',
+  'family.loginNoLogin': 'This child has no login to remove.',
+  'family.loginMalformed': 'That request could not be read. Nothing was changed.',
 
   // The buy page and its form (`buy.ts`), for the same twenty-seven languages
   // as the dashboard. The 14-day withdrawal box is not here: its paragraph is
