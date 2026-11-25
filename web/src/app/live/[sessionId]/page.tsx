@@ -1,13 +1,32 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { describeLength, describeReason, describeWhen } from '@/lib/live';
+import { liveWords } from '@/lib/live-words';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { JoinButton } from './join-button';
 import { MarkLeft } from './attendance';
 import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'live') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('live.heading') };
+}
 
 /**
  * One live class.
@@ -16,6 +35,12 @@ export const dynamic = 'force-dynamic';
  * who is still in the room, a learner sees a door. Both are decided by the
  * database — `live_session_roster()` returns nothing to anybody who is not the
  * host or staff, and the join itself re-checks the entitlement.
+ *
+ * **In the reader's language** since 2026-11-25 (`messages/live.ts`, said
+ * through `lib/live-words.ts`); a language held for review reads it in
+ * English, whole, under `lang="en"`. The title and the description of the
+ * class, the reason it was cancelled and the names on the roll are as their
+ * authors wrote them and keep their own direction.
  */
 export default async function LiveSessionPage({
   params,
@@ -108,61 +133,69 @@ export default async function LiveSessionPage({
   });
   const watchable = watchableData === true;
 
+  const { locale, shown } = await readerLanguage();
+  const words = liveWords(shown.code);
+  const t = words.t;
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
   return (
-    <div className="container section">
+    <div className="container section" {...frame}>
       <p className="eyebrow">
-        <Link href="/learn">My learning</Link> · {one(session.courses)?.title ?? 'Course'}
+        <Link href="/learn">{t('nav.learn')}</Link> ·{' '}
+        <bdi>{one(session.courses)?.title ?? t('course.fallbackTitle')}</bdi>
       </p>
-      <h1>{session.title}</h1>
+      <h1 dir="auto">{session.title}</h1>
       <p className="muted">
-        {describeWhen(session.starts_at, session.scheduled_zone, readerZone)} ·{' '}
-        {describeLength(session.starts_at, session.ends_at)}
+        {words.when(session.starts_at, session.scheduled_zone, readerZone)} ·{' '}
+        {words.length(session.starts_at, session.ends_at)}
       </p>
-      {session.description && <p className="lede">{session.description}</p>}
+      {session.description && (
+        <p className="lede" dir="auto">
+          {session.description}
+        </p>
+      )}
 
       {session.status === 'cancelled' && (
         <div className="notice warn">
-          <strong>This class was cancelled.</strong> {session.cancelled_reason}
+          <strong>{t('live.rCancelled')}</strong>{' '}
+          {/* What the teacher wrote, as written. */}
+          <bdi>{session.cancelled_reason}</bdi>
         </div>
       )}
 
       {watchable && (
         <section className="card" style={{ marginTop: '1rem' }}>
-          <h2 style={{ marginTop: 0 }}>The recording</h2>
+          <h2 style={{ marginTop: 0 }}>{t('live.recTitle')}</h2>
           <p className="muted" style={{ marginTop: 0 }}>
-            This class was recorded. Only the teacher was captured — nobody in the class
-            appears in it. It stays watchable while your place in the course does.
+            {t('live.recBody')}
           </p>
           <a className="btn" href={`/api/live/${session.id}/recording`}>
-            Watch the recording
+            {t('live.recWatch')}
           </a>
         </section>
       )}
 
       {attendees.length > 0 ? (
         <section className="card">
-          <h2 style={{ marginTop: 0 }}>Who came</h2>
+          <h2 style={{ marginTop: 0 }}>{t('live.whoCame')}</h2>
           <ul className="lessons">
             {attendees.map((a) => (
               <li key={a.learner_profile_id}>
                 <span className="t">
-                  {a.display_name}
+                  <bdi>{a.display_name}</bdi>
                   <span className="muted">
-                    {' · '}arrived {new Date(a.joined_at).toLocaleTimeString('en-GB', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      timeZone: readerZone,
-                    })}
-                    {a.minutes_present !== null
-                      ? ` · ${a.minutes_present} minute${a.minutes_present === 1 ? '' : 's'}`
-                      : ' · still in the room'}
+                    {' · '}
+                    {t('live.arrived', { time: words.clock(a.joined_at, readerZone) })}
+                    {' · '}
+                    {a.minutes_present !== null ? words.minutes(a.minutes_present) : t('live.stillIn')}
                   </span>
                 </span>
                 {a.left_at === null && (
                   <MarkLeft
                     sessionId={session.id}
                     learnerProfileId={a.learner_profile_id}
-                    name={a.display_name}
+                    title={t('live.markLeftTitle', { name: a.display_name })}
+                    words={words.roll}
                   />
                 )}
               </li>
@@ -171,18 +204,18 @@ export default async function LiveSessionPage({
         </section>
       ) : (
         <section className="card">
-          <h2 style={{ marginTop: 0 }}>The room</h2>
+          <h2 style={{ marginTop: 0 }}>{t('live.room')}</h2>
           {joinState?.joinable === true && seats[0] ? (
-            <JoinButton sessionId={session.id} learnerProfileId={seats[0].learner_profile_id} />
+            <JoinButton
+              sessionId={session.id}
+              learnerProfileId={seats[0].learner_profile_id}
+              words={words.door}
+            />
           ) : (
             <>
-              <p className="muted">
-                {describeReason(joinState?.reason) ??
-                  'You are not enrolled in this course, so there is no seat in this room.'}
-              </p>
+              <p className="muted">{words.reason(joinState?.reason) ?? t('live.noSeat')}</p>
               <p className="muted" style={{ marginBottom: 0 }}>
-                The room opens 15 minutes before the start. Nobody but enrolled learners
-                can enter, and learners are never recorded.
+                {t('live.roomRule')}
               </p>
             </>
           )}
@@ -190,7 +223,7 @@ export default async function LiveSessionPage({
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href={`/courses/${one(session.courses)?.slug ?? ''}`}>Back to the course</Link>
+        <Link href={`/courses/${one(session.courses)?.slug ?? ''}`}>{t('live.backToCourse')}</Link>
       </p>
     </div>
   );

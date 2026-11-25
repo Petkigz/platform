@@ -3164,6 +3164,36 @@ export const en = {
   'cpage.errSignedOut': 'Your session has ended. Sign in again.',
   'cpage.errUnconfirmed':
     'We could not confirm that the enrolment was made. Look at your learning before trying again.',
+  'live.heading': 'Live classes',
+  'live.attended': 'you were there',
+  'live.cancelledWhy': 'cancelled: {reason}',
+  'live.rNotOpenYet': 'The room opens shortly before the class starts.',
+  'live.rFinished': 'This class has finished.',
+  'live.rCancelled': 'This class was cancelled.',
+  'live.rNotEnrolled': 'You are not enrolled in this course.',
+  'live.rNoHost': 'Live rooms are not connected yet, so the room cannot open.',
+  'live.rGone': 'This class no longer exists.',
+  'live.rShut': 'This room is not open.',
+  'live.yourTime': '{time} your time',
+  'live.recTitle': 'The recording',
+  'live.recBody':
+    'This class was recorded. Only the teacher was captured — nobody in the class appears in it. It stays watchable while your place in the course does.',
+  'live.recWatch': 'Watch the recording',
+  'live.whoCame': 'Who came',
+  'live.arrived': 'arrived {time}',
+  'live.stillIn': 'still in the room',
+  'live.room': 'The room',
+  'live.noSeat': 'You are not enrolled in this course, so there is no seat in this room.',
+  'live.roomRule':
+    'The room opens 15 minutes before the start. Nobody but enrolled learners can enter, and learners are never recorded.',
+  'live.backToCourse': 'Back to the course',
+  'live.enter': 'Enter the room',
+  'live.opening': 'Opening…',
+  'live.joinFailed': 'The room could not be opened just now. Try again.',
+  'live.markLeft': 'Mark left',
+  'live.left': 'Left',
+  'live.markLeftTitle': 'Mark {name} as gone',
+  'live.markFailed': 'That could not be saved. Try again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

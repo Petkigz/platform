@@ -125,6 +125,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'guard',
   'verify',
   'cpage',
+  'live',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

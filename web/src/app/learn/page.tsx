@@ -8,7 +8,8 @@ import { fetchSummary } from '@/lib/progress';
 import { fetchCarryOn } from '@/lib/dashboard-query';
 import { CarryOn } from '@/app/_shared/carry-on';
 import { fetchEngagement } from '@/lib/engagement';
-import { describeReason, describeWhen, type LiveSession } from '@/lib/live';
+import type { LiveSession } from '@/lib/live';
+import { liveWords } from '@/lib/live-words';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
 import {
@@ -118,10 +119,14 @@ export default async function LearnPage() {
   const t = translator(shown.code);
   const num = (value: number) => formatNumber(shown.code, value);
   const mismatch = shown.code !== locale;
-  // The parts below that are not translated yet: live classes, the streak
-  // strip and memorisation, all behind switches. Marked as English so a
-  // right-to-left page lays them out, and a screen reader says them, as English.
+  // The one part below that is not translated yet: memorisation, behind a
+  // switch. Marked as English so a right-to-left page lays it out, and a
+  // screen reader says it, as English.
   const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  // Live classes, in the reader's language since 2026-11-25. "cancelled:
+  // {reason}" is cut at the blank so the teacher's words can be set apart.
+  const live = liveWords(shown.code);
+  const [cancelledBefore = '', cancelledAfter = ''] = t('live.cancelledWhy', { reason: '\u0000' }).split('\u0000');
 
   // Authentication precedes every read. Independent requests use this same
   // request-scoped client, preserving RLS and avoiding shared user caches.
@@ -221,25 +226,33 @@ export default async function LearnPage() {
       )}
 
       {liveSessions.length > 0 && (
-        <section className="card" style={{ marginTop: '1.25rem' }} {...english}>
-          <h2 style={{ marginTop: 0 }}>Live classes</h2>
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>{t('live.heading')}</h2>
           <ul className="lessons">
             {liveSessions.slice(0, 6).map((session) => (
               <li key={session.session_id}>
                 <span className="t">
-                  <Link href={`/live/${session.session_id}`}>{session.title}</Link>
+                  <Link href={`/live/${session.session_id}`}>
+                    <bdi>{session.title}</bdi>
+                  </Link>
                   <span className="muted">
                     {' · '}
-                    {session.course_title}
+                    <bdi>{session.course_title}</bdi>
                     {' · '}
-                    {describeWhen(session.starts_at, session.scheduled_zone)}
-                    {session.attended ? ' · you were there' : ''}
+                    {live.when(session.starts_at, session.scheduled_zone)}
+                    {session.attended ? ` · ${t('live.attended')}` : ''}
                   </span>
                   {session.status === 'cancelled' && (
-                    <span className="muted"> · cancelled: {session.cancelled_reason}</span>
+                    <span className="muted">
+                      {' · '}
+                      {/* The reason is what the teacher wrote, as written. */}
+                      {cancelledBefore}
+                      <bdi>{session.cancelled_reason}</bdi>
+                      {cancelledAfter}
+                    </span>
                   )}
                   {!session.joinable && session.status !== 'cancelled' && (
-                    <span className="muted"> · {describeReason(session.reason)}</span>
+                    <span className="muted"> · {live.reason(session.reason)}</span>
                   )}
                 </span>
               </li>

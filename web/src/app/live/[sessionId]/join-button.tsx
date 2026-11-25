@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { joinLiveSession } from '@/lib/live';
+import { doorRefusal, type DoorWords } from '@/lib/live-door';
 import { track } from '@/lib/analytics';
 
 /**
@@ -10,17 +11,20 @@ import { track } from '@/lib/analytics';
  *
  * A full navigation rather than a new tab, because the room is where the class
  * is and leaving it should not leave a dashboard open behind it. The refusal is
- * shown in the database's own words — "live rooms are not connected yet" is a
- * true sentence and a generic error is not.
+ * said by the reason the database names — "live rooms are not connected yet" is
+ * a true sentence and a generic error is not — in the reader's language: the
+ * words are handed in by the page (`DoorWords`), and the database's English
+ * sentence is not printed. No answer at all is "could not be opened just now",
+ * which is not a claim about the room.
  */
 export function JoinButton({
   sessionId,
   learnerProfileId,
-  label = 'Enter the room',
+  words,
 }: {
   sessionId: string;
   learnerProfileId: string;
-  label?: string;
+  words: DoorWords;
 }) {
   const supabase = createClient();
   const [busy, setBusy] = useState(false);
@@ -29,9 +33,9 @@ export function JoinButton({
   async function join() {
     setBusy(true);
     setError(null);
-    const result = await joinLiveSession(supabase, sessionId, learnerProfileId);
-    if (!result.joined) {
-      setError(result.message ?? 'This room is not open.');
+    const result = await joinLiveSession(supabase, sessionId, learnerProfileId).catch(() => null);
+    if (!result || !result.joined) {
+      setError(doorRefusal(words, result?.reason));
       setBusy(false);
       return;
     }
@@ -43,7 +47,11 @@ export function JoinButton({
 
   return (
     <div className="stack">
-      {error && <p className="notice warn">{error}</p>}
+      {error && (
+        <p className="notice warn" role="alert">
+          {error}
+        </p>
+      )}
       <button
         type="button"
         className="btn"
@@ -51,7 +59,7 @@ export function JoinButton({
         onClick={join}
         disabled={busy}
       >
-        {busy ? 'Opening…' : label}
+        {busy ? words.opening : words.enter}
       </button>
     </div>
   );

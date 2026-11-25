@@ -234,6 +234,8 @@ for (const [file, key] of [
   ['verify.ts', 'verify.notToldBody'],
   // The course page hands its button the words; none of them is in a script.
   ['course-page.ts', 'cpage.teacherUnnamedWhy'],
+  // The door of a live class is handed its words too.
+  ['live.ts', 'live.roomRule'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

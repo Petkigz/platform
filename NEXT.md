@@ -2619,6 +2619,42 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Live classes, in twenty-seven languages, 2026-11-25
+
+- *Built.* One catalogue part, `live.` 28, in the twenty-seven languages
+  with nothing held (`messages/live.ts`), said through
+  `lib/live-words.ts`: the "Live classes" card on `/learn` and the page
+  of one class, `/live/[sessionId]`, with its door (`join-button.tsx`)
+  and the button on the teacher's roll (`attendance.tsx`). The two
+  buttons are handed their words (`lib/live-door.ts`, which imports
+  nothing).
+- *Written by the language, not by a sentence.* When a class is (weekday,
+  day and hour in the teacher's zone, the reader's own hour beside it),
+  how long it lasts, and the hour somebody arrived come from `Intl` in
+  the reader's language. Two limits of the runtime's data, seen when the
+  page was drawn: Tajik durations come out as "2 h ва 30 min", and Tamil
+  abbreviates the hour ("2 ம.").
+- *The door.* It says a refusal by the `reason` the database names and
+  no longer prints the database's English sentence. A reason with no
+  sentence here is "This room is not open"; a database error or no reply
+  is "The room could not be opened just now. Try again", which makes no
+  claim about the room. The roll's button says "That could not be
+  saved" where it printed the database's error.
+- *Not changed.* `lib/live.ts` keeps `describeWhen`, `describeReason`,
+  `describeLength` in English for the teacher's pages
+  (`/teach/[courseId]/live`), which are staff pages. A test holds every
+  reason in `REASON_LABEL` to the same English sentence here.
+- *Checked.* `/live/[sessionId]` drawn by a running `next dev` against a
+  pretend Supabase: an open door in nine languages, a shut door with a
+  recording, a cancelled class (the teacher's reason in `<bdi>`), the
+  teacher's roll; the door and the roll's button pressed in Chromium at
+  390 pixels in French, Arabic, Tamil and Swahili, with the database's
+  wording never reaching the page. **The card on `/learn` was compiled
+  and tested as source, and drawn in no running page.** No speaker has
+  read any of it.
+- *Counts.* 2385 keys; server-only 2017; unwritten while held 2113; held
+  192 of 2385, 8.05%, shown as 8%. No migration.
+
 ### The public course page, in twenty-seven languages, 2026-11-25
 
 - *Why.* The owner's ruling of the same day (what is not a declaration is

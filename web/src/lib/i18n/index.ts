@@ -95,7 +95,7 @@ const SERVER_ONLY_PREFIXES: readonly string[] = [
   'family.', 'buy.', 'close.', 'export.', 'reading.', 'restore.', 'phone.',
   'merge.', 'share.', 'refer.', 'sponsor.', 'orders.', 'billing.', 'receipt.', 'notify.',
   'plans.', 'subs.', 'policy.', 'inst.', 'tapply.', 'board.', 'translate.', 'kid.', 'tq.',
-  'prog.', 'cert.', 'handover.', 'guard.', 'verify.', 'cpage.',
+  'prog.', 'cert.', 'handover.', 'guard.', 'verify.', 'cpage.', 'live.',
 ];
 
 /** Everything a client component outside the companion pages can ask for. */
