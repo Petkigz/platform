@@ -689,9 +689,11 @@ written: not a held draft, nothing.
   format for themselves are right without being changed. **Checked:** the
   table against Node, 54,783 forms; Node against Chromium 158, 12,699
   answers in fifty-one languages with the browser's clock in UTC, Almaty
-  and Kathmandu, none different (4,848 were, before). **Not checked:** a
-  whole page opened in one of these languages after the change; any
-  browser but Chromium; a speaker's eye on any of it.
+  and Kathmandu, none different (4,848 were, before); and the same
+  12,699 on the build machine's Chrome 158, none different. **Not
+  checked:** a whole page opened in one of these languages after the
+  change; any browser that is not Chromium underneath; a speaker's eye
+  on any of it.
   **Still different between server and browser, measured, not fixed:** a
   list joined with "and" (`family/said-list.tsx`, used by the restore
   form; nineteen languages), the names of countries in the phone form

@@ -3237,6 +3237,64 @@ claim external integrations work without credentials or provider callbacks.
   new route handler; 34 smoke scripts; 2660 web tests. No migration: 357,
   174 database suites, not rerun.
 
+### Where the work stops, 2026-11-25
+
+Written so that whoever picks this up, a person or an assistant with no
+memory of it, starts from the repository and not from a conversation.
+
+- *State.* Everything is committed and pushed on
+  `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
+  off. No application has been deployed anywhere. The test project's
+  database has the first 358 of the tree's 362 migrations; the last four
+  have no job and none was asked for (`docs/deploy/README.md`).
+- *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
+  were working folders and were never committed; they are ignored now.
+  The working machine was rolled back more than once and took the drafts
+  after `u35`, the insert script and the page-drawing harnesses with it,
+  so the places above and below that point at `tmp-words/u36` and later
+  point at files that are gone. Nothing is lost by that: the sentences
+  are in `web/src/lib/i18n/messages/*.ts`, which is the record. What is
+  lost is convenience, and the next two entries are what to rebuild.
+- *How a part was translated.* One folder of drafts per part: `en.txt`
+  and one file for each of the twenty-seven languages, a line a sentence
+  as `shortKey|sentence`, and a paragraph for the file's header. A script
+  refused an apostrophe, a backslash, a line break and any sentence whose
+  `{holes}` were not the English ones, and then wrote five places, which
+  are the ones to follow by hand (`cparts` after `hifz` shows each): the
+  English sentences into `lib/i18n/messages/en.ts` as `'prefix.key'`; the
+  other languages into a file of their own beside it, one exported
+  constant (`messages/course-parts.ts`, `COURSE_PARTS`); that constant
+  imported and listed in `messages/catalogues.ts`; the prefix in the list
+  in `messages/held.ts`; and the prefix, with its dot, in the server-only
+  list in `lib/i18n/index.ts`. Four pins move with every part, and each
+  fails with the number it wanted: the prefix and the count of
+  server-only sentences in `lib/companion-i18n.test.ts` (2161 now); the
+  constant, the count unwritten while held (2257) and the total (2529)
+  in `lib/held-translations.test.ts`; the needles in
+  `scripts/client-bundle-check.mjs`; the percentage in a comment in
+  `scripts/companion-browser-smoke.mjs`. `lib/translation-audit.test.ts`
+  wants its shortlist under 220.
+- *How a page was looked at.* A script with a pretend Supabase, the
+  part's switches on, `next dev`, and Chromium at 390 px through
+  `playwright-core`, drawing the page and pressing its buttons, failing
+  on any hydration error. The committed smokes in `scripts/` do the same
+  for the pages they cover and are the pattern to copy. The working
+  machine's Chromium has no Devanagari font and no star, so Nepali and
+  the rating stars were read as text, never seen.
+- *Next, in order.* (1) The pages a learner still reads in English with
+  no mark: saved courses, downloads, learning paths and a path's page,
+  asking a teacher, support and a case's page, `/about`, the scholars'
+  panel, and the name of a course's language (`lib/language.ts`). (2)
+  The four things in the entry below that still differ between server
+  and browser. (3) Staff pages, which are English throughout.
+- *Waiting for the owner, and nothing here can move them.* A privacy
+  notice that names Google. Whether a person's board posts belong in
+  their export. Whether staff are told when a post is reported. A
+  speaker's reading before `family.child_login` is switched on, and of
+  every translated part: no speaker has read any of them. Whether to
+  write a job for the last four migrations; the first of them makes
+  every account agree to the refunds policy again.
+
 ### Numbers and dates from a table, 2026-11-25
 
 - *The fault.* A browser and a server each carry their own copy of how a
@@ -3260,9 +3318,18 @@ claim external integrations work without credentials or provider callbacks.
 - *Checked in a browser on every push.* `scripts/number-date-browser-check.mjs`
   runs the same file in Node and in the build machine's browser and
   compares 12,699 answers. It is the last step of the responsive workflow.
+- *On the build machine.* Its Chrome (158.0.8127.36) and its Node 22.22.3
+  (ICU 78.2) agreed on all 12,699 answers: none different in the
+  twenty-seven table languages, none in the twenty-four left to the
+  runtime. That is read from the step's notice, because the step's log
+  could not be fetched afterwards. Whether that Chrome had the fault
+  before the change was not measured; the browser it was found in is the
+  Chromium 158 of the working machine.
 - *Not done.* Lists, country and language names and the prayer tool still
   use the browser's own data; see `docs/remaining.md`. No page was opened
   in a browser in these languages after the change.
+- *Counts.* 2758 web tests, nine of them new. No migration, no new
+  sentence, no new route, no flag.
 
 ### The test project at 358, 2026-11-25
 
