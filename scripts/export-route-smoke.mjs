@@ -52,7 +52,9 @@ const copy = (cut = []) => ({
   orders: [],
 });
 
-const state = { answer: 'ok' };
+// `boards`: what the two discussion-board switches answer (false, true, or
+// 'broken' for a read that fails). Every other switch is off.
+const state = { answer: 'ok', boards: false };
 const calls = [];
 const fake = createServer(async (req, res) => {
   let body = ''; for await (const chunk of req) body += chunk;
@@ -66,7 +68,13 @@ const fake = createServer(async (req, res) => {
   const path = url.pathname;
   calls.push({ method: req.method, path });
   const send = (value, status = 200) => { res.writeHead(status, json); res.end(JSON.stringify(value)); };
-  if (path === '/rest/v1/rpc/setting_bool') send(false);
+  if (path === '/rest/v1/rpc/setting_bool') {
+    const key = (() => { try { return String(JSON.parse(body).p_key ?? ''); } catch { return ''; } })();
+    if (!key.startsWith('community.')) send(false);
+    else if (state.boards === 'broken') send({ message: 'the switches cannot be read' }, 500);
+    // One board on is enough for the line to be written.
+    else send(state.boards === true && key === 'community.teacher_board');
+  }
   else if (path === '/rest/v1/user_profiles') send([{ display_name: 'Synthetic learner', account_status: 'active', deleted_at: null, preferred_language: 'en', timezone: null }]);
   else if (path === '/rest/v1/rpc/export_my_data') {
     if (state.answer === 'ok') send(copy());
@@ -180,6 +188,33 @@ try {
   // Six readers have opened the page that explains a copy. None was made.
   assert.equal(copies(), 0, 'opening the export page made a copy');
   console.log('Export page: signed out is sent to sign in; English, Arabic, Persian (limit in its own digits), French by choice; Hausa and Pashto readers get it in English, marked; both downloads are plain links without script; opening the page asked for no copy.');
+
+  // ------------------------------------ posts on the discussion boards
+  // The owner, 2026-11-25: they stay out of a copy. The page says so while a
+  // board is switched on, and also when the switches cannot be read; with
+  // both boards off there is no board for the sentence to be about.
+  const BOARD_LINE = 'Your posts in the students’ and the teachers’ discussion';
+  assert.ok(!inner(english).includes(BOARD_LINE), 'with both boards off the export page speaks of board posts');
+  state.boards = true;
+  try {
+    const withBoard = inner(await page('/account/export', { 'accept-language': 'en' }));
+    assert.ok(withBoard.includes(BOARD_LINE), 'with a board on, the export page does not say board posts are left out');
+    assert.ok(withBoard.includes('There you write under a username, so that a post does not carry your name.'), 'the reason is not given');
+    assert.ok(withBoard.includes('The questions and answers you wrote in a course are a different thing: they are in the copy.'), 'course discussion is not told apart from the boards');
+    // It is the last thing under "what is not in it", after the five that were there.
+    assert.ok(withBoard.indexOf(BOARD_LINE) > withBoard.indexOf('Credential tokens'), 'the board line is not under what a copy leaves out');
+    const arBoard = inner(await page('/account/export', { 'accept-language': 'ar' }));
+    assert.ok(arBoard.includes('مشاركاتك في نقاش الطلاب ونقاش المعلمين'), 'the Arabic page lacks the board line');
+    assert.ok(!arBoard.includes('Your posts'), 'the Arabic page has the board line in English');
+    const neBoard = inner(await page('/account/export', { 'accept-language': 'ne' }));
+    assert.ok(neBoard.includes('विद्यार्थी र शिक्षकहरूको छलफलमा तपाईंका पोस्टहरू'), 'the Nepali page lacks the board line');
+    state.boards = 'broken';
+    assert.ok(inner(await page('/account/export', { 'accept-language': 'en' })).includes(BOARD_LINE), 'when the switches cannot be read the sentence is dropped');
+  } finally {
+    state.boards = false;
+  }
+  assert.equal(copies(), 0, 'opening the export page made a copy');
+  console.log('Export page and the boards: no line with both boards off; with one on, the line, its reason and the course-discussion sentence in English, the line in Arabic and Nepali; written when the switches cannot be read');
 
   // ========================================================= the page to print
   const PRINT = 'page narrow export-print-page';

@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 362 migrations and 177 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 363 migrations and 177 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -3029,7 +3029,8 @@ claim external integrations work without credentials or provider callbacks.
   entry above). A way to change the two
   limits from the dashboard (they are changed where the other numbers are).
   Board posts in the data export, and telling staff a report arrived: both
-  asked of the owner and not yet answered.
+  answered by the owner on 2026-11-25 (see "The owner's two answers about
+  the boards").
 - *Counts.* 2027 keys; server-only 1659; unwritten while held 1755
   (`translate.` 13, `kid.` 2, `tq.` 55); held 192 of 2027, 9.47%, shown as
   9%. 362 migrations, 177 database suites, 2763 database assertions (a
@@ -3112,8 +3113,9 @@ claim external integrations work without credentials or provider callbacks.
   looked at. In `ci.yml` and the browser workflow.
 - *Not shown.* Anything from a real database, a real second person, or a
   hosted project. Twenty-four of the languages on any page.
-- *Not built.* Board posts in the data export. Telling staff a report
-  arrived. Search, editing a post, a list of one's own posts, following a
+- *Not built.* (Board posts in the data export and telling staff a report
+  arrived were answered on 2026-11-25; see "The owner's two answers about
+  the boards".) Search, editing a post, a list of one's own posts, following a
   thread. The staff queue in any language but English. A hosted job for
   359 and 360. Still not built from before: `/admin/teachers` in any
   language but English.
@@ -3245,7 +3247,7 @@ memory of it, starts from the repository and not from a conversation.
 - *State.* Everything is committed and pushed on
   `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
   off. No application has been deployed anywhere. The test project's
-  database has the first 358 of the tree's 362 migrations; the last four
+  database has the first 358 of the tree's 363 migrations; the last five
   have no job and none was asked for (`docs/deploy/README.md`).
 - *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
   were working folders and were never committed; they are ignored now.
@@ -3288,12 +3290,43 @@ memory of it, starts from the repository and not from a conversation.
   The four things in the entry below that still differ between server
   and browser. (3) Staff pages, which are English throughout.
 - *Waiting for the owner, and nothing here can move them.* A privacy
-  notice that names Google. Whether a person's board posts belong in
-  their export. Whether staff are told when a post is reported. A
-  speaker's reading before `family.child_login` is switched on, and of
+  notice that names Google. Whether somebody who asks is given a copy of
+  their board posts some other way, now that the export leaves them out.
+  A speaker's reading before `family.child_login` is switched on, and of
   every translated part: no speaker has read any of them. Whether to
-  write a job for the last four migrations; the first of them makes
+  write a job for the last five migrations; the first of them makes
   every account agree to the refunds policy again.
+
+### The owner's two answers about the boards, 2026-11-25
+
+- *The answers.* "A person's blog posts are private and them being in the
+  data export feels like the privacy is somehow gone. The staff are not
+  told only the admin is." Read as: board posts stay out of the export;
+  a report is told to the owner (`platform_admin`) and to no other role.
+  `DECISIONS.md` has the entry and both readings.
+- *Migration 363,* `20261281156000_board_reports_owner_told_export_says.sql`.
+  Two functions replaced whole and nothing added: `export_my_data()` gains
+  one `notIncluded` entry and reads no board table; `staff_attention()`
+  gains two rows (`board_reports_students`, `board_reports_teachers`) in a
+  branch only `platform_admin` enters. The two switches' preconditions say
+  so. Both boards stay off. No hosted job.
+- *"Told" is a count on `/admin`.* Nothing is sent. `/admin` draws the rows
+  it is given, so the page was not edited; `/admin/boards` says in a
+  sentence who is given the count.
+- *Governance still moderates* and can open `/admin/boards`; it is not
+  given the count. Taking moderation from governance was not done and was
+  not asked for in so many words.
+- *`/account/export`* has one more line under what a copy leaves out
+  (`export.outBoards`, `export.outBoardsNote`), in twenty-eight languages,
+  drawn while either board is on, and drawn if the switches cannot be read.
+- *Tests.* `discussion_boards.test.mjs` (two tests added),
+  `staff_attention.test.mjs` (the owner has thirteen queues; governance
+  has none of the two), `export-outcome.test.ts` (each function is the one
+  before it plus what was added). Pins moved by the two new sentences:
+  server-only 2163, unwritten while held 2259, total 2531.
+- *Left for the owner.* Whether a person who asks gets a copy of their
+  board posts another way. How often the owner opens `/admin` once a board
+  is on, since nothing else tells anybody.
 
 ### Numbers and dates from a table, 2026-11-25
 
@@ -3346,8 +3379,9 @@ memory of it, starts from the repository and not from a conversation.
   harmless only because no application is deployed there. One built before
   commit `fbf6341` must not be.
 - *Not done.* The application has not been deployed. The 359th to the
-  362nd (the refunds policy's third version, the discussion boards, the
-  translate button, a child's login from twelve) have no job and none has
+  363rd (the refunds policy's third version, the discussion boards, the
+  translate button, a child's login from twelve, the owner's two answers
+  about the boards) have no job and none has
   been asked for; the 359th asks every account to agree to the refunds
   policy again, so it is the owner's to ask for.
 

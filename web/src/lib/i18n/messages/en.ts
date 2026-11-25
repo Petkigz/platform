@@ -1484,6 +1484,9 @@ export const en = {
   'export.outTokens': 'Credential tokens',
   'export.outTokensNote':
     'Certificate verification tokens and sharing links are what let other people in. Printing them in a copy is how they stop being secret.',
+  'export.outBoards': 'Your posts in the students’ and the teachers’ discussion',
+  'export.outBoardsNote':
+    'There you write under a username, so that a post does not carry your name. A copy that sets those posts beside your name would undo that. They stay in the discussion, where you can read them and take one back. The questions and answers you wrote in a course are a different thing: they are in the copy.',
   'export.after':
     'Downloading is one direction and restoring is the other: part of a copy can be put back on this account or on a new one. Closing your account is separate and cannot be undone; what happens to each kind of record is written on that page.',
   'export.printCrumb': 'To print',

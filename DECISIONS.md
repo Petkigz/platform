@@ -8992,6 +8992,68 @@ Auth's own table; it passes against the test database's copy of that table
 and has not been run against hosted Auth. Both switches
 (`family.child_login`, `family.child_password_recovery`) stay off.
 
+## Board posts stay out of the data export, and only the owner is told of a report — **DECIDED 2026-11-25**
+
+The two questions the boards were built with (entry below, "Not built")
+were answered by the owner on 2026-11-25, in these words:
+
+> A person's blog posts are private and them being in the data export feels
+> like the privacy is somehow gone. The staff are not told only the admin is.
+
+**How the words were read.** "Blog posts" is taken to mean posts on the two
+discussion boards; nothing here is called a blog, and the question asked was
+about the boards. "The admin" is taken to mean the owner, the account
+holding `platform_admin`. Both readings are the builder's and are reported
+to the owner as such.
+
+**1. Board posts are not in a copy of a person's data, and the copy says
+so.** They never were in it. What changed (`20261281156000`) is that
+`export_my_data()` names them under `notIncluded`, with the reason: a post
+is written under a username so that it does not carry the person's name,
+and a file that sets posts beside a name and an address, and is then saved
+and passed on, undoes that. The function reads no board table, and says the
+same sentence to somebody who never posted, so a copy cannot be used to
+find out whether an account has a username. `/account/export` has the line
+in twenty-eight languages, shown while either board is switched on; it also
+says that questions and answers written inside a course are a different
+thing and are in the copy, because both are called "discussion".
+
+*Not decided, and the owner's:* whether somebody who asks for a copy of
+their board posts is given one some other way. A person can read their own
+posts on the board and take one back. Nothing here offers more, and no
+sentence promises it. Where a law gives a person a right to a copy of what
+is held about them, this is the question it asks; it needs somebody
+qualified to say, not this file.
+
+**2. When a post is reported, the owner is told and nobody else is.**
+"Told" is a count on the owner's home page (`/admin`), which is how every
+other queue here tells its people: `staff_attention()` gives an account
+holding `platform_admin` two more rows, reported posts on the students'
+board and on the teachers', each counting a post once however many people
+reported it. Support, finance and governance are not given those rows.
+**No message is sent to anybody**: no email, no notification. So the owner
+learns of a report by opening `/admin`; until then the post stays up,
+because a post is shown at once (the answer of 2026-11-24).
+
+**What did not change.** Who may moderate: the owner and governance still
+open `/admin/boards`, take a post down, block a username and, with a
+written reason, see the account behind a post. Governance can therefore
+find a report by opening that page; it is simply not told there is one. If
+"only the admin" was also meant to take moderation away from governance,
+that is a further change and has not been made.
+
+**Checked.** In the test database: two reports of one post count once; a
+reply counts beside its thread; each board has its own row; a decided
+report leaves the count; a board switched off is marked paused and still
+counted; governance, support and finance get no such row and governance can
+still read the queue; a copy holds no post, no username and no thread id,
+and the same list for somebody who never posted. Turning the count over to
+governance, or counting reports instead of posts, each fails a test. A
+second test compares each replaced function with the one before it, line
+for line. Not checked: anything on a hosted database (this migration, the
+363rd, has no job), and the sentences in twenty-seven languages have been
+read by no speaker.
+
 ## Two discussion boards, under usernames — **DECIDED 2026-11-24**
 
 Two discussion boards, one for students and one for teachers, in which
@@ -9057,9 +9119,10 @@ condition in `board_standing()`.
 software does and no more: a username is not anonymity from staff, and what
 somebody writes can identify them whatever name is above it.
 
-**Not built**, and to be weighed before a switch is turned on: board posts
-in the data export; telling staff a report arrived; search; editing; a list
-of one's own posts. Posts are not translated. Both switches are off.
+**Not built**, and to be weighed before a switch is turned on: search;
+editing; a list of one's own posts. (Board posts in the data export, and
+telling staff a report arrived, were answered on 2026-11-25: the entry
+above.) Posts are not translated. Both switches are off.
 
 **The refunds policy** was republished as version 3 in the same work
 (migration 359): the paragraph about giving a plan back within fourteen days

@@ -105,6 +105,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'رموز الاعتماد',
     'export.outTokensNote':
       'رموز التحقّق من الشهادات وروابط المشاركة هي ما يُدخل الآخرين. وطباعتها في نسخة هي ما يجعلها تكفّ عن أن تكون سرّية.',
+    'export.outBoards': 'مشاركاتك في نقاش الطلاب ونقاش المعلمين',
+    'export.outBoardsNote':
+      'هناك تكتب باسم مستعار، حتى لا تحمل المشاركة اسمك. والنسخة التي تضع تلك المشاركات بجانب اسمك تُبطل ذلك. تبقى المشاركات في النقاش، حيث يمكنك قراءتها وسحب أيٍّ منها. أما الأسئلة والأجوبة التي كتبتها داخل دورة فشيء آخر، وهي موجودة في النسخة.',
     'export.after':
       'التنزيل اتجاه والاستعادة اتجاه آخر: يمكن إعادة جزء من النسخة إلى هذا الحساب أو إلى حساب جديد. أما إغلاق حسابك فأمر منفصل ولا يمكن التراجع عنه؛ وما يحدث لكل نوع من السجلات مكتوب في تلك الصفحة.',
     'export.printCrumb': 'للطباعة',
@@ -190,6 +193,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'اسناد کے ٹوکن',
     'export.outTokensNote':
       'سند کی تصدیق کے ٹوکن اور شیئرنگ لنک ہی وہ چیزیں ہیں جو دوسروں کو اندر آنے دیتی ہیں۔ انہیں نقل میں چھاپ دینے سے وہ راز نہیں رہتے۔',
+    'export.outBoards': 'طلبہ اور اساتذہ کی گفتگو میں آپ کی پوسٹیں',
+    'export.outBoardsNote':
+      'وہاں آپ فرضی نام سے لکھتے ہیں تاکہ پوسٹ پر آپ کا نام نہ ہو۔ جو نقل ان پوسٹوں کو آپ کے نام کے ساتھ رکھ دے وہ یہ بات ختم کر دیتی ہے۔ وہ گفتگو ہی میں رہتی ہیں، جہاں آپ انہیں پڑھ سکتے ہیں اور کوئی بھی واپس لے سکتے ہیں۔ کسی کورس میں آپ کے لکھے ہوئے سوال اور جواب الگ چیز ہیں: وہ نقل میں شامل ہیں۔',
     'export.after':
       'ڈاؤن لوڈ ایک سمت ہے اور بحالی دوسری: نقل کا کچھ حصہ اس اکاؤنٹ پر یا کسی نئے اکاؤنٹ پر واپس رکھا جا سکتا ہے۔ اکاؤنٹ بند کرنا الگ معاملہ ہے اور اسے واپس نہیں لیا جا سکتا؛ ہر قسم کے ریکارڈ کے ساتھ کیا ہوتا ہے، وہ اس صفحے پر لکھا ہے۔',
     'export.printCrumb': 'پرنٹ کے لیے',
@@ -276,6 +282,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'توکن‌های اعتبارنامه',
     'export.outTokensNote':
       'توکن‌های راستی‌آزمایی گواهی‌نامه و پیوندهای اشتراک‌گذاری همان چیزهایی‌اند که دیگران را راه می‌دهند. چاپ‌کردنشان در یک نسخه همان راهی است که دیگر محرمانه نمی‌مانند.',
+    'export.outBoards': 'نوشته‌های شما در گفت‌وگوی دانش‌آموزان و گفت‌وگوی معلمان',
+    'export.outBoardsNote':
+      'آنجا با نام کاربری می‌نویسید تا نوشته نام شما را با خود نداشته باشد. نسخه‌ای که آن نوشته‌ها را کنار نام شما بگذارد این را از میان می‌برد. آن‌ها در گفت‌وگو می‌مانند؛ همان‌جا می‌توانید بخوانیدشان و هرکدام را پس بگیرید. پرسش‌ها و پاسخ‌هایی که در یک دوره نوشته‌اید چیز دیگری است: آن‌ها در نسخه هستند.',
     'export.after':
       'بارگیری یک سو است و بازگردانی سوی دیگر: بخشی از یک نسخه را می‌توان به همین حساب یا به حسابی تازه بازگرداند. بستن حساب جداست و برگشت‌پذیر نیست؛ اینکه برای هر نوع رکورد چه پیش می‌آید در همان صفحه نوشته شده است.',
     'export.printCrumb': 'برای چاپ',
@@ -361,6 +370,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'توکن‌های اعتبارنامه',
     'export.outTokensNote':
       'توکن‌های تصدیق سند و لینک‌های شریک‌سازی همان چیزهایی‌اند که دیگران را راه می‌دهند. چاپ کردن‌شان در یک نسخه همان راهی است که دیگر محرم نمی‌مانند.',
+    'export.outBoards': 'نوشته‌های شما در گفت‌وگوی شاگردان و گفت‌وگوی استادان',
+    'export.outBoardsNote':
+      'آنجا با نام مستعار می‌نویسید تا نوشته نام شما را با خود نداشته باشد. نسخه‌ای که آن نوشته‌ها را کنار نام شما بگذارد این را از بین می‌برد. آن‌ها در گفت‌وگو می‌مانند؛ همان‌جا می‌توانید آن‌ها را بخوانید و هرکدام را پس بگیرید. پرسش‌ها و پاسخ‌هایی که در یک کورس نوشته‌اید چیز دیگری است: آن‌ها در نسخه هستند.',
     'export.after':
       'داونلود یک سو است و بازگرداندن سوی دیگر: بخشی از یک نسخه را می‌توان به همین حساب یا به حسابی نو برگرداند. بستن حساب جداست و برگشت‌پذیر نیست؛ اینکه برای هر نوع سابقه چه پیش می‌آید در همان صفحه نوشته شده است.',
     'export.printCrumb': 'برای چاپ',
@@ -447,6 +459,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Kimlik doğrulama belirteçleri',
     'export.outTokensNote':
       'Sertifika doğrulama belirteçleri ve paylaşım bağlantıları, başkalarını içeri alan şeylerdir. Bunları bir kopyaya basmak, gizli olmaktan çıkmalarının yoludur.',
+    'export.outBoards': 'Öğrenci ve öğretmen tartışmasındaki gönderileriniz',
+    'export.outBoardsNote':
+      'Orada bir kullanıcı adıyla yazarsınız; böylece gönderi adınızı taşımaz. Bu gönderileri adınızın yanına koyan bir kopya bunu boşa çıkarır. Gönderiler tartışmada kalır; orada okuyabilir ve istediğinizi geri alabilirsiniz. Bir kursta yazdığınız sorular ve yanıtlar ayrı bir şeydir: onlar kopyadadır.',
     'export.after':
       'İndirme bir yöndür, geri yükleme öbür yön: bir kopyanın bir kısmı bu hesaba veya yeni bir hesaba geri konabilir. Hesabınızı kapatmak ayrı bir iştir ve geri alınamaz; her kayıt türüne ne olduğu o sayfada yazılıdır.',
     'export.printCrumb': 'Yazdırmak için',
@@ -534,6 +549,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Token kredensial',
     'export.outTokensNote':
       'Token verifikasi sertifikat dan tautan berbagi adalah hal yang memberi jalan masuk kepada orang lain. Mencetaknya dalam salinan adalah cara token itu berhenti menjadi rahasia.',
+    'export.outBoards': 'Kiriman Anda di diskusi siswa dan diskusi guru',
+    'export.outBoardsNote':
+      'Di sana Anda menulis dengan nama pengguna, agar kiriman tidak membawa nama Anda. Salinan yang menaruh kiriman itu di samping nama Anda akan membatalkan hal itu. Kiriman tetap ada di diskusi; di sana Anda dapat membacanya dan menarik kembali yang mana pun. Pertanyaan dan jawaban yang Anda tulis dalam kursus adalah hal lain: semuanya ada dalam salinan.',
     'export.after':
       'Mengunduh adalah satu arah dan memulihkan adalah arah sebaliknya: sebagian salinan dapat dikembalikan ke akun ini atau ke akun baru. Menutup akun adalah hal terpisah dan tidak dapat dibatalkan; apa yang terjadi pada tiap jenis catatan tertulis di halaman itu.',
     'export.printCrumb': 'Untuk dicetak',
@@ -620,6 +638,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Token kelayakan',
     'export.outTokensNote':
       'Token pengesahan sijil dan pautan perkongsian ialah perkara yang membenarkan orang lain masuk. Mencetaknya dalam salinan ialah cara token itu berhenti menjadi rahsia.',
+    'export.outBoards': 'Kiriman anda dalam perbincangan pelajar dan perbincangan guru',
+    'export.outBoardsNote':
+      'Di sana anda menulis dengan nama pengguna, supaya kiriman tidak membawa nama anda. Salinan yang meletakkan kiriman itu di sebelah nama anda akan membatalkan perkara itu. Kiriman kekal dalam perbincangan; di sana anda boleh membacanya dan menarik balik mana-mana satu. Soalan dan jawapan yang anda tulis dalam kursus ialah perkara lain: semuanya ada dalam salinan.',
     'export.after':
       'Memuat turun ialah satu arah dan memulihkan ialah arah sebaliknya: sebahagian salinan boleh dikembalikan ke akaun ini atau ke akaun baharu. Menutup akaun anda ialah perkara berasingan dan tidak boleh dibatalkan; apa yang berlaku kepada setiap jenis rekod tertulis pada halaman itu.',
     'export.printCrumb': 'Untuk dicetak',
@@ -704,6 +725,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'পরিচয়পত্রের টোকেন',
     'export.outTokensNote':
       'সনদ যাচাইয়ের টোকেন ও শেয়ারিং লিংকই অন্যদের ভেতরে ঢুকতে দেয়। এগুলো কপিতে ছাপালে সেগুলো আর গোপন থাকে না।',
+    'export.outBoards': 'শিক্ষার্থীদের ও শিক্ষকদের আলোচনায় আপনার পোস্ট',
+    'export.outBoardsNote':
+      'সেখানে আপনি ব্যবহারকারী-নামে লেখেন, যাতে পোস্টে আপনার নাম না থাকে। যে কপি ওই পোস্টগুলো আপনার নামের পাশে রাখে, তা এই আড়ালটুকু নষ্ট করে দেয়। পোস্টগুলো আলোচনাতেই থাকে; সেখানে আপনি সেগুলো পড়তে পারেন এবং যেকোনোটি ফিরিয়ে নিতে পারেন। কোনো কোর্সে আপনার লেখা প্রশ্ন ও উত্তর আলাদা বিষয়: সেগুলো কপিতে আছে।',
     'export.after':
       'ডাউনলোড এক দিক আর পুনরুদ্ধার অন্য দিক: কপির একটি অংশ এই অ্যাকাউন্টে বা নতুন অ্যাকাউন্টে ফিরিয়ে রাখা যায়। অ্যাকাউন্ট বন্ধ করা আলাদা বিষয় এবং তা ফেরানো যায় না; প্রতিটি ধরনের রেকর্ডের কী হয় তা ওই পাতায় লেখা আছে।',
     'export.printCrumb': 'প্রিন্টের জন্য',
@@ -789,6 +813,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'क्रेडेंशियल टोकन',
     'export.outTokensNote':
       'प्रमाणपत्र सत्यापन टोकन और साझाकरण लिंक ही वे चीज़ें हैं जो दूसरों को भीतर आने देती हैं। उन्हें प्रति में छाप देने से वे गोपनीय नहीं रहते।',
+    'export.outBoards': 'विद्यार्थियों और शिक्षकों की चर्चा में आपकी पोस्ट',
+    'export.outBoardsNote':
+      'वहाँ आप उपयोगकर्ता नाम से लिखते हैं, ताकि पोस्ट पर आपका नाम न हो। जो प्रति उन पोस्ट को आपके नाम के साथ रख दे, वह यह बात ख़त्म कर देती है। वे चर्चा में ही रहती हैं; वहाँ आप उन्हें पढ़ सकते हैं और कोई भी वापस ले सकते हैं। किसी कोर्स में आपके लिखे सवाल और जवाब अलग चीज़ हैं: वे प्रति में हैं।',
     'export.after':
       'डाउनलोड एक दिशा है और पुनर्स्थापना दूसरी: प्रति का कुछ हिस्सा इस खाते पर या किसी नए खाते पर वापस रखा जा सकता है। खाता बंद करना अलग बात है और उसे वापस नहीं लिया जा सकता; हर तरह के रिकॉर्ड के साथ क्या होता है, वह उस पेज पर लिखा है।',
     'export.printCrumb': 'प्रिंट के लिए',
@@ -876,6 +903,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Jetons d’accès',
     'export.outTokensNote':
       'Les jetons de vérification des certificats et les liens de partage sont ce qui laisse entrer d’autres personnes. Les imprimer dans une copie, c’est ce qui leur fait perdre leur secret.',
+    'export.outBoards': 'Vos messages dans la discussion des élèves et celle des enseignants',
+    'export.outBoardsNote':
+      'Vous y écrivez sous un pseudonyme, pour qu’un message ne porte pas votre nom. Une copie qui placerait ces messages à côté de votre nom déferait cela. Ils restent dans la discussion, où vous pouvez les lire et en retirer un. Les questions et les réponses que vous avez écrites dans un cours sont autre chose : elles sont dans la copie.',
     'export.after':
       'Télécharger est un sens et restaurer est l’autre : une partie d’une copie peut être remise sur ce compte ou sur un nouveau. Fermer votre compte est une chose distincte et irréversible ; ce qu’il advient de chaque type d’enregistrement est écrit sur cette page.',
     'export.printCrumb': 'À imprimer',
@@ -963,6 +993,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Tokens de credenciales',
     'export.outTokensNote':
       'Los tokens de verificación de certificados y los enlaces para compartir son lo que deja entrar a otras personas. Imprimirlos en una copia es la manera en que dejan de ser secretos.',
+    'export.outBoards': 'Sus mensajes en el debate de estudiantes y en el de docentes',
+    'export.outBoardsNote':
+      'Allí escribe con un nombre de usuario, para que un mensaje no lleve su nombre. Una copia que pusiera esos mensajes junto a su nombre desharía eso. Se quedan en el debate, donde puede leerlos y retirar cualquiera. Las preguntas y respuestas que escribió en un curso son otra cosa: están en la copia.',
     'export.after':
       'Descargar es un sentido y restaurar es el otro: parte de una copia puede volver a ponerse en esta cuenta o en una nueva. Cerrar su cuenta es algo aparte y no se puede deshacer; lo que ocurre con cada tipo de registro está escrito en esa página.',
     'export.printCrumb': 'Para imprimir',
@@ -1049,6 +1082,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Tokens de credenciais',
     'export.outTokensNote':
       'Os tokens de verificação de certificados e as ligações de partilha são aquilo que deixa entrar outras pessoas. Imprimi-los numa cópia é a forma de deixarem de ser secretos.',
+    'export.outBoards': 'As suas mensagens na discussão dos alunos e na dos professores',
+    'export.outBoardsNote':
+      'Aí escreve com um nome de utilizador, para que uma mensagem não leve o seu nome. Uma cópia que pusesse essas mensagens junto do seu nome desfaria isso. Ficam na discussão, onde as pode ler e retirar qualquer uma. As perguntas e respostas que escreveu num curso são outra coisa: estão na cópia.',
     'export.after':
       'Descarregar é um sentido e restaurar é o outro: parte de uma cópia pode ser reposta nesta conta ou numa nova. Fechar a sua conta é uma coisa à parte e não pode ser desfeita; o que acontece a cada tipo de registo está escrito nessa página.',
     'export.printCrumb': 'Para imprimir',
@@ -1135,6 +1171,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Tokeni za vitambulisho',
     'export.outTokensNote':
       'Tokeni za uthibitishaji wa vyeti na viungo vya kushiriki ndivyo vinavyowaruhusu watu wengine kuingia. Kuvichapisha ndani ya nakala ndiyo njia ya kuacha kuwa siri.',
+    'export.outBoards': 'Machapisho yako katika majadiliano ya wanafunzi na ya walimu',
+    'export.outBoardsNote':
+      'Huko unaandika kwa jina la mtumiaji, ili chapisho lisibebe jina lako. Nakala inayoweka machapisho hayo kando ya jina lako ingeondoa hilo. Yanabaki kwenye majadiliano, ambako unaweza kuyasoma na kuondoa lolote. Maswali na majibu uliyoandika ndani ya kozi ni jambo jingine: yamo kwenye nakala.',
     'export.after':
       'Kupakua ni upande mmoja na kurejesha ni upande mwingine: sehemu ya nakala inaweza kurudishwa kwenye akaunti hii au kwenye akaunti mpya. Kufunga akaunti yako ni jambo tofauti na haliwezi kutenduliwa; kinachotokea kwa kila aina ya kumbukumbu kimeandikwa kwenye ukurasa huo.',
     'export.printCrumb': 'Kwa kuchapisha',
@@ -1220,6 +1259,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Bewystekens',
     'export.outTokensNote':
       'Sertifikaat-verifikasietekens en deelskakels is wat ander mense inlaat. Om hulle in ’n kopie te druk is hoe hulle ophou om geheim te wees.',
+    'export.outBoards': 'Jou plasings in die studentebespreking en die onderwysersbespreking',
+    'export.outBoardsNote':
+      'Daar skryf jy onder ’n gebruikersnaam, sodat ’n plasing nie jou naam dra nie. ’n Kopie wat daardie plasings langs jou naam sit, sou dit ongedaan maak. Hulle bly in die bespreking, waar jy hulle kan lees en enige een kan terugtrek. Die vrae en antwoorde wat jy in ’n kursus geskryf het, is iets anders: hulle is in die kopie.',
     'export.after':
       'Aflaai is een rigting en herstel is die ander: ’n deel van ’n kopie kan na hierdie rekening of na ’n nuwe een teruggesit word. Om jou rekening te sluit is afsonderlik en kan nie ongedaan gemaak word nie; wat met elke soort rekord gebeur, staan op daardie bladsy.',
     'export.printCrumb': 'Om te druk',
@@ -1286,6 +1328,8 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outFilesNote': '附件只以引用方式列出。把每个存储的视频复制到一份文档中是另一项功能，有它自己的大小限制。',
     'export.outTokens': '凭证令牌',
     'export.outTokensNote': '证书验证令牌和分享链接正是让其他人进入的东西。把它们印在副本里，它们就不再保密了。',
+    'export.outBoards': '你在学生讨论区和教师讨论区发布的内容',
+    'export.outBoardsNote': '在那里你用用户名发言，这样内容就不会带着你的名字。把这些内容和你的名字放在一起的副本，会让这一点落空。它们留在讨论区，你可以在那里阅读，也可以撤回任何一条。你在课程里写的提问和回答是另一回事：它们在副本里。',
     'export.after': '下载是一个方向，恢复是另一个方向：副本的一部分可以放回本账户或一个新账户。关闭账户是另一回事，而且无法撤销；每类记录会怎样处理，都写在那个页面上。',
     'export.printCrumb': '供打印',
     'export.printTitle': '你的数据副本',
@@ -1348,6 +1392,8 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outFilesNote': '附件只以參照方式列出。把每個儲存的影片複製到一份文件中是另一項功能，有它自己的大小限制。',
     'export.outTokens': '憑證權杖',
     'export.outTokensNote': '證書驗證權杖和分享連結正是讓其他人進入的東西。把它們印在副本裡，它們就不再保密了。',
+    'export.outBoards': '你在學生討論區和教師討論區發布的內容',
+    'export.outBoardsNote': '在那裡你用使用者名稱發言，這樣內容就不會帶著你的名字。把這些內容和你的名字放在一起的副本，會讓這一點落空。它們留在討論區，你可以在那裡閱讀，也可以收回任何一則。你在課程裡寫的提問和回答是另一回事：它們在副本裡。',
     'export.after': '下載是一個方向，還原是另一個方向：副本的一部分可以放回本帳號或一個新帳號。關閉帳號是另一回事，而且無法復原；每類紀錄會怎樣處理，都寫在那個頁面上。',
     'export.printCrumb': '供列印',
     'export.printTitle': '你的資料副本',
@@ -1429,6 +1475,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Mã thông báo xác thực',
     'export.outTokensNote':
       'Mã xác minh chứng chỉ và đường liên kết chia sẻ là thứ cho người khác vào. In chúng trong một bản sao chính là cách chúng thôi còn bí mật.',
+    'export.outBoards': 'Bài đăng của bạn trong thảo luận của học viên và của giáo viên',
+    'export.outBoardsNote':
+      'Ở đó bạn viết bằng tên người dùng, để bài đăng không mang tên của bạn. Một bản sao đặt những bài đăng đó cạnh tên của bạn sẽ làm mất điều ấy. Chúng vẫn ở trong phần thảo luận, nơi bạn có thể đọc và rút lại bất kỳ bài nào. Câu hỏi và câu trả lời bạn viết trong một khóa học là chuyện khác: chúng có trong bản sao.',
     'export.after':
       'Tải xuống là một chiều và khôi phục là chiều kia: một phần của bản sao có thể được đưa trở lại tài khoản này hoặc một tài khoản mới. Đóng tài khoản là việc riêng và không thể hoàn tác; điều gì xảy ra với từng loại bản ghi được viết trên trang đó.',
     'export.printCrumb': 'Để in',
@@ -1514,6 +1563,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'โทเค็นหลักฐานรับรอง',
     'export.outTokensNote':
       'โทเค็นยืนยันประกาศนียบัตรและลิงก์สำหรับแชร์คือสิ่งที่เปิดทางให้คนอื่นเข้ามา การพิมพ์สิ่งเหล่านี้ลงในสำเนาคือวิธีที่ทำให้มันไม่เป็นความลับอีกต่อไป',
+    'export.outBoards': 'โพสต์ของคุณในการสนทนาของนักเรียนและการสนทนาของครู',
+    'export.outBoardsNote':
+      'ที่นั่นคุณเขียนด้วยชื่อผู้ใช้ เพื่อให้โพสต์ไม่มีชื่อของคุณติดอยู่ สำเนาที่นำโพสต์เหล่านั้นมาวางไว้ข้างชื่อของคุณจะทำให้สิ่งนี้หมดความหมาย โพสต์ยังอยู่ในการสนทนา ซึ่งคุณอ่านได้และถอนโพสต์ใดก็ได้ ส่วนคำถามและคำตอบที่คุณเขียนในหลักสูตรเป็นอีกเรื่องหนึ่ง สิ่งเหล่านั้นอยู่ในสำเนา',
     'export.after':
       'การดาวน์โหลดเป็นทางหนึ่ง และการกู้คืนเป็นอีกทางหนึ่ง: บางส่วนของสำเนานำกลับมาใส่ในบัญชีนี้หรือบัญชีใหม่ได้ การปิดบัญชีเป็นอีกเรื่องหนึ่งและย้อนกลับไม่ได้ สิ่งที่เกิดขึ้นกับระเบียนแต่ละประเภทเขียนไว้ในหน้านั้น',
     'export.printCrumb': 'สำหรับพิมพ์',
@@ -1600,6 +1652,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Mga token ng kredensyal',
     'export.outTokensNote':
       'Ang mga token sa pagberipika ng sertipiko at mga link sa pagbabahagi ang nagpapapasok sa ibang tao. Ang pag-print ng mga ito sa isang kopya ang paraan para hindi na ito maging lihim.',
+    'export.outBoards': 'Ang mga post mo sa talakayan ng mga mag-aaral at ng mga guro',
+    'export.outBoardsNote':
+      'Doon ay sumusulat ka gamit ang username, para hindi dala ng post ang pangalan mo. Mawawalan iyon ng saysay kung ilalagay ng kopya ang mga post na iyon sa tabi ng pangalan mo. Nananatili ang mga ito sa talakayan, kung saan mababasa mo ang mga ito at mababawi ang alinman. Iba ang mga tanong at sagot na isinulat mo sa isang kurso: kasama ang mga iyon sa kopya.',
     'export.after':
       'Isang direksyon ang pag-download at ang kabila naman ang pagbabalik: maibabalik ang bahagi ng isang kopya sa account na ito o sa bago. Hiwalay ang pagsasara ng iyong account at hindi na ito mababawi; nakasulat sa pahinang iyon ang nangyayari sa bawat uri ng tala.',
     'export.printCrumb': 'Para i-print',
@@ -1686,6 +1741,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Hisob maʼlumoti tokenlari',
     'export.outTokensNote':
       'Sertifikatni tekshirish tokenlari va ulashish havolalari boshqalarni ichkariga kiritadigan narsalardir. Ularni nusxada chop etish ularning sir boʻlmay qolishiga olib keladi.',
+    'export.outBoards': 'Oʻquvchilar va oʻqituvchilar muhokamasidagi xabarlaringiz',
+    'export.outBoardsNote':
+      'U yerda foydalanuvchi nomi bilan yozasiz, shunda xabarda ismingiz boʻlmaydi. Oʻsha xabarlarni ismingiz yoniga qoʻyadigan nusxa buni yoʻqqa chiqaradi. Ular muhokamada qoladi; u yerda ularni oʻqishingiz va istalganini qaytarib olishingiz mumkin. Kursda yozgan savol va javoblaringiz boshqa narsa: ular nusxada bor.',
     'export.after':
       'Yuklab olish bir yoʻnalish, tiklash esa ikkinchisi: nusxaning bir qismini shu hisobga yoki yangi hisobga qaytarib qoʻyish mumkin. Hisobni yopish alohida ish va uni ortga qaytarib boʻlmaydi; har bir turdagi yozuv bilan nima boʻlishi oʻsha sahifada yozilgan.',
     'export.printCrumb': 'Chop etish uchun',
@@ -1770,6 +1828,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Тіркелу деректерінің токендері',
     'export.outTokensNote':
       'Сертификатты растау токендері мен бөлісу сілтемелері басқа адамдарды ішке кіргізетін нәрселер. Оларды көшірмеде басып шығару олардың құпия болудан қалуына әкеледі.',
+    'export.outBoards': 'Оқушылар мен мұғалімдер талқылауындағы хабарларыңыз',
+    'export.outBoardsNote':
+      'Онда пайдаланушы атымен жазасыз, сонда хабарда атыңыз болмайды. Сол хабарларды атыңыздың жанына қоятын көшірме мұны жоққа шығарады. Олар талқылауда қалады; сол жерде оларды оқып, кез келгенін қайтарып ала аласыз. Курста жазған сұрақтарыңыз бен жауаптарыңыз — бөлек нәрсе: олар көшірмеде бар.',
     'export.after':
       'Жүктеп алу бір бағыт, ал қалпына келтіру екінші бағыт: көшірменің бір бөлігін осы тіркелгіге немесе жаңа тіркелгіге қайта қоюға болады. Тіркелгіні жабу бөлек іс және оны кері қайтару мүмкін емес; жазбаның әр түрімен не болатыны сол бетте жазылған.',
     'export.printCrumb': 'Басып шығару үшін',
@@ -1856,6 +1917,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Etimadnamə tokenləri',
     'export.outTokensNote':
       'Sertifikat yoxlama tokenləri və paylaşım keçidləri başqalarını içəri buraxan şeylərdir. Onları surətdə çap etmək onların sirr olmaqdan çıxması deməkdir.',
+    'export.outBoards': 'Tələbələrin və müəllimlərin müzakirəsindəki yazılarınız',
+    'export.outBoardsNote':
+      'Orada istifadəçi adı ilə yazırsınız ki, yazıda adınız olmasın. Həmin yazıları adınızın yanına qoyan surət bunu heçə endirər. Onlar müzakirədə qalır; orada onları oxuya və istədiyinizi geri götürə bilərsiniz. Kursda yazdığınız suallar və cavablar başqa şeydir: onlar surətdədir.',
     'export.after':
       'Endirmək bir istiqamətdir, bərpa etmək isə digəri: surətin bir hissəsi bu hesaba və ya yeni hesaba geri qoyula bilər. Hesabı bağlamaq ayrı işdir və geri qaytarıla bilməz; hər növ qeydlə nə baş verdiyi həmin səhifədə yazılıb.',
     'export.printCrumb': 'Çap üçün',
@@ -1942,6 +2006,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Токенҳои эътимоднома',
     'export.outTokensNote':
       'Токенҳои тасдиқи шаҳодатнома ва пайвандҳои мубодила ҳамон чизҳое мебошанд, ки дигаронро ба дарун роҳ медиҳанд. Чоп кардани онҳо дар нусха ҳамон роҳест, ки онҳо дигар махфӣ намемонанд.',
+    'export.outBoards': 'Паёмҳои шумо дар муҳокимаи донишомӯзон ва муаллимон',
+    'export.outBoardsNote':
+      'Он ҷо бо номи корбарӣ менависед, то паём номи шуморо надошта бошад. Нусхае, ки он паёмҳоро дар паҳлуи номи шумо мегузорад, инро аз байн мебарад. Онҳо дар муҳокима мемонанд; он ҷо метавонед онҳоро хонед ва ҳар якеро бозпас гиред. Саволу ҷавобҳое, ки дар курс навиштаед, чизи дигаранд: онҳо дар нусха ҳастанд.',
     'export.after':
       'Боргирӣ як самт аст ва барқарорсозӣ самти дигар: қисме аз нусхаро ба ҳамин ҳисоб ё ба ҳисоби нав баргардондан мумкин аст. Бастани ҳисоб кори алоҳида аст ва онро бекор кардан намешавад; бо ҳар намуди сабт чӣ мешавад, дар ҳамон саҳифа навишта шудааст.',
     'export.printCrumb': 'Барои чоп',
@@ -2027,6 +2094,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Эсептик маалымат токендери',
     'export.outTokensNote':
       'Сертификатты текшерүү токендери жана бөлүшүү шилтемелери башка адамдарды ичкери киргизген нерселер. Аларды көчүрмөдө басып чыгаруу алардын сыр бойдон калбай калышына алып келет.',
+    'export.outBoards': 'Окуучулардын жана мугалимдердин талкуусундагы билдирүүлөрүңүз',
+    'export.outBoardsNote':
+      'Ал жерде колдонуучу аты менен жазасыз, ошондо билдирүүдө атыңыз болбойт. Ошол билдирүүлөрдү атыңыздын жанына койгон көчүрмө муну жокко чыгарат. Алар талкууда калат; ал жерде аларды окуп, каалаганын кайтарып ала аласыз. Курста жазган суроолоруңуз менен жоопторуңуз — башка нерсе: алар көчүрмөдө бар.',
     'export.after':
       'Жүктөп алуу бир багыт, ал эми калыбына келтирүү экинчи багыт: көчүрмөнүн бир бөлүгүн ушул аккаунтка же жаңы аккаунтка кайра коюуга болот. Аккаунтту жабуу өзүнчө иш жана аны артка кайтарууга болбойт; жазуунун ар бир түрү менен эмне болору ошол баракта жазылган.',
     'export.printCrumb': 'Басып чыгаруу үчүн',
@@ -2113,6 +2183,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'Şahsyýet tokenleri',
     'export.outTokensNote':
       'Şahadatnamany barlamak tokenleri we paýlaşma baglanyşyklary başgalary içeri goýberýän zatlardyr. Olary nusgada çap etmek olaryň syr bolmagyny bes edýär.',
+    'export.outBoards': 'Okuwçylaryň we mugallymlaryň maslahatyndaky ýazgylaryňyz',
+    'export.outBoardsNote':
+      'Ol ýerde ulanyjy ady bilen ýazýarsyňyz, şonda ýazgyda adyňyz bolmaýar. Şol ýazgylary adyňyzyň ýanyna goýýan nusga muny ýok edýär. Olar maslahatda galýar; ol ýerde olary okap we islän birini yzyna alyp bilersiniz. Kursda ýazan soraglaryňyz we jogaplaryňyz başga zat: olar nusgada bar.',
     'export.after':
       'Göçürip almak bir ugur, dikeltmek bolsa beýleki ugur: nusganyň bir bölegini şu hasaba ýa-da täze hasaba yzyna goýup bolýar. Hasaby ýapmak aýratyn işdir we ony yzyna gaýtaryp bolmaýar; her görnüşli ýazgy bilen näme bolýandygy şol sahypada ýazylan.',
     'export.printCrumb': 'Çap etmek üçin',
@@ -2200,6 +2273,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'அடையாளச் சான்று டோக்கன்கள்',
     'export.outTokensNote':
       'சான்றிதழ் சரிபார்ப்பு டோக்கன்களும் பகிர்வு இணைப்புகளுமே பிறரை உள்ளே விடுகின்றன. அவற்றை ஒரு நகலில் அச்சிடுவதுதான் அவை இரகசியமாக இல்லாமல் போகும் வழி.',
+    'export.outBoards': 'மாணவர் மற்றும் ஆசிரியர் கலந்துரையாடலில் உங்கள் பதிவுகள்',
+    'export.outBoardsNote':
+      'அங்கே நீங்கள் பயனர்பெயரில் எழுதுகிறீர்கள்; அதனால் பதிவில் உங்கள் பெயர் இருக்காது. அந்தப் பதிவுகளை உங்கள் பெயருக்கு அருகில் வைக்கும் நகல் அதை இல்லாமல் செய்துவிடும். அவை கலந்துரையாடலிலேயே இருக்கும்; அங்கே அவற்றைப் படிக்கலாம், எதையும் திரும்பப் பெறலாம். ஒரு பாடநெறியில் நீங்கள் எழுதிய கேள்விகளும் பதில்களும் வேறு விஷயம்: அவை நகலில் உள்ளன.',
     'export.after':
       'பதிவிறக்குவது ஒரு திசை, மீட்டமைப்பது மறு திசை: ஒரு நகலின் ஒரு பகுதியை இந்தக் கணக்கிலோ புதிய கணக்கிலோ மீண்டும் வைக்கலாம். கணக்கை மூடுவது தனியானது, அதைத் திரும்பப் பெற முடியாது; ஒவ்வொரு வகைப் பதிவுக்கும் என்ன நடக்கும் என்பது அந்தப் பக்கத்தில் எழுதப்பட்டுள்ளது.',
     'export.printCrumb': 'அச்சிடுவதற்கு',
@@ -2285,6 +2361,9 @@ export const EXPORT: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'export.outTokens': 'प्रमाणपत्र टोकनहरू',
     'export.outTokensNote':
       'प्रमाणपत्र प्रमाणीकरण टोकन र साझेदारी लिङ्कहरू नै अरू मानिसलाई भित्र पस्न दिने कुरा हुन्। तिनलाई प्रतिलिपिमा छाप्नु नै ती गोप्य नरहने बाटो हो।',
+    'export.outBoards': 'विद्यार्थी र शिक्षकहरूको छलफलमा तपाईंका पोस्टहरू',
+    'export.outBoardsNote':
+      'त्यहाँ तपाईं प्रयोगकर्ता नामबाट लेख्नुहुन्छ, ताकि पोस्टमा तपाईंको नाम नहोस्। ती पोस्टलाई तपाईंको नामको छेउमा राख्ने प्रतिलिपिले यो कुरा नै मेटाइदिन्छ। ती छलफलमै रहन्छन्; त्यहाँ तपाईं तिनलाई पढ्न र कुनै पनि फिर्ता लिन सक्नुहुन्छ। कोर्समा तपाईंले लेखेका प्रश्न र उत्तरहरू अर्कै कुरा हुन्: ती प्रतिलिपिमा छन्।',
     'export.after':
       'डाउनलोड एउटा दिशा हो र पुनर्स्थापना अर्को: प्रतिलिपिको केही भाग यही खातामा वा नयाँ खातामा फेरि राख्न सकिन्छ। खाता बन्द गर्नु अलग कुरा हो र त्यसलाई फिर्ता गर्न सकिँदैन; हरेक प्रकारको अभिलेखलाई के हुन्छ भन्ने त्यही पृष्ठमा लेखिएको छ।',
     'export.printCrumb': 'छाप्नका लागि',

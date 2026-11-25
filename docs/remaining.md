@@ -1039,10 +1039,14 @@ written: not a held draft, nothing.
   **What people write** is shown as written; since migration 361 a reader
   can ask for a machine translation of it when that switch is on. The staff
   queue is in English.
-  **Before either switch is turned on, these are not built:** what somebody
-  wrote on a board is not in their data export (`export_my_data()`);
-  nothing tells staff that a post was reported, so `/admin/boards` has to be
-  opened to find out; there is no search, no editing of a post, and no way
+  **Answered by the owner on 2026-11-25 and built (migration 363, not on
+  the hosted test project):** what somebody wrote on a board stays out of
+  their data export, and the export and `/account/export` say so; a
+  reported post is counted on the owner's home page and on no other
+  role's, and no message is sent, so the owner has to open `/admin` to
+  find out. Governance can still moderate and is not given the count.
+  **Before either switch is turned on, these are not built:** there is no
+  search, no editing of a post, and no way
   to follow a thread; a username cannot be changed after the first post, and
   one family sign-in has one username whoever is typing.
   **Under 18:** a child without a login of their own gets in through the
@@ -1455,15 +1459,15 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-**The test project is at 358; the tree is at 362.** The 358th went on
-2026-11-25. The 359th to the 362nd have no job and none has been asked
+**The test project is at 358; the tree is at 363.** The 358th went on
+2026-11-25. The 359th to the 363rd have no job and none has been asked
 for. No application has been deployed there, so nothing about Auth, a
 request through PostgREST or a page is shown by that; one built before
 commit `fbf6341` must not be deployed to it, because it knows eight kinds
 of notification and the database now has nine. The next migration needs a
 job of its own, as each of these did.
 
-The existing Supabase test project has the first 358 of the tree's 362 migrations applied
+The existing Supabase test project has the first 358 of the tree's 363 migrations applied
 (the 358th, `20261281151000_teaching_answer_told.sql`, by run
 `45465390298`, approved by the owner on 2026-11-25; the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
 `20261281147000_sponsorship_checkout.sql`, each by a job of its own on

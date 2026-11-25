@@ -89,8 +89,11 @@ test('each thing the database raises has a name, read out of the migration that 
   // session with no profile row. That has no sentence of its own and is told
   // as a failure, never as the limit and never as being signed out.
   const wrapper = latestDefining(/create or replace function public\.export_my_data\(\)/u);
-  assert.equal(wrapper, '20261281139000_resource_resume_export.sql');
-  const inWrapper = raised(sql(wrapper!));
+  assert.equal(wrapper, '20261281156000_board_reports_owner_told_export_says.sql');
+  // The file defines another function after it; only the wrapper is read.
+  const wrapperText = sql(wrapper!);
+  const wrapperAt = wrapperText.indexOf('create or replace function public.export_my_data()');
+  const inWrapper = raised(wrapperText.slice(wrapperAt, wrapperText.indexOf('\n$$;', wrapperAt)));
   assert.deepEqual(
     inWrapper.map((r) => r.message),
     ['support:account_closed_or_missing'],
@@ -103,8 +106,9 @@ test('each thing the database raises has a name, read out of the migration that 
 
 test('the limit the page prints is the one the database cuts at, and the hour holds ten', () => {
   const body = sql('20261281141000_export_eligible_learners_once.sql');
-  const wrapper = sql('20261281139000_resource_resume_export.sql');
-  for (const text of [body, wrapper]) {
+  const wrapper = sql('20261281156000_board_reports_owner_told_export_says.sql');
+  const wrapperBefore = sql('20261281139000_resource_resume_export.sql');
+  for (const text of [body, wrapper, wrapperBefore]) {
     const cap = /v_cap\s+constant integer := (\d+);/u.exec(text);
     assert.ok(cap, 'v_cap is declared');
     assert.equal(Number(cap[1]), EXPORT_ROW_LIMIT);
@@ -112,6 +116,74 @@ test('the limit the page prints is the one the database cuts at, and the hour ho
   // "Ten" is a word in every catalogue sentence; this is where it comes from.
   assert.match(body, /if v_exported >= 10 then/u);
   assert.match(body, /e\.action = 'data\.exported'\s+and e\.occurred_at > now\(\) - interval '1 hour'/u);
+});
+
+test('board posts are named as left out, and the two functions that say so are the earlier ones with that added', () => {
+  // The owner, 2026-11-25: board posts stay out of a copy, and when a post is
+  // reported the owner is told and staff are not. PostgreSQL cannot wrap the
+  // function it replaces, so each was copied whole into 20261281156000. A
+  // copy can lose a line: every earlier line must still be there, in order,
+  // and what was added is counted and read.
+  const NOW = '20261281156000_board_reports_owner_told_export_says.sql';
+  const inFile = (file: string, name: string): string[] => {
+    const text = sql(file);
+    const at = text.lastIndexOf(`create or replace function public.${name}(`);
+    assert.notEqual(at, -1, `${file} does not define ${name}`);
+    return text.slice(at, text.indexOf('\n$$;', at)).split('\n');
+  };
+  const addedTo = (name: string, before: string): string[] => {
+    const old = inFile(before, name);
+    const added: string[] = [];
+    let i = 0;
+    for (const line of inFile(NOW, name)) {
+      if (line === old[i]) i += 1;
+      else added.push(line);
+    }
+    assert.equal(i, old.length, `${name}(): the earlier definition has ${old.length - i} lines the new one lost`);
+    assert.equal(
+      latestDefining(new RegExp(`create or replace function public\\.${name}\\(`, 'u')),
+      NOW,
+      `${name}() is defined again after ${NOW}`,
+    );
+    return added;
+  };
+
+  // The copy: one entry under notIncluded, and not one board table read.
+  const inCopy = addedTo('export_my_data', '20261281139000_resource_resume_export.sql');
+  assert.equal(inCopy.length, 8, inCopy.join('\n'));
+  const copyText = inCopy.join('\n');
+  assert.match(copyText, /jsonb_set\(v_result, '\{notIncluded\}', coalesce\(v_result->'notIncluded', '\[\]'::jsonb\) \|\|/u);
+  assert.match(copyText, /'what', 'What you wrote on the discussion boards'/u);
+  assert.match(copyText, /They stay on the board, where you can read them and take one back\.'\)\), true\);/u);
+  assert.doesNotMatch(copyText, /\b(?:select|from|update|insert|delete|perform|grant|revoke)\b/iu);
+  assert.doesNotMatch(inFile(NOW, 'export_my_data').join('\n'), /board_(?:threads|replies|handles|reports)/u);
+  const whole = [...sql('20261281141000_export_eligible_learners_once.sql').matchAll(/board_(?:threads|replies|handles|reports)/gu)];
+  assert.equal(whole.length, 0, 'the body of the copy reads a board table');
+
+  // The count: two rows, inside a branch only the owner's role enters.
+  const inCount = addedTo('staff_attention', '20261265000100_staff_attention.sql');
+  const countText = inCount.join('\n');
+  assert.equal(countText.match(/^ {2}if v_platform then$/gmu)?.length, 1);
+  assert.equal(countText.match(/public\.attention_row\(/gu)?.length, 2);
+  assert.match(countText, /'board_reports_students', 'Reported posts, students'' board', v_count, '\/admin\/boards',/u);
+  assert.match(countText, /'board_reports_teachers', 'Reported posts, teachers'' board', v_count, '\/admin\/boards',/u);
+  assert.match(countText, /'community\.student_board', not public\.setting_bool\('community\.student_board', false\)\);/u);
+  assert.match(countText, /'community\.teacher_board', not public\.setting_bool\('community\.teacher_board', false\)\);/u);
+  // A post is counted once however many people reported it, and only while a report on it is open.
+  assert.equal(countText.match(/select distinct br\.thread_id, br\.reply_id/gu)?.length, 2);
+  assert.equal(countText.match(/where br\.resolved_at is null and t\.board = '(?:students|teachers)'/gu)?.length, 2);
+  // It counts. It writes nothing, sends nothing and names nobody.
+  const countCode = inCount.filter((line) => !line.trim().startsWith('--')).join('\n');
+  assert.doesNotMatch(countCode, /\b(?:update|insert|delete|perform|grant|revoke|notify_user|reporter_id|author_id|body|handle|reason)\b/iu);
+  // The branch opens and closes around exactly what was added, so no other role reaches it.
+  assert.equal(inCount.filter((line) => line.trim() !== '' && !line.trim().startsWith('--')).at(0), '  if v_platform then');
+  assert.equal(inCount.filter((line) => line.trim() !== '' && !line.trim().startsWith('--')).at(-1), '  end if;');
+
+  // The page that lists what a copy lacks has the sentence, in every language the page is written in.
+  const page = readFileSync(new URL('../app/account/export/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /\['export\.outBoards', 'export\.outBoardsNote'\]/u);
+  assert.match(page, /isFlagEnabled\(supabase, 'community\.student_board'\)\.catch\(\(\) => true\)/u);
+  assert.match(page, /isFlagEnabled\(supabase, 'community\.teacher_board'\)\.catch\(\(\) => true\)/u);
 });
 
 test('the lists that were cut are read from the copy, and an unexpected shape is an empty answer', () => {

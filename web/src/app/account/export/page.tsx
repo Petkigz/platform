@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { EXPORT_ROW_LIMIT } from '@/lib/export-outcome';
+import { isFlagEnabled } from '@/lib/flags';
 import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { formatNumber } from '@/lib/i18n/format';
 import { DownloadCopy, type CopyWords } from './download-copy';
@@ -49,6 +50,11 @@ const HEADING = { fontSize: '1.15rem', margin: '2rem 0 0.5rem' } as const;
  *
  * The two lists are sentences about `export_my_data()`. What the copy leaves
  * out is also written inside the copy, in English, by the database.
+ *
+ * **Posts on the two discussion boards are not in a copy**, by the owner's
+ * decision of 2026-11-25: there a person writes under a username, and a file
+ * that sets those posts beside their name would undo that. The copy says so
+ * itself; this page says so while a board is switched on.
  */
 export default async function ExportPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -62,6 +68,11 @@ export default async function ExportPage() {
   const { locale, shown } = await readerLanguage();
   const t = translator(shown.code);
   const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const [studentBoard, teacherBoard] = await Promise.all([
+    isFlagEnabled(supabase, 'community.student_board').catch(() => true),
+    isFlagEnabled(supabase, 'community.teacher_board').catch(() => true),
+  ]);
+  const boardsOpen = studentBoard || teacherBoard;
 
   const words: CopyWords = {
     preparing: t('export.preparing'),
@@ -92,6 +103,12 @@ export default async function ExportPage() {
     ['export.outStaff', 'export.outStaffNote'],
     ['export.outFiles', 'export.outFilesNote'],
     ['export.outTokens', 'export.outTokensNote'],
+    // Board posts stay out of a copy (owner decision, 2026-11-25). The line is
+    // written while either board is switched on: before that there is no
+    // board for it to be about. If the switches cannot be read it is written,
+    // because leaving out a sentence about what a copy lacks is the worse of
+    // the two mistakes.
+    ...(boardsOpen ? ([['export.outBoards', 'export.outBoardsNote']] as const) : []),
   ] as const;
 
   return (

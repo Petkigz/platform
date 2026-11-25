@@ -94,16 +94,22 @@ export async function run(ctx) {
     }
     assert(!queue(result, 'refunds'), 'a governance admin was shown the refund count');
     assert(!queue(result, 'support'), 'a governance admin was shown the support count');
+    // Governance moderates the boards and is not told when a post is reported.
+    assert(!result.queues.some((x) => x.code.startsWith('board_reports')),
+      'a governance admin was shown the count of reported board posts');
   });
 
   await test('the owner gets everything', async () => {
     const result = await attention(admin);
     for (const code of ['refunds', 'disputes', 'reconciliation', 'payouts',
       'support', 'appeals', 'credentials', 'guardians',
-      'reports', 'reviews', 'media']) {
+      'reports', 'reviews', 'media',
+      // Reported board posts: the owner alone is told (owner decision,
+      // 2026-11-25). What they count is pinned in the boards suite.
+      'board_reports_students', 'board_reports_teachers']) {
       assert(queue(result, code), `the owner has no ${code} queue`);
     }
-    assert(result.queues.length === 11, `the owner saw ${result.queues.length} queues`);
+    assert(result.queues.length === 13, `the owner saw ${result.queues.length} queues`);
   });
 
   // -------------------------------------------------------------------------
@@ -164,7 +170,8 @@ export async function run(ctx) {
     // there is no other queue, so the suite running before this one may well
     // have left media in the media queue.
     const expected = ['refunds', 'disputes', 'reconciliation', 'payouts', 'support',
-      'appeals', 'credentials', 'guardians', 'reports', 'reviews', 'media'];
+      'appeals', 'credentials', 'guardians', 'reports', 'reviews', 'media',
+      'board_reports_students', 'board_reports_teachers'];
     const seen = result.queues.map((row) => row.code).sort();
     assert(seen.join(',') === [...expected].sort().join(','),
       `the owner saw ${seen.join(', ')}`);

@@ -54,7 +54,8 @@ export default async function AdminBoardsPage() {
         <h1>Discussion reports</h1>
         <p className="muted">
           Posts on the two boards that somebody has reported. Nothing is held before it is shown, so
-          this page is where a post is taken down.
+          this page is where a post is taken down. Nobody is sent a message when a post is
+          reported: the number waiting is on the owner&rsquo;s dashboard, and on nobody else&rsquo;s.
         </p>
       </div>
 

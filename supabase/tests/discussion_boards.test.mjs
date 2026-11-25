@@ -488,6 +488,133 @@ export async function run(ctx) {
       assert((await open(teacher, made.threadId)).replies[1].kind === 'staff');
     });
 
+    // -----------------------------------------------------------------------
+    // The owner's two answers of 2026-11-25 (20261281156000)
+    // -----------------------------------------------------------------------
+    await test('a reported post is counted on the owner\'s home page, once, and on nobody else\'s', async () => {
+      const governance = await newUser('boards-governance@example.com');
+      await newProfile(governance, 'Boards Governance');
+      await grantRole(governance, 'governance_admin', admin);
+      const attention = (actor) => call(actor, 'public.staff_attention()', []);
+      const row = (result, code) => result.queues.find((x) => x.code === code);
+      const boardRows = (result) => result.queues.filter((x) => x.code.startsWith('board_reports'));
+
+      const before = await attention(admin);
+      const studentsBefore = row(before, 'board_reports_students');
+      const teachersBefore = row(before, 'board_reports_teachers');
+      assert(studentsBefore && teachersBefore, `the owner has no board rows: ${JSON.stringify(before.queues.map((x) => x.code))}`);
+      assert(studentsBefore.href === '/admin/boards' && teachersBefore.href === '/admin/boards');
+      assert(studentsBefore.feature === 'community.student_board' && teachersBefore.feature === 'community.teacher_board');
+      assert(studentsBefore.dormant === false && teachersBefore.dormant === false, 'a board that is on was marked dormant');
+
+      const writer = await student('Counted Writer');
+      const first = await student('First Reporter');
+      const second = await student('Second Reporter');
+      await name(writer.userId, 'students', 'counted_writer');
+      await name(first.userId, 'students', 'first_reporter');
+      await name(second.userId, 'students', 'second_reporter');
+      const made = await start(writer.userId, 'students', 'A thread two people report', 'body of the thread');
+      await report(first.userId, made.threadId, null, 'Reported by the first.');
+      await report(second.userId, made.threadId, null, 'Reported by the second.');
+
+      // Two reports about one post are one thing to look at.
+      let now = await attention(admin);
+      assert(row(now, 'board_reports_students').count === studentsBefore.count + 1,
+        `two reports of one post counted as ${row(now, 'board_reports_students').count - studentsBefore.count}`);
+      assert(row(now, 'board_reports_teachers').count === teachersBefore.count, 'a students\' report was counted for the teachers\' board');
+      assert(now.waitingCount === before.waitingCount + 1, 'the total did not move by one');
+
+      // A reply is its own post.
+      const answer = await reply(writer.userId, made.threadId, 'a reply that is reported too');
+      await report(first.userId, made.threadId, answer.replyId, 'The reply as well.');
+      now = await attention(admin);
+      assert(row(now, 'board_reports_students').count === studentsBefore.count + 2, 'a reported reply was not counted beside its thread');
+
+      // The teachers' board is counted in its own row.
+      // Two teachers of their own: a username cannot be changed once written under.
+      const writingTeacher = await newInstructor('boards-teacher-counted@example.com', admin);
+      const reportingTeacher = await newInstructor('boards-teacher-reporting@example.com', admin);
+      await name(writingTeacher, 'teachers', 'counted_teacher');
+      await name(reportingTeacher, 'teachers', 'reporting_teacher');
+      const staffRoom = await start(writingTeacher, 'teachers', 'A staff-room thread', 'body');
+      await report(reportingTeacher, staffRoom.threadId, null, 'A colleague reports it.');
+      now = await attention(admin);
+      assert(row(now, 'board_reports_teachers').count === teachersBefore.count + 1, 'a teachers\' report was not counted');
+      assert(row(now, 'board_reports_students').count === studentsBefore.count + 2);
+
+      // Nobody else is told. Governance still moderates: it can open the queue
+      // and see the same posts; it is not given the count.
+      const told = await attention(governance);
+      assert(boardRows(told).length === 0, `governance was told: ${JSON.stringify(boardRows(told))}`);
+      assert(!JSON.stringify(told).includes('/admin/boards'), 'governance was pointed at the board queue');
+      const forGovernance = (await queue(governance)).reports.filter((r) => [made.threadId, staffRoom.threadId].includes(r.threadId));
+      assert(forGovernance.length === 3, `governance can no longer read the queue: ${forGovernance.length}`);
+      assert(boardRows(await attention(support)).length === 0, 'a support agent was told');
+      const finance = await newUser('boards-finance@example.com');
+      await newProfile(finance, 'Boards Finance');
+      await grantRole(finance, 'finance_admin', admin);
+      assert(boardRows(await attention(finance)).length === 0, 'finance was told');
+      // What the others are told did not move.
+      assert(told.waitingCount === (await attention(governance)).waitingCount);
+      for (const person of [teacher, writer.userId]) {
+        await rejects(() => attention(person), /only platform staff/i);
+      }
+
+      // Deciding a report takes it off the count, upheld or not.
+      await moderate(governance, made.threadId, answer.replyId, false, 'Nothing wrong with the reply.');
+      now = await attention(admin);
+      assert(row(now, 'board_reports_students').count === studentsBefore.count + 1, 'a decided report is still counted');
+
+      // A board switched off stops new reports; what is waiting still is.
+      await flags(true, false);
+      try {
+        now = await attention(admin);
+        assert(row(now, 'board_reports_teachers').dormant === true && row(now, 'board_reports_teachers').count === teachersBefore.count + 1,
+          `a closed board's row: ${JSON.stringify(row(now, 'board_reports_teachers'))}`);
+        assert(row(now, 'board_reports_students').dormant === false);
+      } finally {
+        await flags(true, true);
+      }
+
+      await moderate(admin, made.threadId, null, true, 'Clearing the test thread.');
+      await moderate(admin, staffRoom.threadId, null, false, 'Clearing the test report.');
+      now = await attention(admin);
+      assert(row(now, 'board_reports_students').count === studentsBefore.count && row(now, 'board_reports_teachers').count === teachersBefore.count,
+        'the count did not return to where it began');
+    });
+
+    await test('what somebody wrote on a board is not in a copy of their data, and the copy says so', async () => {
+      const writer = await student('Export Writer');
+      const never = await student('Never Posted');
+      await name(writer.userId, 'students', 'export_owl');
+      const made = await start(writer.userId, 'students', 'SECRET-BOARD-TITLE', 'SECRET-BOARD-BODY of a thread');
+      await reply(writer.userId, made.threadId, 'SECRET-BOARD-REPLY under it');
+
+      const copy = await call(writer.userId, 'public.export_my_data()', []);
+      const text = JSON.stringify(copy);
+      for (const secret of ['SECRET-BOARD-TITLE', 'SECRET-BOARD-BODY', 'SECRET-BOARD-REPLY', 'export_owl', made.threadId]) {
+        assert(!text.includes(secret), `the copy holds ${secret}`);
+      }
+      const said = copy.notIncluded.filter((e) => /discussion boards/i.test(e.what));
+      assert(said.length === 1, `the copy does not name the boards once: ${JSON.stringify(copy.notIncluded.map((e) => e.what))}`);
+      assert(/username/.test(said[0].why) && /stay on the board/.test(said[0].why) && /take one back/.test(said[0].why),
+        `the reason does not say why and where they are: ${said[0].why}`);
+      // Everything it said before, it still says.
+      const subjects = copy.notIncluded.map((e) => e.what).join(' | ');
+      for (const earlier of [/other people/i, /sign-in address/i, /staff notes/i, /uploaded files/i, /credential tokens/i]) {
+        assert(earlier.test(subjects), `the copy no longer names ${earlier}`);
+      }
+      assert(Array.isArray(copy.resourcePositions) && copy.meta && copy.account, 'the copy lost a part');
+
+      // The same sentence for somebody with no username: a copy does not tell
+      // whether an account writes on a board.
+      const other = await call(never.userId, 'public.export_my_data()', []);
+      assert(JSON.stringify(other.notIncluded) === JSON.stringify(copy.notIncluded), 'the list differs for somebody who never posted');
+      // And nothing was written about the boards to make it.
+      const audit = (await q(`select action from public.governance_audit_events where actor = $1 and action like 'data.%' order by action`, [writer.userId])).rows.map((r) => r.action);
+      assert(JSON.stringify([...new Set(audit)]) === JSON.stringify(['data.exported', 'data.resource_positions_exported']), `making a copy recorded ${audit}`);
+    });
+
     await test('signed out, or as a visitor, nothing answers', async () => {
       for (const fn of ['my_board(text)', 'set_board_handle(text,text)', 'board_threads_page(text,timestamptz,integer)', 'board_thread(uuid)',
         'post_board_thread(text,text,text)', 'post_board_reply(uuid,text)', 'withdraw_board_post(uuid,uuid)', 'report_board_post(uuid,uuid,text)',
