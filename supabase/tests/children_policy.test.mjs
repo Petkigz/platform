@@ -256,7 +256,17 @@ export async function run(ctx) {
     for (const outcome of [/own account/, /30 days|thirty days/]) {
       assert(outcome.test(body), `the policy does not describe ${outcome}`);
     }
-    assert(/make them a login first|login first/i.test(source),
+    // The screen's sentences are the catalogue's since 2026-11-25, when the page
+    // was written in twenty-seven languages: the library names the sentence by
+    // its key and the English is in `messages/en.ts`. Both halves are held, so
+    // that neither the key nor the instruction can go without this failing.
+    const catalogue = readFileSync(
+      new URL('../../web/src/lib/i18n/messages/en.ts', import.meta.url),
+      'utf8');
+    const needsAccount = /'handover\.errNeedsAccount':\s*'([^']+)'/.exec(catalogue)?.[1] ?? '';
+    assert(source.includes("t('handover.errNeedsAccount')"),
+      'the handover screen no longer says the refusal for a learner with no account');
+    assert(/make them a login first|login first/i.test(needsAccount),
       'the screen no longer explains what to do when there is no account');
   });
 
