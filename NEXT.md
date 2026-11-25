@@ -3324,6 +3324,11 @@ memory of it, starts from the repository and not from a conversation.
   has none of the two), `export-outcome.test.ts` (each function is the one
   before it plus what was added). Pins moved by the two new sentences:
   server-only 2163, unwritten while held 2259, total 2531.
+- *A step that is easy to forget.* Any new migration, even one that adds
+  no table, needs `node scripts/postgrest-schema-snapshot.mjs` run and its
+  result committed: the snapshot records the number of migrations, and
+  CI's database job stops at that check before it runs a single suite.
+  The first push of this unit failed there.
 - *Left for the owner.* Whether a person who asks gets a copy of their
   board posts another way. How often the owner opens `/admin` once a board
   is on, since nothing else tells anybody.
