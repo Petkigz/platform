@@ -2651,9 +2651,8 @@ claim external integrations work without credentials or provider callbacks.
   differ. So `classLines()` and `reviewLines()` write every count, version,
   average and day on the server and hand them over as text. The one thing
   left to the browser is a moment on the reader's clock (`LocalTime`),
-  and **that is still wrong in those seven languages** — see
-  `docs/remaining.md`. It is an older fault in a shared component and it
-  is on pages already shipped.
+  which was wrong in those seven languages when this was written and was
+  put right the same day; see "Numbers and dates from a table" below.
 - *Changed for English readers too.* "Joined for you" is "You have
   joined"; a date is written out with its zone; the kind of a sample's
   material is "Worksheet" where it was `worksheet`; a review's day is the
@@ -3237,6 +3236,33 @@ claim external integrations work without credentials or provider callbacks.
   (`inst.` 75); held 192 of 1901, 10.10%, shown as 10%. 133 page routes, no
   new route handler; 34 smoke scripts; 2660 web tests. No migration: 357,
   174 database suites, not rerun.
+
+### Numbers and dates from a table, 2026-11-25
+
+- *The fault.* A browser and a server each carry their own copy of how a
+  language writes a number and a date. Chromium's is thinner: in seven of
+  the twenty-seven written languages and twenty of the held ones it wrote
+  "2026 M12 5 17:28 GMT+5", or English, or the wrong decimal mark, where
+  the server had written the right thing a moment before.
+- *The fix.* `lib/i18n/format.ts` looks in `lib/i18n/thin-locales.ts`
+  before it asks the runtime. The table has, for twenty-seven languages,
+  the months, the two patterns, the marks, the grouping (Nepali's lakhs),
+  the digits, the words for the halves of the day (Oromo, Somali,
+  Tigrinya), the word for the meridian (Yoruba, Sinhala) and the calendar
+  (Pashto). Nothing that calls the four functions changed, except that
+  `formatNumber` takes a number of decimals and the ratings average uses
+  it instead of a formatter of its own.
+- *Generated, not typed.* `node scripts/generate-thin-locales.mjs` writes
+  the table from Node's data and refuses a language whose forms it cannot
+  carry; `--check` says whether the file is what it would write. After a
+  Node upgrade the test `thin-locales.test.ts` skips its comparison and
+  says so: run the script, read the difference, commit it.
+- *Checked in a browser on every push.* `scripts/number-date-browser-check.mjs`
+  runs the same file in Node and in the build machine's browser and
+  compares 12,699 answers. It is the last step of the responsive workflow.
+- *Not done.* Lists, country and language names and the prayer tool still
+  use the browser's own data; see `docs/remaining.md`. No page was opened
+  in a browser in these languages after the change.
 
 ### The test project at 358, 2026-11-25
 

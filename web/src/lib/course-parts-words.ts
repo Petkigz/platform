@@ -44,11 +44,7 @@ const KIND_KEY: Record<string, MessageKey> = {
 
 /** "4.3" as the language writes it: its digits, its decimal mark, one place. */
 function oneDecimal(code: LocaleCode, value: number): string {
-  try {
-    return new Intl.NumberFormat(code, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
-  } catch {
-    return value.toFixed(1);
-  }
+  return formatNumber(code, value, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 /** The sentences with a number in them, for each class, by the class's id. */

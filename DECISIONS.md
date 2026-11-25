@@ -8103,13 +8103,62 @@ classes, saving for later and the ratings panel are built this way
 refuses a formatter in any of the three.
 
 The exception is a moment on the reader's own clock, which only the browser
-can know. `LocalTime` still lets the browser write it, and in those seven
-languages the browser writes it badly ("2026 M12 5 17:28 GMT+5"). That is
-**not decided and not fixed**: the choices are to carry the months and the
-marks for the thin languages in the bundle so both sides write the same
-thing, or to leave the server's UTC text in place where the browser cannot
-do better. It is recorded in `docs/remaining.md`. The client components
-written before this ruling have not been read against it.
+can know. `LocalTime` lets the browser write it. When this was decided the
+browser wrote it badly in those seven languages ("2026 M12 5 17:28 GMT+5")
+and the choice was left open; it is made in the next entry.
+
+## Twenty-seven languages are written from a table, on both sides — **DECIDED 2026-11-25**
+
+The choice left open above was between carrying the months and the marks of
+the thin languages in the bundle, so that both sides write the same thing,
+and leaving the server's UTC text in place where the browser cannot do
+better. The owner did not choose; asked to continue, the builder chose **the
+table**, for these reasons, and it is reversible by deleting one import.
+
+- Leaving UTC would have fixed nothing but `LocalTime`. Eighteen other client
+  components format a number or a date for themselves, and each disagreed
+  with the server in the same languages. A table under the four formatters
+  (`formatNumber`, `formatPercent`, `formatDateTime`, `formatDay`) repairs
+  all of them at once without touching one.
+- A class at "14:00 UTC" is a sum the reader has to do; "19:00 GMT+5" is not.
+- The cost was measured: 12.8 kB of source, about 2.8 kB compressed, in one
+  shared script. No sentence is in it, only months, marks and patterns.
+
+**What is in it.** Measured in Chromium 158 against Node 22 (ICU 78.2), all
+fifty-one listed languages: twenty-four are written the same by both and
+are left to the runtime. The other twenty-seven are in
+`lib/i18n/thin-locales.ts`: the seven above, and twenty that are listed and
+held (Hausa, Yoruba, Igbo, Wolof, Fula, Bambara, Kinyarwanda, Luganda, Zulu,
+Xhosa, Shona, Sesotho, Lingala, Malagasy, Sinhala, Burmese, Oromo, Somali,
+Tigrinya, Pashto). The table is **generated**
+(`scripts/generate-thin-locales.mjs`) from Node's own data, not typed, and a
+test regenerates it and compares 54,783 forms with Node whenever Node's data
+is the version the table was read from.
+
+**What the runtime is still asked.** Only things every runtime knows, and
+only of English: how a number rounds, what the clock says in a zone, and
+what day it is by a calendar (Pashto counts by the Persian one; the browser
+does that arithmetic, the table has the months).
+
+**Where it knowingly differs from Node.** A zone is always written as its
+distance from the meridian: "GMT+5", "GMT-4", "GMT+5:45", "GMT+0", and
+"UTC" for UTC. Node's data has letters for some zones in three of these
+languages (Kazakh "EEST" in Cairo, Oromo "EST" in New York, Somali "HAST"
+in Honolulu). The table does not carry them: the distance is never wrong,
+it is what the other twenty-four languages in the table already say, and
+both sides say it. A test pins the difference and shows it is the only one.
+
+**What is not covered.** The table is under those four functions and
+nothing else. Measured the same day and still different between server and
+browser in the thin languages: a list joined with the language's "and"
+(`Intl.ListFormat`, nineteen languages), the name of a country (twenty) or
+of a language (twenty-six), and the prayer tool's long date (twenty-seven)
+and its times (twenty-four). Plural forms agree in all fifty-one. The
+ruling above still stands for new work: the server writes the text. Only
+Chromium was measured; `scripts/number-date-browser-check.mjs` repeats the
+comparison in whatever browser the build machine has, fails if a table
+language differs, and reports without failing if one of the twenty-four
+does, because that depends on which data that browser happens to carry.
 
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 

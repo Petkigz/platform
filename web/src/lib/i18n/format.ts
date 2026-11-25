@@ -1,4 +1,5 @@
 import type { LocaleCode } from './locales.ts';
+import { THIN_LOCALES, type ThinLocale } from './thin-locales.ts';
 
 /**
  * The parts of translation that need no catalogue.
@@ -9,7 +10,135 @@ import type { LocaleCode } from './locales.ts';
  * three functions depend on nothing but the runtime, so a client component can
  * import them from here and bring nothing with it. `index.ts` re-exports them,
  * so server code does not have to know the difference.
+ *
+ * **Twenty-seven languages are written from a table, not by the runtime.** A
+ * server and a browser each carry their own copy of how a language writes a
+ * number and a date, and Chromium's copy is thinner than Node's: for Uzbek,
+ * Kazakh and Azerbaijani it has no month names ("2026 M11 20"); for Tajik,
+ * Kyrgyz, Turkmen, Nepali and twenty more it has nothing and writes English;
+ * and the decimal mark, the thousands mark and the digits go with them. A page
+ * drawn on the server and then run in that browser said two different things,
+ * and kept the browser's. For those languages (`thin-locales.ts`, read out of
+ * Node's data by `scripts/generate-thin-locales.mjs`) every function below
+ * writes from the table on both sides, and asks the runtime only for what
+ * every runtime knows: the rounding of a number, the clock of a zone, and the
+ * arithmetic of a calendar, each asked of English.
  */
+
+/** The table for a language whose data a browser may not have, if it is one. */
+function thin(code: string): ThinLocale | undefined {
+  return Object.prototype.hasOwnProperty.call(THIN_LOCALES, code) ? THIN_LOCALES[code] : undefined;
+}
+
+/** 0 to 9 as the language counts, wherever they stand in a finished string. */
+function inDigits(table: ThinLocale, text: string): string {
+  const digits = table.digits;
+  return digits ? text.replace(/[0-9]/g, (d) => [...digits][Number(d)] ?? d) : text;
+}
+
+/**
+ * A number the runtime has already rounded and written plainly ("-1234.568"),
+ * given the language's marks, groups and digits. The plain form comes from
+ * English, which every runtime has whole, so the rounding is the runtime's
+ * own and the same everywhere.
+ */
+function dressed(table: ThinLocale, plain: string): string {
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(plain);
+  // Not a plain number ("NaN", "∞"): say what the runtime said.
+  if (!match) return plain;
+  const [, sign, whole = '', fraction] = match;
+  const [last, before] = table.groups;
+  let grouped = whole;
+  if (whole.length > last) {
+    const tail = whole.slice(-last);
+    let head = whole.slice(0, -last);
+    const pieces: string[] = [];
+    while (head.length > before) {
+      pieces.unshift(head.slice(-before));
+      head = head.slice(0, -before);
+    }
+    grouped = [head, ...pieces, tail].join(table.group);
+  }
+  const said = `${sign ? table.minus : ''}${grouped}${fraction ? `${table.decimal}${fraction}` : ''}`;
+  return inDigits(table, said);
+}
+
+const DAY_PARTS: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
+const CLOCK_PARTS: Intl.DateTimeFormatOptions = { ...DAY_PARTS, hourCycle: 'h23', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' };
+
+/**
+ * A formatter of English that answers in plain digits, in a zone and a
+ * calendar. Making one is the slow part of writing a date, and a list of
+ * forty rows asks for the same one forty times, so they are kept. There are
+ * only as many as there are zones a process is asked about; the cap is for a
+ * server that is asked about all of them.
+ */
+const englishFormatters = new Map<string, Intl.DateTimeFormat>();
+function english(calendar: string, clock: boolean, timeZone?: string): Intl.DateTimeFormat {
+  const tag = `en-US-u-ca-${calendar}-nu-latn`;
+  const parts = clock ? CLOCK_PARTS : DAY_PARTS;
+  // No zone named is the device's own, which a traveller's device changes
+  // without telling anyone; that one is asked afresh every time.
+  if (!timeZone) return new Intl.DateTimeFormat(tag, parts);
+  const key = `${calendar}|${clock ? 'clock' : 'day'}|${timeZone}`;
+  let formatter = englishFormatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(tag, { ...parts, timeZone });
+    if (englishFormatters.size >= 256) englishFormatters.clear();
+    englishFormatters.set(key, formatter);
+  }
+  return formatter;
+}
+
+function partsOf(formatter: Intl.DateTimeFormat, when: Date): Record<string, string> {
+  const parts: Record<string, string> = {};
+  for (const part of formatter.formatToParts(when)) parts[part.type] = part.value;
+  return parts;
+}
+
+/** The year, month and day of an instant in a zone, by the language's calendar. */
+function calendarDay(table: ThinLocale, when: Date, timeZone?: string) {
+  const parts = partsOf(english(table.calendar, false, timeZone), when);
+  return { y: String(Number(parts.year)), m: table.months[Number(parts.month) - 1] ?? '', d: String(Number(parts.day)) };
+}
+
+/**
+ * What a clock on the wall says in a zone, and what the zone is called.
+ *
+ * Asked of English, which every runtime has whole. The zone's distance from
+ * UTC is worked out from the clock rather than read from the runtime's name
+ * for it, because runtimes do not agree on the name: one writes "GMT" for the
+ * meridian and another "GMT+0", and an older one has no such form at all.
+ */
+function wallClock(table: ThinLocale, when: Date, timeZone?: string) {
+  const parts = partsOf(english('gregory', true, timeZone), when);
+  // Midnight is "24" in a few old runtimes even when asked for 0 to 23.
+  const hour = Number(parts.hour) % 24;
+  const minute = Number(parts.minute);
+  const wall = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), hour, minute);
+  const offset = Math.round(wall / 60_000) - Math.floor(when.getTime() / 60_000);
+  let zone: string;
+  if (parts.timeZoneName === 'UTC') {
+    // UTC itself has a name.
+    zone = table.utc;
+  } else {
+    // Every other zone is its distance from the meridian: "GMT+5", "GMT-3",
+    // "GMT+5:45", "GMT+0". Node's data has letters for a few zones in a few of
+    // these languages ("EEST"); the distance is never wrong, and it is the
+    // same on both sides.
+    const size = Math.abs(offset);
+    const minutes = size % 60;
+    zone = `${table.gmt}${offset < 0 ? '-' : '+'}${Math.floor(size / 60)}${minutes ? `${table.gmtMinutes}${String(minutes).padStart(2, '0')}` : ''}`;
+  }
+  return {
+    H: String(hour).padStart(2, '0'),
+    k: String(hour),
+    h: String(hour % 12 || 12),
+    a: table.halves ? table.halves[hour < 12 ? 0 : 1] : '',
+    M: String(minute).padStart(2, '0'),
+    z: zone,
+  };
+}
 
 /**
  * Fill `{name}` placeholders.
@@ -49,11 +178,18 @@ export function pluralForm(code: LocaleCode, count: number): 'one' | 'other' {
  *
  * Arabic writes ٢٤, Hindi २४, and a page that prints 24 in either is in English
  * with translated words around it. `Intl` is in the runtime, so there is no
- * table to maintain and no font that has to carry the digits.
+ * table to maintain and no font that has to carry the digits. (Seven
+ * languages are the exception; see the head of this file.)
+ *
+ * `options` is for the few numbers with a fixed number of decimals, such as an
+ * average rating: "4.3", "4,3", "४.३".
  */
-export function formatNumber(code: LocaleCode, value: number): string {
+export function formatNumber(code: LocaleCode, value: number, options?: { minimumFractionDigits?: number; maximumFractionDigits?: number }): string {
   try {
-    return new Intl.NumberFormat(code).format(value);
+    // Not a number, or no end to it: the table has no word for either.
+    const table = Number.isFinite(value) ? thin(code) : undefined;
+    if (table) return dressed(table, new Intl.NumberFormat('en', { ...options, useGrouping: false }).format(value));
+    return new Intl.NumberFormat(code, options).format(value);
   } catch {
     return String(value);
   }
@@ -67,6 +203,11 @@ export function formatNumber(code: LocaleCode, value: number): string {
  */
 export function formatPercent(code: LocaleCode, value: number): string {
   try {
+    const table = Number.isFinite(value) ? thin(code) : undefined;
+    if (table) {
+      const plain = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 2, useGrouping: false }).format(value / 100);
+      return inDigits(table, table.percent.replace('{n}', dressed({ ...table, digits: null }, plain.replace('%', ''))));
+    }
     return new Intl.NumberFormat(code, { style: 'percent', maximumFractionDigits: 2 }).format(value / 100);
   } catch {
     return `${value}%`;
@@ -90,6 +231,14 @@ export function formatPercent(code: LocaleCode, value: number): string {
 export function formatDateTime(code: LocaleCode | string, iso: string, timeZone?: string): string {
   const when = new Date(iso);
   if (Number.isNaN(when.getTime())) return '';
+  const table = thin(code);
+  if (table) {
+    try {
+      return inDigits(table, fill(table.moment, { ...calendarDay(table, when, timeZone), ...wallClock(table, when, timeZone) }));
+    } catch {
+      // A zone the runtime does not know: fall through to what it would have said.
+    }
+  }
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
@@ -124,6 +273,10 @@ export function formatDay(code: LocaleCode | string, day: string | null | undefi
   const when = new Date(Date.UTC(year, month - 1, date));
   // 2026-02-31 is not a day; `Date` would quietly make it the third of March.
   if (when.getUTCFullYear() !== year || when.getUTCMonth() !== month - 1 || when.getUTCDate() !== date) return '';
+  const table = thin(code);
+  if (table) {
+    return inDigits(table, fill(table.day, calendarDay(table, when, 'UTC')));
+  }
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
   try {
     return new Intl.DateTimeFormat(code, options).format(when);

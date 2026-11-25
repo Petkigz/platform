@@ -676,21 +676,30 @@ written: not a held draft, nothing.
   teacher, support, `/about` and the scholars' panel. The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
-- *A moment on the reader's clock is badly written in seven languages,
-  found 2026-11-25 and not fixed.* `components/local-time.tsx` lets the
-  browser write the moment, because only the browser knows the zone.
-  Chromium 158 holds less language data than the server: for Kazakh, Uzbek
-  and Azerbaijani it writes "2026 M12 5 17:28 GMT+5", and for Tajik,
-  Kyrgyz, Turkmen and Nepali it writes the English form ("Dec 5, 2026,
-  5:28 PM GMT+5") inside a sentence in the language. The server's first
-  drawing is right and is in UTC; the browser then replaces it. It is on
-  every page that shows a moment (live classes, dated classes, the
-  companion), in those seven of the twenty-seven. The same thinness makes
-  any client component that formats a number for itself disagree with the
-  server in those languages (a Kazakh "4,3" against "4.3", a Nepali "१२"
-  against "12"); the three parts of the course page were changed so that
-  they format nothing, and the other client components have not been
-  read for it. Other browsers were not tried.
+- *Numbers and dates in the languages a browser has no data for,
+  2026-11-25: fixed for four functions, measured and open for the rest.*
+  Chromium 158 holds less language data than the server. For Kazakh, Uzbek
+  and Azerbaijani it wrote "2026 M12 5 17:28 GMT+5", for Tajik, Kyrgyz,
+  Turkmen and Nepali the English form inside a sentence in the language,
+  and a Kazakh "4,3" as "4.3"; so did twenty held languages. Now
+  `formatNumber`, `formatPercent`, `formatDateTime` and `formatDay` write
+  twenty-seven languages from a generated table
+  (`lib/i18n/thin-locales.ts`), the same on both sides, so
+  `components/local-time.tsx` and the eighteen client components that
+  format for themselves are right without being changed. **Checked:** the
+  table against Node, 54,783 forms; Node against Chromium 158, 12,699
+  answers in fifty-one languages with the browser's clock in UTC, Almaty
+  and Kathmandu, none different (4,848 were, before). **Not checked:** a
+  whole page opened in one of these languages after the change; any
+  browser but Chromium; a speaker's eye on any of it.
+  **Still different between server and browser, measured, not fixed:** a
+  list joined with "and" (`family/said-list.tsx`, used by the restore
+  form; nineteen languages), the names of countries in the phone form
+  (twenty) and of languages (twenty-six), and the prayer tool, which
+  writes its long date and its times with the browser's data (the date
+  differs in all twenty-seven, the times in twenty-four). A zone is written as its distance
+  ("GMT+3") even where Node has letters for it ("EEST" in Kazakh); that
+  is deliberate, see `DECISIONS.md`.
 - *Memorisation (`/hifz`), 2026-11-25.* The list, its form and its
   refusals are in the twenty-seven languages (`hifz.`, 58 sentences,
   unreviewed), behind `learning.hifz`, off. `/api/hifz` answers by a name

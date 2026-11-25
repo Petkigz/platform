@@ -129,7 +129,14 @@ test('no client component imports the server Supabase client or the service key'
 
 test('the functions a client may use to format are in a file with no catalogue behind it', () => {
   const format = readFileSync(join(src, 'lib', 'i18n', 'format.ts'), 'utf8');
-  assert.deepEqual(runtimeImports(join(src, 'lib', 'i18n', 'format.ts')), []);
+  // One thing behind it, and nothing behind that: how twenty-seven languages
+  // write a number and a date, for the browsers that do not know. It is a
+  // table of months and marks, not of sentences, and it is kept small enough
+  // that a page which formats one number does not pay for a catalogue.
+  const table = join(src, 'lib', 'i18n', 'thin-locales.ts');
+  assert.deepEqual(runtimeImports(join(src, 'lib', 'i18n', 'format.ts')), [table]);
+  assert.deepEqual(runtimeImports(table), []);
+  assert.ok(readFileSync(table).length < 16_000, 'the table of thin languages has grown past 16 kB of source');
   for (const name of ['fill', 'pluralForm', 'formatNumber', 'formatPercent', 'formatDateTime', 'formatDay']) {
     assert.match(format, new RegExp(`export function ${name}\\(`, 'u'));
   }
