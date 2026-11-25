@@ -3095,6 +3095,34 @@ export const en = {
   'guard.eAlreadyRevoked': 'This consent is already withdrawn.',
   'guard.eGone': 'That consent no longer exists.',
   'guard.eNotYours': 'Only the guardian who gave this consent can withdraw it.',
+  'verify.description':
+    'Check an AyahSpring certificate number. No account needed — the number is the only thing required.',
+  'verify.lede':
+    'Every AyahSpring certificate carries a number. Checking one tells you whether it was issued here, to whom, for which course, and whether it has since been revoked.',
+  'verify.numberLabel': 'Certificate number',
+  'verify.check': 'Check',
+  'verify.where': 'Where to find it',
+  'verify.whereBody':
+    'The number is printed on the certificate itself, usually in a corner as {number}: the letters AS, the year, then eight digits. If you were sent a link, the number is at the end of it — either arrives at the same answer.',
+  'verify.forgiving':
+    'Case and spacing do not matter here, and neither do the dashes: a number copied out of a PDF still works.',
+  'verify.notTold': 'What checking does not tell you',
+  'verify.notToldBody':
+    'It confirms what the platform issued and whether it still stands. It does not vouch for the holder outside the course, and it shows nothing about a learner beyond the name on the certificate — there is no account here to log into, and no list of anybody’s certificates to browse.',
+  'verify.home': 'AyahSpring home',
+  'verify.notANumber':
+    'That does not look like a certificate number. They look like {number} — the letters AS, the year, then eight digits.',
+  'verify.heading': 'Verify a certificate',
+  'verify.none': 'No certificate matches that number.',
+  'verify.noneBody': 'Check for a transcription error. Certificate numbers look like {number}.',
+  'verify.valid': 'This certificate is valid.',
+  'verify.validBody': 'It was issued by AyahSpring and has not been revoked.',
+  'verify.invalid': 'This certificate is not valid.',
+  'verify.notIssued': 'Its status is not “issued”.',
+  'verify.holder': 'Holder',
+  'verify.number': 'Number',
+  'verify.frozen':
+    'The course title and version shown here are what they were when the certificate was issued. They are recorded on the certificate itself and cannot be changed afterwards.',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 9% there (192 of 2078 sentences; it was 71% of 272, then
+  the nineteen reads 8% there (192 of 2323 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -557,8 +557,10 @@ still unreviewed and still saying so.
   code, of 1905 with four for an answer to an application to teach, 10% of
   1957 with fifty-two for the two discussion boards, of 2027 with seventy
   for the Translate button, a child's first password and the staff page for
-  teachers, then this with fifty-one for a child's own login on the family
-  page),
+  teachers, 9% of 2078 with fifty-one for a child's own login on the family
+  page and of 2167 with eighty-nine for progress and achievements, then this
+  with a hundred and fifty-six for certificates, turning eighteen, a
+  guardian's consent and the two pages where a certificate is checked),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was

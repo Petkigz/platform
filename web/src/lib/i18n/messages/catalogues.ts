@@ -51,6 +51,7 @@ import { PROGRESS } from './progress.ts';
 import { CERTIFICATES } from './certificates.ts';
 import { HANDOVER } from './handover.ts';
 import { GUARDIANS } from './guardians.ts';
+import { VERIFY } from './verify.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -905,6 +906,7 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   CERTIFICATES,
   HANDOVER,
   GUARDIANS,
+  VERIFY,
 );
 
 /**

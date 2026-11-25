@@ -8027,6 +8027,56 @@ much English the nineteen show. If the owner chooses option 1 the half floor
 goes and nothing in the tests limits it; that is the cost of that option and
 should be chosen knowingly.
 
+## What is not a declaration is in the reader's language — **DECIDED 2026-11-25**
+
+Asked why `/progress`, the certificate pages, `/handover` and
+`/family/guardians` were still English after the family page was translated,
+the builder answered that some were left for want of time and some because
+they carry a declaration. The owner ruled: **translate everything that is not
+a declaration.**
+
+**Implemented locally, not deployed.** Five parts in the twenty-seven
+languages with nothing held: `prog.`, `cert.`, `handover.`, `guard.` and
+`verify.`, 245 sentences. A language with anything held reads these pages in
+English, whole, as it does every page written since 2026-11-16.
+
+**What a declaration is, as built.** A sentence a person puts their name to,
+or a document that is shown to somebody else as it stands. It has one wording
+so that what was agreed to, or what was issued, can be pointed at:
+
+- the statement ticked on `/handover` (`HANDOVER_DECLARATION`);
+- the age declaration on the family page (`age-declaration.tsx`);
+- the certificate sheet a learner prints.
+
+Each is marked `lang="en" dir="ltr"` on a translated page and has a line
+under it, in the reader's language, saying that it is English on purpose
+(`handover.declNote`, `cert.sheetNote`).
+
+**What is not one.** The page around it; the explanation of what ticking
+does; the answer `/verify` gives about a certificate. That answer is the
+platform's, not a person's, and an employer in Jakarta reading "Sertifikat ini
+sah" is better served than one reading English they may not have. It is the
+highest-stakes sentence translated so far and no speaker has read it.
+
+**What a person wrote is nobody's to translate.** A parent's statement goes
+to the reviewer as written and the reviewer's reason comes back as written; a
+revocation reason is as staff wrote it. The page sets each apart with `<bdi>`
+so that its direction is its own.
+
+**A route names its refusal.** Translating a form means it can no longer
+print the English sentence a route sent. `/api/handover` and
+`/api/family/guardians` send a `code` beside the sentence; the form says the
+code in the reader's language. Only a reply in the four hundreds naming a
+code the form knows is a refusal. Everything else (a lost reply, a five
+hundred, a page from something in front of the site, a two hundred that does
+not say `ok`) is "we could not confirm that", and the reader is sent to look
+at what is on record before pressing again, because the request may have
+landed.
+
+**Not decided here.** `family.loginConfirmTwelve`, the sentence a guardian
+ticks about a child being twelve, was translated before this ruling. By the
+ruling it is a declaration. It was left translated and put to the owner.
+
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 
 Offered as the plan for the learner dashboard — translate it in the twenty-seven

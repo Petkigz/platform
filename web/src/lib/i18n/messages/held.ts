@@ -123,6 +123,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'cert',
   'handover',
   'guard',
+  'verify',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

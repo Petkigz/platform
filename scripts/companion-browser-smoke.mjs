@@ -489,11 +489,14 @@ try {
     // (2026-11-24: 192 of 2027 now, which is 9% and no longer 10%: seventy
     // more sentences, for the Translate button, a child's first password and
     // the staff page for teachers, are unwritten for a held language.)
-    assert.ok(settings.includes('9%'), 'the language page does not show the lower number');
-    assert.ok(!settings.includes('9% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
+    // (2026-11-25: 192 of 2323, which is 8%: progress, certificates, turning
+    // eighteen, a guardian's consent and checking a certificate were written
+    // in twenty-seven languages and in none that is held.)
+    assert.ok(settings.includes('8%'), 'the language page does not show the lower number');
+    assert.ok(!settings.includes('8% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);
     await reader.context.close();
-    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 10% in Hausa.`);
+    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 8% in Hausa.`);
   }
 
   // ------------------------------------------------------ 6. withheld whole

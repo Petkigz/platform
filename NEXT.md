@@ -2619,6 +2619,65 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Progress, certificates, turning eighteen, a guardian's consent and checking a certificate, in twenty-seven languages, 2026-11-25
+
+- *Why.* The owner asked why these pages were still English and ruled:
+  what is not a declaration is to be in the reader's language.
+- *Built.* Five catalogue parts, each in the twenty-seven languages with
+  nothing held: `prog.` 89 (`/progress` and the streak strip on `/learn`
+  and `/family`), `cert.` 15 (`/certificates` and the page around a
+  certificate's sheet), `handover.` 34 (`/handover`), `guard.` 86
+  (`/family/guardians` and its two forms), `verify.` 21 (`/verify` and
+  `/verify/[number]`). Server pages; the forms are client components
+  handed their words as props, and no script carries a sentence
+  (`scripts/client-bundle-check.mjs`).
+- *What stays English, on purpose, and says so.* The certificate sheet a
+  learner prints (`cert.sheetNote` under it for another language). The
+  statement ticked on `/handover` (`handover.declNote`). The age
+  declaration card on the family page, as before. What a person wrote is
+  never translated and is set apart with `<bdi>`: a parent's own
+  statement, a reviewer's reason, the reason a certificate was revoked,
+  names and course titles.
+- *Routes.* `/api/handover` and `/api/family/guardians` name every
+  refusal with a `code` beside the English sentence; the forms say the
+  name in the reader's language and never print the sentence. Only a
+  reply in the four hundreds that names a known reason is a refusal;
+  anything else is "we could not confirm", which sends the reader to look
+  before pressing again. `/api/family/guardians` now answers each refusal
+  at its own status (401, 403, 404, 400, 409) where it answered 409 for
+  all, and a database error that is not the database's answer is 502.
+  Both forms take only a reply that says `ok` for a yes.
+- *English that changed.* Dates are the recorded day in the reader's
+  calendar ("Jun 1, 2026", "12 Oct"), not the server's clock. On
+  `/family/guardians` the method is a line of its own, each permission is
+  a sentence, the last day gives the date with no "in 0 days", and the
+  note about a policy not in force no longer tells a parent to publish
+  one. On `/verify` the sentence for a number that does not parse said
+  "3 letters" of a number that has two; it says "the letters AS". The tab
+  title of `/verify/[number]` is the page's heading.
+- *Shown.* 2719 web tests; lint; `check:repo`; a production build and the
+  client-bundle check; the family HTTP smoke; the companion browser smoke
+  in Chromium (the language page reads 8% for a held language). By hand,
+  not kept as a smoke: `/family/guardians` drawn in English, Arabic,
+  Tamil and Chinese against a stand-in database with four consents and no
+  blank left unfilled; the guardians route's statuses and names; `/verify`
+  in English, Arabic, French and Chinese from a production build, and the
+  answer page valid, revoked and not found.
+- *Not shown.* **No speaker has read any of these words.** No Chromium
+  drawing of `/progress`, `/certificates`, `/handover`, `/family/guardians`
+  or `/verify` (direction, line breaks, fonts). `/certificates` and
+  `/handover` were drawn in no running page at all after the change, only
+  compiled and unit-tested. The staff queue (`/admin/guardians`) is
+  English, as every staff page but one is.
+- *Open.* `family.loginConfirmTwelve` is what a guardian declares about a
+  child's age and was translated on the family page earlier the same day.
+  By this ruling it is a declaration and would be English with a note;
+  it was left as it is for the owner to say.
+- *Counts.* 2323 keys; server-only 1955; unwritten while held 2051; held
+  192 of 2323, 8.27%, shown as 8% (it was 9%). 2719 web tests. Lint 1039
+  files. The client-bundle check looks for 1924 sentences in 123 scripts.
+  The translation audit stands at 201 (limit 220). No migration: 362.
+
 ### A child's own login on the family page, in twenty-seven languages, 2026-11-25
 
 - *Built.* The card on a child's card on `/family` that makes a login for

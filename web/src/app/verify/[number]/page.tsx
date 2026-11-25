@@ -1,12 +1,26 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { verifyCertificate } from '@/lib/certificates';
 import { normaliseCertificateNumber } from '@/lib/certificate-number';
+import { LOCALE_COOKIE, chooseLocale, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { WithSampleNumber } from '../sample-number';
 
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'verify') };
+}
 
 /**
  * Not indexed, and not followed.
@@ -23,10 +37,13 @@ export const dynamic = 'force-dynamic';
  * would be blocked for no benefit. The number is unguessable, so nothing here
  * is exposed by being crawlable — it is exposed by being *kept*.
  */
-export const metadata: Metadata = {
-  title: 'Certificate verification',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return {
+    title: translator(shown.code)('verify.heading'),
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Public certificate verification.
@@ -40,6 +57,13 @@ export const metadata: Metadata = {
  * authenticated-only, so nobody can list certificates. A visitor can only ever
  * be told about a number they already hold. That is what makes it safe to
  * publish the result to an anonymous caller — the number is the capability.
+ *
+ * **In the reader's language** since 2026-11-25 (`messages/verify.ts`): the
+ * answer, the labels and the note under them. Four things are not the page's
+ * words and are set apart with `<bdi>`: the holder's name and the course
+ * title, as their authors wrote them; the reason a certificate was revoked,
+ * as a member of staff wrote it; and the number. The date is the day that
+ * was recorded, written in the reader's calendar.
  */
 export default async function VerifyPage({
   params,
@@ -65,33 +89,39 @@ export default async function VerifyPage({
 
   const missing = !result || !result.found;
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const issued = missing ? '' : formatDay(shown.code, result.issuedOn);
+
   return (
-    <div className="container section" style={{ maxWidth: '44rem' }}>
+    <div className="container section" style={{ maxWidth: '44rem' }} {...frame}>
       <p className="eyebrow">AyahSpring</p>
-      <h1>Verify a certificate</h1>
+      <h1>{t('verify.heading')}</h1>
 
       {missing ? (
         <div className="notice warn">
-          <strong>No certificate matches that number.</strong>
+          <strong>{t('verify.none')}</strong>
           <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>
-            Check for a transcription error. Certificate numbers look like{' '}
-            <code>AS-2026-00000001</code>.
+            <WithSampleNumber text={t('verify.noneBody')} />
           </p>
         </div>
       ) : result.valid ? (
         <div className="notice">
-          <strong>This certificate is valid.</strong>
-          <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>
-            It was issued by AyahSpring and has not been revoked.
-          </p>
+          <strong>{t('verify.valid')}</strong>
+          <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>{t('verify.validBody')}</p>
         </div>
       ) : (
         <div className="notice error">
-          <strong>This certificate is not valid.</strong>
+          <strong>{t('verify.invalid')}</strong>
           <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>
-            {result.revokedReason
-              ? `It was revoked: ${result.revokedReason}`
-              : 'Its status is not "issued".'}
+            {result.revokedReason ? (
+              <>
+                {t('cert.revokedWhy')} <bdi>{result.revokedReason}</bdi>
+              </>
+            ) : (
+              t('verify.notIssued')
+            )}
           </p>
         </div>
       )}
@@ -100,52 +130,43 @@ export default async function VerifyPage({
         <div className="card" style={{ marginTop: '1.5rem' }}>
           <dl className="facts">
             <div>
-              <dt>Holder</dt>
-              <dd>{result.learnerName ?? '—'}</dd>
+              <dt>{t('verify.holder')}</dt>
+              <dd>{result.learnerName ? <bdi>{result.learnerName}</bdi> : '—'}</dd>
             </div>
             <div>
-              <dt>Course</dt>
+              <dt>{t('inst.colCourse')}</dt>
               <dd>
-                {result.courseTitle ?? '—'}
+                {result.courseTitle ? <bdi>{result.courseTitle}</bdi> : '—'}
                 {result.courseVersion != null && (
-                  <span className="meta"> · version {result.courseVersion}</span>
+                  <span className="meta">
+                    {' · '}
+                    {t('assign.version', { number: formatNumber(shown.code, result.courseVersion) })}
+                  </span>
                 )}
               </dd>
             </div>
             <div>
-              <dt>Language</dt>
+              <dt>{t('language.title')}</dt>
               <dd>{result.language ?? '—'}</dd>
             </div>
             <div>
-              <dt>Issued</dt>
-              <dd>
-                {result.issuedOn
-                  ? new Date(result.issuedOn).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
-                  : '—'}
-              </dd>
+              <dt>{t('cert.issued')}</dt>
+              <dd>{issued || '—'}</dd>
             </div>
             <div>
-              <dt>Number</dt>
+              <dt>{t('verify.number')}</dt>
               <dd style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }}>
-                {number}
+                <bdi>{canonical}</bdi>
               </dd>
             </div>
           </dl>
 
-          <p className="meta" style={{ marginTop: '1rem', marginBottom: 0 }}>
-            The course title and version shown here are what they were when the
-            certificate was issued. They are recorded on the certificate itself
-            and cannot be changed afterwards.
-          </p>
+          <p className="meta" style={{ marginTop: '1rem', marginBottom: 0 }}>{t('verify.frozen')}</p>
         </div>
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/">AyahSpring home</Link>
+        <Link href="/">{t('verify.home')}</Link>
       </p>
     </div>
   );

@@ -230,6 +230,8 @@ for (const [file, key] of [
   ['handover.ts', 'handover.errUnconfirmed'],
   ['guardians.ts', 'guard.fEvidenceHelp'],
   ['guardians.ts', 'guard.eUnconfirmed'],
+  // The two pages where a certificate is checked have no script of their own.
+  ['verify.ts', 'verify.notToldBody'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -70,11 +70,14 @@ export function certificateVerifyPath(number: string): string {
  *
  * It quotes the shape rather than returning a code, because the person reading
  * it is holding a piece of paper, not a session.
+ *
+ * English, for a log or a caller that is not a page. `/verify` says the same
+ * in the reader's language (`verify.notANumber`).
  */
 export function numberProblem(input: unknown): string | null {
   if (normaliseCertificateNumber(input) !== null) return null;
   if (typeof input !== 'string' || input.trim().length === 0) {
     return 'Enter the certificate number to check it.';
   }
-  return 'That does not look like a certificate number. They look like AS-2026-00000001 — 3 letters, the year, then eight digits.';
+  return 'That does not look like a certificate number. They look like AS-2026-00000001 — the letters AS, the year, then eight digits.';
 }
