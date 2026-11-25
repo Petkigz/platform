@@ -218,6 +218,10 @@ for (const [file, key] of [
   // does not do, must be in that page and in no script.
   ['child-login.ts', 'family.loginConfirmTwelve'],
   ['child-login.ts', 'family.loginDetachMeans'],
+  // Progress and achievements and the streak strip are drawn on the server
+  // from `lib/progress-words.ts`; no script may carry their sentences.
+  ['progress.ts', 'prog.offChildren'],
+  ['progress.ts', 'prog.badgesLede'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

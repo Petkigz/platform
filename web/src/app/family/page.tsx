@@ -88,10 +88,11 @@ const isolate = (value: string) => `\u2068${value}\u2069`;
  * 2026-11-25. A refusal reaches it as a name and it never prints a sentence
  * the server wrote.
  *
- * **What is still English on a translated page**, each marked as English so it
- * is laid out and read aloud as English: the declaration card (it marks
- * itself; see `age-declaration.tsx` for why it is not simply translated) and
- * the streak strip. Both are behind switches that are off.
+ * **What is still English on a translated page:** the declaration card,
+ * which marks itself as English so it is laid out and read aloud as English.
+ * A declaration has one wording, kept for legal reasons (owner, 2026-11-25;
+ * see `age-declaration.tsx`). The streak strip is in the reader's language
+ * since the same day.
  */
 export default async function FamilyPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -223,9 +224,6 @@ async function FamilyBlock({
   t: Translate;
 }) {
   const num = (value: number) => formatNumber(shown.code, value);
-  // What is not translated here, marked so a right-to-left page lays it out,
-  // and a screen reader says it, as English.
-  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
   const band = (code: string) =>
     ageBandLabel(code, {
       ages: (from, to) => t('family.ages', { from: num(from), to: num(to) }),
@@ -443,8 +441,8 @@ async function FamilyBlock({
               </div>
 
               {engagement && (
-                <div style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }} {...english}>
-                  <EngagementStrip engagement={engagement} subject={child.displayName} />
+                <div style={{ marginTop: '0.6rem', marginBottom: '0.6rem' }}>
+                  <EngagementStrip engagement={engagement} subject={child.displayName} code={shown.code} />
                 </div>
               )}
 

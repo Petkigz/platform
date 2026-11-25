@@ -61,6 +61,7 @@ import { TAPPLY } from './i18n/messages/tapply.ts';
 import { BOARD } from './i18n/messages/board.ts';
 import { TRANSLATE } from './i18n/messages/translate.ts';
 import { CHILD_LOGIN } from './i18n/messages/child-login.ts';
+import { PROGRESS } from './i18n/messages/progress.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -433,7 +434,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board', 'translate', 'kid', 'tq']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board', 'translate', 'kid', 'tq', 'prog']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -476,7 +477,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // teachers, three parts of their own.)
   // (A hundred and fifty-one for the family page since 2026-11-25: fifty-one
   // for a child's own login, the card that makes, resets and detaches it.)
-  assert.equal(unwrittenKeys.length, 1806);
+  // (Eighty-nine more on 2026-11-25, later: progress and achievements and
+  // the streak strip, a part of their own.)
+  assert.equal(unwrittenKeys.length, 1895);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('prog.')).length, 89);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('board.')).length, 52);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('translate.')).length, 13);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('kid.')).length, 2);
@@ -545,6 +549,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(BOARD).sort(), written);
   assert.deepEqual(Object.keys(TRANSLATE).sort(), written);
   assert.deepEqual(Object.keys(CHILD_LOGIN).sort(), written);
+  assert.deepEqual(Object.keys(PROGRESS).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -571,6 +576,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
       ...BOARD[code],
       ...TRANSLATE[code],
       ...CHILD_LOGIN[code],
+      ...PROGRESS[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -608,7 +614,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 2078 sentences, which is 9%. Nothing holds a floor under
+  // 192 of 2167 sentences, which is 9%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -658,11 +664,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // to teach (10.08%, still 10%), then fifty-two for the two discussion
   // boards (9.81%, still 10%), then seventy for the Translate button, a
   // child's first password and the staff page for teachers (9.47%, now 9%),
-  // then fifty-one for a child's own login on the family page (9.24%).
+  // then fifty-one for a child's own login on the family page (9.24%),
+  // then eighty-nine for progress and achievements (8.86%, still 9%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 2078);
+    assert.equal(coverageOf(code).total, 2167);
     assert.equal(coverageOf(code).percent, 9, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
@@ -698,9 +705,12 @@ test('the dashboard page reads its words from the catalogue, in one language', (
   }
 
   // What is still English is marked as English rather than left to inherit a
-  // right-to-left frame: live classes, the streak strip and memorisation.
+  // right-to-left frame: live classes and memorisation. The streak strip was
+  // the third until 2026-11-25; it is given the page's language now.
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 3);
+  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 2);
+  assert.match(page, /<EngagementStrip engagement=\{engagement\} code=\{shown\.code\} \/>/u);
+  assert.match(page, /<Link href="\/progress">\{t\('prog\.wholeRecord'\)\}<\/Link>/u);
 
   // The learner-profile prompt is no longer one of them. Its words go to the
   // client button as props, every one of them, so a French page cannot show
@@ -1603,10 +1613,12 @@ test('the family pages are in the reader’s language, and their forms say a ref
   assert.match(page, /<span className="badge neutral">\{t\('family\.archived'\)\}<\/span>/u);
   assert.doesNotMatch(page, /\{child\.status\}/u);
 
-  // What is still English is marked as English: the streak strip by the
-  // page, the declaration by itself.
-  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
+  // What is still English is the declaration, which marks itself: a
+  // declaration keeps one wording for legal reasons (owner, 2026-11-25). The
+  // streak strip was the other thing; it is in the page's language now, and
+  // the page marks nothing as English any more.
+  assert.doesNotMatch(page, /const english =|\{\.\.\.english\}/u);
+  assert.match(page, /<EngagementStrip engagement=\{engagement\} subject=\{child\.displayName\} code=\{shown\.code\} \/>/u);
 
   // A child's own login is the fourth form (2026-11-25). It was the one card
   // on this page still in English, wrapped as English by the page.

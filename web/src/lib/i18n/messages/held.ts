@@ -119,6 +119,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'translate',
   'kid',
   'tq',
+  'prog',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */
