@@ -3,16 +3,8 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { bandMismatch } from '@/lib/audience';
 import { isEnrolRefusal, track } from '@/lib/analytics';
-
-export type LearnerOption = {
-  id: string;
-  name: string;
-  isSelf: boolean;
-  /** A child's band, so the button can say when a course is out of their range. */
-  ageBand: string | null;
-};
+import { enrolOutcomeOf, type EnrolCode, type EnrolLearner, type EnrolWords } from '@/lib/enrol-outcome';
 
 /**
  * The enrol button.
@@ -26,6 +18,13 @@ export type LearnerOption = {
  * child cannot sign in and enrol themselves — the parent has to be able to do
  * it, and the enrolment has to be visibly the child's rather than silently the
  * parent's.
+ *
+ * **It carries no sentence of its own.** Every word is handed in by the page,
+ * in the reader's language (`EnrolWords`), and so is the note about ages for
+ * each learner, made on the server. A refusal is said by the `code` the route
+ * sends, never by the route's English sentence; a reply that is not a refusal
+ * this button knows is "we could not confirm", which sends the reader to look
+ * at their learning before pressing again.
  */
 export function EnrolButton({
   courseId,
@@ -33,35 +32,33 @@ export function EnrolButton({
   signedIn,
   label,
   learners,
-  bands,
+  words,
 }: {
   courseId: string;
   state: 'free' | 'paid' | 'entitled' | 'not_sold_here';
   signedIn: boolean;
   label: string;
-  learners: LearnerOption[];
-  /** The course's stated ages. Empty means every age the audience allows. */
-  bands: string[];
+  learners: EnrolLearner[];
+  words: EnrolWords;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
-  const [guardianReviewRequired, setGuardianReviewRequired] = useState(false);
-  const [tone, setTone] = useState<'info' | 'error'>('info');
+  const [refusal, setRefusal] = useState<EnrolCode | null>(null);
+  const [busy, setBusy] = useState(false);
   const [learnerId, setLearnerId] = useState<string>(
     learners[0]?.id ?? '',
   );
   const chosen = learners.find((l) => l.id === learnerId) ?? null;
-  const mismatch = chosen ? bandMismatch(bands, chosen.ageBand) : null;
+  const mismatch = chosen?.outside ?? null;
 
   if (!signedIn) {
     return (
       <div className="hero-actions">
         <a href={`/sign-up?next=/courses/${courseId}`} className="btn">
-          Create an account to enrol
+          {words.createToEnrol}
         </a>
         <a href={`/sign-in?next=/courses/${courseId}`} className="btn secondary">
-          I already have an account
+          {words.haveAccount}
         </a>
       </div>
     );
@@ -74,9 +71,10 @@ export function EnrolButton({
     return (
       <div>
         <p className="notice warn" style={{ marginTop: 0 }}>
-          <strong>{label}.</strong> This course is on sale, but not on terms we
-          can offer you yet. Nothing has been charged.{' '}
-          <a href="/support">Contact us</a> and we will open your market.
+          {/* On a line of its own: a full stop is not the same mark in every script. */}
+          <strong style={{ display: 'block' }}>{label}</strong>
+          {words.notSoldHere}{' '}
+          <a href="/support">{words.contact}</a>
         </p>
       </div>
     );
@@ -91,10 +89,10 @@ export function EnrolButton({
       <div>
         <div className="hero-actions">
           <a href={`/courses/${courseId}/buy`} className="btn">
-            Buy — {label}
+            {words.buy}
           </a>
           <a href="/learn" className="btn secondary">
-            Go to my learning
+            {words.goLearning}
           </a>
         </div>
       </div>
@@ -102,24 +100,33 @@ export function EnrolButton({
   }
 
   async function enrol() {
-    setMessage(null);
-    const res = await fetch('/api/enrol', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      // learnerId may be a child's. The route passes it through and
-      // course_enrolments_insert decides whether this caller may act for that
-      // learner — the check is not duplicated here.
-      body: JSON.stringify({ courseId, learnerProfileId: learnerId || undefined }),
-    });
-    const json = (await res.json()) as { ok: boolean; code?: string; message?: string };
+    setRefusal(null);
+    setBusy(true);
+    let status = 0;
+    let json: { ok?: boolean; code?: string } = {};
+    try {
+      const res = await fetch('/api/enrol', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        // learnerId may be a child's. The route passes it through and
+        // course_enrolments_insert decides whether this caller may act for that
+        // learner — the check is not duplicated here.
+        body: JSON.stringify({ courseId, learnerProfileId: learnerId || undefined }),
+      });
+      status = res.status;
+      // A reply that is not JSON is a page from something in front of the site.
+      json = ((await res.json().catch(() => ({}))) ?? {}) as { ok?: boolean; code?: string };
+    } catch {
+      // The request never got an answer. That is not a refusal.
+    } finally {
+      setBusy(false);
+    }
 
-    if (json.ok) {
+    if (status >= 200 && status < 300 && json.ok === true) {
       startTransition(() => router.push('/learn'));
       return;
     }
-    setGuardianReviewRequired(json.code === 'guardian_verification_required');
-    setTone(res.status === 402 ? 'info' : 'error');
-    setMessage(json.message ?? 'Enrolment failed. Please try again.');
+    setRefusal(enrolOutcomeOf(status, json.code));
 
     // A refusal leaves no row anywhere — that is what a refusal is — so this is the
     // only place the platform can learn that somebody wanted to start and could not.
@@ -138,7 +145,7 @@ export function EnrolButton({
       {learners.length > 1 && (
         <div style={{ marginBottom: '0.75rem' }}>
           <label className="eyebrow" htmlFor="who-is-learning">
-            Who is learning?
+            {words.who}
           </label>
           <select
             id="who-is-learning"
@@ -147,39 +154,45 @@ export function EnrolButton({
           >
             {learners.map((l) => (
               <option key={l.id} value={l.id}>
-                {l.isSelf ? `${l.name} (me)` : l.name}
+                {l.label}
               </option>
             ))}
           </select>
-          <p className="muted">
-            Enrolling for a child puts the course on their record, not yours.
-          </p>
+          <p className="muted">{words.forChild}</p>
         </div>
       )}
 
       {mismatch && (
         <p className="muted">
-          {chosen && !chosen.isSelf ? `${chosen.name}: ` : ''}
-          {mismatch} You can still enrol — this is a note, not a refusal.
+          {chosen && !chosen.isSelf ? (
+            <>
+              <bdi>{chosen.name}</bdi>:{' '}
+            </>
+          ) : null}
+          {mismatch} {words.outsideNote}
         </p>
       )}
 
       <div className="hero-actions">
-        <button type="button" className="btn" onClick={enrol} disabled={pending}>
-          {pending
-            ? 'Enrolling…'
+        <button type="button" className="btn" onClick={enrol} disabled={pending || busy}>
+          {pending || busy
+            ? words.enrolling
             : state === 'entitled'
-              ? 'Continue enrolment'
-              : 'Enrol — free'}
+              ? words.continueEnrolment
+              : words.enrolFree}
         </button>
-        <a href="/learn" className="btn secondary">Go to my learning</a>
+        <a href="/learn" className="btn secondary">{words.goLearning}</a>
       </div>
-      {message && (
-        <div className={`notice ${tone === 'error' ? 'error' : 'warn'}`} style={{ marginTop: '0.75rem' }}>
-          {message}
-          {guardianReviewRequired && (
+      {refusal && (
+        <div
+          role="alert"
+          className={`notice ${refusal === 'payment_required' ? 'warn' : 'error'}`}
+          style={{ marginTop: '0.75rem' }}
+        >
+          {words.refusals[refusal]}
+          {refusal === 'guardian_verification_required' && (
             <p style={{ margin: '0.5rem 0 0' }}>
-              <Link href="/family/guardians">Open guardian access</Link> to request review.
+              <Link href="/family/guardians">{words.openGuardian}</Link>
             </p>
           )}
         </div>

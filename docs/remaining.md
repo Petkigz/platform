@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 8% there (192 of 2323 sentences; it was 71% of 272, then
+  the nineteen reads 8% there (192 of 2357 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -559,8 +559,9 @@ still unreviewed and still saying so.
   for the Translate button, a child's first password and the staff page for
   teachers, 9% of 2078 with fifty-one for a child's own login on the family
   page and of 2167 with eighty-nine for progress and achievements, then this
-  with a hundred and fifty-six for certificates, turning eighteen, a
-  guardian's consent and the two pages where a certificate is checked),
+  8% of 2323 with a hundred and fifty-six for certificates, turning
+  eighteen, a guardian's consent and the two pages where a certificate is
+  checked, then this with thirty-four for the public course page),
   in the reader's own
   language,
   with the existing sentence that the rest is in English. No new sentence was
@@ -662,6 +663,15 @@ written: not a held draft, nothing.
   translated on this page (seven more `learn.*` sentences) and, since
   2026-11-18, on `/account`, `/family` and the buy page, which is every page
   that shows it.
+- *The public course page (`/courses/[slug]`), 2026-11-25.* The page, its
+  enrol button and the card about who teaches are in the twenty-seven
+  languages (`cpage.`, 34 sentences, unreviewed); the button says a refusal
+  by the name `/api/enrol` gives it. **Still English there, and marked as
+  English:** the dated classes, saving for later and reviews, each behind a
+  switch that is off, and the preview lesson page. **Still English with no
+  mark, on pages of their own:** memorisation (`/hifz`), a live class
+  (`/live/[sessionId]`), saved courses, downloads, learning paths, asking a
+  teacher, support, `/about` and the scholars' panel.
 - *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
   Sixteen `course.*` sentences in the same twenty-seven languages
   (`messages/course.ts`): the heading line, the carry-on card (the dashboard's

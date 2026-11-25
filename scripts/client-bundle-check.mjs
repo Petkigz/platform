@@ -232,6 +232,8 @@ for (const [file, key] of [
   ['guardians.ts', 'guard.eUnconfirmed'],
   // The two pages where a certificate is checked have no script of their own.
   ['verify.ts', 'verify.notToldBody'],
+  // The course page hands its button the words; none of them is in a script.
+  ['course-page.ts', 'cpage.teacherUnnamedWhy'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -2619,6 +2619,63 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### The public course page, in twenty-seven languages, 2026-11-25
+
+- *Why.* The owner's ruling of the same day (what is not a declaration is
+  in the reader's language) and "continue". `/courses/[slug]` is the page
+  a visitor reads before they have an account, and it was English for
+  everybody.
+- *Built.* One catalogue part, `cpage.` 34, in the twenty-seven languages
+  with nothing held (`messages/course-page.ts`), said through
+  `lib/course-page-words.ts`. The page (`app/courses/[slug]/page.tsx`),
+  the enrol button (`enrol-button.tsx`) and the card about who teaches
+  (`app/_shared/who-teaches.tsx`) carry no sentence of their own; the two
+  components are handed their words. The badges, the catalogue link, the
+  price label and "Preview" use keys the catalogue already had.
+- *Three things are built, not glued.* A list of ages is joined by the
+  language's own "and" (`Intl.ListFormat`). The language a course is
+  taught in is named in the reader's language (`Intl.DisplayNames`), with
+  its own name after it when that is different, and not twice for a
+  reader of that language. The note that a learner is outside the stated
+  ages is made on the server for each learner; the browser no longer
+  builds it. In the languages that would have to decline what is inserted
+  these are a label and a value ("Language of instruction: Arabic").
+- *The button.* It says a refusal by the `code` `/api/enrol` sends
+  (`lib/enrol-outcome.ts`) and never prints the route's English sentence.
+  Only a reply in the four hundreds naming a known reason is a refusal;
+  a lost reply, a five hundred or a page from something in front of the
+  site is "we could not confirm that the enrolment was made", which sends
+  the reader to look at their learning first. Before, a reply that was
+  not JSON threw and left the button with nothing said. The button is
+  also disabled while the request is in the air, which it was not.
+- *English that changed.* "Already enrolled" names the learner ("This
+  learner is already enrolled in this course"), since a parent may be
+  enrolling a child. The paid refusal no longer says that no payment
+  provider is connected, which stopped being true when the buy page was
+  built; it says to reload for the price. "Contact us and we will open
+  your market" is one link rather than two words of one. The route's own
+  sentences are unchanged.
+- *Not changed.* The structured data (it is for a search engine and does
+  not follow the reader). `lib/audience.ts` `bandMismatch` and
+  `lib/course-teacher.ts` `UNNAMED_REASON` keep their English for
+  anything that reads them without a reader; a test holds the page's
+  sentence and the library's to one decision.
+- *Still English on this page*, each behind a switch that is off and
+  each marked `lang="en"`: the dated classes (`cohort-browser.tsx`),
+  saving for later (`save-button.tsx`), reviews (`review-panel.tsx`); and
+  the preview lesson page (`preview/[lessonId]`).
+- *Checked.* Drawn by a running `next dev` against a pretend Supabase in
+  English, Arabic, French, Indonesian, Urdu, Chinese, Swahili, Tamil,
+  Kazakh and (held, so English, framed as English) Hausa; signed out;
+  with a named teacher; paid; not sold here. The button was pressed in
+  Chromium at 390 pixels in French, Arabic (a child outside the ages,
+  guardian consent required: the database's wording did not reach the
+  page), Tamil, Swahili (a 502 page) and English (request lost); no page
+  scrolled sideways. That check is not in the repository. **No speaker
+  has read any of the twenty-seven.**
+- *Counts.* 2357 keys; server-only 1989; unwritten while held 2085; held
+  192 of 2357, 8.15%, shown as 8%. No migration.
+
 ### Progress, certificates, turning eighteen, a guardian's consent and checking a certificate, in twenty-seven languages, 2026-11-25
 
 - *Why.* The owner asked why these pages were still English and ruled:

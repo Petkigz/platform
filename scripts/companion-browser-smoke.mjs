@@ -491,7 +491,8 @@ try {
     // the staff page for teachers, are unwritten for a held language.)
     // (2026-11-25: 192 of 2323, which is 8%: progress, certificates, turning
     // eighteen, a guardian's consent and checking a certificate were written
-    // in twenty-seven languages and in none that is held.)
+    // in twenty-seven languages and in none that is held. Later the same day
+    // 192 of 2357, still 8%, with the public course page.)
     assert.ok(settings.includes('8%'), 'the language page does not show the lower number');
     assert.ok(!settings.includes('8% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);

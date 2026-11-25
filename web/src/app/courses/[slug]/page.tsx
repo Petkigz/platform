@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { isSupabaseConfigured } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import {
-  AUDIENCE_LABEL,
   DIFFICULTY_LABEL,
   displayVersion,
   languagesFor,
@@ -20,7 +19,6 @@ import {
 } from '@/lib/enrolment';
 import { countryFromHeaders } from '@/lib/geo';
 import { EnrolButton } from './enrol-button';
-import { BAND_LABEL, isAgeBand } from '@/lib/audience';
 import { isFlagEnabled } from '@/lib/flags';
 import {
   canReviewCourse,
@@ -38,6 +36,8 @@ import { recordEvent } from '@/lib/analytics-server';
 import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
 import { breadcrumbJsonLd, courseJsonLd } from '@/lib/structured-data';
 import { siteOrigin } from '@/lib/site';
+import { coursePageWords } from '@/lib/course-page-words';
+import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, type MessageKey } from '@/lib/i18n';
 import { parseLanguages, textProps, type Language } from '@/lib/language';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 import { JsonLdScript } from '../../_shared/json-ld';
@@ -59,14 +59,28 @@ type Section = {
 
 // `status` and `deleted_at` are selected here but not on the catalogue query,
 // because the catalogue filters on them rather than displaying them.
-/** "Ages 8–10 and 11–13", in age order, whatever order the author ticked. */
-function describeBands(bands: string[]): string {
-  return bands
-    .filter(isAgeBand)
-    .sort((a, b) => Number(a.split('-')[0]) - Number(b.split('-')[0]))
-    .map((b) => BAND_LABEL[b])
-    .join(' and ');
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'cpage') };
 }
+
+const AUDIENCE_KEY: Record<string, MessageKey> = {
+  child: 'audience.child',
+  adult: 'audience.adult',
+  both: 'audience.both',
+};
+
+const DIFFICULTY_KEY: Record<string, MessageKey> = {
+  beginner: 'difficulty.beginner',
+  intermediate: 'difficulty.intermediate',
+  advanced: 'difficulty.advanced',
+};
 
 type CourseDetail = CatalogueCourse & {
   status: string;
@@ -129,6 +143,20 @@ export async function generateMetadata({
  * lessons. Nothing here filters by viewer. RLS returns the published version
  * and its structure to anyone, and returns an unpublished one only to its
  * author, an assigned reviewer, or staff.
+ *
+ * **In the reader's language** since 2026-11-25 (`messages/course-page.ts`,
+ * said through `lib/course-page-words.ts`); a language held for review reads
+ * the page in English, whole, under `lang="en"`. What an author wrote — the
+ * title, the description, section and lesson titles, subjects, the teacher's
+ * name and headline — is shown as written and set apart from the page's
+ * direction. The structured data stays as it was: it is read by a search
+ * engine, which is told the course's own language, and it does not change
+ * with whoever happens to be looking.
+ *
+ * Still English, each behind a switch that is off: the dated classes
+ * (`cohort-browser.tsx`), saving for later (`save-button.tsx`) and reviews
+ * (`review-panel.tsx`). They are marked `lang="en"` so a right-to-left page
+ * lays them out, and a screen reader says them, as English.
  */
 export default async function CoursePage({
   params,
@@ -178,14 +206,14 @@ export default async function CoursePage({
   );
   const taughtLanguage =
     languageRegister.find((entry) => entry.code === (course.language_code ?? 'en')) ?? null;
-  const taughtIn =
-    taughtLanguage && taughtLanguage.code !== 'en'
-      ? `Taught in ${taughtLanguage.englishName}${
-          taughtLanguage.nativeName !== taughtLanguage.englishName
-            ? ` — ${taughtLanguage.nativeName}`
-            : ''
-        }.`
-      : null;
+
+  const { locale, shown } = await readerLanguage();
+  const words = coursePageWords(shown.code);
+  const t = words.t;
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  // The three parts below that are still English, marked as English.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  const taughtIn = words.taughtIn(taughtLanguage);
 
   // A course page seen by a signed-in visitor. The subject is the *version*,
   // because a course can be republished and "which terms were they reading" is
@@ -217,6 +245,10 @@ export default async function CoursePage({
     // Display only: the account's recorded country wins inside the database.
     country: countryFromHeaders(await headers()),
   });
+  const priceLabel = offeringLabel(offering, shown.code);
+  const audienceKey = AUDIENCE_KEY[course.audience];
+  const difficultyKey = DIFFICULTY_KEY[course.difficulty];
+  const writtenFor = words.writtenFor(course.age_bands);
   const lessonCount = sections.reduce(
     (n, s) => n + (s.lessons?.length ?? 0),
     0,
@@ -304,16 +336,16 @@ export default async function CoursePage({
   );
 
   return (
-    <div className="container section" style={{ display: 'grid', gap: '1.5rem' }}>
+    <div className="container section" style={{ display: 'grid', gap: '1.5rem' }} {...frame}>
       <JsonLdScript data={graph} />
       <JsonLdScript data={crumbs} />
       <div>
         <p className="eyebrow">
-          <Link href="/catalogue">Catalogue</Link>
-          {subjects[0] ? ` · ${subjects[0]}` : ''}
+          <Link href="/catalogue">{t('nav.catalogue')}</Link>
+          {subjects[0] ? <> · <bdi>{subjects[0]}</bdi></> : null}
         </p>
         {/* `dir="auto"` on the title and the description: a course may be named
-            in Arabic and this page is English. Without it the browser lays an
+            in Arabic and this page may not be. Without it the browser lays an
             Arabic title out backwards, which reads as a layout fault rather
             than as a language. */}
         <h1 {...textProps(course.language_code)}>
@@ -321,13 +353,17 @@ export default async function CoursePage({
         </h1>
 
         <div className="badges" style={{ marginBottom: '1rem' }}>
-          <span className="badge">{AUDIENCE_LABEL[course.audience] ?? course.audience}</span>
-          <span className="badge">{DIFFICULTY_LABEL[course.difficulty] ?? course.difficulty}</span>
+          <span className="badge">
+            {audienceKey ? t(audienceKey) : course.audience}
+          </span>
+          <span className="badge">
+            {difficultyKey ? t(difficultyKey) : course.difficulty}
+          </span>
           {languages.map((l) => (
-            <span key={l} className="badge neutral">{l.toUpperCase()}</span>
+            <span key={l} className="badge neutral" lang="en" dir="ltr">{l.toUpperCase()}</span>
           ))}
           {subjects.map((s) => (
-            <span key={s} className="badge neutral">{s}</span>
+            <span key={s} className="badge neutral"><bdi>{s}</bdi></span>
           ))}
         </div>
 
@@ -346,72 +382,73 @@ export default async function CoursePage({
           </p>
         )}
 
-        {course.age_bands && course.age_bands.length > 0 && (
+        {writtenFor && (
           <p className="muted" style={{ marginTop: '-0.5rem' }}>
-            Written for {describeBands(course.age_bands)}.
+            {writtenFor}
           </p>
         )}
 
         <div className="stats">
           <div>
-            <div className="n">{sections.length}</div>
-            <div className="l">Sections</div>
+            <div className="n">{formatNumber(shown.code, sections.length)}</div>
+            <div className="l">{t('cpage.sections')}</div>
           </div>
           <div>
-            <div className="n">{lessonCount}</div>
-            <div className="l">Lessons</div>
+            <div className="n">{formatNumber(shown.code, lessonCount)}</div>
+            <div className="l">{t('cpage.lessons')}</div>
           </div>
           <div>
-            <div className="n">v{version.version_number}</div>
-            <div className="l">Current version</div>
+            <div className="n">
+              <bdi dir="ltr">v{version.version_number}</bdi>
+            </div>
+            <div className="l">{t('cpage.currentVersion')}</div>
           </div>
         </div>
 
         <EnrolButton
           courseId={course.id}
           state={offering.kind}
-          bands={course.age_bands ?? []}
-          learners={learners.map((l) => ({
-            id: l.id,
-            name: l.name,
-            isSelf: l.isSelf,
-            ageBand: l.ageBand,
-          }))}
+          learners={words.learners(learners, course.age_bands)}
           signedIn={Boolean(user)}
-          label={offeringLabel(offering)}
+          label={priceLabel}
+          words={words.enrolWords(priceLabel)}
         />
 
         {user && (cohortsOn || joinableCohorts.length > 0) && (
-          <CohortBrowser
-            cohortsEnabled={cohortsOn}
-            cohorts={joinableCohorts}
-            learners={learners}
-          />
+          <div {...english}>
+            <CohortBrowser
+              cohortsEnabled={cohortsOn}
+              cohorts={joinableCohorts}
+              learners={learners}
+            />
+          </div>
         )}
 
         {savedOn && (
-          <SaveButton
-            courseId={course.id}
-            signedIn
-            initiallySaved={savedState.saved}
-            initialId={savedState.id}
-            initialNote={savedState.note}
-          />
+          <div {...english}>
+            <SaveButton
+              courseId={course.id}
+              signedIn
+              initiallySaved={savedState.saved}
+              initialId={savedState.id}
+              initialNote={savedState.note}
+            />
+          </div>
         )}
       </div>
 
       <div>
-        <h2>Who teaches this</h2>
-        <WhoTeaches attribution={attribution} />
+        <h2>{t('cpage.whoTeaches')}</h2>
+        <WhoTeaches attribution={attribution} words={words.teacher} />
 
-        <h2>Course outline</h2>
+        <h2>{t('cpage.outline')}</h2>
         {sections.length === 0 ? (
-          <p className="empty">The outline is not published yet.</p>
+          <p className="empty">{t('cpage.noOutline')}</p>
         ) : (
           sections.map((s, i) => (
             <div key={s.id} className="card" style={{ marginBottom: '0.75rem' }}>
               <h3 style={{ marginTop: 0 }}>
-                {i + 1}. {s.title}
+                {formatNumber(shown.code, i + 1)}. <bdi>{s.title}</bdi>
               </h3>
               <ul className="lesson-list">
                 {(s.lessons ?? [])
@@ -419,11 +456,11 @@ export default async function CoursePage({
                   .sort((a, b) => a.position - b.position)
                   .map((l, j) => (
                     <li key={l.id}>
-                      <span className="n">{j + 1}</span>
-                      <span>{l.title}</span>
+                      <span className="n">{formatNumber(shown.code, j + 1)}</span>
+                      <span dir="auto">{l.title}</span>
                       {l.is_preview && previewsEnabled && (
                         <Link className="badge" href={`/courses/${course.slug}/preview/${l.id}`}>
-                          Preview
+                          {t('course.preview')}
                         </Link>
                       )}
                     </li>
@@ -435,13 +472,15 @@ export default async function CoursePage({
       </div>
 
       {reviewsOn && (
-        <ReviewPanel
-          courseId={course.id}
-          summary={reviewSummary}
-          reviews={courseReviews}
-          signedIn={Boolean(user)}
-          canReview={mayReview}
-        />
+        <div {...english}>
+          <ReviewPanel
+            courseId={course.id}
+            summary={reviewSummary}
+            reviews={courseReviews}
+            signedIn={Boolean(user)}
+            canReview={mayReview}
+          />
+        </div>
       )}
     </div>
   );

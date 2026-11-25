@@ -3123,6 +3123,47 @@ export const en = {
   'verify.number': 'Number',
   'verify.frozen':
     'The course title and version shown here are what they were when the certificate was issued. They are recorded on the certificate itself and cannot be changed afterwards.',
+  'cpage.taughtIn': 'Taught in {language}.',
+  'cpage.writtenFor': 'Written for {ages}.',
+  'cpage.sections': 'Sections',
+  'cpage.lessons': 'Lessons',
+  'cpage.currentVersion': 'Current version',
+  'cpage.whoTeaches': 'Who teaches this',
+  'cpage.outline': 'Course outline',
+  'cpage.noOutline': 'The outline is not published yet.',
+  'cpage.teacherAll': 'Everything {name} teaches',
+  'cpage.teacherUnnamed': 'Written and taught by a teacher',
+  'cpage.teacherUnnamedWhy':
+    'This course was written by a teacher appointed by the platform, and approved by a reviewer before it could be published — an author cannot approve their own course. This teacher has not published a public page, so they are not named here.',
+  'cpage.createToEnrol': 'Create an account to enrol',
+  'cpage.haveAccount': 'I already have an account',
+  'cpage.notSoldHere':
+    'This course is on sale, but not on terms we can offer you yet. Nothing has been charged.',
+  'cpage.contact': 'Contact us and we will open your market.',
+  'cpage.buy': 'Buy — {price}',
+  'cpage.who': 'Who is learning?',
+  'cpage.me': '{name} (me)',
+  'cpage.forChild': 'Enrolling for a child puts the course on their record, not yours.',
+  'cpage.outside': 'Written for {ages} — {band} is outside that.',
+  'cpage.outsideNote': 'You can still enrol — this is a note, not a refusal.',
+  'cpage.enrolling': 'Enrolling…',
+  'cpage.continue': 'Continue enrolment',
+  'cpage.enrolFree': 'Enrol — free',
+  'cpage.openGuardian': 'Open guardian access to request review.',
+  'cpage.errNoProfile':
+    'Your account has no learner profile yet. Finish setting up your profile, then try again.',
+  'cpage.errNotSoldHere':
+    'This course is on sale, but not for your country yet. Contact us and we will let you know when it opens.',
+  'cpage.errPaid':
+    'This course is paid, so it cannot be started for free. Reload the page to see the price.',
+  'cpage.errNotOpen': 'This course is not open for enrolment yet.',
+  'cpage.errAlready': 'This learner is already enrolled in this course.',
+  'cpage.errGuardian':
+    'A verified parent or guardian must complete the consent review before this child can enrol.',
+  'cpage.errNotAvailable': 'This course is not available for enrolment right now.',
+  'cpage.errSignedOut': 'Your session has ended. Sign in again.',
+  'cpage.errUnconfirmed':
+    'We could not confirm that the enrolment was made. Look at your learning before trying again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

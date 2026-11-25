@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { TeacherAttribution } from '@/lib/course-teacher';
+import type { TeacherWords } from '@/lib/enrol-outcome';
 
 /**
  * The teacher behind a course, or the reason nobody is named.
@@ -16,36 +17,48 @@ import type { TeacherAttribution } from '@/lib/course-teacher';
  * was written by an appointed teacher and approved by a reviewer, and an author
  * cannot approve their own work — and it says why the name is missing, which is
  * a privacy choice rather than a lesser course.
+ *
+ * The words come from the page, in the reader's language (`TeacherWords`,
+ * made by `coursePageWords`). The name and the headline are the teacher's own
+ * and are set in `<bdi>` so a name in another script keeps its direction.
  */
-export function WhoTeaches({ attribution }: { attribution: TeacherAttribution }) {
+export function WhoTeaches({
+  attribution,
+  words,
+}: {
+  attribution: TeacherAttribution;
+  words: TeacherWords;
+}) {
   return (
     <section className="card" style={{ marginBottom: '1.75rem' }}>
       {attribution.kind === 'named' ? (
         <>
           <h3 style={{ marginTop: 0, fontSize: '1.15rem' }}>
             {attribution.href ? (
-              <Link href={attribution.href}>{attribution.name}</Link>
+              <Link href={attribution.href}>
+                <bdi>{attribution.name}</bdi>
+              </Link>
             ) : (
-              attribution.name
+              <bdi>{attribution.name}</bdi>
             )}
           </h3>
           {attribution.headline && (
-            <p className="muted" style={{ marginTop: '-0.35rem' }}>{attribution.headline}</p>
+            <p className="muted" style={{ marginTop: '-0.35rem' }} dir="auto">
+              {attribution.headline}
+            </p>
           )}
           {attribution.href && (
             <p style={{ margin: 0, fontSize: '0.93rem' }}>
               {/* First name only: "Everything Amina teaches" reads like a
                   person wrote it, and the full name is already above. */}
-              <Link href={attribution.href}>
-                Everything {attribution.name.split(' ')[0]} teaches &rarr;
-              </Link>
+              <Link href={attribution.href}>{words.all(attribution.name.split(' ')[0] ?? attribution.name)}</Link>
             </p>
           )}
         </>
       ) : (
         <>
-          <h3 style={{ marginTop: 0, fontSize: '1.05rem' }}>Written and taught by a teacher</h3>
-          <p className="muted" style={{ margin: 0 }}>{attribution.reason}</p>
+          <h3 style={{ marginTop: 0, fontSize: '1.05rem' }}>{words.unnamed}</h3>
+          <p className="muted" style={{ margin: 0 }}>{words.unnamedWhy}</p>
         </>
       )}
     </section>
