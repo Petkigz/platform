@@ -236,6 +236,9 @@ for (const [file, key] of [
   ['course-page.ts', 'cpage.teacherUnnamedWhy'],
   // The door of a live class is handed its words too.
   ['live.ts', 'live.roomRule'],
+  // The memorisation board is a script; its words are handed to it, not built into it.
+  ['hifz.ts', 'hifz.addHelp'],
+  ['hifz.ts', 'hifz.eUnconfirmed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

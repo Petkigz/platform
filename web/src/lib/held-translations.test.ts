@@ -68,6 +68,7 @@ import { GUARDIANS } from './i18n/messages/guardians.ts';
 import { VERIFY } from './i18n/messages/verify.ts';
 import { COURSE_PAGE } from './i18n/messages/course-page.ts';
 import { LIVE } from './i18n/messages/live.ts';
+import { HIFZ } from './i18n/messages/hifz.ts';
 import { countryNameIn } from './geo.ts';
 import { ACCOUNT } from './i18n/messages/account.ts';
 import { LESSON } from './i18n/messages/lesson.ts';
@@ -440,7 +441,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // Owner's decision, 2026-11-16: a language the builder cannot write properly
   // falls back to English until a speaker has reviewed it. For a new screen
   // that means not writing it — a held draft would be the same guess, kept.
-  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board', 'translate', 'kid', 'tq', 'prog', 'cert', 'handover', 'guard', 'verify', 'cpage', 'live']);
+  assert.deepEqual([...UNWRITTEN_WHILE_HELD], ['learn', 'course', 'lesson', 'assess', 'assign', 'missing', 'broke', 'player', 'account', 'family', 'buy', 'close', 'export', 'reading', 'restore', 'phone', 'merge', 'share', 'refer', 'sponsor', 'orders', 'billing', 'receipt', 'notify', 'plans', 'subs', 'policy', 'inst', 'tapply', 'board', 'translate', 'kid', 'tq', 'prog', 'cert', 'handover', 'guard', 'verify', 'cpage', 'live', 'hifz']);
   // Thirty-seven for the dashboard (the learner-profile prompt is seven of
   // them), twenty-eight for the course page (twelve are the list of dated
   // classes), a hundred and thirteen for the lesson page (its frame, the
@@ -494,7 +495,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // and the card about who teaches.)
   // (Twenty-eight more the same day: live classes, on the dashboard and on
   // the page of one class.)
-  assert.equal(unwrittenKeys.length, 2113);
+  assert.equal(unwrittenKeys.length, 2171);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('live.')).length, 28);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cpage.')).length, 34);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('verify.')).length, 21);
@@ -577,6 +578,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.deepEqual(Object.keys(VERIFY).sort(), written);
   assert.deepEqual(Object.keys(COURSE_PAGE).sort(), written);
   assert.deepEqual(Object.keys(LIVE).sort(), written);
+  assert.deepEqual(Object.keys(HIFZ).sort(), written);
   const expected = LOCALES.map((l) => l.code)
     .filter((code) => code !== 'en' && !Object.hasOwn(HELD_FOR_REVIEW, code))
     .sort();
@@ -610,6 +612,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
       ...VERIFY[code],
       ...COURSE_PAGE[code],
       ...LIVE[code],
+      ...HIFZ[code],
     };
     assert.deepEqual(Object.keys(own).sort(), [...unwrittenKeys].sort(), `${code} is short a dashboard, course, lesson, assessment or assignment sentence`);
     for (const key of unwrittenKeys) {
@@ -647,7 +650,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 2385 sentences, which is 8%. Nothing holds a floor under
+  // 192 of 2443 sentences, which is 8%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -701,11 +704,12 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // then eighty-nine for progress and achievements (8.86%, still 9%), then a
   // hundred and thirty-five for certificates, turning eighteen and a
   // guardian's consent (8.34%, which is 8%), then twenty-one for checking a
-  // certificate (8.27%).
+  // certificate (8.27%), then sixty-two for the public course page and live
+  // classes (8.05%), then fifty-eight for memorisation (7.86%, still 8%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 2385);
+    assert.equal(coverageOf(code).total, 2443);
     assert.equal(coverageOf(code).percent, 8, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
@@ -740,12 +744,14 @@ test('the dashboard page reads its words from the catalogue, in one language', (
     assert.ok(!page.includes(sentence), `"${sentence}" is still typed into the dashboard`);
   }
 
-  // What is still English is marked as English rather than left to inherit a
-  // right-to-left frame: live classes and memorisation. The streak strip was
-  // the third until 2026-11-25; it is given the page's language now.
-  assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  // (One since 2026-11-25, when the live classes card was written: memorisation.)
-  assert.equal(page.match(/\{\.\.\.english\}/gu)?.length, 1);
+  // Nothing on the dashboard is English for a reader of another language any
+  // more, so nothing on it is marked as English. Three parts were: the streak
+  // strip and the live classes card until 2026-11-25, and memorisation, the
+  // last, until later the same day.
+  assert.doesNotMatch(page, /const english = /u);
+  assert.equal(page.match(/\{\.\.\.english\}/gu), null);
+  assert.doesNotMatch(page.replace(/\/\*[\s\S]*?\*\//gu, '').replace(/^\s*\/\/.*$/gmu, ''), /lang: 'en'/u);
+  assert.match(page, /<Link href="\/hifz">\{t\('hifz\.cardLink'\)\}<\/Link>/u);
   assert.match(page, /<EngagementStrip engagement=\{engagement\} code=\{shown\.code\} \/>/u);
   assert.match(page, /<Link href="\/progress">\{t\('prog\.wholeRecord'\)\}<\/Link>/u);
 

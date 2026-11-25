@@ -2619,6 +2619,60 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Memorisation, in twenty-seven languages, 2026-11-25
+
+- *Why.* "Continue": it was the last English part of `/learn`, and `/hifz`
+  was English for everybody. Behind `learning.hifz`, which is off.
+- *Built.* One catalogue part, `hifz.` 58, in the twenty-seven languages
+  with nothing held (`messages/hifz.ts`), said through `lib/hifz-words.ts`:
+  the card on `/learn`, the four things `/hifz` says when there is no list
+  to show (not a learner yet, not your list, could not be read, not
+  switched on) and the board. The board is a client component and holds no
+  sentence; the page hands it every word with the counts and the days
+  already written (`lib/hifz-board-words.ts`, which imports nothing).
+- *Written by the language, not by a sentence.* A length of time ("3
+  days") comes from `Intl`, but for three languages where it reads badly
+  here: Tajik has no unit data ("3 d"), Arabic is given in the case of a
+  subject ("يومان") where every sentence here wants the form after a
+  preposition ("يومين"), and Traditional Chinese gets a space before 天.
+  Those three are written in `lib/hifz-words.ts`. The steps of the
+  schedule are a list separated by a comma, because the runtime's own unit
+  list glues them ("1 gün 3 gün 7 gün").
+- *The route.* `/api/hifz` answers `{ ok: false, code }` and no sentence.
+  It used to send an English sentence and, for a refusal it did not know,
+  **whatever the database had written**. A database error with no known
+  name is `refused` ("That could not be saved. Try again."); an error with
+  no code at all (the request failed on the way) is a 502, and the board
+  says "We could not confirm that this was saved", and reads the list
+  again, because it may have been.
+- *Changed for English readers too.* The head of the list is three short
+  sentences ("4 passages. 2 of them memorised. Nothing is due today.")
+  where it was one with a comma; "A day overdue" is "1 day overdue" and
+  "Next in a day" is "Next in 1 day". The name of a passage inside a
+  notice is set apart (`<bdi>`), and the box a passage is typed in takes
+  its direction from what is typed.
+- *Removed.* `dueLabel`, `HIFZ_VERDICTS`, `ladderSentence`, `hifzSentence`
+  and `hifzErrorMessage` from `lib/hifz.ts`; nothing else read them. Their
+  tests moved to `lib/hifz-words.test.ts` and read the English catalogue.
+- *Checked.* `/hifz` drawn by a running `next dev` against a pretend
+  Supabase: a list with two due and one coming up in ten languages (Hausa,
+  held, reads English under `lang="en"`), a child's list read by an adult,
+  an empty list, switched off, not allowed, unreadable, not a learner.
+  **`/learn` drawn with both switches on** in English, Arabic, French,
+  Tamil and Hausa: the memorisation card and the live classes card, which
+  had only been compiled until now. In Chromium at 390 pixels, with no
+  sideways scroll: Solid in French, Shaky refused by the database in
+  Arabic, a passage that is already there in Tamil, no answer in Swahili,
+  taking a passage off in Kazakh (it asks first), Shaky in English. The
+  database's wording reached the screen in none. **Not checked:** a real
+  database behind the board; and no speaker has read any of it.
+- *Counts.* 2443 keys; server-only 2075; unwritten while held 2171; held
+  192 of 2443, 7.86%, shown as 8%. The audit's shortlist is 204, two more:
+  the French for "passage" and "passages" is the English word. The example
+  in the form ("Al-Fatihah 1–7") is written once and put into the one
+  sentence that quotes it, so the audit does not list a Latin word in
+  fourteen scripts. No migration.
+
 ### Live classes, in twenty-seven languages, 2026-11-25
 
 - *Built.* One catalogue part, `live.` 28, in the twenty-seven languages
@@ -2762,10 +2816,11 @@ claim external integrations work without credentials or provider callbacks.
   `/handover` were drawn in no running page at all after the change, only
   compiled and unit-tested. The staff queue (`/admin/guardians`) is
   English, as every staff page but one is.
-- *Open.* `family.loginConfirmTwelve` is what a guardian declares about a
-  child's age and was translated on the family page earlier the same day.
-  By this ruling it is a declaration and would be English with a note;
-  it was left as it is for the owner to say.
+- *Decided 2026-11-25: it stays translated.* `family.loginConfirmTwelve`
+  is what a guardian declares about a child's age and was translated on the
+  family page earlier the same day. By this ruling it is a declaration and
+  would be English with a note; it was left as it was and put to the owner,
+  who said it stays translated (`DECISIONS.md`). No speaker has read it.
 - *Counts.* 2323 keys; server-only 1955; unwritten while held 2051; held
   192 of 2323, 8.27%, shown as 8% (it was 9%). 2719 web tests. Lint 1039
   files. The client-bundle check looks for 1924 sentences in 123 scripts.
@@ -2806,7 +2861,8 @@ claim external integrations work without credentials or provider callbacks.
   Latin letters.
 - *Sentences a speaker should read first.* `family.loginConfirmTwelve` is
   what a guardian declares: the child is twelve or older, no date of birth
-  is asked, the answer is recorded. `family.loginDetachMeans` says what
+  is asked, the answer is recorded. (The owner decided on 2026-11-25 that
+  it stays translated; that is not a reading of it.) `family.loginDetachMeans` says what
   detaching does not do. The three `family.loginUnconfirmed*` say that we
   do not know, not that it failed. **No speaker has read any of the
   fifty-one in any language.**

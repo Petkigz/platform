@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { hifzErrorMessage } from '@/lib/hifz';
+import { hifzRefusalOf } from '@/lib/hifz';
 
 /**
  * Memorisation writes.
@@ -12,28 +12,39 @@ import { hifzErrorMessage } from '@/lib/hifz';
  * (`can_access_learner()`), whether the feature is on (`learning.hifz`) and what
  * the schedule does with a verdict. This forwards and reports the answer.
  *
- * The one thing it does decide is the *words*: a refused write comes back as a
- * sentence a learner can act on rather than as `hifz:already_exists`.
+ * **It answers by a name, not by a sentence.** The board is read in
+ * twenty-eight languages and has the sentence for each name
+ * (`lib/hifz-board-words.ts`); a refused write comes back as
+ * `{ ok: false, code: 'already_exists' }`. Until 2026-11-25 this sent an
+ * English sentence, and for a refusal it did not know it sent whatever the
+ * database had written. Nothing the database writes leaves this file now: an
+ * answer with no known name is `refused`, and a write whose request failed on
+ * the way is a 502, because whether it was saved is not known.
  */
 
 type Action = 'add' | 'review' | 'status' | 'archive';
 
+const refuse = (code: string, status = 400) => NextResponse.json({ ok: false, code }, { status });
+
+/** A write that came back with an error: a refusal, or not an answer at all. */
+const failed = (error: { message?: string | null; code?: string | null }) => {
+  const { code, status } = hifzRefusalOf(error);
+  return refuse(code, status);
+};
+
 export async function POST(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { ok: false, message: 'Supabase is not configured.' },
-      { status: 503 },
-    );
-  }
+  // Not an answer about the list at all: the board reads a five hundred as
+  // "could not confirm", which is the truth.
+  if (!isSupabaseConfigured()) return refuse('not_configured', 503);
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ ok: false, message: 'Malformed request.' }, { status: 400 });
+    return refuse('refused');
   }
 
-  const b = body as {
+  const b = (body ?? {}) as {
     action?: unknown;
     learnerId?: unknown;
     label?: unknown;
@@ -46,22 +57,18 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ ok: false, message: 'Sign in first.' }, { status: 401 });
-  }
+  if (!user) return refuse('not_signed_in', 401);
 
   const uuid = /^[0-9a-f-]{36}$/i;
   const isUuid = (value: unknown): value is string => typeof value === 'string' && uuid.test(value);
   const str = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 
-  const refuse = (message: string, status = 400) =>
-    NextResponse.json({ ok: false, message }, { status });
-
   const action = b.action as Action | undefined;
 
   if (action === 'add') {
-    if (!isUuid(b.learnerId)) return refuse('Choose whose list this belongs to.');
-    if (str(b.label) === '') return refuse(hifzErrorMessage('hifz:label_required'));
+    // The board always sends whose list it is; a request without one was not made by it.
+    if (!isUuid(b.learnerId)) return refuse('refused');
+    if (str(b.label) === '') return refuse('label_required');
 
     const { data, error } = await supabase.rpc('add_hifz_passage', {
       p_learner: b.learnerId,
@@ -69,48 +76,44 @@ export async function POST(request: Request) {
       p_status: b.status === 'memorised' ? 'memorised' : 'learning',
     });
 
-    if (error) return refuse(hifzErrorMessage(error.message));
+    if (error) return failed(error);
     return NextResponse.json({ ok: true, value: { passageId: data } }, { status: 200 });
   }
 
   if (action === 'review') {
-    if (!isUuid(b.passageId)) return refuse('That passage is missing.');
-    if (b.outcome !== 'solid' && b.outcome !== 'shaky') {
-      return refuse(hifzErrorMessage('hifz:bad_outcome'));
-    }
+    if (!isUuid(b.passageId)) return refuse('passage_not_found');
+    if (b.outcome !== 'solid' && b.outcome !== 'shaky') return refuse('bad_outcome');
 
     const { data, error } = await supabase.rpc('review_hifz_passage', {
       p_passage: b.passageId,
       p_outcome: b.outcome,
     });
 
-    if (error) return refuse(hifzErrorMessage(error.message));
+    if (error) return failed(error);
     return NextResponse.json({ ok: true, value: data }, { status: 200 });
   }
 
   if (action === 'status') {
-    if (!isUuid(b.passageId)) return refuse('That passage is missing.');
-    if (b.status !== 'learning' && b.status !== 'memorised') {
-      return refuse(hifzErrorMessage('hifz:bad_status'));
-    }
+    if (!isUuid(b.passageId)) return refuse('passage_not_found');
+    if (b.status !== 'learning' && b.status !== 'memorised') return refuse('bad_status');
 
     const { data, error } = await supabase.rpc('set_hifz_passage_status', {
       p_passage: b.passageId,
       p_status: b.status,
     });
 
-    if (error) return refuse(hifzErrorMessage(error.message));
+    if (error) return failed(error);
     return NextResponse.json({ ok: true, value: data }, { status: 200 });
   }
 
   if (action === 'archive') {
-    if (!isUuid(b.passageId)) return refuse('That passage is missing.');
+    if (!isUuid(b.passageId)) return refuse('passage_not_found');
 
     const { error } = await supabase.rpc('archive_hifz_passage', { p_passage: b.passageId });
 
-    if (error) return refuse(hifzErrorMessage(error.message));
+    if (error) return failed(error);
     return NextResponse.json({ ok: true, value: { archived: true } }, { status: 200 });
   }
 
-  return refuse('Unknown action.');
+  return refuse('refused');
 }

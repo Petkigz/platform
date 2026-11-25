@@ -529,7 +529,7 @@ still unreviewed and still saying so.
   opening a held part sees the draft in each box and a notice that readers
   cannot see it yet. The companion tools are now a named part on that sheet.
 - *The number tells the reader.* `/language` counts what is shown, so each of
-  the nineteen reads 8% there (192 of 2385 sentences; it was 71% of 272, then
+  the nineteen reads 8% there (192 of 2443 sentences; it was 71% of 272, then
   64% of 302 when the learner dashboard was added in twenty-seven languages
   only, 59% of 325 with the course page, 55% of 347 with the lesson page,
   50% of 384 with the assessment page, 43% of 444 with the assignment page,
@@ -658,10 +658,10 @@ written: not a held draft, nothing.
 - *The correction sheet offers the part.* "The learner dashboard" is a part on
   `/contribute` for all fifty languages; for a held language each box opens on
   the English sentence, since there is no draft.
-- *Still English on `/learn` in every language:* memorisation, behind a
-  switch that is off and marked as English. (The streak strip and the live
-  classes card were the other two until 2026-11-25; both are in the
-  twenty-seven languages now.) The learner-profile prompt shown to a new account is now
+- *Still English on `/learn` in every language:* nothing, since
+  2026-11-25. The streak strip, the live classes card and the memorisation
+  card were the three parts that were; each is in the twenty-seven
+  languages now, unreviewed, and each is behind a switch that is off. The learner-profile prompt shown to a new account is now
   translated on this page (seven more `learn.*` sentences) and, since
   2026-11-18, on `/account`, `/family` and the buy page, which is every page
   that shows it.
@@ -671,8 +671,16 @@ written: not a held draft, nothing.
   by the name `/api/enrol` gives it. **Still English there, and marked as
   English:** the dated classes, saving for later and reviews, each behind a
   switch that is off, and the preview lesson page. **Still English with no
-  mark, on pages of their own:** memorisation (`/hifz`), saved courses, downloads, learning paths, asking a
+  mark, on pages of their own:** saved courses, downloads, learning paths, asking a
   teacher, support, `/about` and the scholars' panel.
+- *Memorisation (`/hifz`), 2026-11-25.* The list, its form and its
+  refusals are in the twenty-seven languages (`hifz.`, 58 sentences,
+  unreviewed), behind `learning.hifz`, off. `/api/hifz` answers by a name
+  and the board says it; what the database wrote is not printed. The name
+  of a passage is what the learner typed; the example in the form
+  ("Al-Fatihah 1–7") is the same in every language. Drawn in a browser at
+  390 pixels in French, Arabic, Tamil, Swahili, Kazakh and English against
+  a pretend backend; never against a real one.
 - *The course page (`/learn/[enrolmentId]`) followed, on the same rule.*
   Sixteen `course.*` sentences in the same twenty-seven languages
   (`messages/course.ts`): the heading line, the carry-on card (the dashboard's
@@ -1222,14 +1230,18 @@ written: not a held draft, nothing.
   speaker): making a login, setting a new password, detaching it, and
   seventeen refusals said by name; the card no longer prints a sentence the
   server wrote. Behind `family.child_login`, off. The sentence a guardian
-  declares a child's age with (`family.loginConfirmTwelve`) should be read
-  by a speaker of each language before that switch is turned on. Checked
+  declares a child's age with (`family.loginConfirmTwelve`) stays
+  translated by the owner's decision of 2026-11-25 (`DECISIONS.md`); it
+  should still be read by a speaker of each language before that switch is
+  turned on, and none has. Checked
   over HTTP in English, Arabic and Tamil and in a browser at 390 px in
   Arabic and Tamil up to the route's "no service key" answer; **not
   checked:** a login made, reset or detached, because no script has the
   service key.
-  **Still English, every one of them:** `/family/guardians`, `/handover`,
-  `/progress` and a certificate's page, each linked from here.
+  Linked from here and English when this page was written:
+  `/family/guardians`, `/handover`, `/progress` and the certificates. Since
+  2026-11-25 all four are in the twenty-seven languages, unreviewed; the
+  sheet of one certificate stays English on purpose, with a note saying so.
   Checked by `scripts/family-route-smoke.mjs` on a synthetic backend: HTTP in
   English, Arabic, French, Hausa, Pashto and Wolof; the first visit with no
   family; the four states of the adult's card; the declaration card asked

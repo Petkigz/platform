@@ -8073,9 +8073,17 @@ not say `ok`) is "we could not confirm that", and the reader is sent to look
 at what is on record before pressing again, because the request may have
 landed.
 
-**Not decided here.** `family.loginConfirmTwelve`, the sentence a guardian
-ticks about a child being twelve, was translated before this ruling. By the
-ruling it is a declaration. It was left translated and put to the owner.
+**`family.loginConfirmTwelve` stays translated — DECIDED 2026-11-25.** The
+sentence a guardian ticks about a child being twelve was translated before
+this ruling, and by the ruling it is a declaration. It was left translated
+and put to the owner, who answered the same day: it stays translated. So it
+is the one declaration a guardian makes in their own language, by the
+owner's word and not by oversight; the others
+(`app/family/age-declaration.tsx`, the certificate sheet) stay English with
+a note. What the ruling does not change: **no speaker has read that sentence
+in any of the twenty-seven languages**, and `family.child_login`, the switch
+it sits behind, is off. A speaker's reading of it is still asked for before
+that switch is turned on.
 
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 

@@ -1,15 +1,33 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchOwnLearner } from '@/lib/family';
 import { parseHifzRecord } from '@/lib/hifz';
+import { hifzWords } from '@/lib/hifz-words';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { HifzBoard } from './hifz-board';
 
-export const metadata: Metadata = { title: 'Memorisation' };
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'hifz') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('hifz.title') };
+}
 
 /**
  * What a learner has memorised, and when to look at it again.
@@ -24,6 +42,11 @@ export const dynamic = 'force-dynamic';
  * `?learner=<id>` opens a child's list, the same way `/progress` does. Who may
  * read or write it is decided by `can_access_learner()` inside the database; this
  * page decides only what to say when the answer is no.
+ *
+ * **In the reader's language** since 2026-11-25 (`messages/hifz.ts`, said
+ * through `lib/hifz-words.ts`); a language held for review reads it in
+ * English, whole, under `lang="en"`. The name of a passage is what the learner
+ * typed and keeps its own direction.
  */
 export default async function HifzPage({
   searchParams,
@@ -39,25 +62,27 @@ export default async function HifzPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/hifz');
 
+  const { locale, shown } = await readerLanguage();
+  const words = hifzWords(shown.code);
+  const t = words.t;
+  const frame = shown.code !== locale ? ({ lang: shown.code, dir: shown.dir } as const) : {};
+
   const own = await fetchOwnLearner(supabase, user.id).catch(() => null);
   const learnerId = requested && /^[0-9a-f-]{36}$/i.test(requested) ? requested : own?.id ?? null;
 
   if (!learnerId) {
     return (
-      <div className="container section">
-        <p className="eyebrow">My learning</p>
-        <h1>Memorisation</h1>
-        <p className="lede">
-          A memorisation list belongs to a learner, and this account is not one yet. Becoming a
-          learner takes one button and does not create a second account.
-        </p>
+      <div className="container section" {...frame}>
+        <p className="eyebrow">{t('nav.learn')}</p>
+        <h1>{t('hifz.title')}</h1>
+        <p className="lede">{t('hifz.noLearner')}</p>
         <p>
           <Link className="btn" href="/account">
-            Become a learner
+            {t('prog.become')}
           </Link>
         </p>
         <p className="muted" style={{ marginTop: '1rem' }}>
-          <Link href="/learn">Back to my learning</Link>
+          <Link href="/learn">{t('course.back')}</Link>
         </p>
       </div>
     );
@@ -68,17 +93,13 @@ export default async function HifzPage({
   if (error) {
     const refused = /hifz:not_allowed/.test(error.message);
     return (
-      <div className="container section">
-        <p className="eyebrow">My learning</p>
-        <h1>{refused ? 'Not your list' : 'Memorisation'}</h1>
-        <p className="lede">
-          {refused
-            ? 'That list belongs to somebody else. A memorisation record can be read by the learner themselves and by the adults in their family.'
-            : 'The list could not be read just now. Nothing has been lost — this page only displays it.'}
-        </p>
+      <div className="container section" {...frame}>
+        <p className="eyebrow">{t('nav.learn')}</p>
+        <h1>{t(refused ? 'hifz.notYours' : 'hifz.title')}</h1>
+        <p className="lede">{t(refused ? 'hifz.notYoursBody' : 'hifz.unreadable')}</p>
         <p>
           <Link href={refused ? '/hifz' : '/learn'}>
-            {refused ? 'See my own memorisation' : 'Back to my learning'}
+            {t(refused ? 'hifz.seeOwn' : 'course.back')}
           </Link>
         </p>
       </div>
@@ -89,26 +110,25 @@ export default async function HifzPage({
 
   if (!record.enabled) {
     return (
-      <div className="container section">
-        <p className="eyebrow">My learning</p>
-        <h1>Memorisation</h1>
-        <div className="notice">
-          Memorisation tracking is not switched on for this platform yet. When it is, this page
-          will hold the passages you are memorising and the date each one comes back. Nothing you
-          have done on the platform changes in the meantime.
-        </div>
+      <div className="container section" {...frame}>
+        <p className="eyebrow">{t('nav.learn')}</p>
+        <h1>{t('hifz.title')}</h1>
+        <div className="notice">{t('hifz.off')}</div>
         <p style={{ marginTop: '1rem' }}>
-          <Link href="/learn">Back to my learning</Link>
+          <Link href="/learn">{t('course.back')}</Link>
         </p>
       </div>
     );
   }
 
   return (
-    <HifzBoard
-      learnerId={learnerId}
-      record={record}
-      isSelf={!own || own.id === learnerId}
-    />
+    <div {...frame}>
+      <HifzBoard
+        learnerId={learnerId}
+        record={record}
+        isSelf={!own || own.id === learnerId}
+        words={words.board(record)}
+      />
+    </div>
   );
 }

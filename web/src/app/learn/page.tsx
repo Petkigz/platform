@@ -119,10 +119,6 @@ export default async function LearnPage() {
   const t = translator(shown.code);
   const num = (value: number) => formatNumber(shown.code, value);
   const mismatch = shown.code !== locale;
-  // The one part below that is not translated yet: memorisation, behind a
-  // switch. Marked as English so a right-to-left page lays it out, and a
-  // screen reader says it, as English.
-  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
   // Live classes, in the reader's language since 2026-11-25. "cancelled:
   // {reason}" is cut at the blank so the teacher's words can be set apart.
   const live = liveWords(shown.code);
@@ -275,14 +271,13 @@ export default async function LearnPage() {
       )}
 
       {hifzOn && (
-        <section className="card" style={{ marginTop: '1.25rem' }} {...english}>
-          <h2 style={{ marginTop: 0 }}>Memorisation</h2>
+        <section className="card" style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ marginTop: 0 }}>{t('hifz.title')}</h2>
           <p className="muted" style={{ marginTop: 0 }}>
-            The passages you are learning by heart, and the date each one comes back to you. It
-            is a list of dates, not an assessment.
+            {t('hifz.cardBody')}
           </p>
           <p style={{ margin: 0 }}>
-            <Link href="/hifz">Open your memorisation list</Link>
+            <Link href="/hifz">{t('hifz.cardLink')}</Link>
           </p>
         </section>
       )}
