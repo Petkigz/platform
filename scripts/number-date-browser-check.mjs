@@ -99,6 +99,10 @@ try {
   console.log(`${compared} answers compared in ${codes.length} languages: browser ${version}, Node ${process.version} (ICU ${process.versions.icu}).`);
   console.log(`From the table (${thin.size} languages): ${failed} different.`);
   console.log(`Left to the runtime (${whole.length} languages): ${tolerated} different${tolerated ? `, in ${whole.filter((c) => differing.has(c)).join(' ')}` : ''}.`);
+  // A build machine's log is not always readable afterwards; its notices are.
+  if (process.env.GITHUB_ACTIONS) {
+    console.log(`::notice title=Numbers and dates::${compared} answers compared in ${codes.length} languages between Node ${process.version} (ICU ${process.versions.icu}) and browser ${version}. From the table (${thin.size} languages): ${failed} different. Left to the runtime (${whole.length} languages): ${tolerated} different.`);
+  }
   if (tolerated && process.env.GITHUB_ACTIONS) {
     console.log(`::warning title=Numbers and dates::This browser writes ${tolerated} of the compared numbers and dates differently from the server in ${whole.filter((c) => differing.has(c)).join(' ')}. Those languages are left to the runtime; see scripts/number-date-browser-check.mjs.`);
   }
