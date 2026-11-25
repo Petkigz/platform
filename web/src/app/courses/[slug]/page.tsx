@@ -37,6 +37,7 @@ import { fetchCourseTeacher, teacherAttribution } from '@/lib/course-teacher';
 import { breadcrumbJsonLd, courseJsonLd } from '@/lib/structured-data';
 import { siteOrigin } from '@/lib/site';
 import { coursePageWords } from '@/lib/course-page-words';
+import { classLines, coursePartsWords, reviewLines } from '@/lib/course-parts-words';
 import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, type MessageKey } from '@/lib/i18n';
 import { parseLanguages, textProps, type Language } from '@/lib/language';
 import { ArabicInline } from '@/app/_shared/arabic-text';
@@ -153,10 +154,11 @@ export async function generateMetadata({
  * engine, which is told the course's own language, and it does not change
  * with whoever happens to be looking.
  *
- * Still English, each behind a switch that is off: the dated classes
+ * The three parts behind switches — the dated classes
  * (`cohort-browser.tsx`), saving for later (`save-button.tsx`) and reviews
- * (`review-panel.tsx`). They are marked `lang="en"` so a right-to-left page
- * lays them out, and a screen reader says them, as English.
+ * (`review-panel.tsx`) — are in the same language as the rest of the page
+ * (`messages/course-parts.ts`, said through `lib/course-parts-words.ts`).
+ * Each is handed its words; none asks the catalogue from a browser.
  */
 export default async function CoursePage({
   params,
@@ -211,8 +213,8 @@ export default async function CoursePage({
   const words = coursePageWords(shown.code);
   const t = words.t;
   const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
-  // The three parts below that are still English, marked as English.
-  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  // Dated classes, save for later and ratings: the same language as the page.
+  const parts = coursePartsWords(shown.code);
   const taughtIn = words.taughtIn(taughtLanguage);
 
   // A course page seen by a signed-in visitor. The subject is the *version*,
@@ -415,25 +417,25 @@ export default async function CoursePage({
         />
 
         {user && (cohortsOn || joinableCohorts.length > 0) && (
-          <div {...english}>
-            <CohortBrowser
-              cohortsEnabled={cohortsOn}
-              cohorts={joinableCohorts}
-              learners={learners}
-            />
-          </div>
+          <CohortBrowser
+            cohortsEnabled={cohortsOn}
+            cohorts={joinableCohorts}
+            learners={learners}
+            locale={shown.code}
+            words={parts.classes}
+            lines={classLines(shown.code, parts.classes, joinableCohorts)}
+          />
         )}
 
         {savedOn && (
-          <div {...english}>
-            <SaveButton
-              courseId={course.id}
-              signedIn
-              initiallySaved={savedState.saved}
-              initialId={savedState.id}
-              initialNote={savedState.note}
-            />
-          </div>
+          <SaveButton
+            courseId={course.id}
+            signedIn
+            initiallySaved={savedState.saved}
+            initialId={savedState.id}
+            initialNote={savedState.note}
+            words={parts.save}
+          />
         )}
       </div>
 
@@ -472,15 +474,15 @@ export default async function CoursePage({
       </div>
 
       {reviewsOn && (
-        <div {...english}>
-          <ReviewPanel
-            courseId={course.id}
-            summary={reviewSummary}
-            reviews={courseReviews}
-            signedIn={Boolean(user)}
-            canReview={mayReview}
-          />
-        </div>
+        <ReviewPanel
+          courseId={course.id}
+          summary={reviewSummary}
+          reviews={courseReviews}
+          signedIn={Boolean(user)}
+          canReview={mayReview}
+          words={parts.reviews}
+          lines={reviewLines(shown.code, parts.reviews, reviewSummary, courseReviews)}
+        />
       )}
     </div>
   );

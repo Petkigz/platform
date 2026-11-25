@@ -239,6 +239,11 @@ for (const [file, key] of [
   // The memorisation board is a script; its words are handed to it, not built into it.
   ['hifz.ts', 'hifz.addHelp'],
   ['hifz.ts', 'hifz.eUnconfirmed'],
+  // Dated classes, save for later and ratings are scripts on the course page;
+  // each is handed its words.
+  ['course-parts.ts', 'cparts.classesBody'],
+  ['course-parts.ts', 'cparts.revBody'],
+  ['course-parts.ts', 'cparts.saveUnconfirmed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

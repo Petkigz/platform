@@ -12,6 +12,7 @@ import {
   validateCapacity,
   validateCohortInput,
 } from '@/lib/cohorts';
+import { classCodeOf } from '@/lib/course-parts';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,6 +117,16 @@ export async function POST(request: Request) {
     const result = body.action === 'join'
       ? await joinCohort(supabase, body.cohortId, body.learnerProfileId)
       : await leaveCohort(supabase, body.cohortId, body.learnerProfileId);
+    // A learner's page says a refusal in the reader's language, by its name
+    // (`course-parts.ts`). The English sentence still travels for the pages
+    // that print it; `code` is absent when the reason has no name.
+    if (!result.ok) {
+      const code = classCodeOf(result.message);
+      return NextResponse.json(
+        { ok: false, message: result.message, ...(code ? { code } : {}) },
+        { status: result.status },
+      );
+    }
     return respond(result);
   }
 

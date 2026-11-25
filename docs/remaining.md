@@ -668,11 +668,29 @@ written: not a held draft, nothing.
 - *The public course page (`/courses/[slug]`), 2026-11-25.* The page, its
   enrol button and the card about who teaches are in the twenty-seven
   languages (`cpage.`, 34 sentences, unreviewed); the button says a refusal
-  by the name `/api/enrol` gives it. **Still English there, and marked as
-  English:** the dated classes, saving for later and reviews, each behind a
-  switch that is off, and the preview lesson page. **Still English with no
+  by the name `/api/enrol` gives it. The dated classes, saving for later,
+  reviews and the sample lesson followed the same day (`cparts.`, 86
+  sentences, unreviewed), each behind a switch that is off; nothing on the
+  page is marked as English now. **Still English with no
   mark, on pages of their own:** saved courses, downloads, learning paths, asking a
-  teacher, support, `/about` and the scholars' panel.
+  teacher, support, `/about` and the scholars' panel. The teacher's class
+  manager and the saved-courses list still print the sentence a route
+  sends.
+- *A moment on the reader's clock is badly written in seven languages,
+  found 2026-11-25 and not fixed.* `components/local-time.tsx` lets the
+  browser write the moment, because only the browser knows the zone.
+  Chromium 158 holds less language data than the server: for Kazakh, Uzbek
+  and Azerbaijani it writes "2026 M12 5 17:28 GMT+5", and for Tajik,
+  Kyrgyz, Turkmen and Nepali it writes the English form ("Dec 5, 2026,
+  5:28 PM GMT+5") inside a sentence in the language. The server's first
+  drawing is right and is in UTC; the browser then replaces it. It is on
+  every page that shows a moment (live classes, dated classes, the
+  companion), in those seven of the twenty-seven. The same thinness makes
+  any client component that formats a number for itself disagree with the
+  server in those languages (a Kazakh "4,3" against "4.3", a Nepali "१२"
+  against "12"); the three parts of the course page were changed so that
+  they format nothing, and the other client components have not been
+  read for it. Other browsers were not tried.
 - *Memorisation (`/hifz`), 2026-11-25.* The list, its form and its
   refusals are in the twenty-seven languages (`hifz.`, 58 sentences,
   unreviewed), behind `learning.hifz`, off. `/api/hifz` answers by a name

@@ -3,6 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { removeSavedCourse, saveCourse, setSavedNote } from '@/lib/wishlist';
+import { saveCodeOf } from '@/lib/course-parts';
+
+/**
+ * A refusal, with its name beside the sentence when it has one. The course
+ * page says the name in the reader's language (`course-parts.ts`); the
+ * saved-courses list still prints the sentence.
+ */
+function refused(error: string, status: number) {
+  const code = saveCodeOf(error);
+  return NextResponse.json({ error, ...(code ? { code } : {}) }, { status });
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +63,7 @@ export async function POST(request: Request) {
       typeof payload.savedId === 'string' ? payload.savedId : '',
     );
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return refused(result.error, result.status);
     }
     return NextResponse.json({ ok: true });
   }
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
       note: payload.note,
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return refused(result.error, result.status);
     }
     return NextResponse.json({ ok: true, id: result.value.id }, { status: 201 });
   }
@@ -82,7 +93,7 @@ export async function POST(request: Request) {
       note: payload.note,
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return refused(result.error, result.status);
     }
     return NextResponse.json({ ok: true });
   }

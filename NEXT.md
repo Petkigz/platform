@@ -2619,6 +2619,76 @@ claim external integrations work without credentials or provider callbacks.
 
 ## Implementation history (counts below are historical snapshots)
 
+### Dated classes, saving for later, reviews and the sample lesson, in twenty-seven languages, 2026-11-25
+
+- *Built.* One catalogue part, `cparts.` 86, in the twenty-seven languages
+  with nothing held (`messages/course-parts.ts`), said through
+  `lib/course-parts-words.ts`: the three parts of `/courses/[slug]` that
+  sit behind switches (`cohort-browser.tsx`, `save-button.tsx`,
+  `review-panel.tsx`) and the sample lesson
+  (`/courses/[slug]/preview/[lessonId]`). Nothing on the course page is
+  marked as English any more. All four switches are off.
+- *The routes.* `/api/cohorts`, `/api/wishlist` and `/api/reviews` send a
+  `code` beside the sentence they already sent. The three components read
+  only the code (`lib/course-parts.ts`, the rule of `enrol-outcome.ts`):
+  a four hundred that names a known reason is said in the reader's
+  language, and anything else — a lost reply, a five hundred, a reason
+  with no name — is "could not be confirmed, reload". The sentence stays
+  in the reply because the teacher's class manager and the saved-courses
+  list are still English and still print it. Named: a full class, a class
+  that stopped taking joiners, a learner not enrolled, already in the
+  class; a full saved list, a saved course that is gone; reviewing without
+  being enrolled, reviewing one's own course, a review that is too long.
+  **Not named, so said as "could not be confirmed":** the switch being
+  off, joining for a learner one is not responsible for, a class or course
+  that is not there, and an account with no learner profile.
+- *A browser writes no number and no date in these parts.* Found by
+  drawing the page in Chromium in Kazakh: React reported that the server
+  wrote "4,3" and the browser wrote "4.3", and drew the panel again with
+  the browser's. Chromium 158 holds less data than Node for seven of the
+  twenty-seven (Uzbek, Kazakh, Azerbaijani, Tajik, Kyrgyz, Turkmen,
+  Nepali): decimals, thousands, Nepali digits and the names of months all
+  differ. So `classLines()` and `reviewLines()` write every count, version,
+  average and day on the server and hand them over as text. The one thing
+  left to the browser is a moment on the reader's clock (`LocalTime`),
+  and **that is still wrong in those seven languages** — see
+  `docs/remaining.md`. It is an older fault in a shared component and it
+  is on pages already shipped.
+- *Changed for English readers too.* "Joined for you" is "You have
+  joined"; a date is written out with its zone; the kind of a sample's
+  material is "Worksheet" where it was `worksheet`; a review's day is the
+  day in UTC. The width of the class card's facts, of the save buttons, of
+  the star buttons and of the bars under the average was pinned to a
+  label's width by `.row > :first-child`, which nobody had seen with the
+  switches off; each now takes the room it needs.
+- *Checked.* `/courses/synthetic` drawn by a running `next dev` against a
+  pretend Supabase with the four switches on, in thirteen languages (Hausa,
+  held, reads English under `lang="en"`): four classes (open, full,
+  stopped, joined), the save button, a summary of twelve ratings, a
+  published review, an anonymous one and one withdrawn with a reason;
+  also signed out, not enrolled, and the switches off with a class already
+  joined. The sample lesson in six languages, and empty. In Chromium at
+  390 pixels with no sideways scroll: a join refused as full in French, a
+  child who is not enrolled in Arabic, a 502 in Tamil, leaving in Swahili,
+  a full saved list in Indonesian, saving and writing a note in Urdu, a
+  review refused in Kazakh, no star chosen in English, a review held in
+  Chinese, a lost request in Turkish; and the page opened in each of the
+  seven thin languages with no complaint from React. The database's
+  wording reached the screen in none. The wishlist and review database
+  suites pass (28); the two class suites would not start outside the full
+  run, which CI does. **Not checked:** a real database behind the page; a
+  browser other than Chromium; Nepali and the star glyph by eye, because
+  the machine that drew them has no font for either; and no speaker has
+  read any of it.
+- *Counts.* 2529 keys; server-only 2161; unwritten while held 2257; held
+  192 of 2529, 7.59%, shown as 8%. The audit's shortlist is 206, two more:
+  the French for five stars ("Excellent") and the Filipino for one rating
+  are the English words. No migration.
+- *Left as it was.* A review of one's own that staff withdrew still fills
+  the form, under "Update your review", beside the notice that says
+  another can be written. Whether the database takes an update to a
+  withdrawn review was not looked at.
+
 ### Memorisation, in twenty-seven languages, 2026-11-25
 
 - *Why.* "Continue": it was the last English part of `/learn`, and `/hifz`

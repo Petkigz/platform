@@ -3,6 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { removeReview, writeReview } from '@/lib/reviews';
+import { reviewCodeOf } from '@/lib/course-parts';
+
+/**
+ * A refusal, with its name beside the sentence when it has one. The course
+ * page says the name in the reader's language (`course-parts.ts`) and never
+ * prints the sentence, which for most refusals is the database's.
+ */
+function refused(error: string, status: number) {
+  const code = reviewCodeOf(error);
+  return NextResponse.json({ error, ...(code ? { code } : {}) }, { status });
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +63,7 @@ export async function POST(request: Request) {
     const reviewId = typeof payload.reviewId === 'string' ? payload.reviewId : '';
     const result = await removeReview(supabase, reviewId);
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return refused(result.error, result.status);
     }
     return NextResponse.json({ ok: true });
   }
@@ -77,7 +88,7 @@ export async function POST(request: Request) {
       body: payload.body,
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return refused(result.error, result.status);
     }
     return NextResponse.json(
       { ok: true, id: result.value.id, held: result.value.held },

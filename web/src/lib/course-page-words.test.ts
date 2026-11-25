@@ -131,12 +131,9 @@ test('the course page and its button carry no sentence of their own', () => {
   for (const gone of ['Who teaches this', 'Course outline', 'The outline is not published yet', 'Current version', 'Written for ', 'Taught in ']) {
     assert.equal(page.includes(`>${gone}`) || page.includes(`\`${gone}`), false, `the page still says "${gone}" itself`);
   }
-  // The three parts behind switches are still English and are marked so.
-  for (const part of ['<CohortBrowser', '<SaveButton', '<ReviewPanel']) {
-    const at = page.lastIndexOf(part);
-    assert.ok(at > 0, part);
-    assert.match(page.slice(at - 60, at), /<div \{\.\.\.english\}>\s*$/, `${part} is not marked as English`);
-  }
+  // The three parts behind switches are in the page's language too
+  // (`course-parts.test.ts`), so nothing on the page is marked as English.
+  assert.doesNotMatch(page, /\{\.\.\.english\}|const english\b/);
 
   // A browser may not import the catalogues, and the button does not need to.
   assert.doesNotMatch(button, /from '@\/lib\/i18n/);

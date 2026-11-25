@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { coursePartsWords } from '@/lib/course-parts-words';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +18,13 @@ type PreviewResource = {
 
 /** Public sample content is deliberately separate from the enrolled lesson
  * reader. It only fetches resources classified as public_preview; RLS remains
- * the final access gate, including for signed-in visitors. */
+ * the final access gate, including for signed-in visitors.
+ *
+ * In the reader's language (`messages/course-parts.ts`); a language held for
+ * review reads it in English, whole, under `lang="en"`. The course's title,
+ * the lesson's title and the name of each piece of material are the author's
+ * and are shown as written. The kind of a material is said in words
+ * ("Worksheet"), not as the column's value. */
 export default async function PublicLessonPreview({
   params,
 }: {
@@ -73,27 +82,39 @@ export default async function PublicLessonPreview({
   if (resourceError) throw new Error(resourceError.message);
   const resources = (rows ?? []) as unknown as PreviewResource[];
 
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'cparts');
+  const words = coursePartsWords(shown.code).preview;
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
   return (
-    <div className="container section" style={{ maxWidth: 820 }}>
-      <p className="eyebrow"><Link href={`/courses/${course.slug}`}>{course.title}</Link> · Free preview</p>
-      <h1>{lesson.title}</h1>
-      <p className="muted">A sample from version {currentVersion.version_number}.</p>
+    <div className="container section" style={{ maxWidth: 820 }} {...frame}>
+      <p className="eyebrow">
+        <Link href={`/courses/${course.slug}`}><bdi>{course.title}</bdi></Link> · {words.free}
+      </p>
+      <h1 dir="auto">{lesson.title}</h1>
+      <p className="muted">{words.sample(currentVersion.version_number)}</p>
 
       {resources.length === 0 ? (
-        <div className="notice">This lesson has been marked as a preview, but no public sample content has been added yet.</div>
+        <div className="notice">{words.empty}</div>
       ) : (
-        <section className="card" aria-label="Preview content">
-          <h2 style={{ marginTop: 0 }}>Preview content</h2>
+        <section className="card" aria-label={words.content}>
+          <h2 style={{ marginTop: 0 }}>{words.content}</h2>
           <ul className="lesson-list">
             {resources.map((resource) => (
               <li key={resource.id}>
-                <span className="badge neutral">{resource.resource_type}</span>
+                <span className="badge neutral">{words.kind(resource.resource_type)}</span>
                 {resource.external_url ? (
                   <a href={resource.external_url} target="_blank" rel="noopener noreferrer">
-                    {resource.display_name}
+                    <bdi>{resource.display_name}</bdi>
                   </a>
                 ) : (
-                  <span>{resource.display_name}</span>
+                  <bdi>{resource.display_name}</bdi>
                 )}
               </li>
             ))}
@@ -102,7 +123,7 @@ export default async function PublicLessonPreview({
       )}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href={`/courses/${course.slug}`}>Back to course</Link>
+        <Link href={`/courses/${course.slug}`}>{words.back}</Link>
       </p>
     </div>
   );

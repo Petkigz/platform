@@ -127,6 +127,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'cpage',
   'live',
   'hifz',
+  'cparts',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

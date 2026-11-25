@@ -8085,6 +8085,32 @@ in any of the twenty-seven languages**, and `family.child_login`, the switch
 it sits behind, is off. A speaker's reading of it is still asked for before
 that switch is turned on.
 
+## The server writes the numbers and the days; a browser writes only the reader's hour — **DECIDED 2026-11-25**
+
+Drawing the course page in Chromium in Kazakh showed the server and the
+browser disagreeing about "4,3". Chromium holds less of some languages than
+Node does — for seven of the twenty-seven here (Uzbek, Kazakh, Azerbaijani,
+Tajik, Kyrgyz, Turkmen, Nepali) the decimal mark, the thousands mark, the
+digits and the months all come out differently — and React answers a
+disagreement by drawing the part again with the browser's version, which is
+the worse one.
+
+So, for a part of a page that runs in the browser: **every number and every
+day in it is written on the server and handed over as finished text.** The
+component is given sentences, not a language to format in. The dated
+classes, saving for later and the ratings panel are built this way
+(`classLines`, `reviewLines` in `lib/course-parts-words.ts`), and a test
+refuses a formatter in any of the three.
+
+The exception is a moment on the reader's own clock, which only the browser
+can know. `LocalTime` still lets the browser write it, and in those seven
+languages the browser writes it badly ("2026 M12 5 17:28 GMT+5"). That is
+**not decided and not fixed**: the choices are to carry the months and the
+marks for the thin languages in the bundle so both sides write the same
+thing, or to leave the server's UTC text in place where the browser cannot
+do better. It is recorded in `docs/remaining.md`. The client components
+written before this ruling have not been read against it.
+
 ## New screens are not written in a language that has anything held — **DECIDED 2026-11-16**
 
 Offered as the plan for the learner dashboard — translate it in the twenty-seven

@@ -55,6 +55,7 @@ import { VERIFY } from './verify.ts';
 import { COURSE_PAGE } from './course-page.ts';
 import { LIVE } from './live.ts';
 import { HIFZ } from './hifz.ts';
+import { COURSE_PARTS } from './course-parts.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -913,6 +914,7 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   COURSE_PAGE,
   LIVE,
   HIFZ,
+  COURSE_PARTS,
 );
 
 /**
