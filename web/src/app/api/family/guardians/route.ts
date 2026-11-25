@@ -7,6 +7,14 @@ import {
   type ConsentMethod,
   type RelationshipType,
 } from '@/lib/guardian-consent';
+import {
+  METHODS,
+  REASON_MIN,
+  RELATIONSHIPS,
+  STATEMENT_MIN,
+  guardianStatusOf,
+  type GuardianCode,
+} from '@/lib/guardian-outcome';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +29,16 @@ type Body = {
   reason?: unknown;
 };
 
-const TYPES: RelationshipType[] = ['parent', 'guardian', 'other'];
-const METHODS: ConsentMethod[] = ['video_call', 'id_document', 'in_person', 'signed_declaration'];
+const TYPES: readonly string[] = RELATIONSHIPS;
+const WAYS: readonly string[] = METHODS;
+
+/**
+ * A refusal: the reason by name, at the status that name is answered with.
+ * The sentence is English and is for a log or a person reading the reply by
+ * hand; the forms say the name in the reader's language and never print it.
+ */
+const refuse = (code: GuardianCode, error: string) =>
+  NextResponse.json({ error, code }, { status: guardianStatusOf(code) });
 
 /**
  * POST /api/family/guardians — ask for consent, or withdraw it.
@@ -38,10 +54,15 @@ const METHODS: ConsentMethod[] = ['video_call', 'id_document', 'in_person', 'sig
  *
  * Withdrawal is the same door in reverse. It is the parent's own act, it needs a
  * reason, and it clears the permissions without deleting anything.
+ *
+ * Every refusal names its reason (`code`), since 2026-11-25: the two forms are
+ * written in the reader's language and say the refusal by that name. A
+ * database error that is not the database's answer is `unconfirmed` at 502,
+ * because the request may have been recorded.
  */
 export async function POST(request: Request) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ error: 'Not configured.' }, { status: 503 });
+    return NextResponse.json({ error: 'Not configured.', code: 'unavailable' }, { status: 503 });
   }
 
   const supabase = await createClient();
@@ -49,14 +70,14 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: 'Sign in required.' }, { status: 401 });
+    return refuse('signed_out', 'Sign in required.');
   }
 
   let body: Body;
   try {
     body = (await request.json()) as Body;
   } catch {
-    return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
+    return NextResponse.json({ error: 'Malformed request body.', code: 'refused' }, { status: 400 });
   }
 
   if (body.action === 'withdraw') {
@@ -65,19 +86,14 @@ export async function POST(request: Request) {
     const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
 
     if (!relationshipId) {
-      return NextResponse.json({ error: 'relationshipId is required.' }, { status: 400 });
+      return NextResponse.json({ error: 'relationshipId is required.', code: 'refused' }, { status: 400 });
     }
-    if (reason.length < 10) {
-      return NextResponse.json(
-        { error: 'Say why you are withdrawing — the record keeps your reason.' },
-        { status: 400 },
-      );
+    if (reason.length < REASON_MIN) {
+      return refuse('reason_short', 'Say why you are withdrawing — the record keeps your reason.');
     }
 
     const result = await revokeGuardianConsent(supabase, { relationshipId, reason });
-    if (!result.ok) {
-      return NextResponse.json({ error: result.message }, { status: 409 });
-    }
+    if (!result.ok) return refuse(result.reason, result.message);
     return NextResponse.json({ ok: true, status: 'revoked' });
   }
 
@@ -91,28 +107,18 @@ export async function POST(request: Request) {
     typeof body.evidenceReference === 'string' ? body.evidenceReference.trim() : '';
 
   if (!learnerProfileId) {
-    return NextResponse.json({ error: 'learnerProfileId is required.' }, { status: 400 });
+    return refuse('choose_child', 'learnerProfileId is required.');
   }
-  if (!TYPES.includes(relationshipType as RelationshipType)) {
-    return NextResponse.json(
-      { error: `relationshipType must be one of: ${TYPES.join(', ')}.` },
-      { status: 400 },
-    );
+  if (!TYPES.includes(relationshipType)) {
+    return refuse('relationship_invalid', `relationshipType must be one of: ${TYPES.join(', ')}.`);
   }
-  if (!METHODS.includes(method as ConsentMethod)) {
-    return NextResponse.json(
-      { error: `method must be one of: ${METHODS.join(', ')}.` },
-      { status: 400 },
-    );
+  if (!WAYS.includes(method)) {
+    return refuse('method_invalid', `method must be one of: ${WAYS.join(', ')}.`);
   }
-  if (statement.length < 20) {
-    return NextResponse.json(
-      {
-        error:
-          'Write who this child is to you, in your own words — at least 20 '
-          + 'characters. The reviewer reads it.',
-      },
-      { status: 400 },
+  if (statement.length < STATEMENT_MIN) {
+    return refuse(
+      'statement_short',
+      'Write who this child is to you, in your own words — at least 20 characters. The reviewer reads it.',
     );
   }
 
@@ -124,9 +130,7 @@ export async function POST(request: Request) {
     evidenceReference: evidenceReference || null,
   });
 
-  if (!result.ok) {
-    return NextResponse.json({ error: result.message }, { status: 409 });
-  }
+  if (!result.ok) return refuse(result.reason, result.message);
 
   return NextResponse.json({
     ok: true,

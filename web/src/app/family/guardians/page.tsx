@@ -1,23 +1,33 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import {
-  consentSentence,
-  consentStateLabel,
-  consentTone,
-  enforcementNote,
-  expiryWarning,
-  myGuardianConsents,
-  permissionSentence,
-  policyLine,
-  relationshipLabel,
-} from '@/lib/guardian-consent';
+import { consentTone, myGuardianConsents } from '@/lib/guardian-consent';
+import { guardianWords } from '@/lib/guardian-words';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { ConsentForm } from './consent-form';
 import { ConsentActions } from './consent-actions';
 import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'guard') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('guard.title') };
+}
 
 /**
  * Verifiable parental consent, from the parent's side.
@@ -32,6 +42,14 @@ export const dynamic = 'force-dynamic';
  * may decide, whether or not enforcement is on; the flag only decides whether a
  * lapse bites. Saying that plainly is better than hiding the form and letting
  * people think consent is a switch somebody forgot to flip.
+ *
+ * **In the reader's language** since 2026-11-25 (`messages/guardians.ts`,
+ * put together by `guardian-words.ts`); a language held for review reads the
+ * page in English, whole, under `lang="en"`. What a person wrote is shown as
+ * they wrote it and set apart with `<bdi>`: a child's name, the reviewer's
+ * reason, the reason for a withdrawal. The statement a parent writes is theirs
+ * too, in whatever language they write it; nothing here translates it for the
+ * reviewer.
  */
 export default async function FamilyGuardiansPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -60,78 +78,73 @@ export default async function FamilyGuardiansPage() {
     .flatMap((m) => one(m.families)?.learner_profiles ?? [])
     .filter((c) => c.learner_type === 'child');
 
-  const stateFor = new Map(
-    mine.consents.map((c) => [c.learnerProfileId, consentStateLabel(c)]),
-  );
+  const { locale, shown } = await readerLanguage();
+  const words = guardianWords(shown.code);
+  const { t } = words;
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
+  const stateFor = new Map(mine.consents.map((c) => [c.learnerProfileId, words.state(c)]));
 
   const needsAction = mine.consents.filter(
     (c) => c.status !== 'active' && c.status !== 'pending_verification',
   );
 
+  const enforcement = words.enforcementNote(mine.enforced);
+
   return (
-    <div className="page">
+    <div className="page" {...frame}>
       <nav className="crumbs">
-        <Link href="/family">Family</Link>
+        <Link href="/family">{t('nav.family')}</Link>
         <span aria-hidden>›</span>
-        <span>Guardian consent</span>
+        <span>{t('guard.title')}</span>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">Family</p>
-        <h1>Guardian consent</h1>
-        <p className="muted">
-          Ask to be verified as a child&rsquo;s parent or guardian. A person reads
-          every request — it is not instant, and it is not a formality. A
-          verification lasts a stated number of months and then runs out, because
-          a relationship can change within a year.
-        </p>
+        <p className="eyebrow">{t('nav.family')}</p>
+        <h1>{t('guard.title')}</h1>
+        <p className="muted">{t('guard.lede')}</p>
       </div>
 
-      {enforcementNote(mine.enforced) && (
-        <div className="notice warn">{enforcementNote(mine.enforced)}</div>
-      )}
+      {enforcement && <div className="notice warn">{enforcement}</div>}
 
-      <div className="notice info">{policyLine(mine.policyInForce)}</div>
+      <div className="notice info">{words.policyLine(mine.policyInForce)}</div>
 
       {mine.consents.length === 0 ? (
-        <p className="muted">You have no guardian consent on record yet.</p>
+        <p className="muted">{t('guard.noneYet')}</p>
       ) : (
         <section className="card">
-          <h2>Your consents</h2>
+          <h2>{t('guard.yours')}</h2>
           <ul className="lessons">
             {mine.consents.map((c) => {
-              const warning = expiryWarning(c);
+              const warning = words.warning(c);
               return (
                 <li key={c.relationshipId}>
                   <span className="t">
-                    {c.learnerName}
+                    <bdi>{c.learnerName}</bdi>
                     <span className="muted">
                       {' · '}
-                      {relationshipLabel(c.relationshipType)}
+                      {words.relationship(c.relationshipType)}
                     </span>
                   </span>
                   <span className={`badge ${consentTone(c) === 'ok' ? 'ok' : 'neutral'}`}>
-                    {consentStateLabel(c)}
+                    {words.state(c)}
                   </span>
-                  <p className="muted">{consentSentence(c)}</p>
-                  <p className="muted">{permissionSentence(c)}</p>
+                  <p className="muted">{words.sentences(c).join(' ')}</p>
+                  <p className="muted">{words.permissions(c).join(' ')}</p>
                   {warning && <p className="danger">{warning}</p>}
-                  {c.policyChanged && (
-                    <p className="muted">
-                      The children&rsquo;s policy has changed since this consent was
-                      given. Renewing it records the version in force now.
-                    </p>
-                  )}
+                  {c.policyChanged && <p className="muted">{t('guard.policyChanged')}</p>}
                   {c.lastDecision?.reason && (
                     <p className="muted">
-                      Reviewer said: &ldquo;{c.lastDecision.reason}&rdquo;
+                      {t('guard.reviewerSaid')} <bdi>{c.lastDecision.reason}</bdi>
                     </p>
                   )}
                   {c.revokedReason && (
-                    <p className="muted">Withdrawal reason: {c.revokedReason}</p>
+                    <p className="muted">
+                      {t('guard.withdrawalReason')} <bdi>{c.revokedReason}</bdi>
+                    </p>
                   )}
                   {(c.status === 'active' || c.status === 'pending_verification') && (
-                    <ConsentActions relationshipId={c.relationshipId} />
+                    <ConsentActions relationshipId={c.relationshipId} words={words.actionWords} />
                   )}
                 </li>
               );
@@ -141,11 +154,10 @@ export default async function FamilyGuardiansPage() {
       )}
 
       <section className="card">
-        <h2>{needsAction.length > 0 ? 'Ask again or renew' : 'Ask for consent'}</h2>
+        <h2>{needsAction.length > 0 ? t('guard.askAgain') : t('guard.ask')}</h2>
         {children.length === 0 ? (
           <p className="muted">
-            There is no child profile in your family to ask about yet.{' '}
-            <Link href="/family">Add a child first</Link>.
+            {t('guard.noChild')} <Link href="/family">{t('guard.addChild')}</Link>
           </p>
         ) : (
           <ConsentForm
@@ -154,15 +166,12 @@ export default async function FamilyGuardiansPage() {
               name: c.display_name,
               state: stateFor.get(c.id),
             }))}
+            words={words.formWords}
           />
         )}
       </section>
 
-      <p className="muted">
-        Being verified does not give you the child&rsquo;s account. It gives you a
-        view of their progress, it can be narrowed by the reviewer, and it can be
-        withdrawn — by you, at any time, with a reason that is kept.
-      </p>
+      <p className="muted">{t('guard.foot')}</p>
     </div>
   );
 }

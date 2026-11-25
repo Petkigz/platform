@@ -120,6 +120,9 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'kid',
   'tq',
   'prog',
+  'cert',
+  'handover',
+  'guard',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

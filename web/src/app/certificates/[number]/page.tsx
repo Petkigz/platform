@@ -1,5 +1,7 @@
 import { ArabicBlock } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { verificationAddress } from '@/lib/site';
@@ -7,9 +9,40 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCertificateForHolder } from '@/lib/certificates';
 import { PrintCertificateButton } from './print-button';
 import { BrandMark } from '../../_shared/brand-mark';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
+/** The language the words around the sheet are written in for this reader. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'cert') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('cert.mine') };
+}
+
+/**
+ * One certificate, as its holder sees it and prints it.
+ *
+ * Two things are on this page and they are in two languages on purpose. The
+ * words *around* the sheet — the way back, the button, the warning that a
+ * certificate has been revoked — are the reader's (`messages/certificates.ts`,
+ * since 2026-11-25). The sheet is not: it is a document that is handed to
+ * somebody else, an employer or a school, and it reads the same whoever
+ * printed it. So does the one line that is printed under a revoked sheet,
+ * which is for the person holding the paper and not for the person who
+ * printed it. A sentence under the button says so, in the reader's language,
+ * so that an English sheet on an Arabic page is not taken for something
+ * unfinished.
+ */
 export default async function CertificatePage({
   params,
 }: {
@@ -32,18 +65,30 @@ export default async function CertificatePage({
 
   const verifyAddress = verificationAddress(certificate.certificateNumber);
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+
   return (
     <div className="container section certificate-page">
-      <div className="row no-print" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <p className="eyebrow"><Link href="/certificates">My certificates</Link></p>
-        {certificate.status === 'issued' && <PrintCertificateButton />}
-      </div>
-      {certificate.status === 'revoked' && (
-        <div className="notice warn no-print" role="alert">
-          This certificate has been revoked and must not be presented as valid.
-          {certificate.revocationReason && ` Reason: ${certificate.revocationReason}`}
+      <div className="no-print" {...frame}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <p className="eyebrow"><Link href="/certificates">{t('cert.mine')}</Link></p>
+          {certificate.status === 'issued' && <PrintCertificateButton label={t('cert.print')} />}
         </div>
-      )}
+        {certificate.status === 'revoked' && (
+          <div className="notice warn" role="alert">
+            {t('cert.invalid')}
+            {certificate.revocationReason && (
+              <>
+                {' '}
+                {t('cert.reason')} <bdi>{certificate.revocationReason}</bdi>
+              </>
+            )}
+          </div>
+        )}
+        {shown.code !== 'en' && <p className="meta">{t('cert.sheetNote')}</p>}
+      </div>
 
       {/* The sheet declares its own direction. Everything printed on it — the
           kicker, the wording, the footer, the verification address — is English
@@ -55,6 +100,7 @@ export default async function CertificatePage({
       <article
         className={`certificate-sheet ${certificate.status === 'revoked' ? 'is-revoked' : ''}`}
         dir="ltr"
+        lang="en"
       >
         <div className="certificate-inner">
           <div className="certificate-brand"><BrandMark className="certificate-mark" size={16} /> AyahSpring</div>
@@ -102,7 +148,10 @@ export default async function CertificatePage({
         </div>
       </article>
       {certificate.status === 'revoked' && certificate.revocationReason && (
-        <p className="notice warn print-revocation">Revoked: {certificate.revocationReason}</p>
+        // Printed with the sheet, so it is in the sheet's language.
+        <p className="notice warn print-revocation" lang="en" dir="ltr">
+          Revoked: {certificate.revocationReason}
+        </p>
       )}
     </div>
   );

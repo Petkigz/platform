@@ -4,14 +4,21 @@ import { test } from 'node:test';
 
 import {
   HANDOVER_DECLARATION,
-  HANDOVER_EXPLAINER,
-  HANDOVER_OPTIONS,
   confirmSentence,
-  describeHandoverError,
   describeOutcome,
+  handoverCodeOf,
+  handoverReasonOf,
+  handoverWords,
   parseHandoverOutcome,
   type HandoverOutcome,
 } from './handover.ts';
+import { formatDay, translator } from './i18n/index.ts';
+
+// The sentences are the catalogue's since 2026-11-25. These are the English ones,
+// which is what the page hands the form when the reader reads English.
+const english = handoverWords(translator('en'), true);
+const arabic = handoverWords(translator('ar'), false);
+const day = (code: string) => (value: string) => formatDay(code, value);
 
 const outcome = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
   status: 'completed',
@@ -35,48 +42,98 @@ test('nothing is read as done unless the database says it is done', () => {
 
 test('the outcome says what happened to the record, in the past tense', () => {
   const kept = parseHandoverOutcome(outcome())!;
-  assert.match(describeOutcome(kept), /theirs/);
-  assert.match(describeOutcome(kept), /left the family/);
+  assert.match(describeOutcome(kept, english, day('en')), /theirs/);
+  assert.match(describeOutcome(kept, english, day('en')), /left the family/);
 
   const deleted = parseHandoverOutcome(
     outcome({ decision: 'delete', becameOwnAccount: null, leftFamily: false, deletionDue: '2026-12-02' }),
   )!;
-  assert.match(describeOutcome(deleted), /deleted on 2026-12-02/);
-  assert.match(describeOutcome(deleted), /nothing changes/);
+  assert.match(describeOutcome(deleted, english, day('en')), /deleted on Dec 2, 2026/);
+  assert.match(describeOutcome(deleted, english, day('en')), /nothing changes/);
+
+  // The date is written in the reader's calendar and digits, not pasted in as it was stored.
+  const inArabic = describeOutcome(deleted, arabic, day('ar'));
+  assert.doesNotMatch(inArabic, /2026-12-02|\{date\}/);
+  assert.match(inArabic, /ديسمبر/);
+
+  // A date nobody can write is left out, and the sentence that needs none is said.
+  const undated = parseHandoverOutcome(
+    outcome({ decision: 'delete', becameOwnAccount: null, leftFamily: false, deletionDue: 'soon' }),
+  )!;
+  assert.equal(describeOutcome(undated, english, day('en')), english.doneDrop);
+  assert.match(english.doneDrop, /thirty days from today/);
 });
 
 test('each decision says what it does to the work, before it is taken', () => {
-  assert.equal(HANDOVER_OPTIONS.length, 2);
-  const keep = HANDOVER_OPTIONS.find((o) => o.value === 'keep')!;
-  const drop = HANDOVER_OPTIONS.find((o) => o.value === 'delete')!;
-
-  assert.match(keep.effect, /progress, hand-ins and certificates stay/);
-  assert.match(keep.effect, /login first/, 'keeping a record with no account is not explained');
-  assert.match(drop.effect, /thirty days/);
-  assert.match(drop.effect, /certificate already issued/);
+  assert.match(english.keepMeans, /progress, hand-ins and certificates stay/);
+  assert.match(english.keepMeans, /login first/, 'keeping a record with no account is not explained');
+  assert.match(english.dropMeans, /thirty days/);
+  assert.match(english.dropMeans, /certificate already issued/);
 
   // The words are a statement, not a claim that anything was checked.
   assert.match(HANDOVER_DECLARATION, /I confirm this learner is 18 or older/);
   assert.match(HANDOVER_DECLARATION, /does not hold a date of birth to check it against/);
-  assert.match(HANDOVER_EXPLAINER, /never stores a date of birth/);
+  assert.match(translator('en')('handover.explainer'), /never stores a date of birth/);
+});
+
+test('the statement is English on every page, and a reader of another language is told why', () => {
+  const form = readFileSync(new URL('../app/handover/handover-form.tsx', import.meta.url), 'utf8');
+  assert.match(form, /<span lang="en" dir="ltr">\{HANDOVER_DECLARATION\}<\/span>/,
+    'the statement is not marked as English, so a right-to-left page lays it out backwards');
+  assert.equal(english.declarationNote, '', 'an English page explains why its statement is in English');
+  assert.notEqual(arabic.declarationNote, '');
+  // The statement is not in the catalogue: nothing there can translate it by accident.
+  const catalogue = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url), 'utf8');
+  assert.ok(!catalogue.includes('I confirm this learner is 18 or older'));
 });
 
 test('the confirmation repeats the sentence, in the same words', () => {
-  assert.match(confirmSentence('keep', 'Yusuf'), /Yusuf becomes an adult learner/);
-  assert.match(confirmSentence('keep', 'Yusuf'), /cannot be undone/);
-  assert.match(confirmSentence('delete', 'Yusuf'), /deleted thirty days from today/);
+  assert.match(confirmSentence('keep', 'Yusuf', english), /Yusuf becomes an adult learner/);
+  assert.match(confirmSentence('keep', 'Yusuf', english), /cannot be undone/);
+  assert.match(confirmSentence('delete', 'Yusuf', english), /deleted thirty days from today/);
+  for (const words of [english, arabic]) {
+    for (const decision of ['keep', 'delete'] as const) {
+      const said = confirmSentence(decision, 'يوسف', words);
+      assert.ok(said.includes('يوسف'), 'the name is missing from the confirmation');
+      assert.doesNotMatch(said, /\{name\}/);
+    }
+  }
 });
 
 test('every refusal is a sentence somebody can act on', () => {
-  assert.match(describeHandoverError('handover:declaration_required'), /tick the box/);
-  assert.match(describeHandoverError('handover:needs_an_account'), /Make them a login first/);
-  assert.match(describeHandoverError('handover:not_a_child'), /nothing to hand over/);
-  assert.match(describeHandoverError('handover:not_allowed'), /Only the learner/);
-  assert.match(describeHandoverError('handover:not_active'), /on its way out/);
-  assert.match(
-    describeHandoverError('this learning holds a seat on a family plan, so it cannot leave'),
-    /seat on a family plan/);
-  assert.match(describeHandoverError('boom'), /nothing was changed/);
+  const say = (message: string) => english.refusals[handoverReasonOf(message)];
+  assert.match(say('handover:declaration_required'), /tick the box/);
+  assert.match(say('handover:needs_an_account'), /Make them a login first/);
+  assert.match(say('handover:not_a_child'), /nothing to hand over/);
+  assert.match(say('handover:not_allowed'), /Only the learner/);
+  assert.match(say('handover:not_active'), /on its way out/);
+  assert.match(say('handover:already_requested'), /already a request/);
+  assert.match(say('this learning holds a seat on a family plan, so it cannot leave'), /seat on the family plan/);
+  assert.match(say('boom'), /nothing was changed/);
+});
+
+test('only a reply that names its reason is a refusal; anything else is not known', () => {
+  assert.equal(handoverCodeOf(422, 'needs_an_account'), 'needs_an_account');
+  assert.equal(handoverCodeOf(400, 'refused'), 'refused');
+  assert.equal(handoverCodeOf(401, 'refused'), 'refused');
+  // No name, a name nobody has heard of, a name a page cannot send, or a five hundred.
+  assert.equal(handoverCodeOf(422, undefined), 'unconfirmed');
+  assert.equal(handoverCodeOf(422, 'handover:needs_an_account'), 'unconfirmed');
+  assert.equal(handoverCodeOf(422, 'unconfirmed'), 'unconfirmed');
+  assert.equal(handoverCodeOf(422, 'toString'), 'unconfirmed');
+  assert.equal(handoverCodeOf(500, 'refused'), 'unconfirmed');
+  assert.equal(handoverCodeOf(502, undefined), 'unconfirmed');
+  assert.equal(handoverCodeOf(200, 'refused'), 'unconfirmed');
+  assert.match(english.refusals.unconfirmed, /could not confirm/);
+  assert.match(english.refusals.unconfirmed, /before trying again/);
+
+  // Every refusal the route makes names its reason, and no sentence of the route's is shown.
+  const route = readFileSync(new URL('../app/api/handover/route.ts', import.meta.url), 'utf8');
+  const refusals = route.match(/NextResponse\.json\(\s*\{ error:[^}]*\}/g) ?? [];
+  assert.equal(refusals.length, 7);
+  for (const refusal of refusals) assert.match(refusal, /code: /, refusal);
+  const form = readFileSync(new URL('../app/handover/handover-form.tsx', import.meta.url), 'utf8');
+  assert.match(form, /words\.refusals\[result\.code\]/);
 });
 
 test('the page asks the family, and the route never names an actor', () => {
@@ -112,7 +169,8 @@ test('the handover keeps the outcome honest when the payload is the wrong shape'
     declaresAdult: true,
   });
   assert.equal(result.ok, false);
-  if (!result.ok) assert.match(result.message, /will not trust/);
+  // It answered 200 and may well be done: the reader is sent to look, not told it failed.
+  if (!result.ok) assert.equal(result.code, 'unconfirmed');
 
   globalThis.fetch = original;
 });
@@ -127,5 +185,5 @@ test('a kept record and a deleted one are different shapes of outcome', () => {
 
   assert.equal(keep.becameOwnAccount === null, false);
   assert.equal(drop.becameOwnAccount, null);
-  assert.notEqual(describeOutcome(keep), describeOutcome(drop));
+  assert.notEqual(describeOutcome(keep, english, day('en')), describeOutcome(drop, english, day('en')));
 });

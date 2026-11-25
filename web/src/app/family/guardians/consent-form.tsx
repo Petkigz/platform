@@ -3,11 +3,14 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  CONSENT_METHODS,
-  RELATIONSHIP_LABELS,
-  type ConsentMethod,
-  type RelationshipType,
-} from '@/lib/guardian-consent';
+  METHODS,
+  RELATIONSHIPS,
+  STATEMENT_MIN,
+  guardianOutcomeOf,
+  type ConsentFormWords,
+  type Method,
+  type Relationship,
+} from '@/lib/guardian-outcome';
 
 type ChildOption = { id: string; name: string; state?: string };
 
@@ -17,13 +20,19 @@ type ChildOption = { id: string; name: string; state?: string };
  * The statement is a required field with a required length, and the copy says
  * who reads it. That is not decoration: the statement is what the reviewer's
  * judgement rests on, because the evidence reference is write-only by design.
+ *
+ * **The words are handed in** by the page, in the reader's language
+ * (`ConsentFormWords`): this file carries no sentence of its own. A refusal
+ * arrives as a name and is said from the same words; a reply that names
+ * nothing is said as "we could not confirm", because the request may have
+ * been recorded.
  */
-export function ConsentForm({ options }: { options: ChildOption[] }) {
+export function ConsentForm({ options, words }: { options: ChildOption[]; words: ConsentFormWords }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [learnerId, setLearnerId] = useState(options[0]?.id ?? '');
-  const [relationship, setRelationship] = useState<RelationshipType>('parent');
-  const [method, setMethod] = useState<ConsentMethod>('video_call');
+  const [relationship, setRelationship] = useState<Relationship>('parent');
+  const [method, setMethod] = useState<Method>('video_call');
   const [statement, setStatement] = useState('');
   const [evidence, setEvidence] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -37,40 +46,45 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
     setMessage(null);
     if (!learnerId) {
       setTone('error');
-      setMessage('Choose a child first.');
+      setMessage(words.refusals.choose_child);
       return;
     }
-    if (statement.trim().length < 20) {
+    if (statement.trim().length < STATEMENT_MIN) {
       setTone('error');
-      setMessage(
-        'Write who this child is to you, in your own words — at least 20 characters.',
-      );
+      setMessage(words.refusals.statement_short);
       return;
     }
 
-    const res = await fetch('/api/family/guardians', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        learnerProfileId: learnerId,
-        relationshipType: relationship,
-        method,
-        statement,
-        evidenceReference: evidence || undefined,
-      }),
-    });
-    const json = (await res.json().catch(() => ({}))) as { error?: string };
-
-    if (!res.ok) {
+    let res: Response;
+    try {
+      res = await fetch('/api/family/guardians', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          learnerProfileId: learnerId,
+          relationshipType: relationship,
+          method,
+          statement,
+          evidenceReference: evidence || undefined,
+        }),
+      });
+    } catch {
+      // The reply was lost; the request may not have been.
       setTone('error');
-      setMessage(json.error ?? 'The request was not recorded.');
+      setMessage(words.refusals.unconfirmed);
+      return;
+    }
+    const json = (await res.json().catch(() => ({}))) as { ok?: unknown; code?: unknown };
+
+    // A reply that does not say `ok` is not this route's yes, whatever its status.
+    if (!res.ok || json.ok !== true) {
+      setTone('error');
+      setMessage(words.refusals[guardianOutcomeOf(res.status, json.code)]);
       return;
     }
 
     setTone('info');
-    setMessage(
-      'Recorded. A person will read your statement and decide — you will see the outcome here.',
-    );
+    setMessage(words.recorded);
     setStatement('');
     setEvidence('');
     startTransition(() => router.refresh());
@@ -80,7 +94,7 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
     <div className="stack">
       <div className="field">
         <label className="eyebrow" htmlFor="consent-child">
-          Child
+          {words.child}
         </label>
         <select
           id="consent-child"
@@ -97,9 +111,9 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
       </div>
 
       <div className="field">
-        <span className="eyebrow">You are this child&rsquo;s</span>
+        <span className="eyebrow">{words.youAre}</span>
         <div className="row" style={{ gap: '1rem' }}>
-          {(Object.keys(RELATIONSHIP_LABELS) as RelationshipType[]).map((key) => (
+          {RELATIONSHIPS.map((key) => (
             <label key={key}>
               <input
                 type="radio"
@@ -107,7 +121,7 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
                 checked={relationship === key}
                 onChange={() => setRelationship(key)}
               />{' '}
-              {RELATIONSHIP_LABELS[key]}
+              {words.relationships[key]}
             </label>
           ))}
         </div>
@@ -115,60 +129,54 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
 
       <div className="field">
         <label className="eyebrow" htmlFor="consent-method">
-          How the reviewer can confirm it
+          {words.how}
         </label>
         <select
           id="consent-method"
           value={method}
-          onChange={(e) => setMethod(e.target.value as ConsentMethod)}
+          onChange={(e) => {
+            const chosen = METHODS.find((m) => m === e.target.value);
+            if (chosen) setMethod(chosen);
+          }}
         >
-          {CONSENT_METHODS.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
+          {METHODS.map((m) => (
+            <option key={m} value={m}>
+              {words.methods[m].label}
             </option>
           ))}
         </select>
-        <p className="muted">
-          {CONSENT_METHODS.find((m) => m.value === method)?.hint}
-        </p>
+        <p className="muted">{words.methods[method].hint}</p>
       </div>
 
       <div className="field">
         <label className="eyebrow" htmlFor="consent-statement">
-          In your own words (required)
+          {words.statement}
         </label>
         <textarea
           id="consent-statement"
           rows={4}
           value={statement}
           onChange={(e) => setStatement(e.target.value)}
-          placeholder="Who this child is to you, and what you are consenting to."
+          placeholder={words.statementPlaceholder}
         />
-        <p className="muted">
-          At least 20 characters. The reviewer reads this — it is what the
-          decision rests on, alongside whatever they check outside the platform.
-        </p>
+        <p className="muted">{words.statementHelp}</p>
       </div>
 
       <div className="field">
         <label className="eyebrow" htmlFor="consent-evidence">
-          Where the evidence is kept (optional)
+          {words.evidence}
         </label>
         <input
           id="consent-evidence"
           value={evidence}
           onChange={(e) => setEvidence(e.target.value)}
-          placeholder="A pointer, not the document itself"
+          placeholder={words.evidencePlaceholder}
         />
-        <p className="muted">
-          A reference the reviewer can find, in storage that is access-controlled
-          outside this platform. It is written once and then unreadable — not to
-          you, not to the reviewer, not to an administrator.
-        </p>
+        <p className="muted">{words.evidenceHelp}</p>
       </div>
 
       <button type="button" className="btn" onClick={submit} disabled={pending}>
-        {pending ? 'Sending…' : 'Ask for consent'}
+        {pending ? words.sending : words.ask}
       </button>
 
       {message && (
@@ -177,10 +185,7 @@ export function ConsentForm({ options }: { options: ChildOption[] }) {
         </div>
       )}
 
-      <p className="muted">
-        This asks. It does not grant — a reviewer decides, and can narrow what you
-        are given. A verification has a lifetime and runs out on its own.
-      </p>
+      <p className="muted">{words.foot}</p>
     </div>
   );
 }

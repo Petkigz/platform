@@ -2921,6 +2921,180 @@ export const en = {
   'prog.keepYou': 'come back tomorrow to keep it going',
   'prog.keepThey': 'one lesson tomorrow keeps it going',
   'prog.wholeRecord': 'Your whole record',
+  'cert.lede':
+    'Each certificate records the course, its version, and what was required of you at the time. Renaming a course afterwards does not change what you were awarded.',
+  'cert.none':
+    'No certificates yet. They are issued for completed courses whose author has enabled them.',
+  'cert.issued': 'Issued',
+  'cert.revoked': 'Revoked',
+  'cert.issuedOn': 'Issued {date}',
+  'cert.notIssued': 'Not yet issued',
+  'cert.view': 'View and print certificate',
+  'cert.verify': 'Verify this certificate',
+  'cert.revokedWhy': 'Revoked:',
+  'cert.revokedPlain': 'Revoked.',
+  'cert.mine': 'My certificates',
+  'cert.print': 'Print or save as PDF',
+  'cert.invalid': 'This certificate has been revoked and must not be presented as valid.',
+  'cert.reason': 'Reason:',
+  'cert.sheetNote':
+    'The certificate itself is written in English, the same for everyone who reads it.',
+  'handover.crumb': 'Turning eighteen',
+  'handover.eyebrow': 'A record of your own',
+  'handover.title': 'A record that becomes theirs',
+  'handover.explainer':
+    'The platform never stores a date of birth, so it cannot notice an eighteenth birthday. This is where somebody says so — the learner on their own login, or the adult who has been holding the record.',
+  'handover.decidesLead': 'What this decides.',
+  'handover.decides':
+    'Whether a learner’s record becomes their own account, or is not kept. Keeping it moves nothing: their progress, hand-ins and certificates were always theirs, and the account simply stops being something a guardian manages. Not keeping it deletes the record thirty days from today.',
+  'handover.none':
+    'There is no child profile on this account, so there is nothing to hand over. A learner already holding their own adult record has nothing to do here.',
+  'handover.hasLogin':
+    'This learner has a login of their own. Handing the record over makes that account theirs.',
+  'handover.noLogin':
+    'This learner is reached through the family account and has no login of their own.',
+  'handover.keep': 'Keep it, as their own account',
+  'handover.keepMeans':
+    'The record becomes theirs: their progress, hand-ins and certificates stay exactly where they are, their account stops being something a guardian manages, and it leaves the family. This needs an account of their own; if they have none, make them a login first.',
+  'handover.drop': 'Do not keep it',
+  'handover.dropMeans':
+    'The learning record is deleted thirty days from today — the same clock the children’s policy already describes. A certificate already issued keeps its number and can still be verified, because a certificate somebody may have shown an employer has to keep meaning something.',
+  'handover.keepRefused':
+    'This learner has no login yet, so this option will be refused until they have one. Make them a login on the family page first.',
+  'handover.declNote':
+    'The statement you tick is kept in English: it has one wording, for legal reasons.',
+  'handover.confirmKeep':
+    '{name} becomes an adult learner on this platform. This cannot be undone by the platform; the guardian’s access ends.',
+  'handover.confirmDrop':
+    '{name}’s learning record will be deleted thirty days from today. A certificate already issued still verifies.',
+  'handover.working': 'Working…',
+  'handover.doKeep': 'Make the record theirs',
+  'handover.doDrop': 'Decide not to keep it',
+  'handover.doneKeepLeft':
+    'The record is theirs. It has left the family account, and the account it lives in is their own.',
+  'handover.doneKeep': 'The record is theirs. The account it lives in is their own.',
+  'handover.doneDropOn':
+    'The record will be deleted on {date}. Until then nothing changes, and the decision is on file.',
+  'handover.doneDrop':
+    'The record will be deleted thirty days from today. Until then nothing changes.',
+  'handover.errDeclaration':
+    'The statement is the whole record: tick the box confirming this learner is 18 or older.',
+  'handover.errNeedsAccount':
+    'This record can only become their own account once they have one. Make them a login first, then hand it over.',
+  'handover.errNotChild':
+    'That learner already holds their own record; there is nothing to hand over.',
+  'handover.errNotAllowed':
+    'Only the learner, or an adult in their family, can hand a record over.',
+  'handover.errNotActive': 'That record is already on its way out.',
+  'handover.errAlready': 'There is already a request on this record that has not been acted on.',
+  'handover.errRefused':
+    'That did not go through. Reload the page and try again — nothing was changed.',
+  'handover.errUnconfirmed':
+    'We could not confirm whether that went through. Reload the page to see what the record says before trying again.',
+  'handover.policy': 'The children’s policy',
+  'handover.family': 'Family and children',
+  'guard.title': 'Guardian consent',
+  'guard.lede':
+    'Ask to be verified as a child’s parent or guardian. A person reads every request — it is not instant, and it is not a formality. A verification lasts a stated number of months and then runs out, because a relationship can change within a year.',
+  'guard.enforcementOff':
+    'Verification enforcement is off. Consents are recorded, lapse and can be withdrawn, but a lapse does not yet remove access to a learning record.',
+  'guard.policyYes':
+    'Each consent records the version of the children’s policy in force when it was verified.',
+  'guard.policyNo':
+    'No children’s policy is in force. Consents therefore record no agreed version, and this page says so rather than implying agreement to a document that does not exist.',
+  'guard.noneYet': 'You have no guardian consent on record yet.',
+  'guard.yours': 'Your consents',
+  'guard.policyChanged':
+    'The children’s policy has changed since this consent was given. Renewing it records the version in force now.',
+  'guard.reviewerSaid': 'The reviewer said:',
+  'guard.withdrawalReason': 'Reason for withdrawing:',
+  'guard.askAgain': 'Ask again or renew',
+  'guard.ask': 'Ask for consent',
+  'guard.noChild': 'There is no child profile in your family to ask about yet.',
+  'guard.addChild': 'Add a child first',
+  'guard.foot':
+    'Being verified does not give you the child’s account. It gives you a view of their progress, it can be narrowed by the reviewer, and it can be withdrawn — by you, at any time, with a reason that is kept.',
+  'guard.stVerified': 'Verified',
+  'guard.stLapsed': 'Lapsed',
+  'guard.stWaiting': 'Waiting for review',
+  'guard.stNotGranted': 'Not granted',
+  'guard.stWithdrawn': 'Withdrawn',
+  'guard.relParent': 'Parent',
+  'guard.relOther': 'Other adult',
+  'guard.sNotGranted':
+    'A reviewer did not grant this. Nothing was removed from the child’s account.',
+  'guard.sWithdrew': 'You withdrew this consent. The child’s account is unchanged.',
+  'guard.sWaiting': 'Submitted; waiting for a reviewer.',
+  'guard.sMoreInfo': 'The reviewer has asked for more information.',
+  'guard.methodLine': 'How it is confirmed: {method}',
+  'guard.sLapsed': 'This verification has run out. Nothing was deleted — ask again to renew it.',
+  'guard.sRanOutOn': 'It ran out on {date}.',
+  'guard.sVerifiedOn': 'Verified on {date}.',
+  'guard.sVerified': 'Verified.',
+  'guard.sLapsesInOne': 'It lapses on {date}, in {count} day.',
+  'guard.sLapsesInOther': 'It lapses on {date}, in {count} days.',
+  'guard.sLapsesOn': 'It lapses on {date}.',
+  'guard.sNoExpiry':
+    'No expiry is recorded: it was approved before verifications had a lifetime. Renew it to give it one.',
+  'guard.wNoExpiry':
+    'This verification has no expiry. It is counted as verified until it is renewed.',
+  'guard.wToday': 'This verification lapses today. Renew it to keep access.',
+  'guard.wDaysOne': 'This verification lapses in {count} day.',
+  'guard.wDaysOther': 'This verification lapses in {count} days.',
+  'guard.pNone': 'No permissions: the consent is not in force.',
+  'guard.pProgress': 'You may see the child’s progress.',
+  'guard.pLearning': 'You may change what the child is learning.',
+  'guard.pProfile': 'You may change the child’s profile.',
+  'guard.fChild': 'Child',
+  'guard.fYouAre': 'What you are to this child',
+  'guard.fHow': 'How the reviewer can confirm it',
+  'guard.mVideo': 'A video call',
+  'guard.mVideoHint': 'You and the reviewer spoke, and they saw you.',
+  'guard.mDocument': 'An identity document',
+  'guard.mDocumentHint': 'A document showing your name, matched to the child’s record.',
+  'guard.mPerson': 'In person',
+  'guard.mPersonHint': 'You were seen at a class, an office or an event.',
+  'guard.mSigned': 'A signed declaration',
+  'guard.mSignedHint': 'A written statement you signed, kept outside the database.',
+  'guard.fStatement': 'In your own words (required)',
+  'guard.fStatementPlaceholder': 'Who this child is to you, and what you are consenting to.',
+  'guard.fStatementHelp':
+    'At least 20 characters. The reviewer reads this — it is what the decision rests on, alongside whatever they check outside the platform.',
+  'guard.fEvidence': 'Where the evidence is kept (optional)',
+  'guard.fEvidencePlaceholder': 'A pointer, not the document itself',
+  'guard.fEvidenceHelp':
+    'A reference the reviewer can find, in storage that is access-controlled outside this platform. It is written once and then unreadable — not to you, not to the reviewer, not to an administrator.',
+  'guard.fSending': 'Sending…',
+  'guard.fRecorded':
+    'Recorded. A person will read your statement and decide — you will see the outcome here.',
+  'guard.fFoot':
+    'This asks. It does not grant — a reviewer decides, and can narrow what you are given. A verification has a lifetime and runs out on its own.',
+  'guard.eChoose': 'Choose a child first.',
+  'guard.eStatement': 'Write who this child is to you, in your own words — at least 20 characters.',
+  'guard.eSignedOut': 'Your session has ended. Sign in again.',
+  'guard.eNotInFamily': 'Only an adult in this child’s family can ask to be their guardian.',
+  'guard.eNotChild': 'That profile is an adult. Consent is for a child.',
+  'guard.eChildGone': 'That child profile no longer exists.',
+  'guard.eMethod': 'Choose how the relationship can be confirmed.',
+  'guard.eRelationship': 'Choose what you are to this child.',
+  'guard.eAlreadyVerified':
+    'This child is already verified to you. There is nothing to renew until it lapses.',
+  'guard.eAlreadyWaiting': 'A request is already with the reviewer.',
+  'guard.eRefused': 'That was not recorded. Nothing was changed.',
+  'guard.eUnconfirmed':
+    'We could not confirm whether that was recorded. Reload the page to see what is on record before trying again.',
+  'guard.wOpen': 'Withdraw this consent',
+  'guard.wEffect':
+    'Withdrawing clears every permission and records your reason. It does not delete the child’s account, their work or their progress, and another guardian can be verified in your place.',
+  'guard.wWhy': 'Why (required)',
+  'guard.wPlaceholder': 'What changed.',
+  'guard.wWithdrawing': 'Withdrawing…',
+  'guard.wDo': 'Withdraw',
+  'guard.wDone': 'Withdrawn. The reason is kept with the record.',
+  'guard.eReason': 'Say why you are withdrawing — at least 10 characters.',
+  'guard.eAlreadyRevoked': 'This consent is already withdrawn.',
+  'guard.eGone': 'That consent no longer exists.',
+  'guard.eNotYours': 'Only the guardian who gave this consent can withdraw it.',
 } as const;
 
 export type MessageKey = keyof typeof en;

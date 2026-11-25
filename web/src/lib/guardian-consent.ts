@@ -19,9 +19,17 @@
  * (`referenceGiven`, `policyInForce`) precisely so no screen has to guess.
  *
  * The sentences are pure so they can be tested without a browser.
+ *
+ * **They are English, and since 2026-11-25 the parent's page no longer reads
+ * them.** `/family/guardians` is written in the reader's language from
+ * `guardian-words.ts`; the staff queue, which is English like every staff
+ * page, still reads these. A failure of the two parent-side calls carries a
+ * `reason` beside its English `message`, which is the name the parent's forms
+ * say it by.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { guardianReasonOf, type GuardianCode } from './guardian-outcome.ts';
 
 export type ConsentMethod =
   | 'video_call'
@@ -493,7 +501,10 @@ export async function submitGuardianConsent(
     statement: string;
     evidenceReference?: string | null;
   },
-): Promise<{ ok: true; caseId: string; relationshipId: string } | { ok: false; message: string }> {
+): Promise<
+  | { ok: true; caseId: string; relationshipId: string }
+  | { ok: false; message: string; reason: GuardianCode }
+> {
   const { data, error } = await supabase.rpc('submit_guardian_consent', {
     p_learner_profile_id: args.learnerProfileId,
     p_relationship_type: args.relationshipType,
@@ -501,10 +512,13 @@ export async function submitGuardianConsent(
     p_evidence_reference: args.evidenceReference ?? null,
     p_statement: args.statement,
   });
-  if (error) return { ok: false, message: describeConsentError(error.message) };
+  if (error) {
+    return { ok: false, message: describeConsentError(error.message), reason: guardianReasonOf(error) };
+  }
   const row = data as { caseId?: string; relationshipId?: string } | null;
   if (!row?.caseId || !row.relationshipId) {
-    return { ok: false, message: 'The request was not recorded.' };
+    // The call did not fail and did not say what it made: nobody knows.
+    return { ok: false, message: 'The request was not recorded.', reason: 'unconfirmed' };
   }
   return { ok: true, caseId: row.caseId, relationshipId: row.relationshipId };
 }
@@ -537,11 +551,13 @@ export async function decideGuardianConsent(
 export async function revokeGuardianConsent(
   supabase: SupabaseClient,
   args: { relationshipId: string; reason: string },
-): Promise<{ ok: true } | { ok: false; message: string }> {
+): Promise<{ ok: true } | { ok: false; message: string; reason: GuardianCode }> {
   const { error } = await supabase.rpc('revoke_guardian_consent', {
     p_relationship_id: args.relationshipId,
     p_reason: args.reason,
   });
-  if (error) return { ok: false, message: describeConsentError(error.message) };
+  if (error) {
+    return { ok: false, message: describeConsentError(error.message), reason: guardianReasonOf(error) };
+  }
   return { ok: true };
 }

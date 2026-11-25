@@ -7,8 +7,18 @@
  * learner out of the family and makes their account their own; `delete` starts the
  * thirty-day clock that already exists.
  *
- * This module is the words and the call. Two rules the copy follows, because both
- * are places where a screen can turn a statement into a claim:
+ * This module is the statement, the call, and how the sentences are put
+ * together. The sentences themselves are in the catalogue (`handover.*`, in
+ * `messages/handover.ts`), in the reader's language since 2026-11-25; the page
+ * hands them to the form as `HandoverWords`, so this file imports no language
+ * and a browser may import it.
+ *
+ * **The statement is the exception.** `HANDOVER_DECLARATION` is what a person
+ * ticks, and it has one wording, in English, on every page: the owner's ruling
+ * of 2026-11-25 is that a declaration is not translated.
+ *
+ * Two rules the copy follows, because both are places where a screen can turn
+ * a statement into a claim:
  *
  * 1. **It says what is being recorded, not what was checked.** "You are stating
  *    that this learner is 18 or older. The platform records the statement."
@@ -27,49 +37,115 @@ export type HandoverOutcome = {
   deletionDue: string | null;
 };
 
+/**
+ * Why a handover was not done, as a name the form has a sentence for.
+ *
+ * `refused` is a refusal with no better sentence: the request was understood
+ * and turned down, and nothing was changed. `unconfirmed` is the other thing:
+ * no answer this page can read, so nobody knows, and the sentence for it sends
+ * the reader to look at the record before pressing again.
+ */
+export type HandoverCode =
+  | 'declaration_required'
+  | 'needs_an_account'
+  | 'not_a_child'
+  | 'not_allowed'
+  | 'not_active'
+  | 'already_requested'
+  | 'seat_held'
+  | 'refused'
+  | 'unconfirmed';
+
 export type HandoverResult =
   | { ok: true; outcome: HandoverOutcome }
-  | { ok: false; message: string };
+  | { ok: false; code: HandoverCode };
 
-/** What the two decisions actually do, in the order a person reads them. */
-export const HANDOVER_OPTIONS: readonly {
-  value: HandoverDecision;
-  label: string;
-  effect: string;
-}[] = [
-  {
-    value: 'keep',
-    label: 'Keep it, as their own account',
-    effect:
-      'The record becomes theirs: their progress, hand-ins and certificates stay '
-      + 'exactly where they are, their account stops being something a guardian '
-      + 'manages, and it leaves the family. This needs an account of their own; if '
-      + 'they have none, make them a login first.',
-  },
-  {
-    value: 'delete',
-    label: 'Do not keep it',
-    effect:
-      'The learning record is deleted thirty days from today — the same clock the '
-      + 'children’s policy already describes. A certificate already issued keeps its '
-      + 'number and can still be verified, because a certificate somebody may have '
-      + 'shown an employer has to keep meaning something.',
-  },
-];
+/** Every sentence the form says, in the reader's language. `{name}` and `{date}` are filled here. */
+export type HandoverWords = {
+  keep: string;
+  keepMeans: string;
+  drop: string;
+  dropMeans: string;
+  keepRefused: string;
+  /** Empty on an English page, where the statement needs no explaining. */
+  declarationNote: string;
+  confirmKeep: string;
+  confirmDrop: string;
+  working: string;
+  doKeep: string;
+  doDrop: string;
+  doneKeepLeft: string;
+  doneKeep: string;
+  doneDropOn: string;
+  doneDrop: string;
+  refusals: Record<HandoverCode, string>;
+};
 
+/** Anything that says a key in some language: `translator(code)` is one. */
+type Say = (key: HandoverKey) => string;
+
+type HandoverKey =
+  | 'handover.keep' | 'handover.keepMeans' | 'handover.drop' | 'handover.dropMeans'
+  | 'handover.keepRefused' | 'handover.declNote' | 'handover.confirmKeep'
+  | 'handover.confirmDrop' | 'handover.working' | 'handover.doKeep' | 'handover.doDrop'
+  | 'handover.doneKeepLeft' | 'handover.doneKeep' | 'handover.doneDropOn'
+  | 'handover.doneDrop' | 'handover.errDeclaration' | 'handover.errNeedsAccount'
+  | 'handover.errNotChild' | 'handover.errNotAllowed' | 'handover.errNotActive'
+  | 'handover.errAlready' | 'handover.errRefused' | 'handover.errUnconfirmed'
+  | 'family.seatHeld';
+
+/**
+ * The form's sentences, from a translator.
+ *
+ * The seat sentence is the family page's (`family.seatHeld`): it is the same
+ * refusal for the same reason, and one wording of it is enough.
+ */
+export function handoverWords(t: Say, english: boolean): HandoverWords {
+  return {
+    keep: t('handover.keep'),
+    keepMeans: t('handover.keepMeans'),
+    drop: t('handover.drop'),
+    dropMeans: t('handover.dropMeans'),
+    keepRefused: t('handover.keepRefused'),
+    declarationNote: english ? '' : t('handover.declNote'),
+    confirmKeep: t('handover.confirmKeep'),
+    confirmDrop: t('handover.confirmDrop'),
+    working: t('handover.working'),
+    doKeep: t('handover.doKeep'),
+    doDrop: t('handover.doDrop'),
+    doneKeepLeft: t('handover.doneKeepLeft'),
+    doneKeep: t('handover.doneKeep'),
+    doneDropOn: t('handover.doneDropOn'),
+    doneDrop: t('handover.doneDrop'),
+    refusals: {
+      declaration_required: t('handover.errDeclaration'),
+      needs_an_account: t('handover.errNeedsAccount'),
+      not_a_child: t('handover.errNotChild'),
+      not_allowed: t('handover.errNotAllowed'),
+      not_active: t('handover.errNotActive'),
+      already_requested: t('handover.errAlready'),
+      seat_held: t('family.seatHeld'),
+      refused: t('handover.errRefused'),
+      unconfirmed: t('handover.errUnconfirmed'),
+    },
+  };
+}
+
+/**
+ * The statement a person ticks. English on every page, on purpose: it is the
+ * one thing here that is agreed to, and it has one wording.
+ */
 export const HANDOVER_DECLARATION =
   'I confirm this learner is 18 or older. The platform records this statement; it '
   + 'does not hold a date of birth to check it against.';
-
-export const HANDOVER_EXPLAINER =
-  'The platform never stores a date of birth, so it cannot notice an eighteenth '
-  + 'birthday. This is where somebody says so — the learner on their own login, or '
-  + 'the adult who has been holding the record.';
 
 const row = (raw: unknown): Record<string, unknown> =>
   (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
 
 const text = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+const put = (sentence: string, name: string, value: string): string =>
+  sentence.split(`{${name}}`).join(value);
 
 export function parseHandoverOutcome(data: unknown): HandoverOutcome | null {
   const r = row(data);
@@ -87,48 +163,64 @@ export function parseHandoverOutcome(data: unknown): HandoverOutcome | null {
   };
 }
 
-/** What just happened, said in the past tense and without a claim of verification. */
-export function describeOutcome(outcome: HandoverOutcome): string {
-  if (outcome.decision === 'keep') {
-    return outcome.leftFamily
-      ? 'The record is theirs. It has left the family account, and the account it lives in is their own.'
-      : 'The record is theirs. The account it lives in is their own.';
-  }
-  return outcome.deletionDue
-    ? `The record will be deleted on ${outcome.deletionDue}. Until then nothing changes, and the decision is on file.`
-    : 'The record will be deleted thirty days from today. Until then nothing changes.';
+/**
+ * What just happened, said in the past tense and without a claim of verification.
+ *
+ * `day` writes the date the record goes, in the reader's calendar; a date it
+ * cannot write is left out and the sentence says "thirty days" instead, which
+ * is true of every deletion this makes.
+ */
+export function describeOutcome(
+  outcome: HandoverOutcome,
+  words: HandoverWords,
+  day: (value: string) => string,
+): string {
+  if (outcome.decision === 'keep') return outcome.leftFamily ? words.doneKeepLeft : words.doneKeep;
+  const date = outcome.deletionDue ? day(outcome.deletionDue) : '';
+  return date ? put(words.doneDropOn, 'date', date) : words.doneDrop;
 }
 
 /** What the form says before anybody presses anything. */
-export function confirmSentence(decision: HandoverDecision, name: string): string {
-  return decision === 'keep'
-    ? `${name} becomes an adult learner on this platform. This cannot be undone by the platform; the guardian's access ends.`
-    : `${name}'s learning record will be deleted thirty days from today. A certificate already issued still verifies.`;
+export function confirmSentence(decision: HandoverDecision, name: string, words: HandoverWords): string {
+  return put(decision === 'keep' ? words.confirmKeep : words.confirmDrop, 'name', name);
 }
 
-export function describeHandoverError(message: string): string {
-  if (/declaration_required/.test(message)) {
-    return 'The statement is the whole record: tick the box confirming this learner is 18 or older.';
-  }
-  if (/needs_an_account/.test(message)) {
-    return 'This record can only become their own account once they have one. Make them a login first, then hand it over.';
-  }
-  if (/not_a_child/.test(message)) {
-    return 'That learner already holds their own record; there is nothing to hand over.';
-  }
-  if (/not_allowed/.test(message)) {
-    return 'Only the learner, or an adult in their family, can hand a record over.';
-  }
-  if (/not_active/.test(message)) {
-    return 'That record is already on its way out.';
-  }
-  if (/already_requested/.test(message)) {
-    return 'There is already a request on this record that has not been acted on.';
-  }
-  if (/family plan/.test(message)) {
-    return 'This learning holds a seat on a family plan, so it cannot leave the family until that seat is released.';
-  }
-  return 'That did not go through. Reload the page and try again — nothing was changed.';
+/**
+ * The reason the database or the route gave, as a name. Used by the route, so
+ * that what crosses to the browser is a name and never a sentence in English.
+ *
+ * A message nobody has a name for is `refused`: the function raised, so the
+ * transaction it ran in changed nothing.
+ */
+export function handoverReasonOf(message: string): Exclude<HandoverCode, 'unconfirmed'> {
+  if (/declaration_required/.test(message)) return 'declaration_required';
+  if (/needs_an_account/.test(message)) return 'needs_an_account';
+  if (/not_a_child/.test(message)) return 'not_a_child';
+  if (/not_allowed/.test(message)) return 'not_allowed';
+  if (/not_active/.test(message)) return 'not_active';
+  if (/already_requested/.test(message)) return 'already_requested';
+  if (/family plan/.test(message)) return 'seat_held';
+  return 'refused';
+}
+
+const NAMED: readonly HandoverCode[] = [
+  'declaration_required', 'needs_an_account', 'not_a_child', 'not_allowed',
+  'not_active', 'already_requested', 'seat_held', 'refused',
+];
+
+/**
+ * What the route answered, as the name the form says it by.
+ *
+ * Only a reply in the four hundreds that names a reason is a refusal. A five
+ * hundred, a page from something in front of the site, or a reply with no
+ * name is `unconfirmed`: the handover is one transaction and it either
+ * happened or it did not, but this page was not told which.
+ */
+export function handoverCodeOf(status: number, code: unknown): HandoverCode {
+  if (status < 400 || status > 499) return 'unconfirmed';
+  return typeof code === 'string' && NAMED.includes(code as HandoverCode)
+    ? (code as HandoverCode)
+    : 'unconfirmed';
 }
 
 export async function requestHandover(input: {
@@ -145,18 +237,16 @@ export async function requestHandover(input: {
     const json = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
       outcome?: unknown;
-      error?: string;
+      code?: unknown;
     };
     if (res.ok && json.ok) {
       const outcome = parseHandoverOutcome(json.outcome);
-      if (outcome) return { ok: true, outcome };
-      return {
-        ok: false,
-        message: 'The handover came back in a shape this page will not trust. Nothing is shown as done.',
-      };
+      // A reply in a shape this page will not trust is not shown as done.
+      return outcome ? { ok: true, outcome } : { ok: false, code: 'unconfirmed' };
     }
-    return { ok: false, message: describeHandoverError(String(json.error ?? '')) };
+    return { ok: false, code: handoverCodeOf(res.status, json.code) };
   } catch {
-    return { ok: false, message: 'The request did not reach the server. Nothing was changed.' };
+    // The reply was lost; the request may not have been.
+    return { ok: false, code: 'unconfirmed' };
   }
 }

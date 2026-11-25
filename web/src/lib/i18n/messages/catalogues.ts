@@ -48,6 +48,9 @@ import { BOARD } from './board.ts';
 import { TRANSLATE } from './translate.ts';
 import { CHILD_LOGIN } from './child-login.ts';
 import { PROGRESS } from './progress.ts';
+import { CERTIFICATES } from './certificates.ts';
+import { HANDOVER } from './handover.ts';
+import { GUARDIANS } from './guardians.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -899,6 +902,9 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   CHILD_LOGIN,
   // Progress and achievements, and the streak strip, on the same rule.
   PROGRESS,
+  CERTIFICATES,
+  HANDOVER,
+  GUARDIANS,
 );
 
 /**

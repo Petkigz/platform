@@ -222,6 +222,14 @@ for (const [file, key] of [
   // from `lib/progress-words.ts`; no script may carry their sentences.
   ['progress.ts', 'prog.offChildren'],
   ['progress.ts', 'prog.badgesLede'],
+  // A learner's certificates, turning eighteen and a guardian's consent are
+  // server pages. Their forms are client components handed their words as
+  // props, so the parts themselves must be in nothing a browser downloads.
+  ['certificates.ts', 'cert.sheetNote'],
+  ['handover.ts', 'handover.keepMeans'],
+  ['handover.ts', 'handover.errUnconfirmed'],
+  ['guardians.ts', 'guard.fEvidenceHelp'],
+  ['guardians.ts', 'guard.eUnconfirmed'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);
