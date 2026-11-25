@@ -1444,13 +1444,17 @@ make the twenty-seven served languages reviewed. And no speaker has been found
 for any language: until one is, the four stay unavailable and the nineteen stay
 in English on the companion screens, indefinitely.
 
-**The tree and the test project are both at 357.** The application that
-matches them has not been deployed there, so nothing about Auth, a request
-through PostgREST or a page is shown by that. The next migration needs a
+**The test project is at 358; the tree is at 362.** The 358th went on
+2026-11-25. The 359th to the 362nd have no job and none has been asked
+for. No application has been deployed there, so nothing about Auth, a
+request through PostgREST or a page is shown by that; one built before
+commit `fbf6341` must not be deployed to it, because it knows eight kinds
+of notification and the database now has nine. The next migration needs a
 job of its own, as each of these did.
 
-The existing Supabase test project has all 357 of the tree's migrations applied
-(the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
+The existing Supabase test project has the first 358 of the tree's 362 migrations applied
+(the 358th, `20261281151000_teaching_answer_told.sql`, by run
+`45465390298`, approved by the owner on 2026-11-25; the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
 `20261281147000_sponsorship_checkout.sql`, each by a job of its own on
 2026-11-19, runs `44505560049` and `44582224581`; the 355th,
 `20261281148000_notification_facts.sql`, and the 356th,

@@ -3238,6 +3238,26 @@ claim external integrations work without credentials or provider callbacks.
   new route handler; 34 smoke scripts; 2660 web tests. No migration: 357,
   174 database suites, not rerun.
 
+### The test project at 358, 2026-11-25
+
+- *Done.* The owner approved run `45465390298` (started 2026-11-24 from
+  commit `f663fc8`); it succeeded on 2026-11-25 at 15:19 UTC, every step
+  passing. The test project records the 358th migration,
+  `teaching_answer_told`: somebody who applied to teach is written a
+  message when the application is answered, and there are nine kinds of
+  notification there. Read through the connector afterwards: 358
+  migrations, the last `20261281151000`. The job's log cannot be fetched
+  from the workspace; each step's result can.
+- *What follows from it.* The database went ahead of the application, the
+  other way round from what `docs/deploy/README.md` asked for, which is
+  harmless only because no application is deployed there. One built before
+  commit `fbf6341` must not be.
+- *Not done.* The application has not been deployed. The 359th to the
+  362nd (the refunds policy's third version, the discussion boards, the
+  translate button, a child's login from twelve) have no job and none has
+  been asked for; the 359th asks every account to agree to the refunds
+  policy again, so it is the owner's to ask for.
+
 ### The test project at 357, 2026-11-24
 
 - *Done.* The owner approved run `45386711064`; it succeeded. The test

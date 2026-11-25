@@ -410,17 +410,18 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 357. This tree has 362. The 358th,
-`20261281151000_teaching_answer_told.sql`, has a job written for it (below);
-the owner asked for it on 2026-11-24. Because the branch now holds two more
-migrations, that job checks out the commit it was reviewed at (`fbf6341`,
-which ends at that file) and applies from that tree. The 359th to the 362nd
+hosted project is at 358 since 2026-11-25. This tree has 362. The 358th,
+`20261281151000_teaching_answer_told.sql`, went by a job of its own (below);
+the owner asked for it on 2026-11-24 and approved the run on 2026-11-25.
+Because the branch by then held more migrations, that job checked out the
+commit it was reviewed at (`fbf6341`, which ends at that file) and applied
+from that tree. The 359th to the 362nd
 (`20261281152000_refunds_policy_plan_given_back.sql`,
 `20261281153000_discussion_boards.sql`,
 `20261281154000_translate_button.sql` and
-`20261281155000_child_login_from_twelve.sql`) have **no job yet**: one is
-written when the 358th has gone, because each job starts from an exact history and
-is reviewed against it.
+`20261281155000_child_login_from_twelve.sql`) have **no job yet**, and
+none has been asked for. The 358th has gone, so a job for them can now be
+written against an exact history of 358; it has not been.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -572,6 +573,20 @@ the same approval. It starts only from exactly the 357, rehearses on the
 hosted database and rolls back, compares the two roles' privileges with the
 tested database built from all 358, and applies only if the CLI's dry-run
 names exactly that one file.
+**Done:** run `45465390298`, started from commit `f663fc8` on 2026-11-24,
+approved by the owner on 2026-11-25, succeeded at 15:19 UTC; every step of
+the job passed. Read through the connector afterwards, the test project's
+history is 358 long and ends with `teaching_answer_told`
+(`20261281151000`). The job's log cannot be fetched from the workspace, so
+what it printed was not read; each step's result was. This job is now spent
+too. Every later push to the branch started a run of the same workflow that
+was skipped, cancelled or left pending; none of them is to be approved.
+
+**The 358th went first, so the order below can no longer be kept on the
+test project.** No application has been deployed there, so nothing is
+running against it that knows only eight kinds. What it means now: **do not
+deploy an application built before commit `fbf6341` to this project.** One
+built from that commit or later is right for it.
 
 **The application goes before the 358th, not after.** This is the other way
 round from the 356th and 357th. An application built before this commit
