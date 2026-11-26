@@ -268,7 +268,7 @@ try {
       'You can read here without agreeing to anything. To choose a username and to write, you first agree to these documents.',
       '<li><a lang="en" dir="ltr" href="/policies/terms">Terms of use</a> · Version: <bdi>1</bdi></li>',
       '<li><a lang="en" dir="ltr" href="/policies/privacy">Privacy notice</a> · Version: <bdi>2</bdi></li>',
-      'data-board-form="agree"', '<input type="checkbox" name="agree"', 'I have read these documents and I agree to them.',
+      'data-board-form="agree"', '<input type="checkbox"', 'name="agree"/><span>I have read these documents and I agree to them.</span>', '<button type="submit" class="btn" aria-busy="false">Agree</button>',
       'data-board-handle-waits="true"', `data-board-thread="${THREAD}"`,
     ], '/discuss/students, not agreed');
     hasNot(asked, ['data-board-form="handle"', 'data-board-form="thread"', 'data-board-ask'], '/discuss/students, not agreed');
@@ -283,6 +283,7 @@ try {
     has(thread, ['data-board-reply="agree"', '<a href="/discuss/students">Agree before you write</a>'], 'a thread, not agreed');
     hasNot(thread, ['data-board-form="reply"'], 'a thread, not agreed');
     // In a held language the box is said in it; the owner's titles stay as written.
+    state = fresh(); state.students = standing('students', { agreements: OWED });
     const ar = await page('/discuss/students', 'ar');
     has(ar, ['وافق قبل أن تكتب', 'قرأتُ هذه الوثائق وأوافق عليها.', '<a lang="en" dir="ltr" href="/policies/terms">Terms of use</a>'], '/discuss/students in Arabic, not agreed');
     // A list that cannot be read is not an empty one: the page says it could not read the board.

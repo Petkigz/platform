@@ -410,17 +410,19 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 358 since 2026-11-25. This tree has 363. The 358th,
+hosted project is at 358 since 2026-11-25. This tree has 365. The 358th,
 `20261281151000_teaching_answer_told.sql`, went by a job of its own (below);
 the owner asked for it on 2026-11-24 and approved the run on 2026-11-25.
 Because the branch by then held more migrations, that job checked out the
 commit it was reviewed at (`fbf6341`, which ends at that file) and applied
-from that tree. The 359th to the 363rd
+from that tree. The 359th to the 365th
 (`20261281152000_refunds_policy_plan_given_back.sql`,
 `20261281153000_discussion_boards.sql`,
 `20261281154000_translate_button.sql`,
-`20261281155000_child_login_from_twelve.sql` and
-`20261281156000_board_reports_owner_told_export_says.sql`) have **no job yet**, and
+`20261281155000_child_login_from_twelve.sql`,
+`20261281156000_board_reports_owner_told_export_says.sql`,
+`20261281157000_board_agreement_first.sql` and
+`20261281158000_board_words_kept_owner_told.sql`) have **no job yet**, and
 none has been asked for. The 358th has gone, so a job for them can now be
 written against an exact history of 358; it has not been.
 
