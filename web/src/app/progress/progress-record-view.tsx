@@ -199,7 +199,11 @@ export function ProgressRecordView({
             {record.courses.map((course) => (
               <div className="card" key={course.enrolmentId}>
                 <div className="outline-h">
-                  <h3 style={{ marginTop: 0, marginBottom: 0, fontSize: '1.05rem' }}>
+                  {/* A title with no place to break (one long word, a pasted
+                      address) is broken anywhere: in this row it is a flex
+                      item, which is otherwise never narrower than its longest
+                      word, and it pushed the whole page sideways. */}
+                  <h3 style={{ marginTop: 0, marginBottom: 0, fontSize: '1.05rem', minWidth: 0, overflowWrap: 'anywhere' }}>
                     <bdi>{course.courseTitle}</bdi>
                   </h3>
                   {course.status === 'completed' && <span className="badge ok">{t('family.stFinished')}</span>}
@@ -234,7 +238,7 @@ export function ProgressRecordView({
           <h2>{t('nav.certificates')}</h2>
           <ul>
             {record.certificates.map((cert) => (
-              <li key={cert.certificateNumber}>
+              <li key={cert.certificateNumber} style={{ overflowWrap: 'anywhere' }}>
                 <strong><bdi>{cert.courseTitle}</bdi></strong>{' · '}
                 <Say
                   text={t('prog.certIssued')}

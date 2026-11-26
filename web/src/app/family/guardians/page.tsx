@@ -114,7 +114,10 @@ export default async function FamilyGuardiansPage() {
       ) : (
         <section className="card">
           <h2>{t('guard.yours')}</h2>
-          <ul className="lessons">
+          {/* Stacked: a plain `.lessons` row is a flex row, which set the
+              name, the mark and every sentence side by side in columns and
+              ran the page off the side of a phone (549 wide at 320). */}
+          <ul className="lessons stacked">
             {mine.consents.map((c) => {
               const warning = words.warning(c);
               return (
@@ -125,11 +128,18 @@ export default async function FamilyGuardiansPage() {
                       {' · '}
                       {words.relationship(c.relationshipType)}
                     </span>
-                  </span>
+                  </span>{' '}
                   <span className={`badge ${consentTone(c) === 'ok' ? 'ok' : 'neutral'}`}>
                     {words.state(c)}
                   </span>
-                  <p className="muted">{words.sentences(c).join(' ')}</p>
+                  {/* One line for each sentence. The method line ("How it is
+                      confirmed: a video call") has no full stop of its own, so
+                      run together it read "…a video call It lapses on…". */}
+                  <p className="muted">
+                    {words.sentences(c).map((sentence) => (
+                      <span key={sentence} style={{ display: 'block' }}>{sentence}</span>
+                    ))}
+                  </p>
                   <p className="muted">{words.permissions(c).join(' ')}</p>
                   {warning && <p className="danger">{warning}</p>}
                   {c.policyChanged && <p className="muted">{t('guard.policyChanged')}</p>}
