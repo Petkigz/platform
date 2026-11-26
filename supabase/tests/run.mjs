@@ -56,6 +56,7 @@ import { run as planRefund } from './plan_refund.test.mjs';
 import { run as teachingApplications } from './teaching_applications.test.mjs';
 import { run as teachingAnswerTold } from './teaching_answer_told.test.mjs';
 import { run as discussionBoards } from './discussion_boards.test.mjs';
+import { run as boardAgreement } from './board_agreement.test.mjs';
 import { run as translateButton } from './translate_button.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -382,6 +383,7 @@ for (const [name, fn] of [
   ['teaching_applications', teachingApplications],
   ['teaching_answer_told', teachingAnswerTold],
   ['discussion_boards', discussionBoards],
+  ['board_agreement', boardAgreement],
   ['translate_button', translateButton],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],

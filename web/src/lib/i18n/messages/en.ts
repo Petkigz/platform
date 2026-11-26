@@ -2742,6 +2742,15 @@ export const en = {
   'board.removed': 'Staff took this down.',
   'board.older': 'Older posts',
   'board.asWritten': 'Posts are shown as they were written. They are not translated.',
+  // Agreeing to the terms and the privacy notice before writing (2026-11-26).
+  'board.agreeTitle': 'Agree before you write',
+  'board.agreeLead':
+    'You can read here without agreeing to anything. To choose a username and to write, you first agree to these documents. Read them. The time you agree is kept with your account.',
+  'board.agreeBox': 'I have read these documents and I agree to them.',
+  'board.agreeSend': 'Agree',
+  'board.agreeTick': 'Tick the box first.',
+  'board.whyAgree':
+    'Before you write, agree to the two documents this discussion asks for. The box is on its first page.',
 
   // The Translate button, a child's first password and the staff page for
   // teachers (`translate.ts`), for the same twenty-seven languages as the

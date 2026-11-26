@@ -88,6 +88,13 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'أزال فريق العمل هذا المنشور.',
     'board.older': 'منشورات أقدم',
     'board.asWritten': 'تُعرض المنشورات كما كُتبت. لا تُترجم.',
+    'board.agreeTitle': 'وافق قبل أن تكتب',
+    'board.agreeLead':
+      'يمكنك القراءة هنا دون الموافقة على أي شيء. لاختيار اسم مستعار وللكتابة، توافق أولًا على هذه الوثائق. اقرأها. وقت موافقتك يُحفظ مع حسابك.',
+    'board.agreeBox': 'قرأتُ هذه الوثائق وأوافق عليها.',
+    'board.agreeSend': 'أوافق',
+    'board.agreeTick': 'ضع علامة في المربع أولًا.',
+    'board.whyAgree': 'قبل أن تكتب، وافق على الوثيقتين اللتين يطلبهما هذا النقاش. المربع في صفحته الأولى.',
   },
   ur: {
     'board.title': 'گفتگو',
@@ -152,6 +159,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'عملے نے اسے ہٹا دیا۔',
     'board.older': 'پرانی پوسٹیں',
     'board.asWritten': 'پوسٹیں ویسے ہی دکھائی جاتی ہیں جیسے لکھی گئیں۔ ان کا ترجمہ نہیں ہوتا۔',
+    'board.agreeTitle': 'لکھنے سے پہلے اتفاق کریں',
+    'board.agreeLead':
+      'آپ کسی چیز سے اتفاق کیے بغیر یہاں پڑھ سکتے ہیں۔ فرضی نام چننے اور لکھنے کے لیے پہلے آپ ان دستاویزات سے اتفاق کرتے ہیں۔ انہیں پڑھ لیں۔ آپ کے اتفاق کا وقت آپ کے اکاؤنٹ کے ساتھ محفوظ رکھا جاتا ہے۔',
+    'board.agreeBox': 'میں نے یہ دستاویزات پڑھ لی ہیں اور مجھے ان سے اتفاق ہے۔',
+    'board.agreeSend': 'اتفاق ہے',
+    'board.agreeTick': 'پہلے خانے پر نشان لگائیں۔',
+    'board.whyAgree':
+      'لکھنے سے پہلے ان دو دستاویزات سے اتفاق کریں جو یہ گفتگو مانگتی ہے۔ خانہ اس کے پہلے صفحے پر ہے۔',
   },
   fa: {
     'board.title': 'گفت‌وگو',
@@ -216,6 +231,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'کارکنان این را برداشتند.',
     'board.older': 'نوشته‌های قدیمی‌تر',
     'board.asWritten': 'نوشته‌ها همان‌طور که نوشته شده‌اند نشان داده می‌شوند. ترجمه نمی‌شوند.',
+    'board.agreeTitle': 'پیش از نوشتن موافقت کنید',
+    'board.agreeLead':
+      'می‌توانید بدون موافقت با چیزی اینجا بخوانید. برای انتخاب نام کاربری و برای نوشتن، نخست با این سندها موافقت می‌کنید. آن‌ها را بخوانید. زمان موافقت شما همراه حسابتان نگه داشته می‌شود.',
+    'board.agreeBox': 'این سندها را خوانده‌ام و با آن‌ها موافقم.',
+    'board.agreeSend': 'موافقم',
+    'board.agreeTick': 'نخست خانه را علامت بزنید.',
+    'board.whyAgree':
+      'پیش از نوشتن، با دو سندی که این گفت‌وگو می‌خواهد موافقت کنید. خانهٔ آن در صفحهٔ نخست همین گفت‌وگو است.',
   },
   'fa-af': {
     'board.title': 'گفت‌وگو',
@@ -280,6 +303,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'کارمندان این را برداشتند.',
     'board.older': 'نوشته‌های پیشین',
     'board.asWritten': 'نوشته‌ها همان‌طور که نوشته شده‌اند نشان داده می‌شوند. ترجمه نمی‌شوند.',
+    'board.agreeTitle': 'پیش از نوشتن موافقت کنید',
+    'board.agreeLead':
+      'می‌توانید بدون موافقت با چیزی اینجا بخوانید. برای انتخاب نام مستعار و برای نوشتن، نخست با این سندها موافقت می‌کنید. آن‌ها را بخوانید. زمان موافقت شما همراه حساب‌تان نگه داشته می‌شود.',
+    'board.agreeBox': 'این سندها را خوانده‌ام و با آن‌ها موافق هستم.',
+    'board.agreeSend': 'موافق هستم',
+    'board.agreeTick': 'نخست خانه را نشانی کنید.',
+    'board.whyAgree':
+      'پیش از نوشتن، با دو سندی که این گفت‌وگو می‌خواهد موافقت کنید. خانهٔ آن در صفحهٔ نخست همین گفت‌وگو است.',
   },
   tr: {
     'board.title': 'Tartışma',
@@ -345,6 +376,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Görevliler bunu kaldırdı.',
     'board.older': 'Daha eski gönderiler',
     'board.asWritten': 'Gönderiler yazıldıkları gibi gösterilir. Çevrilmezler.',
+    'board.agreeTitle': 'Yazmadan önce onaylayın',
+    'board.agreeLead':
+      'Hiçbir şeyi onaylamadan burada okuyabilirsiniz. Kullanıcı adı seçmek ve yazmak için önce bu belgeleri onaylarsınız. Onları okuyun. Onayladığınız zaman hesabınızla birlikte saklanır.',
+    'board.agreeBox': 'Bu belgeleri okudum ve onaylıyorum.',
+    'board.agreeSend': 'Onaylıyorum',
+    'board.agreeTick': 'Önce kutuyu işaretleyin.',
+    'board.whyAgree':
+      'Yazmadan önce bu tartışmanın istediği iki belgeyi onaylayın. Kutu, tartışmanın ilk sayfasındadır.',
   },
   id: {
     'board.title': 'Diskusi',
@@ -412,6 +451,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Staf menurunkan kiriman ini.',
     'board.older': 'Kiriman yang lebih lama',
     'board.asWritten': 'Kiriman ditampilkan sebagaimana ditulis. Kiriman tidak diterjemahkan.',
+    'board.agreeTitle': 'Setujui sebelum Anda menulis',
+    'board.agreeLead':
+      'Anda dapat membaca di sini tanpa menyetujui apa pun. Untuk memilih nama pengguna dan menulis, Anda lebih dulu menyetujui dokumen-dokumen ini. Bacalah. Waktu Anda menyetujuinya disimpan bersama akun Anda.',
+    'board.agreeBox': 'Saya telah membaca dokumen-dokumen ini dan saya menyetujuinya.',
+    'board.agreeSend': 'Setuju',
+    'board.agreeTick': 'Centang kotaknya lebih dulu.',
+    'board.whyAgree':
+      'Sebelum menulis, setujui dua dokumen yang diminta diskusi ini. Kotaknya ada di halaman pertama diskusi ini.',
   },
   ms: {
     'board.title': 'Perbincangan',
@@ -480,6 +527,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Kakitangan menurunkan hantaran ini.',
     'board.older': 'Hantaran lebih lama',
     'board.asWritten': 'Hantaran dipaparkan seperti yang ditulis. Hantaran tidak diterjemahkan.',
+    'board.agreeTitle': 'Setuju sebelum anda menulis',
+    'board.agreeLead':
+      'Anda boleh membaca di sini tanpa bersetuju dengan apa-apa. Untuk memilih nama pengguna dan menulis, anda terlebih dahulu bersetuju dengan dokumen-dokumen ini. Bacalah. Masa anda bersetuju disimpan bersama akaun anda.',
+    'board.agreeBox': 'Saya telah membaca dokumen-dokumen ini dan saya bersetuju dengannya.',
+    'board.agreeSend': 'Setuju',
+    'board.agreeTick': 'Tandakan kotak itu dahulu.',
+    'board.whyAgree':
+      'Sebelum menulis, bersetujulah dengan dua dokumen yang diminta oleh perbincangan ini. Kotaknya ada di halaman pertama perbincangan ini.',
   },
   bn: {
     'board.title': 'আলোচনা',
@@ -545,6 +600,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'কর্মীরা এটি সরিয়ে দিয়েছেন।',
     'board.older': 'পুরোনো পোস্ট',
     'board.asWritten': 'পোস্টগুলো যেমন লেখা হয়েছে তেমনই দেখানো হয়। সেগুলো অনুবাদ করা হয় না।',
+    'board.agreeTitle': 'লেখার আগে সম্মতি দিন',
+    'board.agreeLead':
+      'কোনো কিছুতে সম্মতি না দিয়েও আপনি এখানে পড়তে পারেন। ব্যবহারকারী-নাম বেছে নিতে এবং লিখতে হলে আগে এই নথিগুলোতে সম্মতি দিতে হয়। সেগুলো পড়ুন। আপনি কখন সম্মতি দিলেন তা আপনার অ্যাকাউন্টের সঙ্গে রাখা হয়।',
+    'board.agreeBox': 'আমি এই নথিগুলো পড়েছি এবং এগুলোতে সম্মতি দিচ্ছি।',
+    'board.agreeSend': 'সম্মতি দিচ্ছি',
+    'board.agreeTick': 'আগে বাক্সে টিক দিন।',
+    'board.whyAgree':
+      'লেখার আগে এই আলোচনা যে দুটি নথিতে সম্মতি চায় সেগুলোতে সম্মতি দিন। বাক্সটি এই আলোচনার প্রথম পাতায় আছে।',
   },
   hi: {
     'board.title': 'चर्चा',
@@ -609,6 +672,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'कर्मचारियों ने इसे हटा दिया।',
     'board.older': 'पुरानी पोस्टें',
     'board.asWritten': 'पोस्टें वैसी ही दिखाई जाती हैं जैसी लिखी गईं। उनका अनुवाद नहीं होता।',
+    'board.agreeTitle': 'लिखने से पहले सहमति दें',
+    'board.agreeLead':
+      'आप किसी बात पर सहमति दिए बिना यहाँ पढ़ सकते हैं। उपयोगकर्ता नाम चुनने और लिखने के लिए पहले आप इन दस्तावेज़ों पर सहमति देते हैं। इन्हें पढ़ें। आपकी सहमति का समय आपके खाते के साथ रखा जाता है।',
+    'board.agreeBox': 'मैंने ये दस्तावेज़ पढ़ लिए हैं और मैं इनसे सहमत हूँ।',
+    'board.agreeSend': 'सहमत हूँ',
+    'board.agreeTick': 'पहले बॉक्स पर निशान लगाएँ।',
+    'board.whyAgree':
+      'लिखने से पहले उन दो दस्तावेज़ों पर सहमति दें जो यह चर्चा माँगती है। बॉक्स इस चर्चा के पहले पन्ने पर है।',
   },
   fr: {
     'board.title': 'Discussion',
@@ -677,6 +748,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.older': 'Messages plus anciens',
     'board.asWritten':
       'Les messages sont affichés tels qu’ils ont été écrits. Ils ne sont pas traduits.',
+    'board.agreeTitle': 'Donnez votre accord avant d’écrire',
+    'board.agreeLead':
+      'Vous pouvez lire ici sans rien accepter. Pour choisir un pseudonyme et pour écrire, vous acceptez d’abord ces documents. Lisez-les. Le moment où vous les acceptez est conservé avec votre compte.',
+    'board.agreeBox': 'J’ai lu ces documents et je les accepte.',
+    'board.agreeSend': 'J’accepte',
+    'board.agreeTick': 'Cochez d’abord la case.',
+    'board.whyAgree':
+      'Avant d’écrire, acceptez les deux documents que cette discussion demande. La case se trouve sur sa première page.',
   },
   es: {
     'board.title': 'Debate',
@@ -741,6 +820,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'El equipo retiró este mensaje.',
     'board.older': 'Mensajes más antiguos',
     'board.asWritten': 'Los mensajes se muestran tal como se escribieron. No se traducen.',
+    'board.agreeTitle': 'Acepte antes de escribir',
+    'board.agreeLead':
+      'Puede leer aquí sin aceptar nada. Para elegir un nombre de usuario y para escribir, primero acepta estos documentos. Léalos. El momento en que los acepta se guarda con su cuenta.',
+    'board.agreeBox': 'He leído estos documentos y los acepto.',
+    'board.agreeSend': 'Acepto',
+    'board.agreeTick': 'Marque primero la casilla.',
+    'board.whyAgree':
+      'Antes de escribir, acepte los dos documentos que pide este debate. La casilla está en su primera página.',
   },
   pt: {
     'board.title': 'Discussão',
@@ -806,6 +893,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'A equipa retirou esta mensagem.',
     'board.older': 'Mensagens mais antigas',
     'board.asWritten': 'As mensagens são mostradas tal como foram escritas. Não são traduzidas.',
+    'board.agreeTitle': 'Aceite antes de escrever',
+    'board.agreeLead':
+      'Pode ler aqui sem aceitar nada. Para escolher um nome de utilizador e para escrever, aceita primeiro estes documentos. Leia-os. O momento em que os aceita fica guardado com a sua conta.',
+    'board.agreeBox': 'Li estes documentos e aceito-os.',
+    'board.agreeSend': 'Aceito',
+    'board.agreeTick': 'Assinale primeiro a caixa.',
+    'board.whyAgree':
+      'Antes de escrever, aceite os dois documentos que esta discussão pede. A caixa está na primeira página da discussão.',
   },
   sw: {
     'board.title': 'Majadiliano',
@@ -871,6 +966,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Wafanyakazi wameliondoa chapisho hili.',
     'board.older': 'Machapisho ya zamani zaidi',
     'board.asWritten': 'Machapisho huonyeshwa jinsi yalivyoandikwa. Hayatafsiriwi.',
+    'board.agreeTitle': 'Kubali kabla ya kuandika',
+    'board.agreeLead':
+      'Unaweza kusoma hapa bila kukubali chochote. Ili kuchagua jina la mtumiaji na kuandika, kwanza unakubali hati hizi. Zisome. Wakati unapokubali huhifadhiwa pamoja na akaunti yako.',
+    'board.agreeBox': 'Nimesoma hati hizi na ninazikubali.',
+    'board.agreeSend': 'Ninakubali',
+    'board.agreeTick': 'Weka alama kwenye kisanduku kwanza.',
+    'board.whyAgree':
+      'Kabla ya kuandika, kubali hati mbili ambazo majadiliano haya yanahitaji. Kisanduku kiko kwenye ukurasa wake wa kwanza.',
   },
   af: {
     'board.title': 'Bespreking',
@@ -939,6 +1042,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Personeel het dit afgehaal.',
     'board.older': 'Ouer plasings',
     'board.asWritten': 'Plasings word gewys soos hulle geskryf is. Hulle word nie vertaal nie.',
+    'board.agreeTitle': 'Stem in voordat jy skryf',
+    'board.agreeLead':
+      'Jy kan hier lees sonder om tot enigiets in te stem. Om ’n gebruikersnaam te kies en om te skryf, stem jy eers in tot hierdie dokumente. Lees hulle. Die tyd waarop jy instem, word saam met jou rekening gehou.',
+    'board.agreeBox': 'Ek het hierdie dokumente gelees en ek stem daartoe in.',
+    'board.agreeSend': 'Ek stem in',
+    'board.agreeTick': 'Merk eers die blokkie.',
+    'board.whyAgree':
+      'Voordat jy skryf, stem in tot die twee dokumente wat hierdie bespreking vra. Die blokkie is op die bespreking se eerste bladsy.',
   },
   'zh-hans': {
     'board.title': '讨论区',
@@ -994,6 +1105,12 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': '工作人员已移除这条内容。',
     'board.older': '更早的帖子',
     'board.asWritten': '帖子按原文显示，不作翻译。',
+    'board.agreeTitle': '发言前请先同意',
+    'board.agreeLead': '您不必同意任何内容就可以在这里阅读。要选择用户名并发言，您需先同意以下文件。请阅读它们。您同意的时间会与您的账户一起保存。',
+    'board.agreeBox': '我已阅读这些文件并表示同意。',
+    'board.agreeSend': '同意',
+    'board.agreeTick': '请先勾选方框。',
+    'board.whyAgree': '发言前，请先同意本讨论区要求的两份文件。方框在讨论区的首页。',
   },
   'zh-hant': {
     'board.title': '討論區',
@@ -1049,6 +1166,12 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': '工作人員已移除這則內容。',
     'board.older': '更早的貼文',
     'board.asWritten': '貼文依原文顯示，不作翻譯。',
+    'board.agreeTitle': '發言前請先同意',
+    'board.agreeLead': '您不必同意任何內容就可以在這裡閱讀。要選擇使用者名稱並發言，您需先同意以下文件。請閱讀它們。您同意的時間會與您的帳號一起保存。',
+    'board.agreeBox': '我已閱讀這些文件並表示同意。',
+    'board.agreeSend': '同意',
+    'board.agreeTick': '請先勾選方框。',
+    'board.whyAgree': '發言前，請先同意本討論區要求的兩份文件。方框在討論區的首頁。',
   },
   vi: {
     'board.title': 'Thảo luận',
@@ -1113,6 +1236,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Nhân viên đã gỡ bài này.',
     'board.older': 'Bài cũ hơn',
     'board.asWritten': 'Bài viết được hiển thị đúng như khi được viết. Chúng không được dịch.',
+    'board.agreeTitle': 'Đồng ý trước khi viết',
+    'board.agreeLead':
+      'Bạn có thể đọc ở đây mà không cần đồng ý điều gì. Để chọn tên người dùng và để viết, trước hết bạn đồng ý với các văn bản này. Hãy đọc chúng. Thời điểm bạn đồng ý được lưu cùng tài khoản của bạn.',
+    'board.agreeBox': 'Tôi đã đọc các văn bản này và tôi đồng ý.',
+    'board.agreeSend': 'Đồng ý',
+    'board.agreeTick': 'Hãy đánh dấu vào ô trước.',
+    'board.whyAgree':
+      'Trước khi viết, hãy đồng ý với hai văn bản mà phần thảo luận này yêu cầu. Ô đồng ý nằm ở trang đầu của phần thảo luận.',
   },
   th: {
     'board.title': 'การสนทนา',
@@ -1175,6 +1306,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'เจ้าหน้าที่นำโพสต์นี้ออกแล้ว',
     'board.older': 'โพสต์ที่เก่ากว่า',
     'board.asWritten': 'โพสต์แสดงตามที่เขียนไว้ และไม่มีการแปล',
+    'board.agreeTitle': 'ยอมรับก่อนเขียน',
+    'board.agreeLead':
+      'คุณอ่านที่นี่ได้โดยไม่ต้องยอมรับสิ่งใด หากจะเลือกชื่อผู้ใช้และเขียน คุณต้องยอมรับเอกสารเหล่านี้ก่อน โปรดอ่านเอกสาร เวลาที่คุณยอมรับจะถูกเก็บไว้กับบัญชีของคุณ',
+    'board.agreeBox': 'ฉันอ่านเอกสารเหล่านี้แล้วและยอมรับ',
+    'board.agreeSend': 'ยอมรับ',
+    'board.agreeTick': 'โปรดทำเครื่องหมายในช่องก่อน',
+    'board.whyAgree':
+      'ก่อนเขียน โปรดยอมรับเอกสารสองฉบับที่การสนทนานี้ขอ ช่องสำหรับยอมรับอยู่ที่หน้าแรกของการสนทนา',
   },
   fil: {
     'board.title': 'Talakayan',
@@ -1242,6 +1381,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.older': 'Mas lumang mga post',
     'board.asWritten':
       'Ipinapakita ang mga post ayon sa pagkakasulat. Hindi isinasalin ang mga ito.',
+    'board.agreeTitle': 'Sumang-ayon bago sumulat',
+    'board.agreeLead':
+      'Makakabasa ka rito nang hindi sumasang-ayon sa anuman. Para pumili ng username at sumulat, sumasang-ayon ka muna sa mga dokumentong ito. Basahin ang mga ito. Itinatabi kasama ng account mo ang oras ng pagsang-ayon mo.',
+    'board.agreeBox': 'Nabasa ko ang mga dokumentong ito at sumasang-ayon ako sa mga ito.',
+    'board.agreeSend': 'Sumasang-ayon ako',
+    'board.agreeTick': 'Lagyan muna ng tsek ang kahon.',
+    'board.whyAgree':
+      'Bago sumulat, sumang-ayon sa dalawang dokumentong hinihingi ng talakayang ito. Nasa unang pahina nito ang kahon.',
   },
   uz: {
     'board.title': 'Muhokama',
@@ -1313,6 +1460,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.older': 'Eskiroq xabarlar',
     'board.asWritten':
       'Xabarlar qanday yozilgan boʻlsa, shunday koʻrsatiladi. Ular tarjima qilinmaydi.',
+    'board.agreeTitle': 'Yozishdan oldin rozilik bering',
+    'board.agreeLead':
+      'Bu yerda hech narsaga rozilik bermasdan oʻqishingiz mumkin. Foydalanuvchi nomini tanlash va yozish uchun avval ushbu hujjatlarga rozilik berasiz. Ularni oʻqing. Rozilik bergan vaqtingiz hisobingiz bilan birga saqlanadi.',
+    'board.agreeBox': 'Men ushbu hujjatlarni oʻqidim va ularga roziman.',
+    'board.agreeSend': 'Roziman',
+    'board.agreeTick': 'Avval katakchani belgilang.',
+    'board.whyAgree':
+      'Yozishdan oldin ushbu muhokama soʻragan ikki hujjatga rozilik bering. Katakcha muhokamaning birinchi sahifasida.',
   },
   kk: {
     'board.title': 'Талқылау',
@@ -1380,6 +1535,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Қызметкерлер мұны алып тастады.',
     'board.older': 'Ескірек жазбалар',
     'board.asWritten': 'Жазбалар қалай жазылса, солай көрсетіледі. Олар аударылмайды.',
+    'board.agreeTitle': 'Жазбас бұрын келісіңіз',
+    'board.agreeLead':
+      'Мұнда ештеңеге келіспей-ақ оқи аласыз. Пайдаланушы атын таңдау және жазу үшін алдымен осы құжаттарға келісесіз. Оларды оқыңыз. Келіскен уақытыңыз есептік жазбаңызбен бірге сақталады.',
+    'board.agreeBox': 'Мен осы құжаттарды оқыдым және оларға келісемін.',
+    'board.agreeSend': 'Келісемін',
+    'board.agreeTick': 'Алдымен ұяшықты белгілеңіз.',
+    'board.whyAgree':
+      'Жазбас бұрын осы талқылау сұрайтын екі құжатқа келісіңіз. Ұяшық талқылаудың бірінші бетінде.',
   },
   az: {
     'board.title': 'Müzakirə',
@@ -1445,6 +1608,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Əməkdaşlar bunu götürdü.',
     'board.older': 'Daha köhnə yazılar',
     'board.asWritten': 'Yazılar necə yazılıbsa, elə də göstərilir. Onlar tərcümə olunmur.',
+    'board.agreeTitle': 'Yazmazdan əvvəl razılıq verin',
+    'board.agreeLead':
+      'Burada heç nəyə razılıq vermədən oxuya bilərsiniz. İstifadəçi adı seçmək və yazmaq üçün əvvəlcə bu sənədlərə razılıq verirsiniz. Onları oxuyun. Razılıq verdiyiniz vaxt hesabınızla birlikdə saxlanılır.',
+    'board.agreeBox': 'Bu sənədləri oxudum və onlarla razıyam.',
+    'board.agreeSend': 'Razıyam',
+    'board.agreeTick': 'Əvvəlcə xananı işarələyin.',
+    'board.whyAgree':
+      'Yazmazdan əvvəl bu müzakirənin istədiyi iki sənədə razılıq verin. Xana müzakirənin ilk səhifəsindədir.',
   },
   tg: {
     'board.title': 'Муҳокима',
@@ -1514,6 +1685,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.older': 'Навиштаҳои кӯҳнатар',
     'board.asWritten':
       'Навиштаҳо ҳамон тавре ки навишта шудаанд, нишон дода мешаванд. Онҳо тарҷума намешаванд.',
+    'board.agreeTitle': 'Пеш аз навиштан розӣ шавед',
+    'board.agreeLead':
+      'Шумо метавонед ин ҷо бе розигӣ ба чизе хонед. Барои интихоби номи корбарӣ ва навиштан аввал ба ин ҳуҷҷатҳо розӣ мешавед. Онҳоро хонед. Вақти розигии шумо бо ҳисоби шумо нигоҳ дошта мешавад.',
+    'board.agreeBox': 'Ман ин ҳуҷҷатҳоро хондам ва ба онҳо розиям.',
+    'board.agreeSend': 'Розиям',
+    'board.agreeTick': 'Аввал катакро қайд кунед.',
+    'board.whyAgree':
+      'Пеш аз навиштан ба ду ҳуҷҷате, ки ин муҳокима мехоҳад, розӣ шавед. Катак дар саҳифаи якуми муҳокима аст.',
   },
   ky: {
     'board.title': 'Талкуу',
@@ -1581,6 +1760,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Кызматкерлер муну алып салышты.',
     'board.older': 'Эскирээк жазуулар',
     'board.asWritten': 'Жазуулар кандай жазылса, ошондой көрсөтүлөт. Алар которулбайт.',
+    'board.agreeTitle': 'Жазардан мурун макул болуңуз',
+    'board.agreeLead':
+      'Бул жерде эч нерсеге макул болбой эле окуй аласыз. Колдонуучу атын тандоо жана жазуу үчүн адегенде бул документтерге макул болосуз. Аларды окуңуз. Макул болгон убактыңыз аккаунтуңуз менен бирге сакталат.',
+    'board.agreeBox': 'Мен бул документтерди окудум жана аларга макулмун.',
+    'board.agreeSend': 'Макулмун',
+    'board.agreeTick': 'Адегенде кутучаны белгилеңиз.',
+    'board.whyAgree':
+      'Жазардан мурун бул талкуу сураган эки документке макул болуңуз. Кутуча талкуунун биринчи бетинде.',
   },
   tk: {
     'board.title': 'Maslahat',
@@ -1644,6 +1831,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'Işgärler muny aýyrdy.',
     'board.older': 'Has köne ýazgylar',
     'board.asWritten': 'Ýazgylar nähili ýazylan bolsa, şeýle görkezilýär. Olar terjime edilmeýär.',
+    'board.agreeTitle': 'Ýazmazdan öň razy boluň',
+    'board.agreeLead':
+      'Bu ýerde hiç zada razy bolman okap bilersiniz. Ulanyjy adyny saýlamak we ýazmak üçin ilki bu resminamalara razy bolýarsyňyz. Olary okaň. Razy bolan wagtyňyz hasabyňyz bilen bile saklanýar.',
+    'board.agreeBox': 'Men bu resminamalary okadym we olara razy.',
+    'board.agreeSend': 'Razy',
+    'board.agreeTick': 'Ilki gutujygy belläň.',
+    'board.whyAgree':
+      'Ýazmazdan öň bu maslahatyň soraýan iki resminamasyna razy boluň. Gutujyk maslahatyň birinji sahypasynda.',
   },
   ta: {
     'board.title': 'கலந்துரையாடல்',
@@ -1713,6 +1908,14 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'பணியாளர்கள் இதை நீக்கினர்.',
     'board.older': 'பழைய பதிவுகள்',
     'board.asWritten': 'பதிவுகள் எழுதப்பட்டபடியே காட்டப்படுகின்றன. அவை மொழிபெயர்க்கப்படுவதில்லை.',
+    'board.agreeTitle': 'எழுதும் முன் ஒப்புக்கொள்ளுங்கள்',
+    'board.agreeLead':
+      'எதையும் ஒப்புக்கொள்ளாமலேயே நீங்கள் இங்கே படிக்கலாம். பயனர்பெயரைத் தேர்ந்தெடுக்கவும் எழுதவும், முதலில் இந்த ஆவணங்களை ஒப்புக்கொள்கிறீர்கள். அவற்றைப் படியுங்கள். நீங்கள் ஒப்புக்கொண்ட நேரம் உங்கள் கணக்குடன் வைக்கப்படும்.',
+    'board.agreeBox': 'இந்த ஆவணங்களைப் படித்தேன்; அவற்றை ஒப்புக்கொள்கிறேன்.',
+    'board.agreeSend': 'ஒப்புக்கொள்கிறேன்',
+    'board.agreeTick': 'முதலில் பெட்டியில் குறியிடுங்கள்.',
+    'board.whyAgree':
+      'எழுதும் முன், இந்தக் கலந்துரையாடல் கேட்கும் இரண்டு ஆவணங்களை ஒப்புக்கொள்ளுங்கள். பெட்டி அதன் முதல் பக்கத்தில் உள்ளது.',
   },
   ne: {
     'board.title': 'छलफल',
@@ -1778,5 +1981,12 @@ export const BOARD: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'board.removed': 'कर्मचारीले यो हटाए।',
     'board.older': 'पुराना पोस्टहरू',
     'board.asWritten': 'पोस्टहरू जसरी लेखिएका छन् त्यसरी नै देखाइन्छन्। तिनको अनुवाद गरिँदैन।',
+    'board.agreeTitle': 'लेख्नुअघि सहमति दिनुहोस्',
+    'board.agreeLead':
+      'तपाईं कुनै कुरामा सहमति नदिई यहाँ पढ्न सक्नुहुन्छ। प्रयोगकर्ता नाम छान्न र लेख्नका लागि पहिले यी कागजातहरूमा सहमति दिनुहुन्छ। तिनलाई पढ्नुहोस्। तपाईंले सहमति दिएको समय तपाईंको खातासँगै राखिन्छ।',
+    'board.agreeBox': 'मैले यी कागजातहरू पढेको छु र म यिनमा सहमत छु।',
+    'board.agreeSend': 'सहमत छु',
+    'board.agreeTick': 'पहिले बाकसमा चिन्ह लगाउनुहोस्।',
+    'board.whyAgree': 'लेख्नुअघि यो छलफलले माग्ने दुई कागजातमा सहमति दिनुहोस्। बाकस यस छलफलको पहिलो पृष्ठमा छ।',
   },
 };

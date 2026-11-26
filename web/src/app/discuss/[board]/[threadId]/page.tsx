@@ -109,7 +109,9 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
   const translate = await translateFor(supabase);
   const written = { dir: 'auto', lang: '' } as const;
   const goneWords = (state: 'withdrawn' | 'removed') => t(state === 'removed' ? 'board.removed' : 'board.takenBack');
-  const canWrite = standing.handle !== null && !standing.blocked && thread.state === 'visible';
+  // Agreeing comes before writing; the box for it is on the board's own page.
+  const mustAgree = standing.agreements.length > 0;
+  const canWrite = standing.handle !== null && !standing.blocked && !mustAgree && thread.state === 'visible';
 
   return (
     <div className="page board-page" {...frame} data-board={board} data-board-thread-state={thread.state}>
@@ -183,9 +185,11 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
           <ReplyForm threadId={thread.id} words={words} />
         </section>
       ) : thread.state === 'visible' ? (
-        <div className={standing.blocked ? 'notice warn' : 'notice'} data-board-reply="no">
-          {standing.blocked ? t('board.whyBlocked') : t('board.nameLead')}{' '}
-          {standing.blocked ? null : <Link href={`/discuss/${board}`}>{t('board.nameTitle')}</Link>}
+        <div className={standing.blocked ? 'notice warn' : 'notice'} data-board-reply={mustAgree && !standing.blocked ? 'agree' : 'no'}>
+          {standing.blocked ? t('board.whyBlocked') : mustAgree ? t('board.whyAgree') : t('board.nameLead')}{' '}
+          {standing.blocked ? null : (
+            <Link href={`/discuss/${board}`}>{mustAgree ? t('board.agreeTitle') : t('board.nameTitle')}</Link>
+          )}
         </div>
       ) : null}
       <p className="muted">{translate ? t('translate.offered') : t('board.asWritten')}</p>

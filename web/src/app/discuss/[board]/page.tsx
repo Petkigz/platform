@@ -8,8 +8,8 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { formatDateTime, formatNumber, translator } from '@/lib/i18n';
 import { boardOf, mayEnter, parseStanding, parseThreadPage } from '@/lib/boards';
 import { translateButtonOn } from '@/lib/translate-server';
-import { HandleForm, ThreadForm } from '../board-forms';
-import { READ_FAILED, boardName, boardWords, kindName, readerLanguage } from '../reader';
+import { AgreeForm, HandleForm, ThreadForm } from '../board-forms';
+import { READ_FAILED, agreeWords, boardName, boardWords, kindName, readerLanguage } from '../reader';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +37,13 @@ export async function generateMetadata({ params }: { params: Promise<{ board: st
  * that others see a username, that staff can find out who wrote a post and
  * that each look is recorded, that what you write can still identify you,
  * and that a post is shown at once.
+ *
+ * **Nobody writes before agreeing** (the owner, 2026-11-26). While this
+ * account has not agreed to the terms and the privacy notice in force, the
+ * page lists them, each a link to the document with its version, above a box
+ * to tick. Until then there is no field for a username and no box to ask in;
+ * reading is as before. The database refuses the writing whatever this page
+ * draws.
  *
  * What people wrote is shown as they wrote it, in whatever language and
  * direction it was typed (`dir="auto"`), and is not translated.
@@ -129,6 +136,8 @@ export default async function BoardPage({
   const words = boardWords(t);
   const written = { dir: 'auto', lang: '' } as const;
   const last = page?.threads[page.threads.length - 1];
+  // What this account has still to agree to before it writes. Empty: no box.
+  const owed = standing.agreements;
 
   // Whether a reader can ask for a translation of a post, which changes the last line.
   const translateOn = await translateButtonOn(supabase);
@@ -153,6 +162,26 @@ export default async function BoardPage({
         </ul>
       </section>
 
+      {owed.length > 0 ? (
+        <section className="card board-card" data-board-agree={owed.map((document) => document.slug).join(' ')}>
+          <h2>{t('board.agreeTitle')}</h2>
+          <p>{t('board.agreeLead')}</p>
+          <ul className="board-rules">
+            {owed.map((document) => (
+              <li key={document.slug}>
+                {/* The owner's title, as written; the documents are not translated. */}
+                <Link href={`/policies/${document.slug}`} lang="en" dir="ltr">
+                  {document.title}
+                </Link>
+                {' · '}
+                <Say text={t('policy.versionNo')} parts={{ number: <bdi>{formatNumber(locale, document.version)}</bdi> }} />
+              </li>
+            ))}
+          </ul>
+          <AgreeForm documents={owed} words={agreeWords(t)} />
+        </section>
+      ) : null}
+
       <section className="card board-card" data-board-handle={standing.handle ? 'chosen' : 'none'}>
         <h2>{t('board.nameTitle')}</h2>
         {standing.handle ? (
@@ -175,6 +204,10 @@ export default async function BoardPage({
           </div>
         ) : standing.handle && standing.handleFixed ? (
           <p className="muted">{t('board.nameFixed')}</p>
+        ) : owed.length > 0 ? (
+          <p className="muted" data-board-handle-waits>
+            {t('board.whyAgree')}
+          </p>
         ) : (
           <>
             <p className="muted">{t('board.nameLead')}</p>
@@ -183,7 +216,7 @@ export default async function BoardPage({
         )}
       </section>
 
-      {standing.handle && !standing.blocked ? (
+      {standing.handle && !standing.blocked && owed.length === 0 ? (
         <section className="card board-card" data-board-ask>
           <h2>{t('board.newTitle')}</h2>
           <ThreadForm board={board} words={words} />

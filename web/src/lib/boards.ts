@@ -55,6 +55,7 @@ export const BOARD_OUTCOMES = [
   'not_signed_in',
   'closed',
   'not_allowed',
+  'agree_first',
   'not_found',
   'no_handle',
   'blocked',
@@ -111,6 +112,7 @@ export function boardStatusOf(reason: BoardOutcome): number {
     case 'not_signed_in': return 401;
     case 'closed':
     case 'not_allowed':
+    case 'agree_first':
     case 'blocked': return 403;
     case 'not_found': return 404;
     case 'handle_shape':
@@ -160,6 +162,7 @@ export const BOARD_ENGLISH: Record<BoardOutcome, string> = {
   not_signed_in: 'Sign in first.',
   closed: 'This discussion is not open.',
   not_allowed: 'This discussion is not open to this account.',
+  agree_first: 'Agree to the terms of use and the privacy notice before writing here.',
   not_found: 'That post is no longer here.',
   no_handle: 'Choose a username before you write.',
   blocked: 'Staff have stopped this username from writing. It can still read.',
@@ -194,13 +197,49 @@ export type Standing = {
   handleFixed: boolean;
   blocked: boolean;
   moderator: boolean;
+  /**
+   * The documents this account has still to agree to before it may choose a
+   * username or write (`20261281157000`). Empty when there is nothing to ask.
+   */
+  agreements: BoardAgreement[];
 };
+
+/** One document to agree to: which, what the owner called it, and the version in force. */
+export type BoardAgreement = { slug: string; title: string; version: number };
+
+const POLICY_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/u;
+
+/**
+ * What is still to be agreed to, read from `my_board()`.
+ *
+ * A reply with no list at all is a database from before the boards asked:
+ * it refuses nothing either, so there is nothing to draw. A list that is
+ * there and cannot be read is not guessed at: null, and the page says it
+ * could not read the board.
+ */
+function agreementsOf(raw: unknown): BoardAgreement[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw)) return null;
+  const owed: BoardAgreement[] = [];
+  for (const item of raw) {
+    const one = record(item);
+    const slug = text(one?.slug);
+    const title = text(one?.title);
+    const version = one?.versionNumber;
+    if (!slug || slug.length > 60 || !POLICY_SLUG.test(slug) || !title) return null;
+    if (typeof version !== 'number' || !Number.isInteger(version) || version < 1 || version > 1_000_000) return null;
+    owed.push({ slug, title, version });
+  }
+  return owed;
+}
 
 export function parseStanding(raw: unknown): Standing | null {
   const row = record(raw);
   const board = boardOf(row?.board);
   if (!row || !board || typeof row.open !== 'boolean') return null;
   if (row.kind !== null && kindOf(row.kind) === null) return null;
+  const agreements = agreementsOf(row.agreements);
+  if (!agreements) return null;
   return {
     board,
     open: row.open,
@@ -210,6 +249,7 @@ export function parseStanding(raw: unknown): Standing | null {
     handleFixed: row.handleFixed === true,
     blocked: row.blocked === true,
     moderator: row.moderator === true,
+    agreements,
   };
 }
 

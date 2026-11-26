@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers';
 import { LOCALE_COOKIE, chooseLocale, languageShownFor } from '@/lib/i18n';
 import type { translator } from '@/lib/i18n';
 import type { AuthorKind, Board, BoardOutcome } from '@/lib/boards';
-import type { BoardWords } from './board-forms';
+import type { AgreeWords, BoardWords } from './board-forms';
 
 /** The language a discussion page is written in for this reader, and whether that is the one they chose. */
 export async function readerLanguage() {
@@ -32,6 +32,7 @@ function reasons(t: T): Record<BoardOutcome, string> {
     not_signed_in: t('buy.signedOut'),
     closed: t('board.closed'),
     not_allowed: t('board.whyOut'),
+    agree_first: t('board.whyAgree'),
     not_found: t('board.whyGone'),
     no_handle: t('board.nameLead'),
     blocked: t('board.whyBlocked'),
@@ -72,5 +73,24 @@ export function boardWords(t: T): BoardWords {
     working: t('auth.working'),
     unreachable: t('auth.offline'),
     reasons: reasons(t),
+  };
+}
+
+/**
+ * What the agreement box says. The sentences for an agreement that could not
+ * be recorded are the policy page's own: it is the same record, written by
+ * the same function.
+ */
+export function agreeWords(t: T): AgreeWords {
+  return {
+    box: t('board.agreeBox'),
+    send: t('board.agreeSend'),
+    tick: t('board.agreeTick'),
+    working: t('auth.working'),
+    unreachable: t('auth.offline'),
+    signedOut: t('buy.signedOut'),
+    changed: t('policy.whyChanged'),
+    failed: t('policy.agreeFailed'),
+    unsure: t('policy.agreeUnsure'),
   };
 }

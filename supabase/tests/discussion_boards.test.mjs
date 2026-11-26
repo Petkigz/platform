@@ -17,6 +17,18 @@ export async function run(ctx) {
   await grantRole(support, 'support_agent', admin);
   const course = await newCourse(teacher, { status: 'active', title: 'Boards Course' });
 
+  // Since 20261281157000 nobody chooses a username or writes before agreeing
+  // to the terms and the privacy notice in force. Everybody in this suite has,
+  // unless a test says otherwise; `board_agreement.test.mjs` is about the
+  // asking itself.
+  const agree = (userId) => q(
+    `insert into public.policy_acceptances (user_id, policy_version_id)
+     select $1, v.id from public.policy_versions v
+       join public.policy_documents d on d.id = v.document_id
+      where d.slug in ('terms', 'privacy') and v.status = 'in_force'
+     on conflict do nothing`, [userId]);
+  for (const person of [admin, teacher, otherTeacher]) await agree(person);
+
   async function asActor(actor, sql, params = []) {
     await q('begin');
     await q(`select set_config('request.jwt.claims',$1,true)`,
@@ -39,6 +51,7 @@ export async function run(ctx) {
     seq += 1;
     const userId = await newUser(`boards-student-${seq}@example.com`);
     await newProfile(userId, name);
+    await agree(userId);
     const learnerId = (await q(
       `insert into public.learner_profiles (display_name, learner_type, age_band, linked_user_id)
        values ($1,$2,$3,$4) returning id`,
@@ -157,6 +170,8 @@ export async function run(ctx) {
       const grant = (await q(`insert into public.entitlement_grants (learner_profile_id, scope_type, course_id, source_type) values ($1,'course',$2,'purchase') returning id`, [kid, course])).rows[0].id;
       const said = await mine(parent, 'students');
       assert(said.kind === 'student', `the family account was not let in on the child's paid class: ${JSON.stringify(said)}`);
+      // The adult who holds the family account is the one who agrees.
+      await agree(parent);
       await name(parent, 'students', 'small_reader');
       const made = await start(parent, 'students', 'A question from a child', 'How long should I practise?');
       assert((await list(parent, 'students')).threads.find((t) => t.id === made.threadId).kind === 'student');
@@ -534,6 +549,8 @@ export async function run(ctx) {
       // Two teachers of their own: a username cannot be changed once written under.
       const writingTeacher = await newInstructor('boards-teacher-counted@example.com', admin);
       const reportingTeacher = await newInstructor('boards-teacher-reporting@example.com', admin);
+      await agree(writingTeacher);
+      await agree(reportingTeacher);
       await name(writingTeacher, 'teachers', 'counted_teacher');
       await name(reportingTeacher, 'teachers', 'reporting_teacher');
       const staffRoom = await start(writingTeacher, 'teachers', 'A staff-room thread', 'body');

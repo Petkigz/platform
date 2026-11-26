@@ -14,8 +14,11 @@ import {
   reasonFaultOf,
   threadFaultOf,
   type Board,
+  type BoardAgreement,
   type BoardOutcome,
 } from '@/lib/boards';
+import { AGREED_EVENT } from '@/lib/policy-notice';
+import { policyOutcomeOf } from '@/lib/policy-outcome';
 
 /** What the forms say, already in the reader's language. */
 export type BoardWords = {
@@ -77,7 +80,7 @@ function useAsk(words: BoardWords) {
     const named = res.ok ? 'unconfirmed' : boardOutcomeOf(res.status, json?.code);
     setSaid({ tone: named === 'refused' || named === 'unconfirmed' ? 'warn' : 'error', text: words.reasons[named] });
     // The page may be out of date: the post went, access ended, or it was done after all.
-    if (['unconfirmed', 'not_found', 'not_allowed', 'closed', 'no_handle', 'blocked', 'handle_fixed'].includes(named)) {
+    if (['unconfirmed', 'not_found', 'not_allowed', 'agree_first', 'closed', 'no_handle', 'blocked', 'handle_fixed'].includes(named)) {
       router.refresh();
     }
     return null;
@@ -93,6 +96,109 @@ function Notice({ said }: { said: Said }) {
     <div className={`notice ${said.tone}`} role={said.tone === 'error' ? 'alert' : 'status'} data-board-said={said.tone}>
       {said.text}
     </div>
+  );
+}
+
+/** What the agreement box says, already in the reader's language. */
+export type AgreeWords = {
+  box: string;
+  send: string;
+  /** Pressed without the box ticked. */
+  tick: string;
+  working: string;
+  unreachable: string;
+  signedOut: string;
+  /** The document was replaced while the page was open. */
+  changed: string;
+  failed: string;
+  unsure: string;
+};
+
+/**
+ * The box somebody ticks before they may choose a username or write.
+ *
+ * **It records an agreement to each document, by the version the page
+ * named.** The record is made by the policies route (`accept_policy()`),
+ * one request for each document, in the order they are listed. A document
+ * replaced while this page was open is refused there, and nothing is
+ * recorded for it.
+ *
+ * **It decides nothing.** Whether this account may write is the database's
+ * answer, asked again when the page is read again, which happens after
+ * every press: what is still owed is then listed with the versions in force
+ * at that moment, and when nothing is, this box is not drawn.
+ */
+export function AgreeForm({ documents, words }: { documents: BoardAgreement[]; words: AgreeWords }) {
+  const router = useRouter();
+  const asking = useRef(false);
+  const [ticked, setTicked] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState<Said>(null);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!ticked) return setSaid({ tone: 'error', text: words.tick });
+    if (asking.current) return;
+    asking.current = true;
+    setBusy(true);
+    setSaid(null);
+
+    let fault: Said = null;
+    for (const document of documents) {
+      let res: Response;
+      try {
+        res = await fetch('/api/policies', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ slug: document.slug, version: document.version }),
+        });
+      } catch {
+        fault = { tone: 'warn', text: words.unreachable };
+        break;
+      }
+      const json = (await res.json().catch(() => null)) as { ok?: unknown; reason?: unknown } | null;
+      if (res.ok && json?.ok === true) {
+        // The notice under the page stops telling about a document just agreed to.
+        window.dispatchEvent(new CustomEvent(AGREED_EVENT, { detail: document.slug }));
+        continue;
+      }
+      const named = res.ok ? 'unconfirmed' : policyOutcomeOf(res.status, json?.reason);
+      fault =
+        named === 'changed' || named === 'not_in_force' || named === 'not_found'
+          ? { tone: 'error', text: words.changed }
+          : named === 'not_signed_in'
+            ? { tone: 'error', text: words.signedOut }
+            : named === 'unconfirmed'
+              ? { tone: 'warn', text: words.unsure }
+              : { tone: 'warn', text: words.failed };
+      // What comes after it in the list is not asked for: the reader is told about this one first.
+      break;
+    }
+
+    asking.current = false;
+    setBusy(false);
+    setSaid(fault);
+    router.refresh();
+  }
+
+  return (
+    <form className="board-form" onSubmit={submit} noValidate data-board-form="agree">
+      <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+        <input
+          type="checkbox"
+          name="agree"
+          checked={ticked}
+          onChange={(event) => setTicked(event.target.checked)}
+          // The boards' forms stretch every input across the card; a tick box is not a line of text.
+          style={{ inlineSize: '1.25rem', blockSize: '1.25rem', margin: '0.15rem 0 0', flex: 'none' }}
+        />
+        <span>{words.box}</span>
+      </label>
+      <button type="submit" className="btn" disabled={busy} aria-busy={busy}>
+        {busy ? words.working : words.send}
+      </button>
+      <Notice said={said} />
+    </form>
   );
 }
 

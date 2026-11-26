@@ -153,12 +153,11 @@ export async function run(ctx) {
     const added = queue(after, 'refunds').count - queue(before, 'refunds').count;
     assert(added === 2, `the refund queue moved by ${added}, not 2`);
     // And the total tracks the rows.
-    assert(after.waitingCount === queue(after, 'refunds').count + queue(after, 'disputes').count +
-      queue(after, 'reconciliation').count + queue(after, 'payouts').count +
-      queue(after, 'support').count + queue(after, 'appeals').count +
-      queue(after, 'credentials').count + queue(after, 'guardians').count +
-      queue(after, 'reports').count + queue(after, 'reviews').count +
-      queue(after, 'media').count,
+    // Every row the owner is given, the two board rows included: until
+    // 2026-11-26 this named eleven and held only because no board post had
+    // been reported by the time this suite ran.
+    assert(after.queues.length === 13, `the owner saw ${after.queues.length} queues`);
+    assert(after.waitingCount === after.queues.reduce((sum, row) => sum + row.count, 0),
       'the total is not the sum of the queues');
   });
 
