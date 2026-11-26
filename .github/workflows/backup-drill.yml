@@ -1,0 +1,112 @@
+# The backup, tried from end to end without the project: a scratch database on
+# the runner is filled from this repository's migrations and two invented
+# accounts, copied with the same CLI commands the real job uses, thrown away,
+# started again empty, and filled from the copy. Then the two are compared.
+# Then the restored database is spoiled on purpose, twice, and the comparison
+# has to notice both.
+#
+# No secret, no environment and no approval: nothing of the project is read.
+# It runs when the backup's own files change, when a migration is added (a
+# migration that cannot be restored should be known the day it is written),
+# and by hand.
+name: Backup drill on a scratch database
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+    paths:
+      - scripts/hosted-backup.mjs
+      - scripts/hosted-backup.test.mjs
+      - scripts/backup-drill-fill.mjs
+      - .github/workflows/backup-drill.yml
+      - .github/workflows/supabase-test-backup.yml
+      - supabase/migrations/**
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: backup-drill-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+      AYAHSPRING_BACKUP_SOURCE: local
+      AYAHSPRING_BACKUP_DIR: ${{ runner.temp }}/backup
+      AYAHSPRING_SCRATCH_DIR: ${{ runner.temp }}/scratch
+      AYAHSPRING_SCRATCH_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - name: Install dependencies and the CLI the real job uses
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$SUPABASE_CLI_BIN" --version)" = '3.1.0'
+      - name: The measure and the comparison, against a local engine
+        run: node --test scripts/hosted-backup.test.mjs
+      - name: Start a scratch database
+        run: |
+          set -euo pipefail
+          mkdir -p "$AYAHSPRING_SCRATCH_DIR/supabase"
+          cd "$AYAHSPRING_SCRATCH_DIR"
+          printf 'project_id = "ayahspring-restore"\n\n[db]\nmajor_version = 17\n' > supabase/config.toml
+          if "$SUPABASE_CLI_BIN" start > "$RUNNER_TEMP/scratch.log" 2>&1; then
+            echo 'The scratch stack is up.'
+          else
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-3000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Scratch database::${s}`)' "$RUNNER_TEMP/scratch.log"
+            exit 1
+          fi
+          container="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$container"
+          echo "AYAHSPRING_SCRATCH_CONTAINER=$container" >> "$GITHUB_ENV"
+      - name: Fill it from the migrations and two invented accounts
+        run: node scripts/backup-drill-fill.mjs
+      - name: Copy it with the CLI, as the real job copies the project
+        run: node scripts/hosted-backup.mjs copy
+      - name: Throw the database away and start an empty one
+        run: |
+          set -euo pipefail
+          cd "$AYAHSPRING_SCRATCH_DIR"
+          "$SUPABASE_CLI_BIN" stop --no-backup > "$RUNNER_TEMP/scratch-stop.log" 2>&1
+          if "$SUPABASE_CLI_BIN" start > "$RUNNER_TEMP/scratch.log" 2>&1; then
+            echo 'A new scratch stack is up.'
+          else
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-3000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Scratch database::${s}`)' "$RUNNER_TEMP/scratch.log"
+            exit 1
+          fi
+          container="$(docker ps --format '{{.Names}}' | grep '^supabase_db_' | head -n 1)"
+          test -n "$container"
+          echo "AYAHSPRING_SCRATCH_CONTAINER=$container" >> "$GITHUB_ENV"
+          # Empty, and so not the database that was copied.
+          test "$(docker exec -e PGPASSWORD=postgres "$container" psql -h 127.0.0.1 -U postgres -d postgres -Atc "select count(*) from pg_tables where schemaname = 'public'")" = '0'
+          test "$(docker exec -e PGPASSWORD=postgres "$container" psql -h 127.0.0.1 -U postgres -d postgres -Atc "select count(*) from auth.users")" = '0'
+      - name: Put the copy back and compare
+        run: node scripts/hosted-backup.mjs restore
+      - name: A lost row and a privilege handed to anon are both noticed
+        run: |
+          set -euo pipefail
+          sql() { docker exec -e PGPASSWORD=postgres "$AYAHSPRING_SCRATCH_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -Atc "$1"; }
+          sql "set session_replication_role = replica; delete from public.platform_settings where key = 'family.child_login';"
+          if GITHUB_STEP_SUMMARY= node scripts/hosted-backup.mjs compare > "$RUNNER_TEMP/spoiled-row.log" 2>&1; then
+            echo '::error title=Backup drill::A row was deleted after the restore and the comparison did not notice.'; exit 1
+          fi
+          grep -q 'table public.platform_settings: ' "$RUNNER_TEMP/spoiled-row.log" || { echo '::error title=Backup drill::The comparison failed without naming the table that lost a row.'; exit 1; }
+          sql "grant delete on public.user_profiles to anon;"
+          if GITHUB_STEP_SUMMARY= node scripts/hosted-backup.mjs compare > "$RUNNER_TEMP/spoiled-grant.log" 2>&1; then
+            echo '::error title=Backup drill::anon was handed a table after the restore and the comparison did not notice.'; exit 1
+          fi
+          grep -q 'What anon and authenticated may do is not the same' "$RUNNER_TEMP/spoiled-grant.log" || { echo '::error title=Backup drill::The comparison failed without saying that a privilege differs.'; exit 1; }
+          echo 'Both were noticed.'
+      - name: Remove the copy and the scratch database
+        if: ${{ always() }}
+        run: |
+          rm -rf "$AYAHSPRING_BACKUP_DIR"
+          cd "$AYAHSPRING_SCRATCH_DIR" 2>/dev/null && "$SUPABASE_CLI_BIN" stop --no-backup > /dev/null 2>&1 || true
