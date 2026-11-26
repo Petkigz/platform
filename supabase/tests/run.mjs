@@ -59,6 +59,7 @@ import { run as discussionBoards } from './discussion_boards.test.mjs';
 import { run as boardAgreement } from './board_agreement.test.mjs';
 import { run as boardWordsKept } from './board_words_kept.test.mjs';
 import { run as ownerAlertEmail } from './owner_alert_email.test.mjs';
+import { run as privacyNoticeBoardsDraft } from './privacy_notice_boards_draft.test.mjs';
 import { run as translateButton } from './translate_button.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -388,6 +389,7 @@ for (const [name, fn] of [
   ['board_agreement', boardAgreement],
   ['board_words_kept', boardWordsKept],
   ['owner_alert_email', ownerAlertEmail],
+  ['privacy_notice_boards_draft', privacyNoticeBoardsDraft],
   ['translate_button', translateButton],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],

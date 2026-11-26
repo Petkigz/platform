@@ -167,7 +167,8 @@ export async function run(ctx) {
         `${privacy.body}\n\n## The discussion boards\n\nA sentence about the boards, for this test.`, 'Says what the boards keep.']);
       await call(admin, 'approve_policy_version($1,$2,$3)', [draft.id, '2026-11-26', 'Reviewed and approved.']);
       const now = await inForce('privacy');
-      assert(now.n === privacy.n + 1, `the version in force is ${now.n}`);
+      // The number the draft was given: an unpublished draft in the register holds one of its own.
+      assert(now.n === draft.versionNumber && now.n > privacy.n, `the version in force is ${now.n}`);
 
       const said = await mine(person);
       assert(JSON.stringify(said.agreements) === JSON.stringify([{ slug: 'privacy', title: 'Privacy notice', versionNumber: now.n }]),

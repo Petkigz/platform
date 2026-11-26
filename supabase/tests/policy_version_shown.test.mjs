@@ -93,9 +93,12 @@ export async function run(ctx) {
   const saved = await call(admin, 'save_policy_draft($1,$2,$3)', [SLUG, body, 'Clarifying one sentence.']);
   await call(admin, 'approve_policy_version($1,$2,$3)', [saved.id, '2026-11-24', 'Reviewed and approved.']);
   const second = await liveOf();
+  // The number the new version was given. Not always N + 1: a draft the owner
+  // has not published (20261281160000) holds a number of its own.
+  const NEXT = saved.versionNumber;
 
   await test('a page left open while a new version is published records nothing when its button is pressed', async () => {
-    eq(second.version_number, N + 1, 'the version now in force');
+    eq(second.version_number, NEXT, 'the version now in force');
     await rejects(() => call(late, 'accept_policy($1,$2)', [SLUG, N]), /policy:changed/, 'the old number was accepted after a new version');
     assert((await agreements(late)).length === 0, `agreements were ${await agreements(late)}`);
     eq(await audited(late), 0, 'audit events for a refusal');
@@ -105,10 +108,10 @@ export async function run(ctx) {
   });
 
   await test('the same reader, shown the new version, agrees to that one', async () => {
-    const done = await call(late, 'accept_policy($1,$2)', [SLUG, N + 1]);
-    eq(done.versionNumber, N + 1, 'the version recorded');
+    const done = await call(late, 'accept_policy($1,$2)', [SLUG, NEXT]);
+    eq(done.versionNumber, NEXT, 'the version recorded');
     eq(done.already, false, 'the first agreement');
-    assert((await agreements(late)).join() === String(N + 1), `agreements were ${await agreements(late)}`);
+    assert((await agreements(late)).join() === String(NEXT), `agreements were ${await agreements(late)}`);
     eq(await audited(late), 1, 'audit events for one agreement');
   });
 
@@ -116,7 +119,7 @@ export async function run(ctx) {
     assert((await agreements(early)).join() === String(N), `agreements were ${await agreements(early)}`);
     const standing = await call(early, 'my_policy_standing()');
     const row = standing.acceptanceRequired.find((r) => r.slug === SLUG);
-    eq(row.versionNumber, N + 1, 'the version asked for');
+    eq(row.versionNumber, NEXT, 'the version asked for');
     eq(row.acceptedAt, null, 'agreement to a version not yet read');
     // Which is how a page knows this is a change and not a first reading.
     assert(standing.history.some((h) => h.slug === SLUG && h.versionNumber === N), 'the earlier agreement is not in the history');
@@ -127,9 +130,9 @@ export async function run(ctx) {
   await test('what is refused before anything is compared', async () => {
     await rejects(() => call(late, 'accept_policy($1,$2)', [SLUG, null]), /policy:version_required/, 'no version was accepted');
     await rejects(() => call(late, 'accept_policy($1,$2)', ['no-such-policy', 1]), /policy:not_found/, 'a document nobody published');
-    await rejects(() => call(null, 'accept_policy($1,$2)', [SLUG, N + 1]), /policy:not_signed_in/, 'nobody agreed');
+    await rejects(() => call(null, 'accept_policy($1,$2)', [SLUG, NEXT]), /policy:not_signed_in/, 'nobody agreed');
     // The slug is read the way the first function reads it.
-    const done = await call(late, 'accept_policy($1,$2)', [`  ${SLUG.toUpperCase()} `, N + 1]);
+    const done = await call(late, 'accept_policy($1,$2)', [`  ${SLUG.toUpperCase()} `, NEXT]);
     eq(done.already, true, 'the same document, typed loosely');
   });
 
@@ -143,7 +146,7 @@ export async function run(ctx) {
     // By slug alone it still records whatever is in force, and compares nothing.
     const other = await account('shown-other@example.com', 'By Slug Alone');
     const done = await call(other, 'accept_policy($1)', [SLUG]);
-    eq(done.versionNumber, N + 1, 'the version in force');
+    eq(done.versionNumber, NEXT, 'the version in force');
   });
   } finally {
     await q('rollback');

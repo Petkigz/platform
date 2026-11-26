@@ -104,7 +104,10 @@ export async function run(ctx) {
 
     assert(docs.length === 7, `expected the seven documents, found ${docs.length}`);
     for (const doc of docs) {
-      eq(Number(doc.drafts), 0, `${doc.slug} still has a draft, so it was not published`);
+      // One draft is expected: the privacy notice that describes the discussion
+      // boards, written on the owner's instruction of 2026-11-26 and waiting
+      // for the owner to publish it (20261281160000). Every other document has none.
+      eq(Number(doc.drafts), doc.slug === 'privacy' ? 1 : 0, `${doc.slug} drafts`);
       eq(Number(doc.live), 1, `${doc.slug} live versions`);
       // Seven published on 2026-10-28; the refunds policy was republished on
       // 2026-11-01 when the owner decided the withdrawal waiver, and a correction
