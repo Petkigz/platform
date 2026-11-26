@@ -1060,18 +1060,32 @@ which is why it goes in before anybody saves anything.
 The repository is an npm workspace: the lockfile and the build both live at the
 root, and the app itself is in `web/`.
 
-On Vercel → **New Project** → import the repository → set:
+`web/vercel.json` carries the framework, the install command (`cd .. && npm
+ci`) and the build command (`cd .. && npm run build`), and `web/package.json`
+asks for Node 22, the version the tests run on. The two `cd ..`s are the
+workspace. So only three things are set by hand on Vercel, and the order
+matters because **the repository's default branch, `main`, holds only the
+first commit and has no `web/` folder**: Vercel builds `main` on import, and
+that first build is expected to fail or to publish an empty page.
 
-- **Root Directory:** `web`
-- **Install Command:** `cd .. && npm ci`
-- **Build Command:** `cd .. && npm run build`
-- **Output Directory:** leave default
+1. vercel.com → **Add New… → Project** → **Import** `Petkigz/platform` (if the
+   repository is not listed: "Adjust GitHub App Permissions" and allow it).
+   Press **Deploy** without changing anything. Ignore the result of this
+   first build.
+2. In the new project → **Settings → Build and Deployment → Root
+   Directory**: type `web`, save. Leave "Include files outside the root
+   directory in the Build Step" on. Leave every command override off.
+3. **Settings → Environments → Production → Branch Tracking**: set the
+   branch to `arena/4f30fd1d-platform`, save.
+4. **Settings → Environment Variables**: the list in 4.1, for Production and
+   Preview. To begin, the three Supabase ones and `OFFLINE_VAULT_SECRET`.
+5. **Deployments** → the newest deployment of `arena/4f30fd1d-platform` → ⋯ →
+   **Redeploy** (or wait for the next push to the branch).
 
-The two `cd ..`s are the workspace. If the build fails with "no such file:
-package-lock.json", the install command is the one that is wrong.
-
-Leave **Framework Preset** on Next.js, and do not override the output directory:
-`next build` writes `.next` inside `web/`, and the preset expects exactly that.
+If the build fails with "no such file: package-lock.json", the root
+directory or the install command is the one that is wrong. Do not override
+the output directory: `next build` writes `.next` inside `web/`, and the
+preset expects exactly that.
 
 Build locally first if you want to find a problem before Vercel does:
 
