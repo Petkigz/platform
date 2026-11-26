@@ -1467,7 +1467,7 @@ commit `fbf6341` must not be deployed to it, because it knows eight kinds
 of notification and the database now has nine. The next migration needs a
 job of its own, as each of these did.
 
-The existing Supabase test project has the first 358 of the tree's 365 migrations applied
+The existing Supabase test project has the first 358 of the tree's 368 migrations applied
 (the 358th, `20261281151000_teaching_answer_told.sql`, by run
 `45465390298`, approved by the owner on 2026-11-25; the 353rd, `20261281146000_merge_request_privacy.sql`, and the 354th,
 `20261281147000_sponsorship_checkout.sql`, each by a job of its own on

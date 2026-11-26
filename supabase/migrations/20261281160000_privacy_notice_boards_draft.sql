@@ -76,9 +76,9 @@ On the discussion boards, other members see your username and whether you are a 
 
 There are two: one for students who have a paid class and for teachers, and one for teachers only. You write there under a username, not under your name.
 
-What you write there is kept, with no time limit. A post comes off the board when you take it back, when a moderator takes it down, or when you close your account. Other members then no longer see it, and the words stay in the platform's record. When you close your account they stay without your name, your account or your username attached to them. Taking a post off the board does not erase it from the record, and the platform gives nobody a way to erase it.
+What you write there is kept, with no time limit. A post comes off the board when you take it back, when a moderator takes it down, or when you close your account. Neither you nor other members then see it, and the words stay in the platform's record. When you close your account they stay without your name, your account or your username attached to them. Taking a post off the board does not erase it from the record, and the platform gives nobody a way to erase it.
 
-The platform's owner and its governance staff moderate the boards. They can read a post that has come off the board, and they can find out which account wrote a post when it has been reported or when somebody may be in danger. Each time they write down a reason first, and the reason is recorded against their own account. Teachers, support staff and other staff can do neither.
+The platform's owner and its governance staff moderate the boards. They can still read a post that you took back or that a moderator took down. To read what a closed account wrote, or to find out which account wrote a post, they write down a reason first, and the reason is recorded against their own account; they find out who wrote a post only when it has been reported or when somebody may be in danger. Teachers, support staff and other staff can do none of this.
 
 This is done so that somebody who is threatened, bullied or misled on a board can be protected, and so that taking a post back does not remove the record of what was said.
 

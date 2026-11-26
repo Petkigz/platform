@@ -214,6 +214,114 @@ export async function run(ctx) {
         assert(row.preconditions.includes('publish a privacy notice that says posts are kept'), row.key);
       }
     });
+
+    await test('a post taken back or taken down is off the board for its writer too, and its words stay in the record', async () => {
+      const writer = await student('Kept Writer');
+      const reader = await student('Kept Reader');
+      await name(writer, 'off_writer');
+      await name(reader, 'off_reader');
+      const mine = await start(writer, 'OFF-TITLE taken back', 'OFF-BODY taken back');
+      const theirs2 = await start(reader, 'A thread with a reply', 'A body.');
+      const unkind = await reply(writer, theirs2.threadId, 'OFF-REPLY taken down');
+      const regret = await reply(writer, theirs2.threadId, 'OFF-REPLY taken back');
+
+      // Only the writer takes a post back; only a moderator takes one down.
+      await rejects(() => call(reader, 'withdraw_board_post($1,$2)', [mine.threadId, null]), /^board:not_found$/);
+      for (const who of [reader, teacher, support, writer]) {
+        await rejects(() => call(who, 'moderate_board_post($1,$2,$3,$4)', [theirs2.threadId, unkind.replyId, true, 'Not theirs to take down.']), /^board:not_allowed$/);
+      }
+
+      await call(writer, 'withdraw_board_post($1,$2)', [mine.threadId, null]);
+      await call(writer, 'withdraw_board_post($1,$2)', [theirs2.threadId, regret.replyId]);
+      await call(governance, 'moderate_board_post($1,$2,$3,$4)', [theirs2.threadId, unkind.replyId, true, 'Unkind to another learner.']);
+
+      // Off the board, for the one who wrote it as for anybody else.
+      for (const who of [reader, writer]) {
+        await rejects(() => open(who, mine.threadId), /^board:not_found$/);
+        const seen = await open(who, theirs2.threadId);
+        assert(!JSON.stringify(seen).includes('OFF-REPLY') && !JSON.stringify(seen).includes('off_writer'),
+          `a reply that is gone is still shown: ${JSON.stringify(seen.replies)}`);
+        // Each keeps its place and says only that it is gone.
+        assert(seen.replies.length === 2 && seen.replies.map((r) => r.state).sort().join() === 'removed,withdrawn');
+        for (const gone of seen.replies) {
+          assert(JSON.stringify(Object.keys(gone).sort()) === JSON.stringify(['createdAt', 'id', 'mine', 'state']), JSON.stringify(gone));
+        }
+      }
+      // The moderators still read it where it was.
+      for (const who of [governance, admin]) {
+        const thread = await open(who, mine.threadId);
+        assert(thread.thread.state === 'withdrawn' && thread.thread.body === 'OFF-BODY taken back', JSON.stringify(thread.thread));
+        const seen = await open(who, theirs2.threadId);
+        assert(seen.replies.map((r) => r.body).sort().join('|') === 'OFF-REPLY taken back|OFF-REPLY taken down', JSON.stringify(seen.replies));
+      }
+      // Nobody else on the staff does.
+      for (const who of [teacher, support]) {
+        await rejects(() => open(who, mine.threadId), /^board:/);
+      }
+
+      // In the record: the words are in the rows they were written to.
+      const rows = (await q(
+        `select (select body from public.board_threads where id = $1) thread,
+                (select state from public.board_threads where id = $1) thread_state,
+                (select body from public.board_replies where id = $2) reply,
+                (select state from public.board_replies where id = $2) reply_state,
+                (select body from public.board_replies where id = $3) regret,
+                (select state from public.board_replies where id = $3) regret_state`, [mine.threadId, unkind.replyId, regret.replyId])).rows[0];
+      assert(rows.thread === 'OFF-BODY taken back' && rows.thread_state === 'withdrawn', JSON.stringify(rows));
+      assert(rows.reply === 'OFF-REPLY taken down' && rows.reply_state === 'removed', JSON.stringify(rows));
+      assert(rows.regret === 'OFF-REPLY taken back' && rows.regret_state === 'withdrawn', JSON.stringify(rows));
+
+      // And after the writer closes the account the words are still held, without the account:
+      // read with a reason, written down.
+      await call(writer, 'erase_my_account($1)', ['Kept Writer']);
+      const after = await kept(admin, mine.threadId, null, 'Reading it again after the account closed.');
+      assert(after.body === 'OFF-BODY taken back' && after.title === 'OFF-TITLE taken back', JSON.stringify(after));
+      const later = await kept(governance, theirs2.threadId, unkind.replyId, 'Reading it again after the account closed.');
+      assert(later.body === 'OFF-REPLY taken down', JSON.stringify(later));
+      const last = await kept(governance, theirs2.threadId, regret.replyId, 'Reading it again after the account closed.');
+      assert(last.body === 'OFF-REPLY taken back', JSON.stringify(last));
+      for (const answer of [after, later, last]) {
+        assert(!JSON.stringify(answer).includes(writer) && !JSON.stringify(answer).includes('off_writer'));
+      }
+    });
+
+    await test('nothing deletes a board post: no signed-in role may, and no function does', async () => {
+      const tables = ['board_threads', 'board_replies', 'board_kept_words', 'board_reports'];
+      for (const table of tables) {
+        for (const role of ['anon', 'authenticated']) {
+          for (const right of ['DELETE', 'TRUNCATE', 'UPDATE', 'INSERT']) {
+            const has = (await q(`select has_table_privilege($1, $2, $3) as yes`, [role, `public.${table}`, right])).rows[0].yes;
+            assert(has === false, `${role} may ${right} public.${table}`);
+          }
+        }
+      }
+      // No function in the database deletes from the tables that hold what was written.
+      const deleting = (await q(
+        `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+          where n.nspname = 'public'
+            and p.prosrc ~* 'delete\s+from\s+(public\.)?(board_threads|board_replies|board_kept_words)\M'`)).rows.map((r) => r.proname);
+      assert(deleting.length === 0, `these functions delete board posts: ${deleting.join(', ')}`);
+      // Nor does anything remove them when something else goes: the only cascade is a reply or a report with its thread, and no thread is ever deleted.
+      const cascades = (await q(
+        `select conrelid::regclass::text as child, confrelid::regclass::text as parent
+           from pg_constraint
+          where contype = 'f' and confdeltype = 'c'
+            and conrelid::regclass::text in ('board_threads','board_replies','board_kept_words','public.board_threads','public.board_replies','public.board_kept_words')
+          order by 1, 2`)).rows.map((r) => `${r.child.replace('public.', '')}>${r.parent.replace('public.', '')}`);
+      assert(JSON.stringify(cascades) === JSON.stringify(['board_replies>board_threads']), `cascades: ${cascades.join(', ')}`);
+    });
+
+    await test('both switches say there is no time limit and that the draft notice has to be published', async () => {
+      const rows = (await q(
+        `select key, preconditions from public.platform_settings
+          where key in ('community.student_board','community.teacher_board') order by key`)).rows;
+      assert(rows.length === 2);
+      for (const row of rows) {
+        assert(row.preconditions.includes('board posts are kept with no time limit'), row.key);
+        assert(row.preconditions.includes('in the policy register as a draft (version 3)'), row.key);
+        assert(row.preconditions.split('board posts are kept with no time limit').length === 2, 'said twice');
+      }
+    });
   } finally {
     await q('rollback');
   }

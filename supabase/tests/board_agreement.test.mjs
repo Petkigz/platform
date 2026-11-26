@@ -185,7 +185,8 @@ export async function run(ctx) {
       await reply(person, made.threadId, 'After agreeing to the new one.');
       // And their own post can still be taken back, as it could before they agreed again.
       await call(person, 'withdraw_board_post($1,$2)', [made.threadId, null]);
-      assert((await open(person, made.threadId)).thread.state === 'withdrawn');
+      await rejects(() => open(person, made.threadId), /^board:not_found$/);
+      assert((await q(`select state from public.board_threads where id = $1`, [made.threadId])).rows[0].state === 'withdrawn');
 
       // Somebody new is asked for the terms and the new notice, never the old.
       const fresh = (await mine(other)).agreements;

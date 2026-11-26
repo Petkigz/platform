@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-365 files in `supabase/migrations/`, applied in filename order — the 14-digit
+368 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -410,19 +410,22 @@ above could apply neither: it applies exactly the ten it was reviewed for
 and refuses a tree with more. The next migration needs a job of its own in
 the same way. Two more went that way on 2026-11-24, in one job (the 355th
 and 356th, below), and the 357th by a job of its own the same day. The
-hosted project is at 358 since 2026-11-25. This tree has 365. The 358th,
+hosted project is at 358 since 2026-11-25. This tree has 368. The 358th,
 `20261281151000_teaching_answer_told.sql`, went by a job of its own (below);
 the owner asked for it on 2026-11-24 and approved the run on 2026-11-25.
 Because the branch by then held more migrations, that job checked out the
 commit it was reviewed at (`fbf6341`, which ends at that file) and applied
-from that tree. The 359th to the 365th
+from that tree. The 359th to the 368th
 (`20261281152000_refunds_policy_plan_given_back.sql`,
 `20261281153000_discussion_boards.sql`,
 `20261281154000_translate_button.sql`,
 `20261281155000_child_login_from_twelve.sql`,
 `20261281156000_board_reports_owner_told_export_says.sql`,
-`20261281157000_board_agreement_first.sql` and
-`20261281158000_board_words_kept_owner_told.sql`) have **no job yet**, and
+`20261281157000_board_agreement_first.sql`,
+`20261281158000_board_words_kept_owner_told.sql`,
+`20261281159000_owner_alert_email.sql`,
+`20261281160000_privacy_notice_boards_draft.sql` and
+`20261281161000_board_post_off_the_board_kept.sql`) have **no job yet**, and
 none has been asked for. The 358th has gone, so a job for them can now be
 written against an exact history of 358; it has not been.
 
@@ -1628,6 +1631,27 @@ state require individual review; the release neither scans nor verifies storage
 objects and does not release safeguarding holds. Test these controls and the
 `media_assets` trigger on a non-production deployment before relying on them.
 
+
+### The owner's email alert for a reported board post (`20261281159000`)
+
+When a post on a discussion board is reported, an alert is queued for each
+account holding `platform_admin`, in a private register (`owner_alerts`) that
+no signed-in account reads. Nothing is sent until all of these are true:
+`delivery.notifications` is on; the server has `SUPABASE_SERVICE_ROLE_KEY`,
+`RESEND_API_KEY`, `EMAIL_FROM` and `CRON_SECRET`; the sender domain is verified
+with the provider; the owner's own email address is confirmed in Supabase
+Auth; and a scheduler sends a POST to `/api/cron/owner-alert` with
+`Authorization: Bearer <CRON_SECRET>`. Set `NEXT_PUBLIC_SITE_URL` if the email
+is to carry the address of the desk; without it the email says to sign in and
+open `/admin/boards`. Each request handles at most one alert, and an owner is
+sent at most one every fifteen minutes however many posts are reported. The
+email says that a post was reported and where the desk is; it carries no
+words of the post, no name and no identifier. The scheduler's answer is
+`{ok: true}` with HTTP 200 whatever the queue held, and HTTP 503 only when the
+email provider is not configured; monitor for the 503. An alert whose report
+has been dealt with before its turn, or whose reader is no longer the owner,
+is dropped unsent. The owner reads how their own alerts stand on
+`/admin/boards`. This route has never been called against a real provider.
 
 ### Private safeguarding alerts (migration 790)
 

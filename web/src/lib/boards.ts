@@ -300,7 +300,7 @@ export type Reply = {
   state: PostState;
   createdAt: string;
   mine: boolean;
-  /** Absent when the reply is gone and this reader is neither its author nor staff. */
+  /** Absent when the reply is gone, unless this reader moderates the boards (its author no longer sees it either). */
   handle: string | null;
   kind: AuthorKind | null;
   body: string | null;

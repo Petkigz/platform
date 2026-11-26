@@ -324,8 +324,9 @@ export async function run(ctx) {
       assert(seen.replies.length === 2 && seen.replies[0].state === 'withdrawn' && seen.replies[0].body === undefined && seen.replies[0].handle === undefined,
         `a reply taken back still said something: ${JSON.stringify(seen.replies[0])}`);
       assert(!JSON.stringify(seen).includes('SECRET-WORDS'));
-      // Its author still sees it, marked.
-      assert((await open(b.userId, made.threadId)).replies[0].body === 'SECRET-WORDS I regret');
+      // Its author sees what everybody sees (20261281161000): it is off the board for them too.
+      const own = (await open(b.userId, made.threadId)).replies[0];
+      assert(own.state === 'withdrawn' && own.body === undefined && own.handle === undefined, JSON.stringify(own));
       assert((await list(a.userId, 'students')).threads.find((t) => t.id === made.threadId).replies === 1);
       // Twice is once.
       await takeBack(b.userId, made.threadId, r1.replyId);
@@ -336,7 +337,8 @@ export async function run(ctx) {
       assert(!(await list(b.userId, 'students')).threads.some((t) => t.id === made.threadId));
       await rejects(() => open(b.userId, made.threadId), /board:not_found/);
       await rejects(() => reply(b.userId, made.threadId, 'too late'), /board:not_found/);
-      assert((await open(a.userId, made.threadId)).thread.state === 'withdrawn');
+      await rejects(() => open(a.userId, made.threadId), /board:not_found/);
+      assert((await q(`select state from public.board_threads where id=$1`, [made.threadId])).rows[0].state === 'withdrawn');
       assert((await q(`select count(*)::int n from public.board_replies where thread_id=$1`, [made.threadId])).rows[0].n === 2, 'taking back deleted something');
     });
 

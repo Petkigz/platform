@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 365 migrations and 179 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 368 migrations and 181 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -3247,7 +3247,7 @@ memory of it, starts from the repository and not from a conversation.
 - *State.* Everything is committed and pushed on
   `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
   off. No application has been deployed anywhere. The test project's
-  database has the first 358 of the tree's 365 migrations; the last seven
+  database has the first 358 of the tree's 368 migrations; the last ten
   have no job and none was asked for (`docs/deploy/README.md`).
 - *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
   were working folders and were never committed; they are ignored now.
@@ -3431,6 +3431,81 @@ memory of it, starts from the repository and not from a conversation.
   kept post is deleted. The boards smoke's browser part was not run with
   the box. `board_reported` has no sentence in the catalogue. Nothing for
   migrations 359 to 365 on the hosted database, and both boards stay off.
+
+### The privacy notice draft and the law, 2026-11-26
+
+- *What the owner said.* Draft a new privacy notice; keep the records and
+  let the notice say so; posts are kept infinitely and "can only be deleted
+  by the moderator and the person who posted them"; build the email alert.
+  Asked what deleting means: off the board, record kept. `DECISIONS.md` has
+  the entry.
+- *Migration 366,* `20261281159000_owner_alert_email.sql`, with
+  `web/src/lib/owner-alert.ts` and `/api/cron/owner-alert`. A report queues
+  one alert for each `platform_admin` account except the reporter, in
+  `owner_alerts`, which no signed-in account reads and which holds nothing
+  about the post. The worker claims one, checks the owner's address is
+  confirmed, asks the database once more, sends through Resend, and settles
+  it as what happened. At most one email to an owner in fifteen minutes. An
+  alert whose reports were all dealt with first is dropped unsent. The email
+  says a post was reported and where the desk is. `/admin/boards` tells the
+  owner how their alerts stand. **Nothing is sent** until
+  `delivery.notifications` is on, Resend is set up, and a scheduler calls
+  the route (`docs/deploy/README.md`). It has never met a real provider.
+- *Migration 367,* `20261281160000_privacy_notice_boards_draft.sql`.
+  Version 3 of the privacy notice, **a draft in the register**. Version 2 is
+  still what a visitor reads and agrees to. The owner publishes the draft
+  from the policy register; every account is then asked to agree again.
+  What it adds: a section on the boards (username, kept with no time limit,
+  off the board is not erased, who reads the record, not in the download, a
+  copy only where a law requires it and a court orders it, reports reach
+  the owner); a mobile number at sign-up; the record of an agreement;
+  Google and Resend by name. What it no longer says: "download everything".
+  It is English only, like every policy.
+- *Migration 368,* `20261281161000_board_post_off_the_board_kept.sql`. A
+  post that was taken back or taken down used to stay visible, words and
+  all, to the account that wrote it. It is now off the board for its writer
+  as for everybody; the owner and governance still read it where it was.
+  Both switches' preconditions say: no time limit, and publish the draft
+  first. A suite pins that nothing deletes a board post.
+- *The law, as far as it was looked at.* Search summaries of the statutes on
+  2026-11-26, not the statutes read through, and not a lawyer's reading.
+  - **A copy only on a court order.** Uganda's Data Protection and Privacy
+    Act 2019 s.24, Kenya's Data Protection Act 2019 s.26, Nigeria's Data
+    Protection Act 2023 s.34 and GDPR Art. 15 each give a person a right to
+    be told what is held and to have it, on asking, in about a month. None
+    waits for a court. A refusal is a complaint to the regulator (in Uganda
+    the Personal Data Protection Office, s.31).
+  - **No time limit.** Each of those laws says personal data is kept no
+    longer than its purpose needs (Uganda s.18, Kenya s.39, GDPR
+    Art. 5(1)(e)). Kenya s.39 lets a person consent to longer; the others
+    read here do not say so. For a child under 13 in the United States, 16
+    CFR 312.10 says the information "may not be retained indefinitely" and
+    wants a written period in the notice.
+  - **Hidden, not erased.** Uganda s.16, GDPR Art. 17 and Nigeria s.34 let
+    a person ask for erasure once there is no ground left to keep the data.
+    Keeping what a particular claim or complaint needs is allowed; keeping
+    everything in case is not what those exceptions say. Kenya s.40(3)
+    allows restricting in place of erasing where the data is evidence, and
+    the person is told.
+  - **Children.** Uganda s.8 wants a parent's or guardian's consent before a
+    child's data is collected. A child reaches the students' board from
+    twelve; guardian verification gates enrolment, and nothing asks the
+    guardian about the board in particular.
+  - **The box.** It records that somebody agreed to the notice. It does not
+    waive a right the law gives, and a notice that says "no copy" does not
+    make a refusal lawful.
+  - South Africa was searched for and nothing came back.
+- *What follows.* The draft says what the owner decided, because a notice
+  has to describe what is done. Somebody qualified should read it before it
+  is published and before either board is turned on. Shorter roads if the
+  advice is against it: give a copy of their own posts to a member who asks
+  (the words are there and the account is known while it is open); set a
+  period for what is kept after an account closes.
+- *Not done.* The draft was not published. No translation of it. No page
+  for `board_kept_post()`: what a closed account wrote can be read only by
+  calling the function. The email route was not called against Resend, and
+  no scheduler exists. Nothing for migrations 359 to 368 on the hosted
+  database. Both boards stay off.
 
 ### Numbers and dates from a table, 2026-11-25
 

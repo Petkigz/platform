@@ -30,8 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ board: st
  *
  * **A reply that was taken back or taken down keeps its place** and says
  * only that: the replies after it still make sense, and neither its words
- * nor its username are in what the database sent. Its author still sees
- * their own, marked.
+ * nor its username are in what the database sent. That is so for its
+ * author too since 20261281161000: a post that was taken back or taken down
+ * is off the board for the one who wrote it. Only the owner and governance
+ * still read it here.
  *
  * Under each post there is one action: take it back if it is yours, report
  * it if it is not.

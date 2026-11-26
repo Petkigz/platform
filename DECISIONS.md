@@ -10266,3 +10266,46 @@ The privacy notice in force says the download holds "everything held about
 you" and that a request for a copy "will be honoured"; both are untrue of
 board posts, and a new version is the owner's to publish.
 
+## Board posts: no time limit, off the board is not erased, an email to the owner, a notice in draft — **DECIDED 2026-11-26**
+
+The owner, after the report on the five answers: draft a new privacy notice
+("I do not see any issue as nothing is live and there are no accounts"); yes
+to keeping the records with the notice saying so; "posts are kept
+infinitely. They can only be deleted by the moderator and the person who
+posted them"; build the private email alert. Asked what "deleted" means, the
+owner chose *off the board, record kept* over *truly erased* and *erased
+unless reported*.
+
+What was built on it:
+
+- **No time limit, and nothing erases.** Nothing in the database deletes a
+  board post and no signed-in role may; a suite pins it. Taking a post back
+  (its writer) or down (the owner or governance) changes its state and
+  leaves the words. From migration 368 a post that is off the board is off
+  it for its writer too. The moderators still read it where it was; what a
+  closed account wrote is read with a written reason, audited.
+- **The email alert** (migration 366): a private register, one alert per
+  owner, at most one email in fifteen minutes, no words of the post and no
+  name in it. It sends nothing until email is switched on and set up.
+- **The notice** (migration 367): version 3 of the privacy notice, in the
+  policy register as a **draft**. Version 2 stays in force until the owner
+  publishes the draft. It says what the platform does, including the three
+  things below.
+
+**What the builder told the owner, and the owner has not yet answered.** Read
+from summaries of the laws, not by a lawyer: (1) a copy "only where a court
+orders it" is not how the right of access works in Uganda (s.24), Kenya
+(s.26), Nigeria (s.34) or under the GDPR (Art. 15): a person asks and is
+answered, within about a month, with no court; (2) keeping with no time limit
+is against the storage-limitation rule in each of those, and the US children's
+rule (16 CFR 312.10) says a child's information "may not be retained
+indefinitely"; (3) hiding in place of erasing does not meet a request to
+erase. A notice that states these does not make them lawful, and a ticked
+box does not waive a right the law gives. The builder's advice: have
+somebody qualified read the draft before it is published and before a board
+is turned on. Both switches' preconditions say so.
+
+Not decided by anybody: a parent's consent for a child's board posts (Uganda
+s.8) beyond the guardian verification that already gates a child's
+enrolment.
+
