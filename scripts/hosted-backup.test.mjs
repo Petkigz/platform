@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
-import { BEFORE_RESTORE, describeDump, differences, measure, safeErrors } from './hosted-backup.mjs';
+import { BEFORE_RESTORE, describeDump, differences, leftOutRows, measure, safeErrors } from './hosted-backup.mjs';
 
 const SCHEMA = `
   create table public.courses (id int primary key, title text not null, made timestamptz not null);
@@ -125,4 +125,16 @@ test('the defaults are taken away before the schema goes back', () => {
   for (const kind of ['TABLES', 'FUNCTIONS', 'SEQUENCES']) {
     assert.ok(statements.includes(`ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON ${kind} FROM anon, authenticated;`), kind);
   }
+});
+
+test('tables left out of the copy are counted, and rows in one are said', async () => {
+  const db = await database();
+  await db.exec(`create schema storage; create table storage.objects (id int); create table storage.migrations (id int);
+    insert into storage.migrations values (1), (2)`);
+  const empty = await measure(db);
+  assert.deepEqual(empty.leftOut, { 'storage.migrations': 2, 'storage.objects': 0 });
+  assert.deepEqual(leftOutRows(empty), [], 'Supabase\'s own list of migrations is not the platform\'s data');
+  await db.exec('insert into storage.objects values (1)');
+  assert.deepEqual(leftOutRows(await measure(db)), ['storage.objects (1 rows)']);
+  assert.deepEqual(leftOutRows({}), []);
 });

@@ -66,6 +66,19 @@ const TABLES = `select n.nspname as schema, c.relname as name
   where c.relkind in ('r', 'p') and (n.nspname = 'public' or (n.nspname = 'auth' and c.relname in ('users', 'identities')))
   order by 1, 2`;
 
+const LEFT_OUT = `select n.nspname as schema, c.relname as name
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where c.relkind in ('r', 'p') and n.nspname in ('storage', 'supabase_functions')
+  order by 1, 2`;
+
+// Rows in a table the copy leaves out, other than the two lists of Supabase's
+// own migrations. Empty for this platform; if it is ever not, the copy is
+// missing something and has to say so.
+export function leftOutRows(measured) {
+  return Object.entries(measured.leftOut ?? {}).filter(([name, rows]) => !name.endsWith('.migrations') && rows !== 0)
+    .map(([name, rows]) => `${name} (${rows === null ? 'could not be counted' : `${rows} rows`})`);
+}
+
 const SHAPE = `select
   (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p'))::int as tables,
   (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('v', 'm'))::int as views,
@@ -104,10 +117,23 @@ export async function measure(client) {
     }
     const { rows: [shape] } = await client.query(SHAPE);
     const { rows: [{ version }] } = await client.query(`select current_setting('server_version') as version`);
+    // Tables the copy leaves out: Supabase's own file storage and database
+    // webhooks. The platform keeps its files in object storage elsewhere and
+    // never writes here, and the database's owner may not write some of these
+    // tables at all, so a copy that held them could not be put back.
+    const leftOut = {};
+    for (const { schema, name } of (await client.query(LEFT_OUT)).rows) {
+      let count = null;
+      try {
+        await client.query('savepoint left_out');
+        count = Number((await client.query(`select count(*)::text as rows from ${quote(schema)}.${quote(name)}`)).rows[0].rows);
+      } catch { await client.query('rollback to savepoint left_out'); }
+      leftOut[`${schema}.${name}`] = count;
+    }
     let history = null;
     const { rows: [{ present }] } = await client.query(`select to_regclass('supabase_migrations.schema_migrations') is not null as present`);
     if (present) history = (await client.query('select version, name from supabase_migrations.schema_migrations order by version')).rows.map((r) => `${r.version}_${r.name}`);
-    return { version, shape, tables, sequences, history };
+    return { version, shape, tables, sequences, history, leftOut };
   } finally { await client.query('rollback'); }
 }
 
@@ -240,7 +266,9 @@ async function copy(env, { say, fail }) {
   // The copy. The CLI's output is never shown when the source is the project: it can hold the address.
   const cli = env.SUPABASE_CLI_BIN || 'supabase';
   const files = { roles: `${dir}/roles.sql`, schema: `${dir}/schema.sql`, data: `${dir}/data.sql` };
-  for (const [what, extra] of [['roles', ['--role-only']], ['schema', []], ['data', ['--data-only', '--use-copy']]]) {
+  const excluded = Object.keys(measured.leftOut);
+  const dataFlags = ['--data-only', '--use-copy', ...(excluded.length ? ['--exclude', excluded.join(',')] : [])];
+  for (const [what, extra] of [['roles', ['--role-only']], ['schema', []], ['data', dataFlags]]) {
     const result = await run(cli, ['db', 'dump', ...dumpTarget, '--file', files[what], ...extra], { cwd });
     let size = 0; try { size = statSync(files[what]).size; } catch { /* reported below */ }
     if (result.code !== 0 || size === 0) {
@@ -252,6 +280,13 @@ async function copy(env, { say, fail }) {
   const held = { roles: await describeDump(files.roles), schema: await describeDump(files.schema), data: await describeDump(files.data) };
   const copied = Object.entries(held.data.copies).map(([schema, count]) => `${count} in ${schema}`).join(', ') || 'none';
   say(`The copy: schema ${held.schema.bytes} bytes (${held.schema.tables} tables, ${held.schema.functions} functions, ${held.schema.policies} policies); data ${held.data.bytes} bytes (tables copied: ${copied}); roles ${held.roles.bytes} bytes (${held.roles.roles} roles of the project's own).`);
+  const stray = leftOutRows(measured);
+  say(stray.length
+    ? `NOT IN THE COPY, and holding rows: ${stray.join(', ')}. The copy leaves out Supabase's own file storage and webhooks; something has started using them, and this job has to be changed before the copy can be called complete.`
+    : `Left out on purpose: ${excluded.length} tables of Supabase's own file storage and database webhooks, which hold nothing (the platform keeps its files elsewhere).`);
+  for (const schema of Object.keys(held.data.copies)) {
+    if (schema === 'storage' || schema === 'supabase_functions') return fail(`Stopped: the data file still holds tables from ${schema}, which were to be left out.`);
+  }
   if (held.schema.tables < measured.shape.tables) return fail(`Stopped: the schema file creates ${held.schema.tables} tables and there are ${measured.shape.tables} in public. The copy is not complete.`);
   writeFileSync(`${dir}/measure.json`, JSON.stringify({ source: source.kind, takenAt: new Date().toISOString(), measured, privileges }));
   return true;
