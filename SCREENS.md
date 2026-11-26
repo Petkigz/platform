@@ -248,6 +248,7 @@ forty-four beneath it (measured 2026-11-02; the line said forty-three).
 | Numbered screen IDs | **50**, plus 19a, 19b, 20a, 20b, 20c, 31a, 31b, 31c, 31d, 33b, 35a, 35b, 35c, 35d, 35e, 35f, 35g, 35h and 43b — **69 rows** |
 | Routed | **138 page routes**, every one of them a screen somebody can be sent to. The line here said *121 page routes … three are not screens (`/_not-found`, `/sign-out`, `/auth/confirm`), so 118 are routed* — and both halves were wrong, in the ways the note below sets out |
 | Built but never inventoried | **70** route rows in section 11 — four were added on 2026-11-02 by the reconciliation below. The line said 50 while the section held 66 |
+| Drawn in a browser other than Chromium | **6** *(2026-11-26)*: `/progress`, `/certificates`, `/handover`, `/family/guardians`, `/verify` (and `/verify/[number]`) and `/admin/connections`, in Chrome, Firefox and WebKit, by `scripts/drawn-pages-smoke.mjs` against a stand-in Supabase. Every other route has only ever been drawn in Chromium. The drawings found `/family/guardians` 549 wide at 320 and `/progress` and `/verify/[number]` off the side for an unbreakable title; all three were fixed |
 | Ready to design now | **1** |
 | Blocked | **4** |
 

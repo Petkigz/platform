@@ -3579,9 +3579,83 @@ memory of it, starts from the repository and not from a conversation.
     in `FLAGS.md`).
   - **Never started:** recitation correction (`learning.recitation`);
     native mobile apps; push notifications.
-  - **Never checked:** any browser but Chromium; drawings of `/progress`,
-    `/certificates`, `/handover`, `/family/guardians`, `/verify` and
-    `/admin/connections` signed in; backups and a restore.
+  - **Never checked:** *(all three done later the same day; see "Drawn in
+    three browsers, a backup that restores" below)* any browser but Chromium;
+    drawings of `/progress`, `/certificates`, `/handover`,
+    `/family/guardians`, `/verify` and `/admin/connections` signed in;
+    backups and a restore.
+
+### Drawn in three browsers, a backup that restores, 2026-11-26
+
+- *What the owner said.* "Done the migration, created the Resend account.
+  Let's go to Google sign-in, media storage and sign-in emails. For the never
+  checked: draw the pages, let's test in browser and also try to set up a
+  backup and restore. Then afterwards continue with what's half done."
+- *The migration.* Run `45771990920` (359 to 368) succeeded at 11:38 UTC.
+  Read back through the connector: 368 recorded, no user, every switch off.
+  Recorded in `docs/deploy/README.md`. The 369th still has no hosted job.
+- *The six pages.* `scripts/drawn-pages-smoke.mjs` draws `/progress`,
+  `/certificates`, `/handover`, `/family/guardians`, `/verify` and
+  `/admin/connections` against a stand-in Supabase: with nothing to show and
+  with something, at 320, 390 and 1280 in English and at 390 in Arabic,
+  signed out, and as a member who is not the owner. 54 drawings. It checks
+  where each lands, the sentences, that nothing runs off the side, that the
+  console is silent and that neither a database error's text nor an
+  account's or a family's id is in the page.
+  **It passes in Chrome, Firefox and WebKit** (job `drawn` of the responsive
+  workflow, run `45819845580`): the first time anything here has been drawn
+  in a browser that is not Chromium. Firefox and WebKit are Playwright's
+  builds on Ubuntu 24.04; that Playwright does not support Ubuntu 26.04.
+- *What the drawings showed, and was fixed.*
+  - `/family/guardians` was 549 wide in a 320 window. The consent rows were
+    flex rows, so the name, the mark and each sentence stood side by side.
+    They are stacked now.
+  - The same page read "…How it is confirmed: A video call It lapses on…":
+    the method line has no full stop in any language. Each sentence is on its
+    own line.
+  - `/progress` (870 wide) and `/verify/<number>` (765 wide) ran off the side
+    for a course title with no place to break. Both break it now.
+- *What the drawings showed, and was left.* `/verify/<number>` and
+  `/certificates` show the course's language as its code ("ar"), not its
+  name. A badge whose unit the page does not know is counted in lessons.
+- *What the drawings are not.* Real Auth, row-level security or the database
+  functions: the stand-in answers whatever it is told to.
+- *The backup.* `scripts/hosted-backup.mjs` and two workflows; section 12 of
+  `docs/deploy/README.md` is the whole account. The drill (run `45835315132`)
+  copied a database built from the 369 migrations, emptied it, put the copy
+  back and found 194 tables, 480 rows and 1,477 privileges the same, then
+  noticed a deleted row and a privilege handed to `anon`. **The run against
+  the project itself waits for the owner's approval**, and keeps nothing
+  until the secret `AYAHSPRING_BACKUP_PASSPHRASE` exists.
+- *The three connections.* None is connected, and each for a reason outside
+  the code:
+  - **The app is not deployed.** The owner said yes to Vercel. The Vercel
+    connection in this workspace can read and cannot create: `create_project`
+    answered "Access denied" twice (with and without the repository), and no
+    project exists. Either the owner imports the repository by hand (section
+    4.2: root `web`, install `cd .. && npm ci`, build `cd .. && npm run
+    build`, two public variables) or reconnects Vercel with write access.
+    Until there is an address, Supabase's site address stays
+    `http://localhost:3000`, and Google and R2 have nothing to be told.
+  - **Sign-in emails need a domain the owner does not have yet.** Resend's
+    own guide for Supabase lists a verified domain as a prerequisite
+    (smtp.resend.com, port 465, user `resend`, the API key as password).
+    Without one, Resend sends only to the account's own address, and
+    Supabase's built-in mailer only to the project's own members, two an
+    hour. So: no sign-in email to a stranger until a domain is bought and
+    verified. That is the same domain the name's clearance is waiting on.
+  - **Google sign-in** needs an OAuth client the owner has not made yet; the
+    one address Google must be given is
+    `https://glhxtsgrhhvtbsnlxgxu.supabase.co/auth/v1/callback`, which does
+    not depend on the deployment. The code is finished.
+  - **Media storage** needs R2 switched on in the owner's Cloudflare account
+    (it asks for a card), then two buckets, a token and a CORS rule naming
+    the deployed address.
+- *Said to the owner, because it happened.* Listing the project's API keys
+  to get the public one also returned the service-role key to this session.
+  It was written nowhere and used for nothing.
+- *Not done this turn.* The hosted job for the 369th; everything on the
+  half-done list above.
 
 ### The hosted job for 359 to 368, and the Resend probe, 2026-11-26
 

@@ -427,13 +427,13 @@ from that tree. The 359th to the 368th
 `20261281160000_privacy_notice_boards_draft.sql` and
 `20261281161000_board_post_off_the_board_kept.sql`) have a job since
 2026-11-26, when the owner asked for one: see "The 359th to the 368th" below.
-**It has not run.**
+**It ran on 2026-11-26** (run `45771990920`, approved by the owner, finished
+11:38 UTC): the hosted project is at 368.
 
 The 369th, `20261281162000_provider_events.sql` (what the email provider says
 about a message after accepting it, section 7.7), was added on 2026-11-26
 after that job was written. It is **not** in that job and has no hosted job
-yet. After the job for 359 to 368 the hosted database is one migration behind
-the tree; an application built from this tree and deployed against it would
+yet. The hosted database is therefore one migration behind the tree; an application built from this tree and deployed against it would
 find `/api/email/webhook` unable to record and `/admin/messages` unable to
 read the two new columns. Give the 369th a job of its own before deploying.
 
@@ -621,8 +621,18 @@ commit the job was reviewed at, so a migration added to the branch later
 does not go with it. Read through the connector on 2026-11-26 before the job
 was written: the test project records 358, ends at `20261281151000`, has no
 Auth user and no learner, and its refunds policy in force is the version the
-359th was written to follow. **Not run yet**; when it has, record the run
-here.
+359th was written to follow.
+
+**Run on 2026-11-26:** trigger commit `9c6b4e3`, run `45771990920`, job
+`apply-359-to-368`, approved by the owner, success at 11:38:15 UTC. Read back
+through the read-only connector a quarter of an hour later, separately from
+the job: the history records 368 entries and ends at `20261281161000`; there
+is no `provider_events` table (the 369th is not there); no Auth user and no
+learner; `community.student_board`, `community.teacher_board`,
+`delivery.notifications`, `family.child_login` and `platform.email_auth` are
+all off; the privacy notice in force is version 2 with version 3 a draft; the
+refunds policy in force is version 3. The job is spent: never run it again,
+and never push its trigger prefix again.
 
 **The 358th went first, so the order below can no longer be kept on the
 test project.** No application has been deployed there, so nothing is
@@ -1522,18 +1532,120 @@ A deployment is finished when all of these are true, in this order:
 
 ## 12. Backups, and what free does not include
 
-The free tier has **no backups**. That is the one real risk of starting free, and
-it is handled by a habit rather than a service:
+The free tier has **no backups**: no daily copy, no point in time to go back
+to. If the project is deleted, corrupted by a bad statement or lost with the
+account, there is nothing of Supabase's to restore from. The copy is this
+repository's own job.
+
+### 12.1 What the job does
+
+`scripts/hosted-backup.mjs`, run by the workflow "Back up the Supabase test
+project and rehearse a restore" (`.github/workflows/supabase-test-backup.yml`):
+
+1. reads the project inside one READ ONLY transaction and takes its measure:
+   for every table in `public`, and for `auth.users` and `auth.identities`,
+   the number of rows and a fingerprint of them; the sequences; how many
+   functions, policies, triggers, indexes and constraints there are; every
+   privilege `anon` and `authenticated` hold; the migration history;
+2. has the Supabase CLI write three files (roles, schema, data), which is the
+   method Supabase documents;
+3. puts the three into an **empty scratch database on the runner** (a local
+   Supabase stack of the same PostgreSQL major version that has never seen the
+   project), in one transaction, after taking away the defaults a fresh
+   Supabase database would otherwise hand `anon` and `authenticated`;
+4. measures the scratch database the same way and compares. A table with a
+   different number of rows, or the same number and different rows, is named.
+   So is any privilege the two API roles hold on one side and not the other;
+5. only then, and only if the environment holds the secret
+   `AYAHSPRING_BACKUP_PASSPHRASE` (twenty characters or more), packs the three
+   files and the measure into one archive, encrypts it (GnuPG, AES-256,
+   symmetric), decrypts it again to check it opens to the same bytes, and
+   keeps the encrypted file as the run's artifact for 90 days.
+
+It writes nothing to the project. It prints no row, no value and no address:
+this repository and its logs are public. Without the passphrase the run still
+does steps 1 to 4 and **keeps nothing**, and says so.
+
+### 12.2 Starting it
+
+- push a commit to the working branch whose message begins
+  `test: back up ayahspring test project`, or
+- Actions → the workflow → *Run workflow*, or
+- weekly (Sunday 03:17 UTC) once the repository variable
+  `AYAHSPRING_BACKUP_SCHEDULE` is `yes`. GitHub runs a schedule only from the
+  default branch, so that begins when the workflow is on `main`.
+
+Each run waits for the owner's approval, because it runs in the environment
+`ayahspring-test-dry-run`, which holds the database password. Unlike the
+migration jobs it may be run as often as wanted.
+
+To keep copies: GitHub → Settings → Environments → `ayahspring-test-dry-run`
+→ *Add environment secret* → name `AYAHSPRING_BACKUP_PASSPHRASE`, value a long
+passphrase that is also written down somewhere that is not GitHub. **Whoever
+loses the passphrase loses every copy made with it.**
+
+### 12.3 What has been tried, and what has not
+
+- **The drill** (workflow "Backup drill on a scratch database", no secret, no
+  approval): a scratch database built from this repository's 369 migrations
+  and two invented accounts was copied with the same CLI commands, thrown
+  away, started again empty and filled from the copy. Run `45835315132` on
+  2026-11-26: PostgreSQL 17.11, 194 tables, 812 functions, 282 policies, 205
+  triggers and 480 rows came back the same, with the same 1,477 privileges of
+  `anon` and `authenticated` and the same 4 defaults. A row deleted afterwards
+  and a table handed to `anon` afterwards were each noticed. The drill runs
+  again whenever a migration is added, so a migration that cannot be restored
+  is known the day it is written.
+- The first drill failed, usefully: the data held Supabase's own storage
+  tables, and the database's owner may not write one of them (`permission
+  denied for table buckets_vectors`). The copy now leaves out the `storage`
+  and `supabase_functions` schemas, counts their rows, and says so loudly if
+  one ever holds any. The platform keeps its files in R2 and uses neither.
+- **Not tried yet: a run against the project itself.** It needs the owner's
+  approval. Record the run here when it has happened.
+- **Never tried, and not possible on the free tier with two projects in use:**
+  a restore into a new *hosted* project. The scratch database is local.
+
+### 12.4 Putting a copy back for real
+
+Into a new, empty Supabase project, with its database address in `$NEW`
+(the same statements in the same order as the job's rehearsal; this exact
+command line has not been run):
 
 ```bash
-pg_dump "$DATABASE_URL" --no-owner --no-privileges -f "ayahspring-$(date +%F).sql"
+gpg --decrypt ayahspring-2026-11-26.tar.gz.gpg | tar -xz
+psql "$NEW" -v ON_ERROR_STOP=1 --single-transaction \
+  -c 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated' \
+  -c 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM anon, authenticated' \
+  -c 'ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM anon, authenticated' \
+  -f roles.sql -f schema.sql -c 'SET session_replication_role = replica' -f data.sql
 ```
 
-Weekly, onto a disk that is not the machine you deploy from. The database is 140
-tables of text; it compresses to a few megabytes. The masters in R2 are the
-expensive part and are not covered by this dump — they are the files a teacher
-already has, which is the honest answer until the platform is bigger than a free
-tier.
+The three `ALTER DEFAULT PRIVILEGES` lines come first on purpose: without
+them a fresh project gives `anon` and `authenticated` everything on each
+table as it is created, and the copy only states what differs from that.
+Then:
+
+- the migration history is **not** in the copy (the CLI leaves that table
+  out). `manifest.json` in the archive lists what was applied; mark them with
+  `supabase migration repair --status applied <version>…` before the next
+  `db push`, or the CLI will try to apply all of them again;
+- compare `manifest.json`'s row counts with the new project's;
+- set the new project's address and keys in the app's environment, and the
+  Auth settings (site address, redirect addresses, mail, Google) again by
+  hand: they belong to the project, not to the database.
+
+### 12.5 What the copy does not hold
+
+- **The media.** Masters and renditions are in R2, not in the database. They
+  are the files a teacher already has, which is the honest answer until the
+  platform is bigger than a free tier.
+- Auth settings, API keys, the database password, environment variables.
+- Supabase's own storage and webhook tables (unused; see 12.3).
+- Anything written after the copy was taken. With a weekly copy, up to a
+  week of work can be lost; that figure is the owner's to choose.
+- An artifact expires after 90 days and lives on GitHub. Download the newest
+  one from time to time and keep it on a disk of your own.
 
 ### Local quiz draft model
 
