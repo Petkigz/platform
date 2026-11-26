@@ -515,7 +515,9 @@ jobs:
   # steps so that a browser that will not install is told apart from a page
   # that will not draw.
   drawn:
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: that is Ubuntu 26.04 now, and this Playwright (1.58.2)
+    # answers "does not support firefox on ubuntu26.04-x64" there.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
