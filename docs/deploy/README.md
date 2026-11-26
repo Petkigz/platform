@@ -1222,6 +1222,42 @@ message is queued, and the dispatcher claims **nothing** while no key is set —
 deliberately, because claiming is what starts a message's five attempts and a run
 without credentials would dead-letter the whole outbox in one pass.
 
+**7.0 Before anything is deployed: ask Resend itself.** The Resend side can be
+finished and proved with no application running. `scripts/resend-probe.mjs`
+reads the settings the way the application does, asks Resend how the sender's
+domain and each of its DNS records stand, looks up the DMARC record in public
+DNS, and, only if it is given one address, sends **one** message to it through
+the application's own sender and says what the application would have
+recorded. It prints no key and no whole address.
+
+What the owner does, once:
+
+1. Make the account at resend.com and do 7.1 below (the domain and its DNS
+   records). Verification can take from minutes to a day.
+2. Resend → **API Keys** → create one with **Sending access**, limited to
+   that domain. That is the key the application gets too: it can send and do
+   nothing else.
+3. GitHub → the repository → **Settings → Secrets and variables → Actions**:
+   - secret `RESEND_API_KEY`: the key;
+   - secret `RESEND_PROBE_TO`: your own inbox, where the one test message goes
+     (leave it out and nothing is sent);
+   - variable `EMAIL_FROM`: the sender, for example
+     `no-reply@ayahspring.com`, on the domain you verified.
+   Do not send the key in a chat or put it in a file.
+4. Tell the builder. The workflow "Resend probe" runs on a commit whose
+   message begins `test: resend probe`, and leaves what it found on the run.
+
+With a sending-only key Resend will not say how the domain stands, so the
+probe judges it by the send: a message accepted from that sender is a
+verified domain. To see the records one by one before DNS has settled, use a
+**Full access** key for the probe and replace it with a sending-only one
+afterwards.
+
+The probe proves the provider's side and nothing else. For the application to
+send, the same key and sender still have to be in the application's
+environment (7.2), with the scheduler (7.5) and the switch (7.3). **Never run
+against Resend yet**: the owner has not said the account exists.
+
 **7.1** Resend → **Domains** → add `ayahspring.com`. It gives you three DNS
 records: a **DKIM** `TXT`, an **SPF** `TXT` (`v=spf1 include:…`) and a **DMARC**
 `TXT` starting at `p=none`. Add all three at your DNS host. They are free and they

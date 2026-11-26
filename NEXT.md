@@ -3509,6 +3509,42 @@ memory of it, starts from the repository and not from a conversation.
   no scheduler exists. Nothing for migrations 359 to 368 on the hosted
   database. Both boards stay off.
 
+### The hosted job for 359 to 368, and the Resend probe, 2026-11-26
+
+- *What the owner said.* "Write a hosted job for the migrations. Let's set
+  up the Resend side next." And asked where 100 000 lines had gone.
+- *The job.* `scripts/hosted-migration-368.mjs` with
+  `.github/workflows/supabase-test-368.yml`: the ten migrations after the
+  358, in one step, on the same terms as every step before it (exact
+  history, no Auth user and no learner, a rehearsal on the hosted database
+  rolled back, the two roles' privileges compared with the tested database,
+  the CLI's dry-run naming exactly the ten). The workflow checks out commit
+  `11dbb74`, which holds exactly the 368, so a later migration does not go
+  with it. Its plan is tested against the real migrations in a local engine
+  (`scripts/hosted-migration-368.test.mjs`, 5). `docs/deploy/README.md`
+  says whether it has run.
+- *The Resend probe.* `scripts/resend-probe.mjs` with
+  `.github/workflows/resend-probe.yml`: asks Resend how the sender's domain
+  stands and, given one address, sends one message through the
+  application's own sender. It needs a key only the owner can make, saved
+  as a repository secret. `docs/deploy/README.md` 7.0 has the owner's four
+  steps. **It has never met Resend**: its tests run against a stand-in
+  typed from Resend's documentation (9).
+- *What Resend being ready does not do.* Nothing is deployed, so nothing
+  calls `/api/cron/owner-alert` or `/api/cron/dispatch-messages`, and
+  `delivery.notifications` is off. The probe proves the provider and the
+  application's sender, not a delivery from the platform.
+- *The lines.* The tracked tree has only grown: 440 718 lines on
+  2026-11-20, 512 524 on 2026-11-25, 516 000 or so on 2026-11-26. Since
+  the branch began no commit has removed more than about 1 200 lines, and
+  one file has been deleted (`web/src/app/plans/plan-storefront.tsx`, 140
+  lines, replaced by two pages on 2026-11-23). What stopped being counted
+  on 2026-11-25 was the two scratch folders, `tmp-words/` and `tmp-shots/`:
+  translation drafts and screenshots that were never committed, now
+  ignored, and lost when the working machine was rolled back. Their size
+  can no longer be measured, so that they account for the whole difference
+  is likely and not proved.
+
 ### Numbers and dates from a table, 2026-11-25
 
 - *The fault.* A browser and a server each carry their own copy of how a

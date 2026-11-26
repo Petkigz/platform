@@ -1,0 +1,45 @@
+name: Resend probe
+# Whether the email provider is set up, asked of Resend itself, by hand, when
+# the owner has made a Resend account and saved its key as the repository
+# secret RESEND_API_KEY. The sender is the repository variable EMAIL_FROM (the
+# application's default when unset). If the repository secret RESEND_PROBE_TO
+# holds an address, ONE message is sent to that one address; without it
+# nothing is sent to anybody. Nothing is deployed, no database is touched, and
+# no other secret is read. See scripts/resend-probe.mjs.
+#
+# Started by a commit on the working branch whose message begins
+# "test: resend probe". GitHub shows a "Run workflow" button only for a
+# workflow on the default branch, and this file is not there, so the button
+# cannot be relied on; it is kept for the day the file is.
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: resend-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: >-
+      github.repository == 'Petkigz/platform' && (github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: resend probe')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      - name: The probe against a stand-in, before the real one
+        run: node --experimental-strip-types --test scripts/resend-probe.test.mjs
+      - name: Ask Resend whether the sender is ready
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_PROBE_TO: ${{ secrets.RESEND_PROBE_TO }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO }}
+        run: node --experimental-strip-types scripts/resend-probe.mjs
