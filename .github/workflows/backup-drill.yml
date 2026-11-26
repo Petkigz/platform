@@ -32,12 +32,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
       AYAHSPRING_BACKUP_SOURCE: local
-      AYAHSPRING_BACKUP_DIR: ${{ runner.temp }}/backup
-      AYAHSPRING_SCRATCH_DIR: ${{ runner.temp }}/scratch
       AYAHSPRING_SCRATCH_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
     steps:
+      # The runner's temporary directory is not known where a job's `env` is
+      # read, so the three paths under it are set here.
+      - name: Say where the copy and the scratch database live
+        run: |
+          {
+            echo "SUPABASE_CLI_BIN=$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase"
+            echo "AYAHSPRING_BACKUP_DIR=$RUNNER_TEMP/backup"
+            echo "AYAHSPRING_SCRATCH_DIR=$RUNNER_TEMP/scratch"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
