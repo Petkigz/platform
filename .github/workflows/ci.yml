@@ -70,7 +70,7 @@ jobs:
       - run: npm ci
 
       - name: Migration preview and apply guard tests
-        run: node --test scripts/hosted-migration-dry-run.test.mjs scripts/hosted-backup.test.mjs scripts/hosted-migration-apply.test.mjs scripts/hosted-migration-advance.test.mjs scripts/hosted-migration-one-more.test.mjs scripts/hosted-migration-354.test.mjs scripts/hosted-migration-356.test.mjs scripts/hosted-migration-357.test.mjs scripts/hosted-migration-358.test.mjs scripts/hosted-migration-368.test.mjs
+        run: node --test scripts/hosted-migration-dry-run.test.mjs scripts/hosted-backup.test.mjs scripts/hosted-migration-apply.test.mjs scripts/hosted-migration-advance.test.mjs scripts/hosted-migration-one-more.test.mjs scripts/hosted-migration-354.test.mjs scripts/hosted-migration-356.test.mjs scripts/hosted-migration-357.test.mjs scripts/hosted-migration-358.test.mjs scripts/hosted-migration-368.test.mjs scripts/hosted-migration-369.test.mjs
 
       - name: Resend probe against a stand-in
         run: node --experimental-strip-types --test scripts/resend-probe.test.mjs
