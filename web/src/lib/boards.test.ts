@@ -97,11 +97,47 @@ test('what the database raised is named, and its own words are never the name', 
   const raised = new Set([...migration.matchAll(/raise exception 'board:([a-z_]+)'/gu)].map((m) => m[1]));
   assert.ok(raised.size >= 14, `${raised.size} names raised`);
   for (const name of raised) assert.ok((BOARD_OUTCOMES as readonly string[]).includes(name!), `board:${name} has no name here`);
+  // And the one the boards raise since they ask for agreement first.
+  const later = readFileSync(join(root, '..', '..', 'supabase/migrations/20261281157000_board_agreement_first.sql'), 'utf8');
+  const asked = new Set([...later.matchAll(/raise exception 'board:([a-z_]+)'/gu)].map((m) => m[1]));
+  assert.ok(asked.has('agree_first'));
+  for (const name of asked) assert.ok((BOARD_OUTCOMES as readonly string[]).includes(name!), `board:${name} has no name here`);
+  assert.equal(boardReasonOf({ code: '42501', message: 'board:agree_first' }), 'agree_first');
+  assert.equal(boardStatusOf('agree_first'), 403);
+});
+
+test('what is still to be agreed to is read whole, or the standing is not read at all', () => {
+  const base = { board: 'students', open: true, kind: 'student', until: AT, handle: null, handleFixed: false, blocked: false, moderator: false };
+  const owed = [
+    { slug: 'terms', title: 'Terms of use', versionNumber: 1 },
+    { slug: 'privacy', title: 'Privacy notice', versionNumber: 2 },
+  ];
+  assert.deepEqual(parseStanding({ ...base, agreements: owed })!.agreements, [
+    { slug: 'terms', title: 'Terms of use', version: 1 },
+    { slug: 'privacy', title: 'Privacy notice', version: 2 },
+  ]);
+  assert.deepEqual(parseStanding({ ...base, agreements: [] })!.agreements, []);
+  // A database from before the boards asked says nothing, and refuses nothing.
+  assert.deepEqual(parseStanding(base)!.agreements, []);
+  // A list that cannot be read is not taken for an empty one: the box would
+  // vanish and the database would still refuse the post.
+  for (const bad of [
+    null, 'none', {}, [null], [{ slug: 'terms', title: 'Terms of use' }],
+    [{ slug: 'terms', title: 'Terms of use', versionNumber: '1' }],
+    [{ slug: 'terms', title: 'Terms of use', versionNumber: 0 }],
+    [{ slug: 'terms', title: 'Terms of use', versionNumber: 1.5 }],
+    [{ slug: '../admin', title: 'Terms of use', versionNumber: 1 }],
+    [{ slug: 'Terms', title: 'Terms of use', versionNumber: 1 }],
+    [{ slug: 'terms', title: '', versionNumber: 1 }],
+    [owed[0], { slug: 'privacy' }],
+  ]) {
+    assert.equal(parseStanding({ ...base, agreements: bad }), null, JSON.stringify(bad));
+  }
 });
 
 test('where somebody stands is read, and an unreadable reply is not a standing', () => {
   const standing = parseStanding({ board: 'students', open: true, kind: 'student', until: AT, handle: 'quiet_owl', handleFixed: true, blocked: false, moderator: false });
-  assert.deepEqual(standing, { board: 'students', open: true, kind: 'student', until: AT, handle: 'quiet_owl', handleFixed: true, blocked: false, moderator: false });
+  assert.deepEqual(standing, { board: 'students', open: true, kind: 'student', until: AT, handle: 'quiet_owl', handleFixed: true, blocked: false, moderator: false, agreements: [] });
   assert.equal(mayEnter(standing!), true);
   const out = parseStanding({ board: 'students', open: true, kind: null, until: null, handle: 'old_name' })!;
   assert.equal(out.kind, null);
