@@ -1,0 +1,69 @@
+# The ten migrations after the 358, on the AyahSpring test project only:
+# 20261281152000_refunds_policy_plan_given_back.sql to
+# 20261281161000_board_post_off_the_board_kept.sql (the refunds policy's new
+# version, the two discussion boards and what the owner ruled about them, the
+# translate button, a child's own sign-in, the owner's email alert register,
+# and version 3 of the privacy notice as a draft). Every switch they add is
+# off. One-time: scripts/hosted-migration-368.mjs refuses unless the hosted
+# history is exactly the 358 and the local files are exactly the reviewed
+# 368. The owner asked for this job on 2026-11-26. The environment requires
+# the owner's approval before the job, and so before any secret, is released.
+#
+# The job checks out the commit this step was reviewed at (11dbb74, which
+# holds exactly the 368) and runs that tree's script, test and migrations.
+# Nothing added to the branch later reaches the hosted project.
+name: Apply Supabase test migrations 359 to 368
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+# A group of its own, as the ones before it had: every push starts every one
+# of these workflows (each then skips), and GitHub keeps one run waiting in a
+# group and cancels the rest. The script refuses unless the hosted history is
+# exactly the 358.
+concurrency:
+  group: ayahspring-supabase-test-migrations-359-to-368
+  cancel-in-progress: false
+jobs:
+  apply-359-to-368:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: apply ayahspring test migrations 359 to 368')
+    runs-on: ubuntu-latest
+    environment: ayahspring-test-migration-apply
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The tree with exactly the 368 migrations this step was reviewed for.
+          ref: 11dbb742ceed1995e95bc18ce69d797ae6487796
+          persist-credentials: false
+      - name: The tree is the one reviewed, with 368 migrations and no more
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '11dbb742ceed1995e95bc18ce69d797ae6487796'
+          test "$(ls supabase/migrations/*.sql | wc -l)" = '368'
+          test "$(ls supabase/migrations/*.sql | tail -1)" = 'supabase/migrations/20261281161000_board_post_off_the_board_kept.sql'
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # Everything below this comment and above the last step runs without the
+      # database secret.
+      - name: Install reviewed dependencies and CLI
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase" --version)" = '3.1.0'
+      - name: The plan, against the real migrations in a local engine
+        run: node --test scripts/hosted-migration-368.test.mjs
+      - name: What the tested database gives anon and authenticated
+        run: node scripts/api-role-privileges.mjs --write "$RUNNER_TEMP/expected-privileges.json"
+      - name: Check, rehearse on the test project, apply the ten, compare
+        run: node scripts/hosted-migration-368.mjs
+        env:
+          SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+          AYAHSPRING_EXPECTED_PRIVILEGES: ${{ runner.temp }}/expected-privileges.json
+          AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
+          AYAHSPRING_TEST_APPLY_READY: ${{ vars.AYAHSPRING_TEST_APPLY_READY }}
