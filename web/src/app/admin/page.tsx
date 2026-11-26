@@ -89,6 +89,7 @@ const sharedLinks: ConsoleLink[] = [
   { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
   { href: '/admin/boards', label: 'Discussion board reports', note: 'posts on the students’ and the teachers’ boards that somebody reported. A post there is shown at once, so this is where one is taken down. Seeing who is behind a username needs a reason and is recorded' },
   { href: '/admin/ai-support', label: 'Study assistant', note: 'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing' },
+  { href: '/admin/connections', label: 'Connections', note: 'the outside accounts this site uses (database, email, scheduler, storage, payments) and which are still to be connected. The owner only; names of missing settings, never a value' },
   { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
   { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
   { href: '/admin/panels', label: 'Scholarly panels', note: 'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it' },

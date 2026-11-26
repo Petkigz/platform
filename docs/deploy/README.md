@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-368 files in `supabase/migrations/`, applied in filename order — the 14-digit
+369 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -428,6 +428,14 @@ from that tree. The 359th to the 368th
 `20261281161000_board_post_off_the_board_kept.sql`) have a job since
 2026-11-26, when the owner asked for one: see "The 359th to the 368th" below.
 **It has not run.**
+
+The 369th, `20261281162000_provider_events.sql` (what the email provider says
+about a message after accepting it, section 7.7), was added on 2026-11-26
+after that job was written. It is **not** in that job and has no hosted job
+yet. After the job for 359 to 368 the hosted database is one migration behind
+the tree; an application built from this tree and deployed against it would
+find `/api/email/webhook` unable to record and `/admin/messages` unable to
+read the two new columns. Give the 369th a job of its own before deploying.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -998,6 +1006,7 @@ Then, in the order you get to them:
 | `MEDIA_WORKER_EMAIL`, `MEDIA_WORKER_PASSWORD` | the encoder's own sign-in | 6 |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO` | anything sends at all | 7 |
 | `CRON_SECRET`, `EMAIL_WORKER_EMAIL`, `EMAIL_WORKER_PASSWORD` | the unattended mail run | 7 |
+| `RESEND_WEBHOOK_SECRET` | a bounce or a spam complaint that comes after Resend accepted a message is learned of, and the address is not written to again | 7.7 |
 | `RETENTION_WORKER_EMAIL`, `RETENTION_WORKER_PASSWORD` | the unattended retention cleanup — the job that makes the privacy notice's three and seven years true. Must be an account holding `platform_admin`, because only the owner may delete a record; unset means the route refuses and `/admin/retention` still works by hand | 4 |
 | `PAYMENT_PROVIDER` | how a provider is named; unset means checkout says payments are not configured rather than pretending | — |
 | `MTN_MOMO_SUBSCRIPTION_KEY`, `MTN_MOMO_API_USER`, `MTN_MOMO_API_KEY`, `MTN_MOMO_BASE_URL`, `MTN_MOMO_TARGET_ENVIRONMENT`, `MTN_MOMO_CALLBACK_URL`, `MTN_MOMO_COUNTRY`, `MTN_MOMO_CURRENCY` | MTN collections, one account: the country is `MTN_MOMO_COUNTRY` (Uganda when unset) and the currency that country's unless `MTN_MOMO_CURRENCY` says otherwise (MTN's sandbox takes only EUR). **Each further country has its own names with its two letters in them**, `MTN_MOMO_GH_SUBSCRIPTION_KEY` and so on, for the eleven countries MTN's Open API serves (UG GH CI ZM CM BJ CG SZ GN ZA LR); its provider id is `mtn_momo_gh` and its callback `/api/payments/webhook/mtn_momo_gh` | — |
@@ -1296,7 +1305,27 @@ curl -sS -X POST https://ayahspring.vercel.app/api/cron/dispatch-messages \
   settles the messages. Same reasoning as the encoder: a machine writer is subject
   to the same refusals as a person.
 
-A scheduler such as [cron-job.org](https://cron-job.org) can call this hourly:
+**The clock is in the repository** (added 2026-11-26): the workflow
+"Scheduler" (`.github/workflows/scheduler.yml`, `scripts/scheduler-run.mjs`).
+Every ten minutes it calls `dispatch-messages`, `owner-alert` and
+`safeguarding-alert`; once a day, `retention`. It does nothing until both of
+these exist under GitHub → the repository → **Settings → Secrets and variables
+→ Actions**:
+
+- the **variable** `AYAHSPRING_SITE_URL`: the deployment's `https://` address;
+- the **secret** `CRON_SECRET`: the same value the deployment holds.
+
+Three things to know. GitHub runs a schedule only from the default branch, so
+the clock starts when this work is merged to `main`. GitHub may start a
+scheduled run some minutes late. And in a public repository GitHub switches
+schedules off after sixty days with no commit, asks by email first, and one
+click switches them on again. The log of a run shows, for each route, the HTTP
+status and one word, and never what the route answered: the repository's logs
+are public. A `503` (that route is not set up on the deployment yet) does not
+fail the run; a `401` (the two secrets differ) does. The same script runs from
+any machine: `AYAHSPRING_SITE_URL=… CRON_SECRET=… node scripts/scheduler-run.mjs retention`.
+
+Any other scheduler does the same job. One such as [cron-job.org](https://cron-job.org) can call this hourly:
 URL as above, method POST, header `Authorization: Bearer <secret>`. Confirm its
 current terms and no-card eligibility before relying on it. This job does not
 guarantee that a free Supabase project remains active.
@@ -1322,6 +1351,68 @@ curl -sS -X POST https://ayahspring.vercel.app/api/cron/retention \
   worth reading — how many cases nobody has closed, because those have no clock
   at all. The owner can run the same cleanup by hand from that page, which is the
   whole job until there is a scheduler.
+
+**7.7** What became of a message afterwards (added 2026-11-26, migration
+`20261281162000_provider_events.sql`). "Sent" in `/admin/messages` means Resend
+accepted the message. A mailbox that does not exist is usually found out
+minutes later, and Resend says so only by calling a webhook. Without one, the
+platform never learns of the bounce and writes to the dead address again,
+which is how a sending domain loses its reputation.
+
+1. Resend → **Webhooks** → **Add webhook**. Endpoint:
+   `https://<the site>/api/email/webhook`. Events: `email.delivered`,
+   `email.delivery_delayed`, `email.bounced`, `email.complained`,
+   `email.failed`, `email.suppressed`. Nothing else: opens and clicks are not
+   tracked, and are thrown away if sent.
+2. Copy the webhook's **signing secret** (it begins with `whsec_`) into the
+   deployment's environment as `RESEND_WEBHOOK_SECRET`, and redeploy.
+   `SUPABASE_SERVICE_ROLE_KEY` must be set too.
+
+What the route does: checks Resend's signature over the exact bytes that
+arrived and refuses a call older than five minutes (`401`); answers `503` and
+reads nothing while no secret is set; records each event once (Resend sends an
+unanswered event again). A **complaint** or a bounce Resend calls
+**permanent** puts the address on the do-not-send list; a delay or a temporary
+bounce is shown and suppresses nothing. The address suppressed is the one the
+platform itself sent that message to, never one named in the call. The result
+is in `/admin/messages` under each sent message ("The provider says: …").
+Private alerts to the owner are not in the outbox, so a report about one of
+them is recorded and changes nothing.
+
+**Not yet met Resend.** The signature check passes the example Svix publishes
+for checking an implementation; no real Resend webhook has called this route,
+because there is no Resend account and no deployment.
+
+### When the accounts exist: what to connect, in order
+
+Written on 2026-11-26, when the owner said the domain and the funded accounts
+come later and asked for everything else to be ready. Each line is a
+connection, not a build. The owner's page `/admin/connections` shows which of
+these the deployment has been given (names of missing variables, never a
+value).
+
+1. **The database's last migrations.** Approve the job for 359 to 368, then the
+   369th needs a job of its own (above).
+2. **A deployment** (section 4): the environment in 4.1, starting with the
+   three Supabase variables and `NEXT_PUBLIC_SITE_URL`. Until the domain is
+   owned, the site's address is the one the host gives; change
+   `NEXT_PUBLIC_SITE_URL` and redeploy when the domain arrives.
+3. **The domain.** At the host, add the domain; at the DNS host, the records
+   the host asks for.
+4. **Resend** (7.0 to 7.2): the account, the domain's three DNS records,
+   `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`. Run the probe (7.0).
+5. **Sign-in emails.** Supabase sends confirmation and password-reset emails
+   itself, not this application. Supabase → Authentication → Emails → SMTP
+   settings: enter Resend's SMTP details, so they come from the same domain.
+   Without this they come from Supabase's built-in sender, which is for trying
+   things out and not for the public.
+6. **The webhook** (7.7): `RESEND_WEBHOOK_SECRET`.
+7. **The scheduler** (7.5): `CRON_SECRET` and the two worker accounts in the
+   deployment; `AYAHSPRING_SITE_URL` and `CRON_SECRET` in GitHub; this branch
+   merged to `main`.
+8. **The switches** (7.3 and `/admin`): connecting switches nothing on.
+9. Later, each by its own section: media storage (5), Google sign-in (8), a
+   payment provider (9).
 
 ---
 

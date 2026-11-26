@@ -25,6 +25,8 @@ type MessageRow = {
   suppressed_reason: string | null;
   created_at: string;
   sent_at: string | null;
+  provider_outcome: string | null;
+  provider_outcome_at: string | null;
   dead_lettered_at: string | null;
 };
 
@@ -62,6 +64,15 @@ function when(value: string): string {
  * Nothing on this screen can mark a row `sent`. Only a provider's answer can,
  * and the constraints refuse the claim without a reference from it.
  */
+/** What the provider reported after accepting a message (`record_provider_event`). */
+const PROVIDER_OUTCOME: Record<string, string> = {
+  delivered: 'delivered to the mail server',
+  delayed: 'delayed, still trying',
+  bounced: 'bounced',
+  complained: 'the reader marked it as spam',
+  failed: 'not sent',
+};
+
 export default async function AdminMessagesPage() {
   if (!isSupabaseConfigured()) redirect('/');
 
@@ -79,7 +90,7 @@ export default async function AdminMessagesPage() {
     supabase
       .from('outbound_messages')
       .select(
-        'id,channel,template_code,purpose,to_address,subject,status,provider,attempts,last_error,suppressed_reason,created_at,sent_at,dead_lettered_at',
+        'id,channel,template_code,purpose,to_address,subject,status,provider,attempts,last_error,suppressed_reason,created_at,sent_at,dead_lettered_at,provider_outcome,provider_outcome_at',
       )
       .order('created_at', { ascending: false })
       .limit(100),
@@ -238,6 +249,13 @@ export default async function AdminMessagesPage() {
               </p>
 
               {message.sent_at && <p className="meta">Sent {when(message.sent_at)} UTC</p>}
+              {message.sent_at && (
+                <p className="meta">
+                  {message.provider_outcome && message.provider_outcome_at
+                    ? `The provider says: ${PROVIDER_OUTCOME[message.provider_outcome] ?? message.provider_outcome}, ${when(message.provider_outcome_at)} UTC`
+                    : 'Accepted by the provider. Whether it arrived has not been reported.'}
+                </p>
+              )}
               {message.suppressed_reason && (
                 <p className="meta">Not written to: {message.suppressed_reason}</p>
               )}

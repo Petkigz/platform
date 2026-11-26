@@ -75,6 +75,9 @@ jobs:
       - name: Resend probe against a stand-in
         run: node --experimental-strip-types --test scripts/resend-probe.test.mjs
 
+      - name: Scheduler against a stand-in
+        run: node --test scripts/scheduler-run.test.mjs
+
       - name: Prayer component simulation
         run: npm run test:prayer-component
 
@@ -182,6 +185,9 @@ jobs:
 
       - name: Discussion boards synthetic HTTP regression
         run: node scripts/boards-route-smoke.mjs
+
+      - name: Email webhook synthetic HTTP regression
+        run: node scripts/email-webhook-route-smoke.mjs
 
       - name: Translate button and staff teachers page synthetic HTTP regression
         run: node scripts/translate-route-smoke.mjs

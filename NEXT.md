@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 368 migrations and 181 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 369 migrations and 182 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -3247,10 +3247,11 @@ memory of it, starts from the repository and not from a conversation.
 - *State.* Everything is committed and pushed on
   `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
   off. No application has been deployed anywhere. The test project's
-  database has the first 358 of the tree's 368 migrations; the last ten
+  database has the first 358 of the tree's 369 migrations; 359 to 368
   have one job between them, asked for by the owner on 2026-11-26
   (`scripts/hosted-migration-368.mjs`, `docs/deploy/README.md`). It runs
-  only when the owner approves it in GitHub, and has not run.
+  only when the owner approves it in GitHub, and has not run. The 369th
+  (`20261281162000_provider_events.sql`) has no hosted job yet.
 - *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
   were working folders and were never committed; they are ignored now.
   The working machine was rolled back more than once and took the drafts
@@ -3508,6 +3509,50 @@ memory of it, starts from the repository and not from a conversation.
   calling the function. The email route was not called against Resend, and
   no scheduler exists. Nothing for migrations 359 to 368 on the hosted
   database. Both boards stay off.
+
+### Built ahead of the accounts, 2026-11-26
+
+- *What the owner said.* "I dont yet own the dns but I wanted to build the
+  system either way so when I get funding I just connect them to the funded
+  accounts so build it now and tell me what else is still not yet build or
+  halfway done."
+- *What was built.* Four things, none of which needed an account.
+  1. **The provider's word afterwards.** Migration 369,
+     `20261281162000_provider_events.sql`: `provider_events`,
+     `record_provider_event()` (service role only), and
+     `outbound_messages.provider_outcome`. The route
+     `POST /api/email/webhook` with `web/src/lib/email/provider-events.ts`
+     verifies Resend's (Svix) signature and records delivered, delayed,
+     bounced, complained and failed. A complaint or a permanent bounce
+     suppresses the address the platform itself wrote to. Shown in
+     `/admin/messages`. Environment: `RESEND_WEBHOOK_SECRET`.
+  2. **The clock.** `.github/workflows/scheduler.yml` and
+     `scripts/scheduler-run.mjs`: the four `/api/cron/` routes on a
+     schedule. Skipped until the repository variable `AYAHSPRING_SITE_URL`
+     exists; runs only from `main`.
+  3. **`/admin/connections`.** The owner's page: each outside account and
+     whether the deployment has been given it (`web/src/lib/connections.ts`).
+     Names of missing variables, never values. Payment providers are shown
+     as "not connected" or "variables are set", never "connected": their
+     settings can be per country and the page does not judge completeness.
+  4. **The order to connect things in**: `docs/deploy/README.md`, "When the
+     accounts exist".
+- *How it was checked.* `supabase/tests/provider_events.test.mjs` (7);
+  `web/src/lib/email-provider-events.test.ts` (11) and
+  `connections.test.ts` (9); `scripts/scheduler-run.test.mjs` (5);
+  `scripts/email-webhook-route-smoke.mjs`, the real Next route against a
+  stand-in for Supabase. Two changes made on purpose were caught and
+  undone: the route re-writing the body before checking the signature
+  (the smoke failed), and a bounce suppressing whether or not it is
+  permanent (the database suite failed).
+- *What none of it has met.* No Resend webhook has called the route (the
+  signature check is pinned to Svix's published example). The scheduler has
+  never called a deployment (tested against a stand-in). The connections
+  page has not been drawn signed in: only its refusal of a visitor was
+  checked over HTTP, and its list by unit test.
+- *What this leaves behind.* The 369th migration is not in the hosted job
+  for 359 to 368 and needs its own. Do not deploy this tree against a
+  database without it.
 
 ### The hosted job for 359 to 368, and the Resend probe, 2026-11-26
 

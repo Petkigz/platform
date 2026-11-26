@@ -1,0 +1,52 @@
+name: Scheduler
+# The clock for the application's unattended work: queued email, the owner's
+# alert, the safeguarding alert (every ten minutes) and the retention cleanup
+# (once a day). Each is one POST to the deployment with the shared secret. See
+# scripts/scheduler-run.mjs.
+#
+# It does NOTHING until two things exist in this repository's settings
+# (Settings → Secrets and variables → Actions):
+#   - the variable AYAHSPRING_SITE_URL, the deployment's https address;
+#   - the secret CRON_SECRET, the same value the deployment holds.
+# Without the variable the job is skipped; no deployment is guessed.
+#
+# GitHub runs a schedule only from the default branch, so this starts keeping
+# time when this file is on `main`. GitHub may start a scheduled run late, and
+# switches schedules off in a public repository after sixty days without a
+# commit: it then asks by email, and one click switches them on again.
+on:
+  schedule:
+    - cron: '7,17,27,37,47,57 * * * *'
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ayahspring-scheduler
+  cancel-in-progress: false
+jobs:
+  call:
+    if: ${{ vars.AYAHSPRING_SITE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/scheduler-run.mjs
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      - name: Email and the two alerts
+        if: ${{ github.event.schedule != '23 3 * * *' }}
+        env:
+          AYAHSPRING_SITE_URL: ${{ vars.AYAHSPRING_SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: node scripts/scheduler-run.mjs dispatch-messages owner-alert safeguarding-alert
+      - name: The retention cleanup, once a day
+        if: ${{ github.event.schedule == '23 3 * * *' }}
+        env:
+          AYAHSPRING_SITE_URL: ${{ vars.AYAHSPRING_SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: node scripts/scheduler-run.mjs retention
