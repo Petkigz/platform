@@ -534,17 +534,25 @@ jobs:
           export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
           if node scripts/drawn-pages-smoke.mjs > "$RUNNER_TEMP/drawn-chrome.log" 2>&1; then
             tail -n 1 "$RUNNER_TEMP/drawn-chrome.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages, Chrome::${s}`)' "$RUNNER_TEMP/drawn-chrome.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages in Chrome::${s}`)' "$RUNNER_TEMP/drawn-chrome.log"
           else
             cat "$RUNNER_TEMP/drawn-chrome.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages, Chrome::${s}`)' "$RUNNER_TEMP/drawn-chrome.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages in Chrome::${s}`)' "$RUNNER_TEMP/drawn-chrome.log"
             exit 1
           fi
       - name: Install Firefox and WebKit as Playwright builds them
         run: |
           set -euo pipefail
-          cd "$RUNNER_TEMP/responsive"
-          npx --no-install playwright-core install --with-deps firefox webkit
+          cli="$RUNNER_TEMP/responsive/node_modules/playwright-core/cli.js"
+          # The browsers, then the system libraries they need. Two commands and
+          # one log, so a failure says which of the two it was.
+          if { node "$cli" install firefox webkit && sudo env "PATH=$PATH" node "$cli" install-deps firefox webkit; } > "$RUNNER_TEMP/browsers.log" 2>&1; then
+            tail -n 3 "$RUNNER_TEMP/browsers.log"
+          else
+            cat "$RUNNER_TEMP/browsers.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-3000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Installing Firefox and WebKit::${s}`)' "$RUNNER_TEMP/browsers.log"
+            exit 1
+          fi
       - name: Draw the same six pages in Firefox
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
@@ -553,10 +561,10 @@ jobs:
           set -euo pipefail
           if node scripts/drawn-pages-smoke.mjs > "$RUNNER_TEMP/drawn-firefox.log" 2>&1; then
             tail -n 1 "$RUNNER_TEMP/drawn-firefox.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages, Firefox::${s}`)' "$RUNNER_TEMP/drawn-firefox.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages in Firefox::${s}`)' "$RUNNER_TEMP/drawn-firefox.log"
           else
             cat "$RUNNER_TEMP/drawn-firefox.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages, Firefox::${s}`)' "$RUNNER_TEMP/drawn-firefox.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages in Firefox::${s}`)' "$RUNNER_TEMP/drawn-firefox.log"
             exit 1
           fi
       - name: Draw the same six pages in WebKit
@@ -568,9 +576,9 @@ jobs:
           set -euo pipefail
           if node scripts/drawn-pages-smoke.mjs > "$RUNNER_TEMP/drawn-webkit.log" 2>&1; then
             tail -n 1 "$RUNNER_TEMP/drawn-webkit.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages, WebKit::${s}`)' "$RUNNER_TEMP/drawn-webkit.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").pop().replaceAll("%","%25");console.log(`::notice title=Drawn pages in WebKit::${s}`)' "$RUNNER_TEMP/drawn-webkit.log"
           else
             cat "$RUNNER_TEMP/drawn-webkit.log"
-            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages, WebKit::${s}`)' "$RUNNER_TEMP/drawn-webkit.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Drawn pages in WebKit::${s}`)' "$RUNNER_TEMP/drawn-webkit.log"
             exit 1
           fi
