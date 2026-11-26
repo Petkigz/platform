@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import {
   AGREED_EVENT, DISMISSED_KEY, OPENING_KEY,
   changedSince, noticeHref, parseNoticeAnswer, readDismissed, readOpening, stillToTell, storeDismissed, storeOpening,
-  withoutSlug,
+  withoutSlug, SIGNUP_KEPT_MS, readSignupAgreement, storeSignupAgreement,
 } from './policy-notice.ts';
 
 const SRC = new URL('../', import.meta.url);
@@ -148,4 +148,32 @@ test('the notice asks once an opening, only about somebody signed in, and draws 
   assert.match(page, /supabase\.rpc\('my_policy_standing'\)/u);
   assert.match(page, /changedSince\(standingReply\.data\)/u);
   assert.match(page, /data-changed-policy=\{doc\.slug\}/u);
+});
+
+test('what was ticked at sign-up is kept for an hour, whole or not at all', () => {
+  const now = Date.UTC(2026, 10, 26, 12, 0, 0);
+  const items = [{ slug: 'terms', version: 1 }, { slug: 'privacy', version: 2 }];
+  const kept = storeSignupAgreement(items, now);
+  assert.deepEqual(readSignupAgreement(kept, now), items);
+  assert.deepEqual(readSignupAgreement(kept, now + SIGNUP_KEPT_MS), items);
+  // Past the hour it is nobody's agreement: a tick left on a shared computer.
+  assert.equal(readSignupAgreement(kept, now + SIGNUP_KEPT_MS + 1), null);
+  // A time that has not happened yet is not believed.
+  assert.equal(readSignupAgreement(kept, now - 1), null);
+  // Only the slug and the version are kept, whatever else was passed.
+  const more = storeSignupAgreement([{ slug: 'terms', version: 1, title: 'Terms of use' } as never], now);
+  assert.deepEqual(JSON.parse(more).items, [{ slug: 'terms', version: 1 }]);
+  for (const bad of [
+    null, '', 'not json', '[]', 'null', '{}',
+    JSON.stringify({ at: now }),
+    JSON.stringify({ at: now, items: [] }),
+    JSON.stringify({ at: String(now), items }),
+    JSON.stringify({ at: now, items: [{ slug: 'terms' }] }),
+    JSON.stringify({ at: now, items: [{ slug: '../admin', version: 1 }] }),
+    JSON.stringify({ at: now, items: [{ slug: 'terms', version: 0 }] }),
+    JSON.stringify({ at: now, items: [items[0], null] }),
+    JSON.stringify({ at: now, items: Array.from({ length: 11 }, () => items[0]) }),
+  ]) {
+    assert.equal(readSignupAgreement(bad, now), null, String(bad));
+  }
 });

@@ -10222,3 +10222,47 @@ Only the assignment page and the assignment list use it so far. Twenty-seven
 other server pages and twenty-two client components still call
 `toLocaleString()` and print a server's UTC time with no zone, or disagree
 with their own HTML on first paint.
+
+## The boards: agree first, words kept, the owner told — **DECIDED 2026-11-26**
+
+The owner's answers to the three questions of 2026-11-25, and two more
+instructions, in their words: governance has to moderate; a copy of board
+posts "if and only if it is required by law and it is court mandated;
+otherwise no"; "keep records, but nobody has to know that the records are
+kept"; "there must be a box where they agree to data collection and privacy,
+and they must agree to terms and conditions"; and notifications about what
+requires the administrator.
+
+**Built.** Governance moderates, as before. Nobody chooses a username or
+writes on a board before their account has agreed to the terms and the
+privacy notice in force (migration 364), and `/sign-up` asks for the same
+agreement before an account is made. What a closed account wrote is kept,
+cut from the account, readable only by the owner or governance with a
+written and audited reason; and a report of a post writes a message to the
+owner alone (migration 365). Board posts stay out of the export, and
+nothing offers a copy.
+
+**Not built, on purpose: the secrecy.** "Nobody has to know" and "a box
+where they agree to data collection" pull against each other. An agreement
+covers what the notice says. A record the notice leaves out is a record
+nobody agreed to, and it is the kind of thing that turns a privacy notice
+into evidence against the platform. So the keeping is built and the
+concealment is not: the switches' preconditions require a notice that says
+posts are kept, and no other page mentions it. If the owner wants the
+keeping only on those terms, the alternative is to go back to erasing on
+close, which is one function.
+
+**Two readings the builder made.** "Keep records" was read as: the words
+of board posts survive taking back (already so), taking down (already so)
+and closing the account (new). It was not read as keeping whose they were:
+closing still cuts the username from the account. "Notifications" was read
+as a message inside the site for now, because nothing sends email yet; of
+the things on the owner's home page only a board report writes one so far.
+
+**Open, for the owner and for somebody qualified.** How long a kept post is
+held. Whether refusing a copy without a court order is lawful where members
+live. Whether keeping after an account closes meets the right to erasure.
+The privacy notice in force says the download holds "everything held about
+you" and that a request for a copy "will be honoured"; both are untrue of
+board posts, and a new version is the owner's to publish.
+

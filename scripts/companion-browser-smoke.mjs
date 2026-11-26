@@ -495,7 +495,8 @@ try {
     // 192 of 2385, still 8%, with the public course page and live classes,
     // and 192 of 2443, still 8% (7.86%), with memorisation, and 192 of 2529,
     // still 8% (7.59%), with the switched parts of the course page, and
-    // 192 of 2531 with the line about board posts on the export page.)
+    // 192 of 2531 with the line about board posts on the export page; of 2537
+    // with the box that asks for agreement before writing on a board.)
     assert.ok(settings.includes('8%'), 'the language page does not show the lower number');
     assert.ok(!settings.includes('8% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);

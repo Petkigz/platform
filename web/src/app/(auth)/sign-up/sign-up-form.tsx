@@ -6,8 +6,23 @@ import { createClient } from '@/lib/supabase/client';
 import { toE164 } from '@/lib/phone';
 import { oauthRedirectUrl } from '@/lib/oauth';
 import { useT } from '@/lib/i18n/client';
+import { SIGNUP_KEY, storeSignupAgreement } from '@/lib/policy-notice';
 
-export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
+/**
+ * The box somebody ticks before an account is made. The words come from the
+ * server, already in the reader's language; the titles are the owner's.
+ */
+export type SignUpAgreement = {
+  /** The documents, with the version in force when the page was read. Empty when that could not be read. */
+  documents: { slug: string; title: string; version: number; versionLine: string }[];
+  box: string;
+  /** Said when somebody goes on without ticking. */
+  tick: string;
+  /** The link to the list of documents, when they could not be named. */
+  all: string;
+};
+
+export function SignUpForm({ googleEnabled, agreement }: { googleEnabled: boolean; agreement: SignUpAgreement }) {
   const t = useT();
   const [mode, setMode] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
@@ -17,6 +32,31 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState(false);
+
+  /**
+   * Whether the box is ticked, and if it is, what was agreed to is kept on
+   * this device so it can be recorded when there is an account. False stops
+   * all three ways in.
+   */
+  function agreedFirst(): boolean {
+    if (!agreed) {
+      setDone(null);
+      setError(agreement.tick);
+      return false;
+    }
+    if (agreement.documents.length > 0) {
+      try {
+        window.localStorage.setItem(
+          SIGNUP_KEY,
+          storeSignupAgreement(agreement.documents.map((d) => ({ slug: d.slug, version: d.version })), Date.now()),
+        );
+      } catch {
+        // Nothing is kept, so nothing is recorded from here; the account page asks.
+      }
+    }
+    return true;
+  }
 
   /**
    * The same call as signing in: with Google there is no difference between
@@ -24,6 +64,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
    * an account that exists but refuses to open.
    */
   async function signUpWithGoogle() {
+    if (!agreedFirst()) return;
     setError(null);
     setDone(null);
     setBusy(true);
@@ -44,6 +85,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!agreedFirst()) return;
     setError(null);
     setDone(null);
     setBusy(true);
@@ -94,8 +136,45 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
         </a>
       </div>
 
-      {error && <p className="danger">{error}</p>}
+      {error && <p className="danger" role="alert">{error}</p>}
       {done && <div className="notice">{done}</div>}
+
+      {/* Above all three ways in, because it comes before each of them. */}
+      <div data-signup-agree style={{ margin: '0.75rem 0' }}>
+        <label style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+          <input
+            type="checkbox"
+            name="agree"
+            checked={agreed}
+            onChange={(e) => {
+              setAgreed(e.target.checked);
+              if (e.target.checked && error === agreement.tick) setError(null);
+            }}
+            style={{ inlineSize: '1.25rem', blockSize: '1.25rem', margin: '0.15rem 0 0', flex: 'none' }}
+          />
+          <span>{agreement.box}</span>
+        </label>
+        <ul style={{ margin: '0.5rem 0 0', paddingInlineStart: '2.4rem', display: 'grid', gap: '0.25rem' }}>
+          {agreement.documents.length > 0 ? (
+            agreement.documents.map((d) => (
+              <li key={d.slug}>
+                {/* The owner's title, as written; the documents are not translated. */}
+                <Link href={`/policies/${d.slug}`} target="_blank" lang="en" dir="ltr">
+                  {d.title}
+                </Link>
+                {' · '}
+                <span className="muted">{d.versionLine}</span>
+              </li>
+            ))
+          ) : (
+            <li>
+              <Link href="/policies" target="_blank">
+                {agreement.all}
+              </Link>
+            </li>
+          )}
+        </ul>
+      </div>
 
       {googleEnabled && (
         <>

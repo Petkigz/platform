@@ -171,3 +171,50 @@ export function withoutSlug(items: readonly NoticeItem[], slug: string): NoticeI
 export function noticeHref(items: readonly NoticeItem[]): string {
   return items.length === 1 ? `/policies/${items[0]!.slug}` : '/notifications';
 }
+
+/**
+ * What somebody ticked on the sign-up page, kept on this device until they
+ * are signed in and it can be recorded.
+ *
+ * `accept_policy()` needs an account, and at the moment the box is ticked
+ * there is none yet: with Google the account is made on the way back, with
+ * an email address it opens when the link in the message is followed. So the
+ * documents and the versions the page named are kept here and recorded on
+ * the first page opened signed in (`_shared/policy-notice.tsx`).
+ *
+ * **Kept for an hour and no longer.** A tick left behind on a shared
+ * computer must not become the agreement of whoever signs in there next
+ * week. Past the hour nothing is recorded, and the account page asks, as it
+ * asks anybody who has not agreed.
+ */
+export const SIGNUP_KEY = 'ayahspring.policy.signup';
+export const SIGNUP_KEPT_MS = 60 * 60 * 1000;
+
+export function storeSignupAgreement(items: NoticeItem[], now: number): string {
+  return JSON.stringify({ at: now, items: items.map((item) => ({ slug: item.slug, version: item.version })) });
+}
+
+/** What was ticked, or null: nothing kept, not readable, or older than the hour. */
+export function readSignupAgreement(raw: string | null, now: number): NoticeItem[] | null {
+  if (!raw) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!value || typeof value !== 'object') return null;
+  const row = value as Record<string, unknown>;
+  if (typeof row.at !== 'number' || !Number.isFinite(row.at)) return null;
+  // A time in the future is a clock that moved, or not ours: not believed.
+  if (row.at > now || now - row.at > SIGNUP_KEPT_MS) return null;
+  if (!Array.isArray(row.items) || row.items.length === 0 || row.items.length > 10) return null;
+  const items: NoticeItem[] = [];
+  for (const entry of row.items) {
+    if (!entry || typeof entry !== 'object') return null;
+    const one = entry as Record<string, unknown>;
+    if (!isSlug(one.slug) || !isVersion(one.version)) return null;
+    items.push({ slug: one.slug, version: one.version });
+  }
+  return items;
+}

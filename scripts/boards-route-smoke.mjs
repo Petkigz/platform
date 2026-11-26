@@ -255,6 +255,42 @@ try {
   // No username yet: the name form, and no box to post in.
   has(en, ['data-board-handle="none"', 'data-board-form="handle"', 'Choose the name you will write under here. Do not use your real name.', 'data-board-until="true"', 'You can use this discussion until <bdi>', 'That is when your paid class ends.'], '/discuss/students, no username');
   hasNot(en, ['data-board-form="thread"', 'data-board-ask'], '/discuss/students, no username');
+  // Nothing to agree to: no box asks for it.
+  hasNot(en, ['data-board-agree', 'data-board-form="agree"'], '/discuss/students, nothing owed');
+  // Not agreed yet (the owner, 2026-11-26): the two documents with their versions and a box to tick,
+  // and neither a field for a username nor a box to ask in. Reading is as before.
+  {
+    const OWED = [{ slug: 'terms', title: 'Terms of use', versionNumber: 1 }, { slug: 'privacy', title: 'Privacy notice', versionNumber: 2 }];
+    state = fresh(); state.students = standing('students', { agreements: OWED });
+    const asked = await page('/discuss/students');
+    has(asked, [
+      '<section class="card board-card" data-board-agree="terms privacy"><h2>Agree before you write</h2>',
+      'You can read here without agreeing to anything. To choose a username and to write, you first agree to these documents.',
+      '<li><a lang="en" dir="ltr" href="/policies/terms">Terms of use</a> · Version: <bdi>1</bdi></li>',
+      '<li><a lang="en" dir="ltr" href="/policies/privacy">Privacy notice</a> · Version: <bdi>2</bdi></li>',
+      'data-board-form="agree"', '<input type="checkbox" name="agree"', 'I have read these documents and I agree to them.',
+      'data-board-handle-waits="true"', `data-board-thread="${THREAD}"`,
+    ], '/discuss/students, not agreed');
+    hasNot(asked, ['data-board-form="handle"', 'data-board-form="thread"', 'data-board-ask'], '/discuss/students, not agreed');
+    assert.ok(asked.indexOf('data-board-rules') < asked.indexOf('data-board-agree'), 'the rules come before the box that asks for agreement');
+    // With a username from before, and a new version since: still no box to ask in.
+    state = fresh(); state.students = standing('students', { handle: 'synthetic_me', handleFixed: true, agreements: [OWED[1]] });
+    const again = await page('/discuss/students');
+    has(again, ['data-board-agree="privacy"', 'data-board-handle="chosen"'], '/discuss/students, a new version');
+    hasNot(again, ['data-board-ask', 'data-board-form="thread"', 'href="/policies/terms"'], '/discuss/students, a new version');
+    // And on a thread: no reply box, and the way to the box that asks.
+    const thread = await page(`/discuss/students/${THREAD}`);
+    has(thread, ['data-board-reply="agree"', '<a href="/discuss/students">Agree before you write</a>'], 'a thread, not agreed');
+    hasNot(thread, ['data-board-form="reply"'], 'a thread, not agreed');
+    // In a held language the box is said in it; the owner's titles stay as written.
+    const ar = await page('/discuss/students', 'ar');
+    has(ar, ['وافق قبل أن تكتب', 'قرأتُ هذه الوثائق وأوافق عليها.', '<a lang="en" dir="ltr" href="/policies/terms">Terms of use</a>'], '/discuss/students in Arabic, not agreed');
+    // A list that cannot be read is not an empty one: the page says it could not read the board.
+    state = fresh(); state.students = standing('students', { agreements: [{ slug: 'terms' }] });
+    const broken = await page('/discuss/students');
+    hasNot(broken, ['data-board-form="handle"', 'data-board-form="agree"', 'data-board-ask'], '/discuss/students, an unreadable list');
+    state = fresh(); state.students = standing('students', { until: UNTIL });
+  }
   // A thread in the list: what was typed is text, in no known language, and the page says posts are not translated.
   has(en, [
     `<li data-board-thread="${THREAD}"><a class="board-thread-title" href="/discuss/students/${THREAD}"><bdi dir="auto" lang="">Synthetic title &lt;i&gt;as typed&lt;/i&gt;</bdi></a><p class="board-by"><bdi dir="auto" lang="">synthetic_other</bdi><span class="badge neutral">Teacher</span><span>Replies: <bdi>1</bdi></span>`,

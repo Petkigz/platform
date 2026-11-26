@@ -137,7 +137,8 @@ test('a notification is shown here and is not sent: nothing that writes one writ
   // The other way round: nothing that writes a notification queues a message
   // through the function that fills the outbox.
   const writesNotification = names.filter((name) => /public\.notify_user\(/u.test(read(name)));
-  assert.equal(writesNotification.length, 6);
+  // The seventh, 2026-11-26: a report of a board post tells the owner.
+  assert.equal(writesNotification.length, 7);
   for (const name of writesNotification) {
     assert.doesNotMatch(read(name), /queue_message\(|insert into public\.outbound_messages/u, `${name} writes a notification and queues a message`);
   }

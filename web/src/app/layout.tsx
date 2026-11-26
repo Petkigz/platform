@@ -15,6 +15,7 @@ import { JsonLdScript } from './_shared/json-ld';
 import { BrandMark } from './_shared/brand-mark';
 import { MastheadActions } from './_shared/masthead-actions';
 import { PolicyNotice } from './_shared/policy-notice';
+import { SignupAgreement } from './_shared/signup-agreement';
 import { NavLink } from './_shared/nav-link';
 import './globals.css';
 
@@ -189,6 +190,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
           {...(policyShown.code !== code ? { lang: policyShown.code, dir: policyShown.dir } : {})}
         />
+        {/* Draws nothing. Records the agreement ticked on the sign-up page once
+            somebody is signed in: see `_shared/signup-agreement.tsx`. */}
+        <SignupAgreement />
 
         <footer>
           <div className="container">

@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 363 migrations and 177 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 365 migrations and 179 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -3247,7 +3247,7 @@ memory of it, starts from the repository and not from a conversation.
 - *State.* Everything is committed and pushed on
   `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
   off. No application has been deployed anywhere. The test project's
-  database has the first 358 of the tree's 363 migrations; the last five
+  database has the first 358 of the tree's 365 migrations; the last seven
   have no job and none was asked for (`docs/deploy/README.md`).
 - *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
   were working folders and were never committed; they are ignored now.
@@ -3332,6 +3332,105 @@ memory of it, starts from the repository and not from a conversation.
 - *Left for the owner.* Whether a person who asks gets a copy of their
   board posts another way. How often the owner opens `/admin` once a board
   is on, since nothing else tells anybody.
+
+### The owner's five answers about the boards, 2026-11-26
+
+- *The answers, in the owner's words.* Governance has to moderate. A copy
+  of board posts is given "if and only if it is required by law and it is
+  court mandated; otherwise no". Keep records, "but nobody has to know that
+  the records are kept" (to protect some people from others and from the
+  public). "There must be a box where they agree to data collection and
+  privacy, and they must agree to terms and conditions." And notifications
+  about what needs the administrator, rather than the dashboard having to
+  be opened to find out. `DECISIONS.md` has the entry.
+- *Governance moderates.* Already so, and unchanged: `can_moderate_boards()`
+  is the owner or governance. The question left open on 2026-11-25 is
+  closed. What governance is not given is the *count* of reports on the
+  staff home page and the message below; those go to the owner alone, by
+  the ruling of 2026-11-25. Governance works the queue at `/admin/boards`.
+- *Migration 364,* `20261281157000_board_agreement_first.sql`. Nobody
+  chooses a username or writes before their account has agreed to the
+  terms and the privacy notice in force. `my_board()` lists what is still
+  owed (`agreements`); `set_board_handle()` and `board_writer()` raise
+  `board:agree_first`. Reading, reporting, taking back one's own post and
+  moderating are not gated. A new version of either document makes an
+  account agree again before its next post. The board page draws the two
+  documents with their versions and a box to tick (`AgreeForm`); the box
+  records through the policies route, so it is the same record
+  `/policies/[slug]` writes. Six sentences, `board.agree*` and
+  `board.whyAgree`, in English and the twenty-seven languages; **drafts no
+  speaker has read**, like every other.
+- *The box at sign-up.* `/sign-up` has a box naming the terms and the
+  privacy notice with the versions in force, and none of the three ways in
+  (email, telephone, Google) goes ahead without it. There is no account at
+  that moment to record it against, so what was ticked is kept on the
+  device for an hour (`SIGNUP_KEY`, `lib/policy-notice.ts`) and recorded on
+  the first page opened signed in (`_shared/signup-agreement.tsx`). **Said
+  plainly:** somebody who follows the link in the confirming message on
+  another device, or after the hour, has made an account with nothing
+  recorded; `/account` asks them, and the boards refuse them until they
+  agree. The box at sign-up is asked; the one on the boards is enforced.
+  The words are the boards' (`board.agreeBox`, `board.agreeTick`), passed
+  from the server, so the form gained no sentence of its own. `/sign-in`
+  has no box: with Google an account can be made from there too, and that
+  account is asked on `/account` and refused on the boards the same way.
+- *Migration 365,* `20261281158000_board_words_kept_owner_told.sql`.
+  **Kept:** closing an account used to overwrite its board posts with
+  `[erased]`; the words are now copied to `board_kept_words` first (words
+  and the time written, no account, no username). The table has no grant
+  and no policy; `board_kept_post(thread, reply, reason)` is the one way
+  in, for the owner or governance, with a written reason, audited before
+  it answers. No page calls it yet. Everything a reader can reach is as it
+  was. **Told:** `report_board_post()` writes a message of a new kind,
+  `board_reported`, to every `platform_admin` account: which board, a link
+  to `/admin/boards`, neither the words nor anybody's name; one for a post
+  in a day. It cannot be switched off and is not among the preferences.
+  It shows as the stored English on `/notifications`, like any message
+  with no facts this code names.
+- *What was not built, and why.* **Keeping records in secret.** A person
+  who ticks the box agrees to what the notice says and to nothing else, so
+  a record the notice does not mention has not been agreed to; the box and
+  the secret cannot both be had. Both switches' preconditions now say the
+  notice has to say posts are kept before a board is turned on. What can
+  be had is quietness: the notice says it once, and no page repeats it.
+  **An email or a text to the owner.** A message inside the site still
+  means opening the site. Email needs the Resend set-up
+  (`delivery.notifications`, the key, the sender domain), and a report
+  cannot go through the ordinary outbox, which staff can read: it needs a
+  private register like the safeguarding alerts' (`20261281079000`). That
+  is a unit of its own and is the next thing to build if wanted.
+- *The notice in force contradicts two of the answers.* It says "You can
+  download everything held about you, as one file" and "Where the law
+  gives you more — access, portability, objection, a copy in another
+  format — ask and it will be honoured". Board posts are held and are not
+  in the file; and "ask and it will be honoured" is wider than "only when
+  a court orders it". It also says nothing about the boards at all. **A
+  new version is the owner's to publish**, and every account is then asked
+  to agree again. Words it would need, offered as a draft and not put in
+  the register:
+  > *Discussion boards.* On the students' and the teachers' discussion you
+  > write under a username. Other members see the username and whether
+  > you are a student, a teacher or staff, not your name. What you write
+  > there is kept: after you take a post back, after staff take it down,
+  > and after you close your account, when it is kept without your name or
+  > your username. Kept posts are read only by the platform's owner and
+  > its governance staff, each time with a written reason that is
+  > recorded, to deal with a report or to protect somebody. [OWNER
+  > DECISION: how long a kept post is held before it is deleted.] Board
+  > posts are not in the file you can download. A copy of them is given
+  > where a law requires it and a court orders it.
+- *For somebody qualified, before a board is turned on.* Whether "only on
+  a court order" is lawful where the members live: data protection laws
+  commonly give a person a right to a copy of their own data on request,
+  with no court involved, and a notice cannot take that away. Whether
+  keeping a closed account's words meets the right to have data erased,
+  and for how long it may be kept. And that a ticked box records
+  agreement; it does not by itself prevent a claim. None of this was
+  checked against any law here.
+- *Not done.* No page for `board_kept_post()`. No period after which a
+  kept post is deleted. The boards smoke's browser part was not run with
+  the box. `board_reported` has no sentence in the catalogue. Nothing for
+  migrations 359 to 365 on the hosted database, and both boards stay off.
 
 ### Numbers and dates from a table, 2026-11-25
 
