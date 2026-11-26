@@ -75,6 +75,20 @@ jobs:
           echo "AYAHSPRING_SCRATCH_CONTAINER=$container" >> "$GITHUB_ENV"
       - name: Fill it from the migrations and two invented accounts
         run: node scripts/backup-drill-fill.mjs
+      # The first run against the project failed on exactly this: its Auth
+      # service is newer than the one a scratch database starts with, and one
+      # of Auth's tables had a column the scratch one lacked. So the drill's
+      # source is made "newer" on purpose: a column with a value on a table
+      # that holds rows, a column on a table that holds none, and a table the
+      # scratch database will not have.
+      - name: Make the source's Auth newer than a scratch database's
+        run: |
+          set -euo pipefail
+          docker exec -e PGPASSWORD=postgres "$AYAHSPRING_SCRATCH_CONTAINER" psql -h 127.0.0.1 -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -Atc "
+            alter table auth.users add column drill_newer_column text;
+            update auth.users set drill_newer_column = 'synthetic' where email = 'synthetic-one@example.invalid';
+            alter table auth.sessions add column drill_newer_and_empty text;
+            create table auth.drill_table_only_here (id int, note text);"
       - name: Copy it with the CLI, as the real job copies the project
         run: node scripts/hosted-backup.mjs copy
       - name: Throw the database away and start an empty one
@@ -95,7 +109,12 @@ jobs:
           test "$(docker exec -e PGPASSWORD=postgres "$container" psql -h 127.0.0.1 -U postgres -d postgres -Atc "select count(*) from pg_tables where schemaname = 'public'")" = '0'
           test "$(docker exec -e PGPASSWORD=postgres "$container" psql -h 127.0.0.1 -U postgres -d postgres -Atc "select count(*) from auth.users")" = '0'
       - name: Put the copy back and compare
-        run: node scripts/hosted-backup.mjs restore
+        run: |
+          set -euo pipefail
+          node scripts/hosted-backup.mjs restore | tee "$RUNNER_TEMP/restore.log"
+          # The newer column was added to the scratch database before the copy went in, and said.
+          grep -q '1 columns were added to the scratch database first (users.drill_newer_column)' "$RUNNER_TEMP/restore.log" || { echo '::error title=Backup drill::The newer Auth column was not reported as added.'; exit 1; }
+          test "$(docker exec -e PGPASSWORD=postgres "$AYAHSPRING_SCRATCH_CONTAINER" psql -h 127.0.0.1 -U postgres -d postgres -Atc "select count(*) from auth.users where drill_newer_column = 'synthetic'")" = '1'
       - name: A lost row and a privilege handed to anon are both noticed
         run: |
           set -euo pipefail

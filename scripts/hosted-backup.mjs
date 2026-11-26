@@ -23,7 +23,9 @@
 //   6. If a passphrase was given, packs the three files and the measure into
 //      one archive, encrypts it (AES-256, symmetric) and decrypts it again to
 //      check that it opens. Only the encrypted file leaves the runner. With
-//      no passphrase nothing is kept, and the run says so.
+//      no passphrase nothing is kept, and the run says so. A copy whose
+//      rehearsal failed is kept too, named UNPROVEN, and the run is red: the
+//      only copy there is must not be thrown away.
 //
 // It writes nothing to the hosted database: one read-only transaction, and
 // `pg_dump`, which only reads.
@@ -63,8 +65,16 @@ const quote = (name) => `"${String(name).replaceAll('"', '""')}"`;
 // the accounts. Storage rows describe files that are not in this copy.
 const TABLES = `select n.nspname as schema, c.relname as name
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where c.relkind in ('r', 'p') and (n.nspname = 'public' or (n.nspname = 'auth' and c.relname in ('users', 'identities')))
+  where c.relkind in ('r', 'p') and (n.nspname = 'public' or (n.nspname = 'auth' and c.relname <> 'schema_migrations'))
   order by 1, 2`;
+
+// Every column of every Auth table, with its type as the database writes it.
+// Supabase's Auth service owns these tables and adds columns as it is
+// upgraded; the project's can be newer than a scratch database's.
+const AUTH_COLUMNS = `select c.relname as name, a.attname as column, format_type(a.atttypid, a.atttypmod) as type
+  from pg_attribute a join pg_class c on c.oid = a.attrelid join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'auth' and c.relkind in ('r', 'p') and a.attnum > 0 and not a.attisdropped and a.attgenerated = ''
+  order by c.relname, a.attnum`;
 
 const LEFT_OUT = `select n.nspname as schema, c.relname as name
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -77,6 +87,36 @@ const LEFT_OUT = `select n.nspname as schema, c.relname as name
 export function leftOutRows(measured) {
   return Object.entries(measured.leftOut ?? {}).filter(([name, rows]) => !name.endsWith('.migrations') && rows !== 0)
     .map(([name, rows]) => `${name} (${rows === null ? 'could not be counted' : `${rows} rows`})`);
+}
+
+// What the data file leaves out: Supabase's storage and webhook tables, and
+// every Auth table that holds nothing. An empty table loses nothing by being
+// left out, and its column list is the thing most likely not to fit another
+// version of Auth. A table of Auth's that holds a row is always in the copy.
+export function dataExclusions(measured) {
+  const emptyAuth = Object.entries(measured.tables).filter(([name, t]) => name.startsWith('auth.') && t.rows === 0).map(([name]) => name);
+  return [...Object.keys(measured.leftOut ?? {}), ...emptyAuth].sort();
+}
+
+// Auth tables that the database's owner could not read: they may hold rows
+// and are not known to be in the copy.
+export function unreadAuth(measured) {
+  return Object.entries(measured.tables).filter(([name, t]) => name.startsWith('auth.') && t.rows === null).map(([name]) => name);
+}
+
+// Columns the project's Auth tables have and the scratch database's do not,
+// for the tables that are in the copy. `missingTables` are tables the scratch
+// database does not have at all: the copy cannot be rehearsed with those.
+export function authGap(source, scratchColumns) {
+  const columns = []; const missingTables = [];
+  for (const [name, t] of Object.entries(source.tables)) {
+    if (!name.startsWith('auth.') || !t.rows) continue;
+    const there = scratchColumns[name];
+    if (!there) { missingTables.push(name); continue; }
+    const have = new Set(there.map(([column]) => column));
+    for (const [column, type] of source.authColumns?.[name] ?? []) if (!have.has(column)) columns.push({ table: name, column, type });
+  }
+  return { columns, missingTables };
 }
 
 const SHAPE = `select
@@ -108,9 +148,20 @@ export async function measure(client) {
     await client.query(`set local bytea_output = 'hex'`);
     const tables = {};
     for (const { schema, name } of (await client.query(TABLES)).rows) {
-      const { rows: [row] } = await client.query(rowsOf(schema, name));
-      tables[`${schema}.${name}`] = { rows: Number(row.rows), print: row.print };
+      try {
+        await client.query('savepoint one_table');
+        const { rows: [row] } = await client.query(rowsOf(schema, name));
+        tables[`${schema}.${name}`] = { rows: Number(row.rows), print: row.print };
+      } catch (error) {
+        // A table of the platform's own that cannot be read is a failure. One
+        // of Auth's that the database's owner may not read is recorded as such.
+        if (schema !== 'auth') throw error;
+        await client.query('rollback to savepoint one_table');
+        tables[`${schema}.${name}`] = { rows: null, print: '' };
+      }
     }
+    const authColumns = {};
+    for (const row of (await client.query(AUTH_COLUMNS)).rows) (authColumns[`auth.${row.name}`] ??= []).push([row.column, row.type]);
     const sequences = {};
     for (const row of (await client.query(`select sequencename as name, last_value::text as last from pg_sequences where schemaname = 'public' order by 1`)).rows) {
       sequences[row.name] = row.last;
@@ -133,7 +184,7 @@ export async function measure(client) {
     let history = null;
     const { rows: [{ present }] } = await client.query(`select to_regclass('supabase_migrations.schema_migrations') is not null as present`);
     if (present) history = (await client.query('select version, name from supabase_migrations.schema_migrations order by version')).rows.map((r) => `${r.version}_${r.name}`);
-    return { version, shape, tables, sequences, history, leftOut };
+    return { version, shape, tables, sequences, history, leftOut, authColumns };
   } finally { await client.query('rollback'); }
 }
 
@@ -147,7 +198,12 @@ export function differences(source, restored) {
   const names = new Set([...Object.keys(source.tables), ...Object.keys(restored.tables)]);
   for (const name of [...names].sort()) {
     const a = source.tables[name]; const b = restored.tables[name];
-    if (!b) out.push(`table ${name}: not there after the restore`);
+    // Auth's tables are Supabase's, and which of them exist depends on the
+    // version of its Auth service. One that holds nothing on either side is
+    // not a difference; one that holds a row on either side is compared.
+    if (name.startsWith('auth.') && !(a?.rows) && !(b?.rows) && a?.rows !== null && b?.rows !== null) continue;
+    if (a?.rows === null || b?.rows === null) out.push(`table ${name}: could not be read ${a?.rows === null ? 'in the project' : 'after the restore'}`);
+    else if (!b) out.push(`table ${name}: not there after the restore`);
     else if (!a) out.push(`table ${name}: there after the restore and not in the project`);
     else if (a.rows !== b.rows) out.push(`table ${name}: ${a.rows} rows in the project, ${b.rows} after the restore`);
     else if (a.print !== b.print) out.push(`table ${name}: ${a.rows} rows on both sides, and they are not the same rows`);
@@ -260,13 +316,13 @@ async function copy(env, { say, fail }) {
     privileges = await readPrivileges(client);
   } catch { return fail(`Not copied: ${source.label.toLowerCase()} could not be reached or read.`); }
   finally { await client.end().catch(() => {}); }
-  const rows = Object.values(measured.tables).reduce((sum, t) => sum + t.rows, 0);
+  const rows = Object.values(measured.tables).reduce((sum, t) => sum + (t.rows ?? 0), 0);
   say(`${source.label}: PostgreSQL ${measured.version}; ${measured.shape.tables} tables, ${measured.shape.functions} functions, ${measured.shape.policies} policies, ${measured.shape.triggers} triggers; ${rows} rows in ${Object.keys(measured.tables).length} tables measured; ${measured.history ? measured.history.length : 'no'} migrations recorded.`);
 
   // The copy. The CLI's output is never shown when the source is the project: it can hold the address.
   const cli = env.SUPABASE_CLI_BIN || 'supabase';
   const files = { roles: `${dir}/roles.sql`, schema: `${dir}/schema.sql`, data: `${dir}/data.sql` };
-  const excluded = Object.keys(measured.leftOut);
+  const excluded = dataExclusions(measured);
   const dataFlags = ['--data-only', '--use-copy', ...(excluded.length ? ['--exclude', excluded.join(',')] : [])];
   for (const [what, extra] of [['roles', ['--role-only']], ['schema', []], ['data', dataFlags]]) {
     const result = await run(cli, ['db', 'dump', ...dumpTarget, '--file', files[what], ...extra], { cwd });
@@ -283,8 +339,13 @@ async function copy(env, { say, fail }) {
   const stray = leftOutRows(measured);
   say(stray.length
     ? `NOT IN THE COPY, and holding rows: ${stray.join(', ')}. The copy leaves out Supabase's own file storage and webhooks; something has started using them, and this job has to be changed before the copy can be called complete.`
-    : `Left out on purpose: ${excluded.length} tables of Supabase's own file storage and database webhooks, which hold nothing (the platform keeps its files elsewhere).`);
+    : `Left out on purpose: ${Object.keys(measured.leftOut).length} tables of Supabase's own file storage and database webhooks, which hold nothing (the platform keeps its files elsewhere), and ${excluded.length - Object.keys(measured.leftOut).length} tables of its Auth service that hold nothing.`);
+  const kept = Object.entries(measured.tables).filter(([name, t]) => name.startsWith('auth.') && t.rows).map(([name, t]) => `${name.slice(5)} (${t.rows})`);
+  say(kept.length ? `Auth tables in the copy, with their rows: ${kept.join(', ')}.` : 'No Auth table holds a row: there are no accounts to copy yet.');
+  const unread = unreadAuth(measured);
+  if (unread.length) say(`COULD NOT BE READ, and so not known to be in the copy: ${unread.join(', ')}.`);
   for (const schema of Object.keys(held.data.copies)) {
+    if (schema === 'auth' && !kept.length) return fail('Stopped: the data file holds Auth tables, and none was to be in it.');
     if (schema === 'storage' || schema === 'supabase_functions') return fail(`Stopped: the data file still holds tables from ${schema}, which were to be left out.`);
   }
   if (held.schema.tables < measured.shape.tables) return fail(`Stopped: the schema file creates ${held.schema.tables} tables and there are ${measured.shape.tables} in public. The copy is not complete.`);
@@ -314,57 +375,85 @@ async function restore(env, { say, fail, finish }, { put: putBack = true } = {})
     if (before.shape.tables !== 0) return fail(`Not started: the scratch database already holds ${before.shape.tables} tables in public. A rehearsal into a database that is not empty proves nothing.`);
   } catch { return fail('Not started: the scratch database could not be read.'); }
 
+  let proven = true;
+  const unproven = (line) => { say(line); proven = false; };
+  const psql = (user, input) => run('docker', ['exec', '-i', '-e', 'PGPASSWORD=postgres', container, 'psql', '-h', '127.0.0.1', '-U', user, '-d', 'postgres',
+    '--no-psqlrc', '--quiet', '--single-transaction', '--variable', 'ON_ERROR_STOP=1', '--file', '-'], { input });
+
+  // The project's Auth service can be newer than the one a scratch database
+  // starts with. Columns it has gained are added to the scratch database's
+  // tables first, so that the copy fits. A real restore goes into a new
+  // project, whose Auth is at least as new as the one that was copied.
+  let ready = true;
+  if (putBack) {
+    let gap;
+    try { gap = authGap(source, (await read(measure)).authColumns); } catch { return fail('Not started: the scratch database could not be read.'); }
+    if (gap.missingTables.length) { ready = false; unproven(`NOT REHEARSED: the copy holds rows of ${gap.missingTables.join(', ')}, and the scratch database's Auth service has no such table. The rehearsal needs a newer scratch database (a newer CLI in the workflow).`); }
+    else if (gap.columns.length) {
+      const added = await psql('supabase_admin', [gap.columns.map((c) => `alter table ${quote('auth')}.${quote(c.table.slice(5))} add column if not exists ${quote(c.column)} ${c.type};\n`).join('')]);
+      if (added.code !== 0) { ready = false; unproven(`NOT REHEARSED: the project's Auth service is newer than the scratch database's, and its ${gap.columns.length} newer columns could not be added there (${safeErrors(added.output).join('; ') || 'no complaint that can be shown'}).`); }
+      else say(`The project's Auth service is newer than the scratch database's: ${gap.columns.length} columns were added to the scratch database first (${gap.columns.map((c) => `${c.table.slice(5)}.${c.column}`).join(', ')}).`);
+    }
+  }
+
   // All of it or none of it, and stop at the first complaint.
-  const put = !putBack ? { code: 0, output: '' } : await run('docker', ['exec', '-i', '-e', 'PGPASSWORD=postgres', container, 'psql', '-h', '127.0.0.1', '-U', 'postgres', '-d', 'postgres',
-    '--no-psqlrc', '--quiet', '--single-transaction', '--variable', 'ON_ERROR_STOP=1', '--file', '-'],
-  { input: [BEFORE_RESTORE, { file: files.roles }, '\n', { file: files.schema }, '\nSET session_replication_role = replica;\n', { file: files.data }, '\n'] });
+  const put = !putBack || !ready ? { code: 0, output: '' } : await psql('postgres',
+    [BEFORE_RESTORE, { file: files.roles }, '\n', { file: files.schema }, '\nSET session_replication_role = replica;\n', { file: files.data }, '\n']);
   if (put.code !== 0) {
     const errors = safeErrors(put.output);
-    return fail(`The copy was written and could NOT be put back into an empty database${errors.length ? `:\n  ${errors.join('\n  ')}` : ' (no complaint from the database could be shown safely).'}\nNothing was kept. A copy that does not restore is not a backup.`);
+    unproven(`The copy was written and could NOT be put back into an empty database${errors.length ? `:\n  ${errors.join('\n  ')}` : ' (no complaint from the database could be shown safely).'}`);
+  } else if (ready) {
+    let restored; let restoredPrivileges;
+    try {
+      restored = await read(measure);
+      restoredPrivileges = await read(readPrivileges);
+    } catch { return fail('The copy was put back, and the scratch database could not then be read to compare.'); }
+    const diff = differences(source, restored);
+    const privileges = privilegeProblems(sourcePrivileges, restoredPrivileges)
+      .map((line) => line.replaceAll('held on the hosted database and not on the tested one', 'held after the restore and not before')
+        .replaceAll('held on the tested database and not on the hosted one', 'held before and not after the restore'));
+    say(`Put back into an empty PostgreSQL ${restored.version}: ${restored.shape.tables} tables, ${restored.shape.functions} functions, ${restored.shape.policies} policies, ${restored.shape.triggers} triggers; ${Object.values(restored.tables).reduce((sum, t) => sum + (t.rows ?? 0), 0)} rows.`);
+    if (source.history) {
+      say(restored.history
+        ? `The migration history came back with ${restored.history.length} entries.`
+        : `The migration history is not in the copy (the CLI leaves that table out). After a real restore, mark the ${source.history.length} as applied with "supabase migration repair --status applied"; the list is in the archive's manifest.`);
+    }
+    if (diff.length) say(`Differences (${diff.length}):\n  ${diff.slice(0, 40).join('\n  ')}${diff.length > 40 ? `\n  … and ${diff.length - 40} more` : ''}`);
+    if (privileges.length) say(`What anon and authenticated may do is not the same:\n  ${privileges.join('\n  ')}`);
+    if (diff.length || privileges.length) unproven('The restore did not give back what was copied.');
+    else say(`Same on both sides: every table's rows, every sequence, the counts of functions, policies, triggers, indexes and constraints, and the ${sourcePrivileges.privileges.length} privileges of anon and authenticated with the same ${sourcePrivileges.defaults.length} defaults.`);
   }
-  let restored; let restoredPrivileges;
-  try {
-    restored = await read(measure);
-    restoredPrivileges = await read(readPrivileges);
-  } catch { return fail('The copy was put back, and the scratch database could not then be read to compare.'); }
 
-  const diff = differences(source, restored);
-  const privileges = privilegeProblems(sourcePrivileges, restoredPrivileges)
-    .map((line) => line.replaceAll('held on the hosted database and not on the tested one', 'held after the restore and not before')
-      .replaceAll('held on the tested database and not on the hosted one', 'held before and not after the restore'));
-  say(`Put back into an empty PostgreSQL ${restored.version}: ${restored.shape.tables} tables, ${restored.shape.functions} functions, ${restored.shape.policies} policies, ${restored.shape.triggers} triggers; ${Object.values(restored.tables).reduce((sum, t) => sum + t.rows, 0)} rows.`);
-  if (source.history) {
-    say(restored.history
-      ? `The migration history came back with ${restored.history.length} entries.`
-      : `The migration history is not in the copy (the CLI leaves that table out). After a real restore, mark the ${source.history.length} as applied with "supabase migration repair --status applied"; the list is in the archive's manifest.`);
-  }
-  if (diff.length) say(`Differences (${diff.length}):\n  ${diff.slice(0, 40).join('\n  ')}${diff.length > 40 ? `\n  … and ${diff.length - 40} more` : ''}`);
-  if (privileges.length) say(`What anon and authenticated may do is not the same:\n  ${privileges.join('\n  ')}`);
-  if (diff.length || privileges.length) return fail('The restore did not give back what was copied. Nothing was kept.');
-  say(`Same on both sides: every table's rows, every sequence, the counts of functions, policies, triggers, indexes and constraints, and the ${sourcePrivileges.privileges.length} privileges of anon and authenticated with the same ${sourcePrivileges.defaults.length} defaults.`);
-
-  const manifest = { project: taken.source === 'hosted' ? 'glhxtsgrhhvtbsnlxgxu' : 'drill', takenAt: taken.takenAt, postgres: source.version, shape: source.shape,
-    tables: source.tables, sequences: source.sequences, migrations: source.history, files: {} };
+  const manifest = { project: taken.source === 'hosted' ? 'glhxtsgrhhvtbsnlxgxu' : 'drill', takenAt: taken.takenAt, postgres: source.version,
+    rehearsal: proven ? 'put back into an empty database and found the same' : 'FAILED: this copy has not been shown to restore',
+    shape: source.shape, tables: source.tables, sequences: source.sequences, migrations: source.history,
+    leftOutOfTheData: dataExclusions(source), authColumns: source.authColumns, files: {} };
   for (const [what, path] of Object.entries(files)) manifest.files[`${what}.sql`] = { bytes: statSync(path).size, sha256: await sha256(path) };
   writeFileSync(`${dir}/manifest.json`, `${JSON.stringify(manifest, null, 2)}\n`);
 
-  if (taken.source !== 'hosted') { say('A drill: the database copied was made from this repository\'s migrations on the runner. Nothing of the project was read and nothing is kept.'); return finish(true); }
+  if (taken.source !== 'hosted') { say('A drill: the database copied was made from this repository\'s migrations on the runner. Nothing of the project was read and nothing is kept.'); return finish(proven); }
   if (!passphrase) {
-    say('No passphrase is set (secret AYAHSPRING_BACKUP_PASSPHRASE), so NOTHING WAS KEPT: this run proves the copy can be taken and put back, and is not a backup.');
-    return finish(true);
+    say(proven
+      ? 'No passphrase is set (secret AYAHSPRING_BACKUP_PASSPHRASE), so NOTHING WAS KEPT: this run proves the copy can be taken and put back, and is not a backup.'
+      : 'No passphrase is set (secret AYAHSPRING_BACKUP_PASSPHRASE), so nothing was kept.');
+    return finish(proven);
   }
-  const archive = `${dir}/ayahspring-${manifest.takenAt.slice(0, 10)}.tar.gz`;
+  // A copy that failed its rehearsal is still kept, and named for what it is:
+  // the only copy there is must not be thrown away because a scratch database
+  // would not take it. The run is red all the same.
+  const archive = `${dir}/ayahspring-${manifest.takenAt.slice(0, 10)}${proven ? '' : '-UNPROVEN'}.tar.gz`;
   const packed = await run('tar', ['-C', dir, '-czf', archive, 'roles.sql', 'schema.sql', 'data.sql', 'manifest.json']);
-  if (packed.code !== 0) return fail('The copy restored, and could not be packed into one file. Nothing was kept.');
+  if (packed.code !== 0) return fail('The copy could not be packed into one file. Nothing was kept.');
   // The passphrase goes to gpg on its standard input, never as an argument or a file.
   const gpg = (args) => run('gpg', ['--batch', '--yes', '--quiet', '--no-tty', '--pinentry-mode', 'loopback', '--passphrase-fd', '0', ...args], { input: [`${passphrase}\n`] });
   const sealed = await gpg(['--symmetric', '--cipher-algo', 'AES256', '--s2k-digest-algo', 'SHA512', '--s2k-count', '65011712', '--output', `${archive}.gpg`, archive]);
-  if (sealed.code !== 0) return fail('The copy restored, and could not be encrypted. Nothing was kept.');
+  if (sealed.code !== 0) return fail('The copy could not be encrypted. Nothing was kept.');
   const opened = await gpg(['--decrypt', '--output', `${archive}.check`, `${archive}.gpg`]);
   if (opened.code !== 0 || await sha256(`${archive}.check`) !== await sha256(archive)) return fail('The encrypted copy did not open again to the same bytes. Nothing was kept.');
   say(`Kept: ${archive.split('/').pop()}.gpg, ${statSync(`${archive}.gpg`).size} bytes, sha256 ${await sha256(`${archive}.gpg`)}. It opened again with the passphrase to the same bytes. It is this run's artifact for 90 days; download it and keep it somewhere of your own.`);
+  if (!proven) say('KEPT ALTHOUGH THE REHEARSAL FAILED. It is the data as the project held it, and nobody has seen it restore. Read the lines above before relying on it.');
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `encrypted=${archive}.gpg\n`);
-  return finish(true);
+  return finish(proven);
 }
 
 // `copy`, `restore`, or both in one go (the default). The drill runs the two

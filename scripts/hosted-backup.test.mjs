@@ -8,7 +8,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
-import { BEFORE_RESTORE, describeDump, differences, leftOutRows, measure, safeErrors } from './hosted-backup.mjs';
+import { BEFORE_RESTORE, authGap, dataExclusions, describeDump, differences, leftOutRows, measure, safeErrors, unreadAuth } from './hosted-backup.mjs';
 
 const SCHEMA = `
   create table public.courses (id int primary key, title text not null, made timestamptz not null);
@@ -137,4 +137,61 @@ test('tables left out of the copy are counted, and rows in one are said', async 
   await db.exec('insert into storage.objects values (1)');
   assert.deepEqual(leftOutRows(await measure(db)), ['storage.objects (1 rows)']);
   assert.deepEqual(leftOutRows({}), []);
+});
+
+const AUTH = `create schema auth;
+  create table auth.users (id int primary key, email text);
+  create table auth.identities (id int, provider text);
+  create table auth.sessions (id int);
+  create table auth.schema_migrations (version text);
+  insert into auth.schema_migrations values ('1')`;
+
+test('an Auth table that holds nothing is left out of the data, and one that holds a row never is', async () => {
+  const db = await database();
+  await db.exec(`${AUTH}; create schema storage; create table storage.objects (id int)`);
+  const empty = await measure(db);
+  assert.deepEqual(dataExclusions(empty), ['auth.identities', 'auth.sessions', 'auth.users', 'storage.objects']);
+  assert.equal(empty.tables['auth.schema_migrations'], undefined, 'Auth\'s own list of its migrations is not measured');
+  await db.exec(`insert into auth.users values (1, 'synthetic@example.invalid')`);
+  const one = await measure(db);
+  assert.deepEqual(dataExclusions(one), ['auth.identities', 'auth.sessions', 'storage.objects']);
+  assert.deepEqual(one.authColumns['auth.users'], [['id', 'integer'], ['email', 'text']]);
+  assert.deepEqual(unreadAuth(one), []);
+  assert.deepEqual(unreadAuth({ tables: { 'auth.users': { rows: null, print: '' }, 'public.courses': { rows: 2, print: 'x' } } }), ['auth.users']);
+});
+
+test('Auth tables that differ only by existing, and hold nothing, are not a difference; a lost account is', async () => {
+  const project = await database();
+  await project.exec(`${AUTH}; create table auth.custom_oauth_providers (id int, client_auth_method text)`);
+  const older = await database();
+  await older.exec(`${AUTH}; create table auth.instances (id int)`);
+  assert.deepEqual(differences(await measure(project), await measure(older)), []);
+
+  await project.exec(`insert into auth.users values (1, 'synthetic@example.invalid')`);
+  assert.deepEqual(differences(await measure(project), await measure(older)), ['table auth.users: 1 rows in the project, 0 after the restore']);
+  await older.exec(`insert into auth.users values (1, 'synthetic@example.invalid')`);
+  assert.deepEqual(differences(await measure(project), await measure(older)), []);
+  await older.exec(`insert into auth.instances values (1)`);
+  assert.deepEqual(differences(await measure(project), await measure(older)), ['table auth.instances: there after the restore and not in the project']);
+  const unread = await measure(project); unread.tables['auth.users'] = { rows: null, print: '' };
+  assert.deepEqual(differences(unread, await measure(project)), ['table auth.users: could not be read in the project']);
+});
+
+test('columns a newer Auth has are found for the tables in the copy, and only for those', async () => {
+  const project = await database();
+  await project.exec(`${AUTH}; alter table auth.users add column is_new boolean, add column label varchar(20);
+    alter table auth.sessions add column never_copied text;
+    create table auth.newer_table (id int);
+    insert into auth.users (id) values (1)`);
+  const scratch = await database();
+  await scratch.exec(AUTH);
+  const source = await measure(project);
+  const columns = (await measure(scratch)).authColumns;
+  assert.deepEqual(authGap(source, columns), { columns: [
+    { table: 'auth.users', column: 'is_new', type: 'boolean' },
+    { table: 'auth.users', column: 'label', type: 'character varying(20)' },
+  ], missingTables: [] }, 'auth.sessions holds nothing, is not in the copy, and so needs nothing');
+  await project.exec('insert into auth.newer_table values (1)');
+  assert.deepEqual(authGap(await measure(project), columns).missingTables, ['auth.newer_table']);
+  assert.deepEqual(authGap(await measure(scratch), columns), { columns: [], missingTables: [] });
 });
