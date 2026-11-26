@@ -634,6 +634,23 @@ all off; the privacy notice in force is version 2 with version 3 a draft; the
 refunds policy in force is version 3. The job is spent: never run it again,
 and never push its trigger prefix again.
 
+**The 369th has a job, and nobody has asked for it yet.** The 369th is
+`20261281162000_provider_events.sql`: somewhere to write down what a mail
+provider says happened to a message after it was handed over. One table
+(`provider_events`), a few columns on `outbound_messages`, and two functions,
+of which the one that writes may be called by the server's own role only. It
+changes no existing row and turns no switch on. Its job is
+`scripts/hosted-migration-369.mjs`, run by the workflow "Apply Supabase test
+migration 369" on a commit whose message starts with that workflow's own
+trigger words (read them in `.github/workflows/supabase-test-369.yml`; they
+are not repeated here so that nobody pastes them by accident), behind the
+same environment and approval. It starts only from exactly the 368 with no
+Auth user and no learner, so **it has to run before anybody signs up**, which
+means before the deployed site is given to anyone. Without it the site still
+works: only the page that receives the mail provider's reports
+(`/api/email/webhook`) has nowhere to write, and that page does nothing
+until the provider is connected.
+
 **The 358th went first, so the order below can no longer be kept on the
 test project.** No application has been deployed there, so nothing is
 running against it that knows only eight kinds. What it means now: **do not
@@ -1401,8 +1418,9 @@ connection, not a build. The owner's page `/admin/connections` shows which of
 these the deployment has been given (names of missing variables, never a
 value).
 
-1. **The database's last migrations.** Approve the job for 359 to 368, then the
-   369th needs a job of its own (above).
+1. **The database's last migration.** 359 to 368 are applied. The 369th has
+   its job (above): say the word, then approve the run. Do this before the
+   first account is made.
 2. **A deployment** (section 4): the environment in 4.1, starting with the
    three Supabase variables and `NEXT_PUBLIC_SITE_URL`. Until the domain is
    owned, the site's address is the one the host gives; change
