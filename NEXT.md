@@ -3553,6 +3553,35 @@ memory of it, starts from the repository and not from a conversation.
 - *What this leaves behind.* The 369th migration is not in the hosted job
   for 359 to 368 and needs its own. Do not deploy this tree against a
   database without it.
+- *Measured on commit `4f5dc34`.* Database suite 2797 passed, 0 failed, in
+  182 suites; web tests 2787 passed, 0 failed; type check, lint and the
+  repository check clean.
+- *Not built or half done, as told to the owner on 2026-11-26.*
+  - **Waiting for an account or the domain:** any deployment; the domain
+    and DNS; a Resend account (no email has ever been sent; the probe has
+    never met Resend); Supabase's SMTP for sign-in emails; the scheduler's
+    two settings and a merge to `main`; media storage and the encoder
+    machine; Google sign-in; every payment provider (MTN, Airtel and
+    M-Pesa never called; pawaPay only in its sandbox, never a callback or
+    refund); SMS and phone codes (no provider chosen).
+  - **Waiting for the owner:** approval of the hosted job for 359 to 368;
+    a speaker's reading of the ky, tk, ta and ne drafts; a qualified
+    reading of privacy notice v3 (a draft, English only) and the three
+    legal questions; trademark and domain clearance for the name.
+  - **Half done in the code:** a hosted job for the 369th migration; no
+    link anywhere to `/discuss`; no page for `board_kept_post()`; no
+    `board_reported` sentence in the notifications catalogue; no agreement
+    box on `/sign-in`; learner pages still in English only (`saved`,
+    `downloads`, `paths`, `learn/ask`, `support`, `about`, `panel`) and
+    all staff pages; fr `star5` and fil `revCountOne` equal to English;
+    `notify.lead` untrue for the owner once email is on; institution
+    single sign-on (SAML and OIDC unbuilt); accessibility (the second half
+    in `FLAGS.md`).
+  - **Never started:** recitation correction (`learning.recitation`);
+    native mobile apps; push notifications.
+  - **Never checked:** any browser but Chromium; drawings of `/progress`,
+    `/certificates`, `/handover`, `/family/guardians`, `/verify` and
+    `/admin/connections` signed in; backups and a restore.
 
 ### The hosted job for 359 to 368, and the Resend probe, 2026-11-26
 
