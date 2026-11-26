@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { parseReportQueue } from '@/lib/boards';
+import { describeOwnerAlerts, parseOwnerAlertStanding } from '@/lib/owner-alert';
 import { translateFor } from '@/lib/translate-reader';
 import { BoardReports } from './board-reports';
 
@@ -40,6 +41,12 @@ export default async function AdminBoardsPage() {
 
   const { data, error } = await supabase.rpc('board_report_queue');
   const queue = error ? null : parseReportQueue(data);
+  // How the owner's own email alerts stand. Governance moderates here too and
+  // is not sent one: the function refuses them, and then the line is not drawn.
+  const alerts = await supabase.rpc('my_owner_alerts').then(
+    (r) => (r.error ? null : parseOwnerAlertStanding(r.data)),
+    () => null,
+  );
   // Null when translation is off: then no button is drawn.
   const translate = await translateFor(supabase);
 
@@ -54,9 +61,16 @@ export default async function AdminBoardsPage() {
         <h1>Discussion reports</h1>
         <p className="muted">
           Posts on the two boards that somebody has reported. Nothing is held before it is shown, so
-          this page is where a post is taken down. Nobody is sent a message when a post is
-          reported: the number waiting is on the owner&rsquo;s dashboard, and on nobody else&rsquo;s.
+          this page is where a post is taken down. When a post is reported the owner is told, and
+          nobody else: the number waiting is on the owner&rsquo;s dashboard, a message is written
+          to the owner&rsquo;s notifications, and an email alert is queued for the owner. None of
+          the three carries the post or anybody&rsquo;s name.
         </p>
+        {alerts ? (
+          <p className="muted" data-owner-alerts={alerts.sending ? 'on' : 'off'}>
+            {describeOwnerAlerts(alerts)}
+          </p>
+        ) : null}
       </div>
 
       {!queue ? (
