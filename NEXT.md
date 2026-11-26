@@ -3248,7 +3248,9 @@ memory of it, starts from the repository and not from a conversation.
   `arena/4f30fd1d-platform`; no pull request is open for it. Every flag is
   off. No application has been deployed anywhere. The test project's
   database has the first 358 of the tree's 368 migrations; the last ten
-  have no job and none was asked for (`docs/deploy/README.md`).
+  have one job between them, asked for by the owner on 2026-11-26
+  (`scripts/hosted-migration-368.mjs`, `docs/deploy/README.md`). It runs
+  only when the owner approves it in GitHub, and has not run.
 - *Scratch folders are not the record.* `tmp-words/` and `tmp-shots/`
   were working folders and were never committed; they are ignored now.
   The working machine was rolled back more than once and took the drafts

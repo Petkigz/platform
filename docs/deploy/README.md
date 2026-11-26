@@ -425,9 +425,9 @@ from that tree. The 359th to the 368th
 `20261281158000_board_words_kept_owner_told.sql`,
 `20261281159000_owner_alert_email.sql`,
 `20261281160000_privacy_notice_boards_draft.sql` and
-`20261281161000_board_post_off_the_board_kept.sql`) have **no job yet**, and
-none has been asked for. The 358th has gone, so a job for them can now be
-written against an exact history of 358; it has not been.
+`20261281161000_board_post_off_the_board_kept.sql`) have a job since
+2026-11-26, when the owner asked for one: see "The 359th to the 368th" below.
+**It has not run.**
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -587,6 +587,34 @@ history is 358 long and ends with `teaching_answer_told`
 what it printed was not read; each step's result was. This job is now spent
 too. Every later push to the branch started a run of the same workflow that
 was skipped, cancelled or left pending; none of them is to be approved.
+
+**The 359th to the 368th, in one job.** **Asked for by the owner on
+2026-11-26** ("write a hosted job for the migrations"). The ten are: a new
+version of the refunds policy (a plan can be given back, and then ends); the
+two discussion boards; the translate button's allowance; a child's own
+sign-in from twelve; the count of board reports for the owner and what the
+export leaves out; agreeing before writing on a board; what a closed account
+wrote kept without the account, and a message to the owner for a report; the
+private register for the owner's email alert; version 3 of the privacy
+notice **as a draft**; and a post that is off the board being off it for its
+writer too. Every switch they add is off, `delivery.notifications` stays
+off, and the privacy notice in force stays version 2. Its job is
+`scripts/hosted-migration-368.mjs`, run by the workflow "Apply Supabase test
+migrations 359 to 368" on a commit whose message starts
+`test: apply ayahspring test migrations 359 to 368`, behind the same
+environment and the same approval. It starts only from exactly the 358 with
+no Auth user and no learner, rehearses all ten on the hosted database in one
+transaction and rolls back, compares the two roles' privileges with the
+tested database built from all 368, and applies only if the CLI's dry-run
+names exactly those ten files. The CLI applies each file by itself: if it
+stopped part of the way, a second run would not carry on, and the history
+and schema would have to be compared by hand. The workflow checks out the
+commit the job was reviewed at, so a migration added to the branch later
+does not go with it. Read through the connector on 2026-11-26 before the job
+was written: the test project records 358, ends at `20261281151000`, has no
+Auth user and no learner, and its refunds policy in force is the version the
+359th was written to follow. **Not run yet**; when it has, record the run
+here.
 
 **The 358th went first, so the order below can no longer be kept on the
 test project.** No application has been deployed there, so nothing is
