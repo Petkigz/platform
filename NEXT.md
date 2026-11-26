@@ -10715,3 +10715,20 @@ Admin dashboard · payments UI · mobile · the investor proposal.
 - **P6 consequence.** The scholarly panel is dormant. Before switching it on,
   decide whether anything published under peer review gets retroactive panel
   review or is grandfathered.
+
+### The first real backup run, and what it taught, 2026-11-26
+
+- Run `45836395176` copied the project and could not put the copy back:
+  the project's Auth service is newer than a scratch database's, and one
+  Auth table had a column the scratch one lacked. Nothing was kept.
+- Fixed in `scripts/hosted-backup.mjs`: empty Auth tables are left out of
+  the data; newer Auth columns are added to the scratch database first; a
+  copy whose rehearsal fails is kept as `UNPROVEN` with the run red. Drill
+  `45844781633` passes with a source made newer on purpose.
+- **Still to see:** a passing run against the project, with the passphrase
+  secret in place so that the copy is kept. Record it in
+  `docs/deploy/README.md` section 12.3.
+- Read from the project the same day: Google is switched on in Auth; the
+  site address is still `http://localhost:3000` and the list of redirect
+  addresses is empty, so Google sign-in cannot finish until the app has an
+  address. No mail server is set.

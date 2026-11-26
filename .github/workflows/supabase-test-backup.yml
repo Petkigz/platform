@@ -95,7 +95,9 @@ jobs:
           AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
           AYAHSPRING_BACKUP_PASSPHRASE: ${{ secrets.AYAHSPRING_BACKUP_PASSPHRASE }}
       - name: Keep the encrypted copy, and only that
-        if: ${{ steps.copy.outputs.encrypted != '' }}
+        # always(): a copy whose rehearsal failed is kept too (named UNPROVEN),
+        # and the step before it is red in that case.
+        if: ${{ always() && steps.copy.outputs.encrypted != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ayahspring-backup-${{ github.run_id }}

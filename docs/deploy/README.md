@@ -1543,8 +1543,8 @@ repository's own job.
 project and rehearse a restore" (`.github/workflows/supabase-test-backup.yml`):
 
 1. reads the project inside one READ ONLY transaction and takes its measure:
-   for every table in `public`, and for `auth.users` and `auth.identities`,
-   the number of rows and a fingerprint of them; the sequences; how many
+   for every table in `public`, and for every table of the Auth service
+   (accounts, identities, sessions and the rest), the number of rows and a fingerprint of them; the sequences; how many
    functions, policies, triggers, indexes and constraints there are; every
    privilege `anon` and `authenticated` hold; the migration history;
 2. has the Supabase CLI write three files (roles, schema, data), which is the
@@ -1556,11 +1556,13 @@ project and rehearse a restore" (`.github/workflows/supabase-test-backup.yml`):
 4. measures the scratch database the same way and compares. A table with a
    different number of rows, or the same number and different rows, is named.
    So is any privilege the two API roles hold on one side and not the other;
-5. only then, and only if the environment holds the secret
+5. then, if the environment holds the secret
    `AYAHSPRING_BACKUP_PASSPHRASE` (twenty characters or more), packs the three
    files and the measure into one archive, encrypts it (GnuPG, AES-256,
    symmetric), decrypts it again to check it opens to the same bytes, and
    keeps the encrypted file as the run's artifact for 90 days.
+   If step 3 or 4 failed, the copy is kept all the same, with `UNPROVEN` in
+   its name, and the run is red: read why before relying on it.
 
 It writes nothing to the project. It prints no row, no value and no address:
 this repository and its logs are public. Without the passphrase the run still
@@ -1601,8 +1603,34 @@ loses the passphrase loses every copy made with it.**
   denied for table buckets_vectors`). The copy now leaves out the `storage`
   and `supabase_functions` schemas, counts their rows, and says so loudly if
   one ever holds any. The platform keeps its files in R2 and uses neither.
-- **Not tried yet: a run against the project itself.** It needs the owner's
-  approval. Record the run here when it has happened.
+- **The first run against the project itself failed, also usefully.** Run
+  `45836395176` on 2026-11-26, approved by the owner: the copy was taken
+  (PostgreSQL 17.11; 193 tables, 810 functions, 281 policies, 205 triggers,
+  476 rows; schema 2,723,614 bytes, data 226,222 bytes), and
+  then would not go back: `column "client_auth_method" of relation
+  "custom_oauth_providers" does not exist`. Supabase runs a newer Auth
+  service on the project than the one a scratch database of CLI 3.1.0 starts
+  with, and the copied Auth tables did not fit. The drill could not have
+  seen it, because both of its sides were the same version. Nothing was
+  kept from that run.
+- What changed because of it:
+  - an Auth table that holds nothing is left out of the data. Nothing is
+    lost, and the run names how many were left out;
+  - for an Auth table that does hold rows, any column the project has and
+    the scratch database lacks is added to the scratch database before the
+    copy goes in, and the run names each one. This touches the scratch
+    database only, never the project;
+  - every Auth table is now measured and compared, not only `users` and
+    `identities`;
+  - a copy whose rehearsal fails is **still encrypted and kept**, with
+    `UNPROVEN` in its name and the run red. The only copy of a project must
+    not be thrown away because a scratch database would not take it;
+  - the drill now makes its source's Auth newer on purpose (a new column
+    with a value, a new column on an empty table, a table found nowhere
+    else). Run `45844781633`: the column was added and reported, and all
+    194 tables and 480 rows came back the same.
+- **Not yet seen: a run against the project that passes.** Record it here
+  when it has happened.
 - **Never tried, and not possible on the free tier with two projects in use:**
   a restore into a new *hosted* project. The scratch database is local.
 
