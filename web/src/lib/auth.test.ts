@@ -67,3 +67,24 @@ test('a board member whose board is not convened is not sent to a door that refu
     '/review',
   );
 });
+
+test('a role question that fails is asked again, and is never read as no', async () => {
+  const { askRole } = await import('./auth.ts');
+  const answers = (list: { data: unknown; error: unknown }[]) => {
+    let asked = 0;
+    return { ask: async () => list[Math.min(asked++, list.length - 1)] ?? { data: null, error: 'none' }, count: () => asked };
+  };
+  // Answered: true is yes, anything else is no, and it is asked once.
+  let q = answers([{ data: true, error: null }]);
+  assert.equal(await askRole(q.ask), true); assert.equal(q.count(), 1);
+  for (const data of [false, null, 'true', 1]) {
+    q = answers([{ data, error: null }]);
+    assert.equal(await askRole(q.ask), false); assert.equal(q.count(), 1);
+  }
+  // Failed once, answered the second time: the answer, not a no.
+  q = answers([{ data: null, error: { message: 'fetch failed' } }, { data: true, error: null }]);
+  assert.equal(await askRole(q.ask), true); assert.equal(q.count(), 2);
+  // Never answered: it throws, so the owner is not drawn a learner's page.
+  q = answers([{ data: null, error: { message: 'fetch failed' } }]);
+  await assert.rejects(() => askRole(q.ask), /could not be read/); assert.equal(q.count(), 2);
+});

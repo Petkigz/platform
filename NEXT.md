@@ -10810,3 +10810,16 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   as "cannot be switched". `gateLabel(gate, enabled)` now says "Outside
   setup first" when off and "On, uses outside setup" when on, and the tile
   on `/admin` counts only the ones still off (`web/src/lib/flags.test.ts`).
+- *Google sign-in completed on the live site, 2026-11-27 08:57 UTC*, by
+  the owner with the owner's own address. Read through the connector:
+  still one account; it now carries both `email` and `google`; it holds
+  `platform_admin`, unrevoked, with an active profile; and acting as that
+  account under an OAuth session, `has_role`, `is_privileged` and
+  `staff_attention()` all answer as for the owner.
+- **Open: the owner reported arriving "as a user account, not admin".**
+  Not reproduced and not explained. `/auth/callback` sends to
+  `/dashboard`, which sends an owner to `/admin`. The one path that sends
+  an owner to `/learn` was a role question that *failed* being read as
+  "no"; that is fixed (`askRole()` in `web/src/lib/auth.ts`: asked twice,
+  then the error page). Ask the owner which address they landed on and
+  whether `/admin` opens; do not call this closed until they say.

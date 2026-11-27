@@ -46,6 +46,33 @@ export type RoleFacts = {
   reviewer: boolean;
 };
 
+/**
+ * One role question, where a failed question is not a "no".
+ *
+ * `/dashboard` asked seven of these and read anything but `true` as false,
+ * including a request that failed. So an owner whose questions were not
+ * answered (a cold start, a dropped connection) was sent to `/learn`, the
+ * screen of somebody with no role, with nothing to say why. On 2026-11-27
+ * the owner signed in with Google and reported arriving as an ordinary user
+ * while the database held the same account with its role intact; whether
+ * this was the cause was not established, but it is the one path in the
+ * code that does that.
+ *
+ * Asked twice. If neither is answered this throws, and the site's own error
+ * page offers "try again", which is the truth: nobody knows yet where this
+ * person belongs.
+ */
+export async function askRole(
+  ask: () => PromiseLike<{ data: unknown; error: unknown }>,
+  attempts = 2,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const { data, error } = await ask();
+    if (!error) return data === true;
+  }
+  throw new Error('Your roles could not be read just now.');
+}
+
 export function homeFor(roles: RoleFacts): string {
   if (roles.platformAdmin || roles.governanceAdmin) return '/admin';
   // Every other staff member belongs in the console too: it opens with their own

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { homeFor } from '@/lib/auth';
+import { askRole, homeFor } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Your area' };
@@ -30,10 +30,10 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/sign-in?next=/dashboard');
 
-  const role = async (code: string) => {
-    const { data } = await supabase.rpc('has_role', { p_user_id: user.id, p_role_code: code });
-    return data === true;
-  };
+  // A question that fails is asked again, and is never read as "no": see
+  // `askRole()`. An unanswered one ends on the error page, not on `/learn`.
+  const role = (code: string) =>
+    askRole(() => supabase.rpc('has_role', { p_user_id: user.id, p_role_code: code }));
 
   const [platformAdmin, governanceAdmin, financeAdmin, supportAgent, boardMember, instructor, reviewer] =
     await Promise.all([
@@ -48,10 +48,10 @@ export default async function DashboardPage() {
 
   // Asked only when it can matter: the board question is a setting read.
   const boardActive = boardMember
-    ? (await supabase.rpc('setting_bool', {
+    ? await askRole(() => supabase.rpc('setting_bool', {
         p_key: 'governance.scholar_board_active',
         p_default: false,
-      })).data === true
+      }))
     : false;
 
   redirect(homeFor({
