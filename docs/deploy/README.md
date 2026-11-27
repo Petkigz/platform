@@ -444,6 +444,13 @@ button on `/admin/subjects` does; they can be reactivated there) and keeps
 nothing, and leaves a duplicate alone if anything points at it. **The hosted
 database is one migration behind the tree until its job has run**; nothing
 in the application depends on it, the page only lists two subjects twice.
+Its job is `scripts/hosted-migration-370.mjs`, run by the workflow "Apply
+Supabase test migration 370" on a commit that begins with that workflow's
+trigger words, behind the same environment and approval. It is the first
+job that does not refuse a project holding accounts, because the site is
+deployed; instead its rehearsal on the hosted database must show the two
+duplicates retired, the two that stay active and the number of subjects
+unchanged, or nothing is applied.
 
 Read back afterwards through the read-only connector, separately from the job:
 
