@@ -257,3 +257,19 @@ export function markReadIdsOf(body: unknown): string[] | null {
   if (!ids.every((id) => typeof id === 'string' && UUID.test(id))) return null;
   return [...new Set(ids as string[])];
 }
+
+/**
+ * The first sentence of `/notifications` for the owner, once email is on.
+ *
+ * Everybody else is told, truthfully, that these messages "are not sent to
+ * an inbox or a phone" (`notify.lead`). One reader is the exception: when a
+ * board post is reported, the owner is told here and is also emailed
+ * (`owner-alert.ts`), as soon as `delivery.notifications` is on. English,
+ * like everything written for staff.
+ */
+export const OWNER_LEAD =
+  'Messages from the platform, shown inside the application. One kind is also emailed to you, because you are the owner: a report of a post on a discussion board. Nothing else here is sent to an inbox or a phone.';
+
+export function ownerLeadFor(emailOn: boolean, owner: boolean): string | null {
+  return emailOn && owner ? OWNER_LEAD : null;
+}

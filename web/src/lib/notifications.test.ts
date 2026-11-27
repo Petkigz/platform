@@ -305,3 +305,22 @@ test('the message is still written in English beside its facts, and an old messa
   assert.doesNotMatch(sql, /update public\.notifications/u);
   assert.match(sql, /add column if not exists facts jsonb;/u);
 });
+
+test('the owner is not told nothing is emailed once something is', async () => {
+  const { OWNER_LEAD, ownerLeadFor } = await import('./notifications.ts');
+  // The page's first sentence says its messages "are not sent to an inbox or
+  // a phone". With email on, a report of a board post is emailed to the owner
+  // (`owner-alert.ts`), so for that one reader the sentence was untrue.
+  assert.equal(ownerLeadFor(true, true), OWNER_LEAD);
+  assert.equal(ownerLeadFor(true, false), null);
+  assert.equal(ownerLeadFor(false, true), null);
+  assert.equal(ownerLeadFor(false, false), null);
+  assert.match(OWNER_LEAD, /emailed to you/u);
+  assert.doesNotMatch(OWNER_LEAD, /only place/u);
+
+  const page = readFileSync(new URL('../app/notifications/page.tsx', import.meta.url), 'utf8');
+  // English, like every word written for staff, and marked as English.
+  assert.match(page, /ownerLead \? \(\s*<p className="lede" lang="en" dir="ltr">\{ownerLead\}<\/p>\s*\) : \(\s*<p className="lede">\{t\('notify\.lead'\)\}<\/p>/u);
+  // The role is asked only when email is on: nobody else pays for the question.
+  assert.match(page, /emailOn\s*\? await askRole\(/u);
+});

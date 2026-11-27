@@ -9,7 +9,9 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { NOTIFICATION_KINDS, describeKind, parsePreferences, type NotificationKind, type Preference } from '@/lib/notification-prefs';
 import { formatMinor } from '@/lib/money';
-import { centreOf, planNameOf, type Centre, type CentreReminder, type MessageFacts } from '@/lib/notifications';
+import { askRole } from '@/lib/auth';
+import { isFlagEnabled } from '@/lib/flags';
+import { centreOf, ownerLeadFor, planNameOf, type Centre, type CentreReminder, type MessageFacts } from '@/lib/notifications';
 import { changedSince } from '@/lib/policy-notice';
 
 import { Ending } from '../_shared/ending';
@@ -97,7 +99,7 @@ export default async function NotificationsPage() {
   const num = (value: number) => formatNumber(shown.code, value);
 
   // Each reply on its own: one failing must not take the other with it.
-  const [centreReply, prefsReply, standingReply] = await Promise.all([
+  const [centreReply, prefsReply, standingReply, emailOn] = await Promise.all([
     supabase.rpc('my_notifications', { p_limit: 50 }).then(
       (reply) => reply,
       () => ({ data: null, error: { code: 'no-answer', message: '' } }),
@@ -110,7 +112,16 @@ export default async function NotificationsPage() {
       (reply) => reply,
       () => ({ data: null, error: { code: 'no-answer', message: '' } }),
     ),
+    isFlagEnabled(supabase, 'delivery.notifications').catch(() => false),
   ]);
+
+  // With email on, one reader is emailed something that is also shown here:
+  // the owner, when a board post is reported. The page's first sentence says
+  // nothing is emailed, so the owner is given a true one. See `OWNER_LEAD`.
+  const owner = emailOn
+    ? await askRole(() => supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' })).catch(() => false)
+    : false;
+  const ownerLead = ownerLeadFor(emailOn, owner);
 
   // The documents that changed since this reader agreed to them. Not read is
   // not drawn: the page is about messages, and this is said elsewhere too.
@@ -279,7 +290,11 @@ export default async function NotificationsPage() {
           <Link href="/account">{t('merge.back')}</Link>
         </p>
         <h1>{t('footer.notifications')}</h1>
-        <p className="lede">{t('notify.lead')}</p>
+        {ownerLead ? (
+          <p className="lede" lang="en" dir="ltr">{ownerLead}</p>
+        ) : (
+          <p className="lede">{t('notify.lead')}</p>
+        )}
       </div>
 
       {centre === null && (
