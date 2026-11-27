@@ -11153,3 +11153,14 @@ started: recitation correction, native apps, push notifications.
   `data/review.txt`.
   **Still English:** `/review/[assignmentId]`, and the staff areas
   (`/admin`, `/teach`, `/institution`).
+- **The responsive workflow's first job is now two.** With the review
+  check added, the job `responsive` ran to its 25 minute limit on the
+  push of `9218d24` and was stopped during "lesson and video layout",
+  with "enrolled course layout" not run; every check before those two
+  passed, the review one among them. The push before took 23 minutes
+  27 seconds, so there was a minute and a half to spare and it was
+  used. The checks from "the sponsors' pool" down are now the job
+  `responsive-payments-and-lessons`, with the same setup; each check
+  starts its own server, so nothing crosses the split. Each half is
+  about twelve minutes of the 25. The next unit's check goes in
+  whichever half is shorter.

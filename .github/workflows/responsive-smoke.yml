@@ -271,6 +271,23 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Sponsored seats responsive test::${s}`)' "$RUNNER_TEMP/sponsorship-responsive.log"
             exit 1
           fi
+  # The second half of the checks above, in a job of its own since 2026-11-27.
+  # As one job they took 23 minutes 27 seconds of the 25 allowed; one more
+  # check and an ordinary slow runner used the rest, and the job was stopped
+  # with its last two checks not run. Nothing depends on the order across the
+  # two halves: each check starts its own server and its own synthetic data.
+  responsive-payments-and-lessons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/responsive" --no-audit --no-fund playwright-core@1.58.2
       - name: Check the sponsors' pool and the asking page in five languages, and what each form says
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
