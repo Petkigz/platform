@@ -91,7 +91,7 @@ const fake = createServer(async (req, res) => {
   if (!signedIn) { res.writeHead(401); res.end('{}'); return; }
   const fn = path.replace('/rest/v1/rpc/', '');
   const thread = state.threads.find((t) => t.id === p.p_thread);
-  const writers = ['set_board_handle', 'post_board_thread', 'post_board_reply', 'withdraw_board_post', 'report_board_post', 'moderate_board_post', 'block_board_handle', 'board_author'];
+  const writers = ['set_board_handle', 'post_board_thread', 'post_board_reply', 'withdraw_board_post', 'report_board_post', 'moderate_board_post', 'block_board_handle', 'board_author', 'board_kept_post'];
   if (writers.includes(fn) && state.refuse) { res.writeHead(state.refuse[0]); send(state.refuse[1]); return; }
   if (fn === 'my_board') send(state[p.p_board]);
   else if (fn === 'board_threads_page') send({ more: state.more, threads: state.threads.filter((t) => t.state === 'visible').map((t) => ({ id: t.id, title: t.title, handle: t.handle, kind: t.kind, mine: t.mine, replies: t.replies.filter((r) => r.state === 'visible').length, createdAt: t.createdAt, lastActivityAt: t.lastActivityAt })) });
@@ -126,6 +126,11 @@ const fake = createServer(async (req, res) => {
     send({ students: true, teachers: false, reports: state.reports.map((r) => { const t = state.threads.find((x) => x.id === r.thread); return { threadId: t.id, replyId: null, board: 'students', title: t.title, body: t.body, handleId: HANDLE_ID, handle: t.handle, kind: t.kind, blocked: false, postedAt: AT, reports: 1, firstReportedAt: AT, reasons: [r.reason] }; }) });
   }
   else if (fn === 'board_author') send({ handle: 'synthetic_other', userId: OTHER_ACCOUNT, name: OTHER_NAME });
+  else if (fn === 'board_kept_post') {
+    if (!state.staff) return raise('not_allowed', 403);
+    if (!state.kept) { res.writeHead(400); send({ code: 'P0002', message: 'board:not_found', details: null, hint: null }); return; }
+    send(state.kept);
+  }
   else if (fn === 'moderate_board_post') { if (p.p_remove) thread.state = 'removed'; state.reports = state.reports.filter((r) => r.thread !== p.p_thread); send({ removed: p.p_remove, reportsClosed: 1 }); }
   else if (fn === 'block_board_handle') send({ blocked: p.p_block });
   else if (fn === 'notification_badge') send(0);
@@ -197,7 +202,8 @@ try {
     const response = await fetch(`${origin}/api/boards`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body), signal: AbortSignal.timeout(90000) });
     const text = await response.text();
     assert.equal(text.includes('SYNTHETIC-DATABASE'), false, `the route passed on a sentence that is not its own: ${text}`);
-    return { status: response.status, json: JSON.parse(text) };
+    // The headers are carried but not counted: an answer is compared whole by its status and its body.
+    return Object.defineProperty({ status: response.status, json: JSON.parse(text) }, 'headers', { value: response.headers, enumerable: false });
   };
   const expect = (answer, status, code, what) => {
     assert.equal(answer.status, status, `${what}: ${JSON.stringify(answer)}`);
@@ -407,6 +413,23 @@ try {
   assert.deepEqual(done.json, { ok: true, author: { handle: 'synthetic_other', userId: OTHER_ACCOUNT, name: OTHER_NAME } });
   assert.deepEqual(rpcs('board_author').at(-1).payload, { p_thread: THREAD, p_reply: null, p_reason: 'Synthetic reason to look' });
 
+  // What a closed account had written: a reason, the staff, and words that are whole.
+  const KEPT = { title: 'Synthetic kept title', body: 'Synthetic kept <i>words</i>', writtenAt: AT, keptAt: AT };
+  state = fresh();
+  expect(await send({ action: 'kept', threadId: THREAD, reason: 'too short' }), 400, 'reason_required', 'kept words with a short reason');
+  expect(await send({ action: 'kept', threadId: 'not-an-id', reason: 'Synthetic reason to read' }), 404, 'not_found', 'kept words of no post');
+  assert.equal(rpcs('board_kept_post').length, 0, 'a refused look reached the database');
+  expect(await send({ action: 'kept', threadId: THREAD, reason: 'Synthetic reason to read' }), 403, 'not_allowed', 'kept words asked for by a member');
+  state.staff = true;
+  expect(await send({ action: 'kept', threadId: THREAD, reason: 'Synthetic reason to read' }), 404, 'not_found', 'a post with nothing kept');
+  state.kept = { ...KEPT, body: '' };
+  expect(await send({ action: 'kept', threadId: THREAD, reason: 'Synthetic reason to read' }), 502, 'unconfirmed', 'kept words that are not whole');
+  state.kept = KEPT;
+  done = await send({ action: 'kept', threadId: THREAD, replyId: null, reason: '  Synthetic reason to read  ' });
+  assert.deepEqual(done.json, { ok: true, kept: KEPT });
+  assert.equal(done.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(rpcs('board_kept_post').at(-1).payload, { p_thread: THREAD, p_reply: null, p_reason: 'Synthetic reason to read' });
+
   // ------------------------------------------------------------ the staff desk
   state = fresh();
   const notStaff = await request('/admin/boards', { cookie });
@@ -418,6 +441,10 @@ try {
   hasNot(desk, [OTHER_ACCOUNT, OTHER_NAME], '/admin/boards before anybody looked');
   state.reports = [];
   has(inner(await (await request('/admin/boards', { cookie })).text()), ['No post has an open report.'], '/admin/boards, empty');
+  // The form for what a closed account wrote, filled in from the link on a thread and from nothing else.
+  const named = inner(await (await request(`/admin/boards?thread=${THREAD}&reply=${OTHER_ACCOUNT}`, { cookie })).text());
+  has(named, ['<h2 style="margin-top:0">What a closed account had written</h2>', 'Read what was written (recorded)', `value="${THREAD}"`, `value="${OTHER_ACCOUNT}"`], '/admin/boards with a post named');
+  hasNot(inner(await (await request('/admin/boards?thread=%22%3E%3Cb%3E&reply=x', { cookie })).text()), ['<b>', 'value="x"'], '/admin/boards with a post that is not one');
 
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
@@ -541,7 +568,43 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
     }
-    console.log('Boards in a browser: three pages at three widths in English, Arabic and Tamil fit and ask the database nothing from the browser; in Arabic at 390 a username was refused twice in Arabic and then chosen, a thread started, answered, the answer taken back in place, and another post reported only once a reason was typed; the staff desk showed the account behind a post only after a reason.');
+
+    // What a closed account wrote, at 390, reached by the link a thread carries: nothing
+    // is asked without a reason, a post with nothing kept is said to have nothing, and
+    // the words are shown as written, once, after a reason.
+    {
+      state = fresh(); state.staff = true; state.students = { ...state.students, moderator: true };
+      state.threads[0].replies[0].body = '[erased]';
+      const reading = await visit(`/discuss/students/${THREAD}`, 'en', 390);
+      const link = reading.tab.locator(`[data-board-post="${REPLY}"] [data-board-kept-link] a`);
+      assert.equal(await link.getAttribute('href'), `/admin/boards?thread=${THREAD}&reply=${REPLY}#kept`);
+      // The first post still has its words, so it carries no such link.
+      assert.equal(await reading.tab.locator('[data-board-post="thread"] [data-board-kept-link]').count(), 0);
+      await reading.context.close();
+
+      const { context, tab, errors, sent } = await visit(`/admin/boards?thread=${THREAD}&reply=${REPLY}`, 'en', 390);
+      const form = tab.locator('[data-board-kept]');
+      assert.equal(await form.locator('#kept-thread').inputValue(), THREAD);
+      assert.equal(await form.locator('#kept-reply').inputValue(), REPLY);
+      await form.getByRole('button', { name: 'Read what was written (recorded)' }).click();
+      await form.getByText('Write why you need to read this, in at least 10 characters. It is kept in the audit log.').waitFor();
+      assert.equal(sent.length, 0, 'kept words were asked for with no reason');
+      await form.locator('#kept-reason').fill('Synthetic reason to read this');
+      await form.getByRole('button', { name: 'Read what was written (recorded)' }).click();
+      await form.getByText('Nothing is kept for that post.', { exact: false }).waitFor();
+      assert.equal(await form.locator('[data-board-kept-words]').count(), 0);
+      state.kept = { title: null, body: 'Synthetic kept <i>words</i>', writtenAt: AT, keptAt: AT };
+      await form.getByRole('button', { name: 'Read what was written (recorded)' }).click();
+      await form.locator('[data-board-kept-words]').waitFor();
+      assert.match(await form.locator('[data-board-kept-words]').innerText(), /Synthetic kept <i>words<\/i>/u);
+      assert.match(await form.locator('[data-board-kept-words]').innerText(), /This look is in the audit log, with your reason\./u);
+      assert.deepEqual(sent.at(-1), { action: 'kept', threadId: THREAD, replyId: REPLY, reason: 'Synthetic reason to read this' });
+      assert.ok(await fits(tab), 'the kept words are wider than a phone');
+      await shot(tab, 'boards-kept-en-390');
+      assert.deepEqual(errors.filter((e) => !e.includes('404')), []);
+      await context.close();
+    }
+    console.log('Boards in a browser: three pages at three widths in English, Arabic and Tamil fit and ask the database nothing from the browser; in Arabic at 390 a username was refused twice in Arabic and then chosen, a thread started, answered, the answer taken back in place, and another post reported only once a reason was typed; the staff desk showed the account behind a post only after a reason, and what a closed account had written only after one too, from the link its thread carries.');
   }
   console.log('Boards HTTP smoke passed. Not real Auth, RLS or the board functions’ own rules; every username, post and reason in it is invented.');
 } catch (e) { console.error(seen.logs.slice(-4000)); throw e; }

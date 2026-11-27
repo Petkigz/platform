@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isFlagEnabled } from '@/lib/flags';
 import { fetchMyCourses } from '@/lib/authoring';
 import { myScreeningSentence, screeningStatusLabel, type MyScreening } from '@/lib/screening';
 import { teacherHeadline, type MyTakedown } from '@/lib/takedowns';
@@ -42,9 +43,11 @@ export default async function TeachPage() {
   // Teaching is an appointment (decided 2026-10-22): the database refuses a
   // course insert without the role, and this page says why rather than showing a
   // form that will fail. The owner holds every control and is a teacher besides.
-  const [{ data: instructor }, { data: owner }] = await Promise.all([
+  const [{ data: instructor }, { data: owner }, teacherBoardOn] = await Promise.all([
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'instructor' }),
     supabase.rpc('has_role', { p_user_id: user.id, p_role_code: 'platform_admin' }),
+    // The teachers' board, linked from here while it is switched on.
+    isFlagEnabled(supabase, 'community.teacher_board').catch(() => false),
   ]);
   if (instructor !== true && owner !== true) {
     return (
@@ -221,6 +224,12 @@ export default async function TeachPage() {
         {' · '}
         <Link href="/teach/media">Media library</Link> — upload lesson recordings and see which ones are ready to use.
       </p>
+      {teacherBoardOn && (
+        <p>
+          <Link href="/discuss/teachers">Teachers’ discussion</Link> — the board for teachers only. You
+          write there under a username, not your name.
+        </p>
+      )}
       <p>
         <Link href="/teach/earnings">Earnings</Link> — what your courses have earned, per currency,
         and the sales behind it. Nothing is paid out yet: this is the record, not a balance.

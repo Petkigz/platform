@@ -425,3 +425,36 @@ export function parseAuthor(raw: unknown): PostAuthor | null {
   if (row.userId !== null && !isId(row.userId)) return null;
   return { handle, userId: (row.userId as string | null) ?? null, name: text(row.name) };
 }
+
+// ---------------------------------------------------------------------------
+// What a closed account had written
+// ---------------------------------------------------------------------------
+/** What a post says on the board once its writer's account has closed. */
+export const ERASED = '[erased]';
+
+/** The words `board_kept_post()` answers with. Not whose they were: that was cut when the account closed. */
+export type KeptWords = { title: string | null; body: string; writtenAt: string; keptAt: string };
+
+export function parseKept(raw: unknown): KeptWords | null {
+  const row = record(raw);
+  const body = text(row?.body);
+  const writtenAt = moment(row?.writtenAt);
+  const keptAt = moment(row?.keptAt);
+  if (!row || !body || !writtenAt || !keptAt) return null;
+  // A thread's first post has a title and a reply has none; anything else is not a title.
+  if (row.title !== null && row.title !== undefined && text(row.title) === null) return null;
+  return { title: text(row.title), body, writtenAt, keptAt };
+}
+
+/**
+ * The thread somebody named, by its id or by the address of its page.
+ *
+ * A moderator has the thread open in another tab, so what they have to hand
+ * is its address. Anything else is not a thread.
+ */
+export function threadIdOf(input: string): string | null {
+  const said = input.trim();
+  if (isId(said)) return said.toLowerCase();
+  const found = /\/discuss\/(?:students|teachers)\/([0-9a-f-]{36})(?:[/?#]|$)/iu.exec(said)?.[1];
+  return found && isId(found) ? found.toLowerCase() : null;
+}

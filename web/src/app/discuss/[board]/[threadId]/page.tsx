@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { formatDateTime, translator } from '@/lib/i18n';
-import { boardOf, boardReasonOf, isId, mayEnter, parseStanding, parseThread } from '@/lib/boards';
+import { ERASED, boardOf, boardReasonOf, isId, mayEnter, parseStanding, parseThread } from '@/lib/boards';
 import { TranslateButton } from '@/components/translate-button';
 import { translateFor } from '@/lib/translate-reader';
 import { PostActions, ReplyForm } from '../../board-forms';
@@ -137,6 +137,13 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
         <div className="board-written" {...written}>
           {thread.body}
         </div>
+        {/* The writer's account has closed. The words are kept, and a
+            moderator is shown the way to them; it is a staff desk, in English. */}
+        {standing.moderator && thread.body === ERASED ? (
+          <p className="muted" lang="en" dir="ltr" data-board-kept-link>
+            <Link href={`/admin/boards?thread=${thread.id}#kept`}>Read what was kept (recorded)</Link>
+          </p>
+        ) : null}
         {thread.state === 'visible' ? (
           <TranslateButton text={`${thread.title}\n\n${thread.body}`} words={translate} />
         ) : null}
@@ -171,6 +178,11 @@ export default async function ThreadPage({ params }: { params: Promise<{ board: 
                 <div className="board-written" {...written}>
                   {reply.body}
                 </div>
+              ) : null}
+              {standing.moderator && reply.body === ERASED ? (
+                <p className="muted" lang="en" dir="ltr" data-board-kept-link>
+                  <Link href={`/admin/boards?thread=${thread.id}&reply=${reply.id}#kept`}>Read what was kept (recorded)</Link>
+                </p>
               ) : null}
               {reply.body && reply.state === 'visible' ? <TranslateButton text={reply.body} words={translate} /> : null}
               {reply.state === 'visible' && thread.state === 'visible' ? (

@@ -12,6 +12,7 @@ import {
   handleFaultOf,
   isId,
   parseAuthor,
+  parseKept,
   reasonFaultOf,
   threadFaultOf,
   type BoardOutcome,
@@ -180,6 +181,23 @@ export async function POST(request: Request) {
     const author = parseAuthor(data);
     if (!author) return named('unconfirmed');
     return NextResponse.json({ ok: true, author }, { headers: { 'cache-control': 'no-store' } });
+  }
+
+  // What a closed account had written in one post. The database writes the
+  // audit entry before it answers, and the answer is not kept anywhere here.
+  if (action === 'kept') {
+    if (!post) return named('not_found');
+    const reason = str(body.reason).trim();
+    if ([...reason].length < LOOK_REASON_MIN) return named('reason_required');
+    const { refusal, data } = await ask('board_kept_post', {
+      p_thread: post.threadId,
+      p_reply: post.replyId,
+      p_reason: reason,
+    });
+    if (refusal) return refusal;
+    const kept = parseKept(data);
+    if (!kept) return named('unconfirmed');
+    return NextResponse.json({ ok: true, kept }, { headers: { 'cache-control': 'no-store' } });
   }
 
   return named('not_found');

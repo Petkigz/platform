@@ -3,10 +3,11 @@ import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { parseReportQueue } from '@/lib/boards';
+import { isId, parseReportQueue } from '@/lib/boards';
 import { describeOwnerAlerts, parseOwnerAlertStanding } from '@/lib/owner-alert';
 import { translateFor } from '@/lib/translate-reader';
 import { BoardReports } from './board-reports';
+import { KeptWords } from './kept-words';
 
 export const metadata = { title: 'Discussion reports' };
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,20 @@ export const dynamic = 'force-dynamic';
  *
  * Owner or governance only, which is who `can_moderate_boards()` lets act.
  */
-export default async function AdminBoardsPage() {
+export default async function AdminBoardsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ thread?: string | string[]; reply?: string | string[] }>;
+}) {
+  // A post named by the link on a thread: both are ids or they are not used.
+  const named = await searchParams;
+  const idOf = (value: string | string[] | undefined): string => {
+    const one = Array.isArray(value) ? value[0] : value;
+    return isId(one) ? one : '';
+  };
+  const keptThread = idOf(named.thread);
+  const keptReply = keptThread ? idOf(named.reply) : '';
+
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
@@ -90,6 +104,10 @@ export default async function AdminBoardsPage() {
           <BoardReports reports={queue.reports} translate={translate} />
         </>
       )}
+
+      <div style={{ marginTop: '1.5rem' }}>
+        <KeptWords threadId={keptThread} replyId={keptReply} translate={translate} />
+      </div>
     </div>
   );
 }

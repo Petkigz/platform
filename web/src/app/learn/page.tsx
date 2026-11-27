@@ -130,6 +130,7 @@ export default async function LearnPage() {
   const [
     profileResult, enrolmentResult, learnerResult, savedResult,
     liveOn, streaksOn, progressOn, hifzOn, counterOn, hijriOn, prayerTimesOn,
+    studentBoardOn, teacherBoardOn,
   ] = await Promise.all([
     supabase.from('user_profiles').select('display_name').eq('user_id', user.id).maybeSingle(),
     supabase.from('course_enrolments')
@@ -150,6 +151,11 @@ export default async function LearnPage() {
     isFlagEnabled(supabase, 'companion.dhikr_counter').catch(() => false),
     isFlagEnabled(supabase, 'companion.hijri_date').catch(() => false),
     isFlagEnabled(supabase, 'companion.calculated_prayer_times').catch(() => false),
+    // The discussion boards. The link is a way in, shown while either board
+    // is switched on; whether this account is let in is the discussion page's
+    // to say, with the reason. The same rule as the card on `/account`.
+    isFlagEnabled(supabase, 'community.student_board').catch(() => false),
+    isFlagEnabled(supabase, 'community.teacher_board').catch(() => false),
   ]);
 
   const { data: profiles, error: profileError } = profileResult;
@@ -207,6 +213,7 @@ export default async function LearnPage() {
           <Link href="/downloads">{t('learn.onDevice')}</Link>
           {/* Remains reachable when the assistant flag is off, like saved courses. */}
           <Link href="/learn/ask">{t('learn.ask')}</Link>
+          {(studentBoardOn || teacherBoardOn) && <Link href="/discuss">{t('board.title')}</Link>}
           <form action="/sign-out" method="post">
             <button type="submit" className="btn ghost">{t('action.signOut')}</button>
           </form>

@@ -214,3 +214,62 @@ test('only the staff desk reads the account behind a post', () => {
     assert.doesNotMatch(source, /display_name|user_profiles|\.email|userId/u, page);
   }
 });
+
+test('a board that is switched on can be reached from where its people work', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (path: string) => readFileSync(new URL(`../app/${path}`, import.meta.url), 'utf8');
+  // The only way in was a card far down `/account`. A student works on
+  // `/learn` and a teacher on `/teach`.
+  const learn = read('learn/page.tsx');
+  assert.match(learn, /isFlagEnabled\(supabase, 'community\.student_board'\)\.catch\(\(\) => false\)/u);
+  assert.match(learn, /isFlagEnabled\(supabase, 'community\.teacher_board'\)\.catch\(\(\) => false\)/u);
+  // Shown while either board is on; who is let in is the discussion page's to say.
+  assert.match(learn, /\{\(studentBoardOn \|\| teacherBoardOn\) && <Link href="\/discuss">\{t\('board\.title'\)\}<\/Link>\}/u);
+  const teach = read('teach/page.tsx');
+  assert.match(teach, /isFlagEnabled\(supabase, 'community\.teacher_board'\)\.catch\(\(\) => false\)/u);
+  assert.match(teach, /\{teacherBoardOn && \([\s\S]*?<Link href="\/discuss\/teachers">/u);
+  // Each page has that one link and no other: nothing leads to a board that is off.
+  for (const page of [learn, teach]) assert.equal(page.split('href="/discuss').length - 1, 1);
+});
+
+test('what a closed account wrote is read whole or not at all', async () => {
+  const { ERASED, parseKept, threadIdOf } = await import('./boards.ts');
+  const id = '3d9a7c10-5e2b-4a8f-9c1d-0b7e6f5a4020';
+  const kept = { title: 'A title', body: 'The words.', writtenAt: '2026-11-20T09:14:00+00:00', keptAt: '2026-11-26T10:00:00+00:00' };
+  assert.deepEqual(parseKept(kept), kept);
+  // A reply has no title.
+  assert.deepEqual(parseKept({ ...kept, title: null }), { ...kept, title: null });
+  for (const broken of [null, [], {}, { ...kept, body: '' }, { ...kept, body: 7 }, { ...kept, writtenAt: 'soon' }, { ...kept, keptAt: null }, { ...kept, title: 7 }]) {
+    assert.equal(parseKept(broken), null, JSON.stringify(broken));
+  }
+  assert.equal(ERASED, '[erased]');
+
+  // The thread is named by its id or by the address of its page, as copied.
+  assert.equal(threadIdOf(id), id);
+  assert.equal(threadIdOf(`  ${id.toUpperCase()} `), id);
+  assert.equal(threadIdOf(`https://example.org/discuss/students/${id}`), id);
+  assert.equal(threadIdOf(`/discuss/teachers/${id}?x=1#top`), id);
+  for (const not of ['', 'a thread', `/discuss/others/${id}`, `/learn/${id}`, `${id}${id}`]) {
+    assert.equal(threadIdOf(not), null, not);
+  }
+});
+
+test('reading what was kept has a route, a form and a way to it, each saying it is recorded', async () => {
+  const { readFileSync } = await import('node:fs');
+  const read = (path: string) => readFileSync(new URL(`../app/${path}`, import.meta.url), 'utf8');
+  // `board_kept_post()` existed since 2026-11-26 and no page called it.
+  const route = read('api/boards/route.ts');
+  assert.match(route, /if \(action === 'kept'\) \{[\s\S]*?LOOK_REASON_MIN[\s\S]*?ask\('board_kept_post', \{\s*p_thread: post\.threadId,\s*p_reply: post\.replyId,\s*p_reason: reason,\s*\}\)[\s\S]*?parseKept\(data\)[\s\S]*?'cache-control': 'no-store'/u);
+  const form = read('admin/boards/kept-words.tsx');
+  assert.match(form, /action: 'kept'/u);
+  assert.match(form, /audit log/u);
+  // The words are held in the page's memory and nowhere else.
+  assert.doesNotMatch(form, /localStorage|sessionStorage|router\.refresh/u);
+  const page = read('admin/boards/page.tsx');
+  assert.match(page, /<KeptWords /u);
+  // A moderator reading a thread is shown the way from a post that says `[erased]`.
+  const thread = read('discuss/[board]/[threadId]/page.tsx');
+  assert.match(thread, /standing\.moderator && thread\.body === ERASED/u);
+  assert.match(thread, /standing\.moderator && reply\.body === ERASED/u);
+  assert.match(thread, /\/admin\/boards\?thread=\$\{thread\.id\}&reply=\$\{reply\.id\}#kept/u);
+});
