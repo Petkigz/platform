@@ -219,7 +219,8 @@ export default async function AdminPage() {
 
   const on = flags.filter((f) => f.enabled).length;
   const deployGated = flags.filter((f) => f.gateType === 'code').length;
-  const setupGated = flags.filter((f) => f.gateType === 'admin_setup').length;
+  // Only the ones still off: one that is on needs nothing more.
+  const setupGated = flags.filter((f) => f.gateType === 'admin_setup' && !f.enabled).length;
 
   return (
     <div className="container section">
@@ -333,7 +334,7 @@ export default async function AdminPage() {
             </div>
             <div>
               <div className="n">{setupGated}</div>
-              <div className="l">Need external setup</div>
+              <div className="l">Off, outside setup first</div>
             </div>
             <div>
               <div className="n">{deployGated}</div>

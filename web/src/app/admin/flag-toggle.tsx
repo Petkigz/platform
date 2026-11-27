@@ -64,7 +64,7 @@ export function FlagToggle({
       </span>
 
       <span className="badge neutral" style={{ flex: 'none' }}>
-        {gateLabel(gateType)}
+        {gateLabel(gateType, state)}
       </span>
 
       {locked ? (

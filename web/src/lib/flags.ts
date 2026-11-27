@@ -171,9 +171,18 @@ export async function setFlag(
   return { ok: true, flag: toFlag(data as unknown as Row) };
 }
 
-export function gateLabel(g: GateType): string {
+/**
+ * The badge beside a switch.
+ *
+ * An `admin_setup` switch said "Needs external setup" whether it was off or
+ * on. The owner finished the setup, switched Google sign-in on, and the row
+ * went on saying something was needed (2026-11-27). The badge now says what
+ * is true for the state the switch is in: before, do the outside part first;
+ * after, this is on and leans on something outside the platform.
+ */
+export function gateLabel(g: GateType, enabled = false): string {
   if (g === 'admin') return 'Runtime toggle';
-  if (g === 'admin_setup') return 'Needs external setup';
+  if (g === 'admin_setup') return enabled ? 'On, uses outside setup' : 'Outside setup first';
   return 'Needs a deploy';
 }
 

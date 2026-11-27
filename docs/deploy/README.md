@@ -441,9 +441,14 @@ history twice: two seed migrations had spelled two codes differently. It
 retires the first seed's `aqidah` and `islamic-history` (what the Retire
 button on `/admin/subjects` does; they can be reactivated there) and keeps
 `aqeedah` and `history`, which have subdivisions. It moves and deletes
-nothing, and leaves a duplicate alone if anything points at it. **The hosted
-database is one migration behind the tree until its job has run**; nothing
-in the application depends on it, the page only lists two subjects twice.
+nothing, and leaves a duplicate alone if anything points at it. **Applied on 2026-11-27**: trigger commit `e0ed95b`, run `45965517473`,
+job `apply-370`, approved by the owner, success at 08:33 UTC, on a project
+that by then held the owner's account. Read back through the connector
+afterwards: 370 entries ending at `20261281163000`; `aqidah` and
+`islamic-history` retired, `aqeedah` and `history` active, all 37 rows
+still there, 9 disciplines readable; and the deployed home page, fetched
+from outside, lists 9 subjects with no name twice. The job is spent: never
+run it again and never push its trigger words again.
 Its job is `scripts/hosted-migration-370.mjs`, run by the workflow "Apply
 Supabase test migration 370" on a commit that begins with that workflow's
 trigger words, behind the same environment and approval. It is the first

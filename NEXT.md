@@ -10800,3 +10800,13 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   is spent. Read the result and record it in `docs/deploy/README.md`.
 - *A new migration also needs:* `node scripts/postgrest-schema-snapshot.mjs`
   and the result committed, or CI's database job stops before the suites.
+- *370 applied, Google switched on, 2026-11-27.* Run `45965517473`
+  succeeded at 08:33 UTC, approved by the owner. **Spent.** Hosted has all
+  370. The live home page lists 9 subjects. The owner switched
+  `auth.google_sign_in` on; `/sign-in`, fetched from outside, shows
+  "Continue with Google". **Not seen: a Google sign-in completing.**
+- *A badge that read as a refusal.* The row for a switch that leans on
+  outside setup said "Needs external setup" on and off; the owner read it
+  as "cannot be switched". `gateLabel(gate, enabled)` now says "Outside
+  setup first" when off and "On, uses outside setup" when on, and the tile
+  on `/admin` counts only the ones still off (`web/src/lib/flags.test.ts`).
