@@ -7,6 +7,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { verifyCertificate } from '@/lib/certificates';
 import { normaliseCertificateNumber } from '@/lib/certificate-number';
 import { LOCALE_COOKIE, chooseLocale, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { languageName } from '@/lib/i18n/language-name';
 import { WithSampleNumber } from '../sample-number';
 
 export const dynamic = 'force-dynamic';
@@ -85,8 +86,15 @@ export default async function VerifyPage({
   if (!isSupabaseConfigured()) redirect('/');
 
   const supabase = await createClient();
-  const result = await verifyCertificate(supabase, canonical).catch(() => null);
+  // A check that could not be made is not an answer. This used to be caught
+  // and read as "no such certificate": an employer holding a real one was
+  // told no certificate matched, for as long as the database did not answer.
+  const result = await verifyCertificate(supabase, canonical).catch((error: unknown) => {
+    console.error('verify: the check could not be made:', error instanceof Error ? error.message : error);
+    return null;
+  });
 
+  const unchecked = result === null;
   const missing = !result || !result.found;
 
   const { locale, shown } = await readerLanguage();
@@ -99,7 +107,12 @@ export default async function VerifyPage({
       <p className="eyebrow">AyahSpring</p>
       <h1>{t('verify.heading')}</h1>
 
-      {missing ? (
+      {unchecked ? (
+        <div className="notice error" role="alert" data-verify="unchecked">
+          <strong>{t('verify.unchecked')}</strong>
+          <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>{t('verify.uncheckedBody')}</p>
+        </div>
+      ) : missing ? (
         <div className="notice warn">
           <strong>{t('verify.none')}</strong>
           <p style={{ marginBottom: 0, marginTop: '0.5rem' }}>
@@ -147,7 +160,7 @@ export default async function VerifyPage({
             </div>
             <div>
               <dt>{t('language.title')}</dt>
-              <dd>{result.language ?? '—'}</dd>
+              <dd>{languageName(shown.code, result.language) ?? '—'}</dd>
             </div>
             <div>
               <dt>{t('cert.issued')}</dt>

@@ -7,6 +7,7 @@ import {
   consentStateLabel,
   expiryWarning,
   relationshipLabel,
+  reviewerSaid,
   type MyConsent,
 } from './guardian-consent.ts';
 import { guardianWords } from './guardian-words.ts';
@@ -221,4 +222,29 @@ test('the page draws with these words and has no sentence of its own', () => {
   const body = page.slice(page.indexOf('export default'));
   const sentence = />\s*[A-Z][a-z]+ [a-z]+ [a-z]+[^<{]*</u.exec(body);
   assert.equal(sentence, null, sentence?.[0]);
+});
+
+test('what the reviewer asked for is shown to the parent it was asked of', () => {
+  // Found by drawing the page, 2026-11-26. The reviewer's screen says "The
+  // parent sees your note"; the parent's page said only "The reviewer has
+  // asked for more information" and showed the note nowhere.
+  const asked = { id: 'c1', status: 'needs_information', submittedAt: '2026-11-20T09:14:00Z', note: '  Please send the second page.  ' };
+  assert.equal(reviewerSaid(consent({ status: 'pending_verification', openCase: asked })), 'Please send the second page.');
+  // The open case is the one being asked about now; an older decision is not.
+  assert.equal(
+    reviewerSaid(consent({ status: 'pending_verification', openCase: asked, lastDecision: { status: 'rejected', at: null, reason: 'An older reason.' } })),
+    'Please send the second page.',
+  );
+  // With nothing asked, the last decision's reason is shown as it always was.
+  assert.equal(
+    reviewerSaid(consent({ openCase: { ...asked, note: null }, lastDecision: { status: 'rejected', at: null, reason: 'An older reason.' } })),
+    'An older reason.',
+  );
+  assert.equal(reviewerSaid(consent({ openCase: { ...asked, note: '   ' } })), null);
+  assert.equal(reviewerSaid(consent()), null);
+
+  const page = readFileSync(new URL('../app/family/guardians/page.tsx', import.meta.url), 'utf8');
+  // As the reviewer wrote it, set apart, in whatever direction it reads.
+  assert.match(page, /\{t\('guard\.reviewerSaid'\)\} <bdi>\{said\}<\/bdi>/u);
+  assert.doesNotMatch(page, /c\.lastDecision\?\.reason &&/u);
 });

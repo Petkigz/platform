@@ -10,6 +10,7 @@ import { CarryOn } from '@/app/_shared/carry-on';
 import { fetchAssessmentsForVersion } from '@/lib/assessment';
 import { isFlagEnabled } from '@/lib/flags';
 import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { languageName } from '@/lib/i18n/language-name';
 import { MarkComplete, type MarkCompleteWords } from './mark-complete';
 import { LocalTime } from '@/components/local-time';
 import { CohortMemberships, type CohortWords } from './cohort-memberships';
@@ -245,7 +246,7 @@ export default async function CourseViewPage({
         <p className="muted">
           {t('course.version', {
             number: version ? num(version.version_number) : '?',
-            language: (version?.language ?? '?').toUpperCase(),
+            language: languageName(shown.code, version?.language) ?? '?',
           })}
         </p>
       </header>

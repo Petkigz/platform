@@ -260,6 +260,22 @@ export function consentSentence(consent: MyConsent, now: Date = new Date()): str
     + '— it was approved before lifetimes existed. Renew it to give it one.';
 }
 
+/**
+ * What the reviewer wrote to this parent, or null.
+ *
+ * A reviewer who needs more is told "The parent sees your note"
+ * (`decisionEffect`). The parent's page said that more had been asked for
+ * and did not say what: the note was read from the database and shown
+ * nowhere. So the note of the case that is open comes first, because it is
+ * what is being asked now; with none, the reason of the last decision.
+ */
+export function reviewerSaid(consent: Pick<MyConsent, 'openCase' | 'lastDecision'>): string | null {
+  const asked = consent.openCase?.note?.trim() ?? '';
+  if (asked.length > 0) return asked;
+  const decided = consent.lastDecision?.reason?.trim() ?? '';
+  return decided.length > 0 ? decided : null;
+}
+
 /** The warning shown when a live consent is within a month of lapsing. */
 export function expiryWarning(consent: MyConsent, now: Date = new Date()): string | null {
   if (consent.status !== 'active') return null;

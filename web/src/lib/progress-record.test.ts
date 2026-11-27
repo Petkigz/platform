@@ -200,3 +200,22 @@ test('the no-streak prompt follows the same pronoun', () => {
   assert.match(streakHeadline(0, 0, 'they'), /They finish a lesson/);
   assert.match(streakHeadline(0, 6, 'they'), /Their best is 6 days/);
 });
+
+test('a record is the reader’s own only when their learner is known and is this one', async () => {
+  const { isOwnRecord } = await import('./progress-record.ts');
+  const { readFileSync } = await import('node:fs');
+  assert.equal(isOwnRecord({ id: 'a' }, 'a'), true);
+  assert.equal(isOwnRecord({ id: 'a' }, 'b'), false);
+  // A parent who is not a learner, reading a child's record: it said "Your progress".
+  assert.equal(isOwnRecord(null, 'b'), false);
+  assert.equal(isOwnRecord(undefined, 'b'), false);
+
+  const page = readFileSync(new URL('../app/progress/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /isSelf=\{isOwnRecord\(own\.learner, learnerId\)\}/u);
+  // A learner who could not be read is not "not a learner": the page says it could not read.
+  assert.doesNotMatch(page, /fetchOwnLearner\([^)]*\)\.catch\(\(\) => null\)/u);
+  assert.match(page, /if \(!learnerId && !own\.read\) \{[\s\S]*?t\('prog\.unread'\)/u);
+  // And a list of children that could not be read is not an empty list.
+  const handover = readFileSync(new URL('../app/handover/page.tsx', import.meta.url), 'utf8');
+  assert.match(handover, /if \(error\) throw new Error\(/u);
+});

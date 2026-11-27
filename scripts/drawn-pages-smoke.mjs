@@ -139,10 +139,21 @@ const origin = `http://127.0.0.1:${port}`;
 // forms work, and the reader already owns those rows.
 const NEVER = ['SYNTHETIC-DATABASE', 'permission denied', user.id, FAMILY, CASE, '<b>Tajwid</b> &amp;amp;'];
 
+// What each page says when nothing can be read. Two say so in their own
+// words; three stop on the site's own error page. None says "there is none".
+const STOPPED = ['This page stopped working', 'That is a fault on our side, not a mistake you made.'];
+const BROKEN_PATHS = [
+  { path: '/progress', has: ['The record could not be read just now.'], hasNot: ['Become a learner', 'this account is not one yet'] },
+  { path: '/verify?number=AS-2026-00000123', lands: '/verify/AS-2026-00000123', has: ['This certificate could not be checked just now.', 'It does not mean the certificate is not valid.'], hasNot: ['No certificate matches that number.', 'This certificate is not valid.', 'This certificate is valid.'] },
+  { path: '/certificates', status: 500, has: STOPPED, hasNot: ['No certificates yet.'] },
+  { path: '/handover', status: 500, has: STOPPED, hasNot: ['There is no child profile on this account'] },
+  { path: '/family/guardians', status: 500, has: STOPPED, hasNot: ['You have no guardian consent on record yet.'] },
+];
+
 let browser;
 let drawn = 0;
 const failures = [];
-async function draw(path, { width = 390, locale = 'en', has = [], hasNot = [], lands = path, cookie = true, dir } = {}) {
+async function draw(path, { width = 390, locale = 'en', has = [], hasNot = [], lands = path, cookie = true, dir, status = 200, refused = false } = {}) {
   const context = await browser.newContext({ viewport: { width, height: 900 } });
   const cookies = [{ name: 'ayahspring_locale', value: locale, url: origin }];
   if (cookie) cookies.push({ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin });
@@ -159,11 +170,14 @@ async function draw(path, { width = 390, locale = 'en', has = [], hasNot = [], l
     // Every complaint about one drawing is collected, so one run names them all.
     const say = (ok, message) => { if (!ok) failures.push(message); };
     say(new URL(page.url()).pathname + new URL(page.url()).search === lands, `${what} landed on ${page.url().replace(origin, '')}, not ${lands}`);
-    say(response.status() === 200, `${what} answered ${response.status()}`);
+    say(response.status() === status, `${what} answered ${response.status()}, not ${status}`);
     for (const sentence of has) say(text.includes(sentence), `${what} lacks "${sentence}"`);
     for (const sentence of hasNot) say(!text.includes(sentence), `${what} still says "${sentence}"`);
     const html = await page.content();
-    for (const never of NEVER) say(!html.includes(never), `${what} holds "${never}"`);
+    // With every read refused, `next dev` copies the server's log into the page's
+    // scripts and into the console, which a deployed site does not. What is judged
+    // then is what the reader is shown.
+    for (const never of NEVER) say(!(refused ? text : html).includes(never), `${what} ${refused ? 'shows' : 'holds'} "${never}"`);
     const fit = await page.evaluate(() => {
       const view = document.documentElement.clientWidth;
       // The widest things on the page, when it does not fit: what to go and fix.
@@ -175,7 +189,7 @@ async function draw(path, { width = 390, locale = 'en', has = [], hasNot = [], l
     });
     say(fit.wide <= fit.view + 1, `${what} is ${fit.wide} wide in a window of ${fit.view}: ${fit.culprits.join(' | ')}`);
     if (dir) say(fit.dir === dir, `${what} is ${fit.dir}, not ${dir}`);
-    say(errors.length === 0, `${what} raised console errors: ${errors.join(' | ')}`);
+    if (!refused) say(errors.length === 0, `${what} raised console errors: ${errors.join(' | ')}`);
     drawn += 1;
     return text;
   } finally { await context.close(); }
@@ -212,12 +226,12 @@ try {
   state.data = FULL;
   for (const width of WIDTHS) {
     await draw('/progress', { width, has: ['Your progress', '3 days in a row — your best is 12 days.', '41 lessons finished', '1 of 2 earned.', 'Synthetic seven days', 'Four more days', '7 of 20 lessons · 35%', MARKUP, LONG, 'AS-2026-00000123'], hasNot: ['Become a learner', 'Four more lessons'] });
-    const shelf = await draw('/certificates', { width, has: ['AS-2026-00000123', 'AS-2026-00000124', LONG, MARKUP, 'Issued Nov 17, 2026', 'Revoked: Synthetic reason: issued by mistake.', 'View and print certificate'], hasNot: ['No certificates yet.'] });
+    const shelf = await draw('/certificates', { width, has: ['AS-2026-00000123', 'AS-2026-00000124', LONG, MARKUP, 'Arabic', 'Issued Nov 17, 2026', 'Revoked: Synthetic reason: issued by mistake.', 'View and print certificate'], hasNot: ['No certificates yet.'] });
     // One certificate stands and one is revoked: the word "Revoked" as a mark appears once, and once more in the reason.
     if (shelf.split('Revoked').length - 1 !== 2) failures.push(`/certificates at ${width} marks the wrong certificates as revoked`);
     await draw('/handover', { width, has: ['Synthetic Child One · Ages 13–17', 'Synthetic Child Two · Ages 9–12', 'Keep it, as their own account', 'Do not keep it', 'This learner has no login yet, so this option will be refused until they have one.'], hasNot: ['There is no child profile on this account'] });
-    await draw('/family/guardians', { width, has: ['Synthetic Child One · Parent', 'Synthetic Child Two · Guardian', 'How it is confirmed: A video call\n', 'You may see the child’s progress.', 'The reviewer has asked for more information.', 'Withdraw this consent', 'Ask for consent'], hasNot: ['You have no guardian consent on record yet.', 'Verification enforcement is off.', 'A video call It lapses'] });
-    await draw('/verify?number=AS-2026-00000123', { width, lands: '/verify/AS-2026-00000123', has: ['This certificate is valid.', 'Synthetic Learner', LONG, 'Nov 17, 2026'], hasNot: ['not valid'] });
+    await draw('/family/guardians', { width, has: ['Synthetic Child One · Parent', 'Synthetic Child Two · Guardian', 'How it is confirmed: A video call\n', 'You may see the child’s progress.', 'The reviewer has asked for more information.', 'The reviewer said: Synthetic note: please send the second page.', 'Withdraw this consent', 'Ask for consent'], hasNot: ['You have no guardian consent on record yet.', 'Verification enforcement is off.', 'A video call It lapses'] });
+    await draw('/verify?number=AS-2026-00000123', { width, lands: '/verify/AS-2026-00000123', has: ['This certificate is valid.', 'Synthetic Learner', LONG, 'Nov 17, 2026', 'Arabic'], hasNot: ['not valid'] });
     // Typed in lower case with spaces, as copied out of a PDF: the same certificate.
     await draw('/verify?number=as%202026%2000000124', { width, lands: '/verify/AS-2026-00000124', has: ['This certificate is not valid.', 'Revoked: Synthetic reason: issued by mistake.', 'Synthetic Learner', MARKUP] });
   }
@@ -239,8 +253,14 @@ try {
   await draw('/admin/connections', { lands: '/learn', hasNot: ['Still to set', 'RESEND_API_KEY', 'Connections'] });
   state.owner = true;
 
+  // 5. Every read refused with the database's own words.
+  state.data = FULL;
+  state.broken = true;
+  for (const width of [320, 1280]) for (const path of BROKEN_PATHS) await draw(path.path, { ...path, width, refused: true });
+  state.broken = false;
+
   assert.deepEqual(failures, [], `${failures.length} complaint(s):\n  ${failures.join('\n  ')}`);
-  if (!PRINT) console.log(`Drawn pages smoke passed in ${kind}: ${drawn} drawings of six pages, empty and with something to show, at 320, 390 and 1280 in English and at 390 in Arabic. Not real Auth, row-level security or the database functions; every name in it is invented.`);
+  if (!PRINT) console.log(`Drawn pages smoke passed in ${kind}: ${drawn} drawings of six pages, empty, with something to show and with every read refused, at 320, 390 and 1280 in English and at 390 in Arabic. Not real Auth, row-level security or the database functions; every name in it is invented.`);
 } catch (e) { console.error(seen.logs.slice(-3000)); throw e; }
 finally {
   if (browser) await browser.close();

@@ -53,13 +53,19 @@ export default async function HandoverPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/handover');
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('learner_profiles')
     .select('id, display_name, age_band, family_id, linked_user_id')
     .eq('learner_type', 'child')
     .is('deleted_at', null)
     .eq('status', 'active')
     .order('display_name');
+
+  // A list that could not be read is not an empty list. The error was not
+  // looked at, so the page said "There is no child profile on this account"
+  // to a parent who has one. It stops instead, on the page that says the
+  // fault is ours and offers to try again.
+  if (error) throw new Error(`handover: the learners could not be read: ${error.message}`);
 
   const learners = (data ?? []) as unknown as {
     id: string;

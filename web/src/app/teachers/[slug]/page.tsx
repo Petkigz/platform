@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { languageName } from '@/lib/i18n/language-name';
 import { fetchInstructorProfile } from '@/lib/instructor-profiles';
 import { one, type Embedded } from '@/lib/embed';
 
@@ -66,7 +67,7 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
           <div className="grid cols-2">
             {courses.map((course) => (
               <article className="card" key={course.versionId}>
-                <p className="eyebrow">{course.language}</p>
+                <p className="eyebrow">{languageName('en', course.language)}</p>
                 <h3><Link href={`/courses/${course.slug}`}>{course.title}</Link></h3>
                 {course.description && <p className="muted">{course.description}</p>}
                 <Link href={`/courses/${course.slug}`} className="btn secondary">View course</Link>

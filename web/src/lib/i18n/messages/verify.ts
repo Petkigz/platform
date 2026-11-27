@@ -18,9 +18,17 @@ import type { Messages } from './en.ts';
  * shown as a member of staff wrote it. "The holder" is the person named
  * on the certificate, of either sex. The sheet a learner prints stays
  * English (`cert.sheetNote`); this is the page that reads it back.
+ *
+ * `unchecked` and `uncheckedBody` (2026-11-27) are what the page says when
+ * the check itself could not be made. They must never read as an answer
+ * about the certificate: not "no match", not "not valid". No speaker has
+ * read them.
  */
 export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
   ar: {
+    'verify.unchecked': 'تعذّر التحقق من هذه الشهادة الآن.',
+    'verify.uncheckedBody':
+      'هذا خلل من جهتنا، ولا يعني أن الشهادة غير سارية. حاول مرة أخرى بعد قليل.',
     'verify.description': 'تحقّق من رقم شهادة AyahSpring. لا حاجة إلى حساب — الرقم هو كل ما يلزم.',
     'verify.lede':
       'تحمل كل شهادة من AyahSpring رقمًا. التحقق منه يخبرك هل صدرت الشهادة من هنا، ولمن، ولأي دورة، وهل أُلغيت بعد ذلك.',
@@ -50,6 +58,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'عنوان الدورة ونسختها المعروضان هنا هما ما كانا عليه عند إصدار الشهادة. وهما مسجّلان في الشهادة نفسها ولا يمكن تغييرهما بعد ذلك.',
   },
   ur: {
+    'verify.unchecked': 'اس سند کی تصدیق ابھی نہیں ہو سکی۔',
+    'verify.uncheckedBody':
+      'یہ خرابی ہماری طرف سے ہے۔ اس کا مطلب یہ نہیں کہ سند درست نہیں ہے۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔',
     'verify.description':
       'AyahSpring کی سند کا نمبر جانچیں۔ اکاؤنٹ کی ضرورت نہیں — صرف نمبر درکار ہے۔',
     'verify.lede':
@@ -81,6 +92,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'یہاں دکھایا گیا کورس کا عنوان اور ورژن وہی ہیں جو سند جاری ہوتے وقت تھے۔ یہ خود سند پر درج ہیں اور بعد میں بدلے نہیں جا سکتے۔',
   },
   fa: {
+    'verify.unchecked': 'این گواهی‌نامه هم‌اکنون قابل بررسی نبود.',
+    'verify.uncheckedBody':
+      'این اشکال از سمت ماست و به این معنا نیست که گواهی‌نامه معتبر نیست. کمی بعد دوباره تلاش کنید.',
     'verify.description':
       'شمارهٔ گواهی‌نامهٔ AyahSpring را بررسی کنید. حساب لازم نیست — فقط شماره لازم است.',
     'verify.lede':
@@ -112,6 +126,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'عنوان و نسخهٔ دوره که اینجا نشان داده شده همان است که هنگام صدور گواهی‌نامه بود. این‌ها روی خود گواهی‌نامه ثبت شده‌اند و پس از آن قابل تغییر نیستند.',
   },
   'fa-af': {
+    'verify.unchecked': 'این سند همین حالا بررسی شده نتوانست.',
+    'verify.uncheckedBody':
+      'این مشکل از طرف ماست و به این معنا نیست که سند معتبر نیست. کمی بعد دوباره کوشش کنید.',
     'verify.description':
       'شمارهٔ سند AyahSpring را بررسی کنید. به حساب ضرورت نیست — تنها شماره کافی است.',
     'verify.lede':
@@ -143,6 +160,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'عنوان و نسخهٔ کورس که اینجا نشان داده شده همان است که هنگام صدور سند بود. این‌ها روی خود سند ثبت شده‌اند و پس از آن تغییر داده نمی‌شوند.',
   },
   tr: {
+    'verify.unchecked': 'Bu sertifika şu anda kontrol edilemedi.',
+    'verify.uncheckedBody':
+      'Bu bizden kaynaklanan bir hatadır; sertifikanın geçerli olmadığı anlamına gelmez. Biraz sonra yeniden deneyin.',
     'verify.description':
       'Bir AyahSpring sertifika numarasını doğrulayın. Hesap gerekmez — yalnızca numara yeterlidir.',
     'verify.lede':
@@ -174,6 +194,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Burada gösterilen kurs başlığı ve sürümü, sertifika verildiği andaki hâlidir. Bunlar sertifikanın üzerinde kayıtlıdır ve sonradan değiştirilemez.',
   },
   id: {
+    'verify.unchecked': 'Sertifikat ini tidak dapat diperiksa saat ini.',
+    'verify.uncheckedBody':
+      'Ini kesalahan di pihak kami. Bukan berarti sertifikat ini tidak sah. Coba lagi sebentar lagi.',
     'verify.description':
       'Periksa nomor sertifikat AyahSpring. Tidak perlu akun — hanya nomornya yang diperlukan.',
     'verify.lede':
@@ -205,6 +228,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Judul dan versi kursus yang ditampilkan di sini adalah seperti saat sertifikat diterbitkan. Keduanya tercatat pada sertifikat itu sendiri dan tidak dapat diubah setelahnya.',
   },
   ms: {
+    'verify.unchecked': 'Sijil ini tidak dapat disemak sekarang.',
+    'verify.uncheckedBody':
+      'Ini masalah di pihak kami. Ia tidak bermakna sijil ini tidak sah. Cuba lagi sebentar lagi.',
     'verify.description':
       'Semak nombor sijil AyahSpring. Akaun tidak diperlukan — hanya nombor itu yang diperlukan.',
     'verify.lede':
@@ -236,6 +262,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Tajuk dan versi kursus yang ditunjukkan di sini adalah seperti semasa sijil dikeluarkan. Kedua-duanya direkodkan pada sijil itu sendiri dan tidak boleh diubah selepas itu.',
   },
   bn: {
+    'verify.unchecked': 'এই সনদটি এই মুহূর্তে যাচাই করা যায়নি।',
+    'verify.uncheckedBody':
+      'এটি আমাদের দিকের ত্রুটি। এর মানে এই নয় যে সনদটি বৈধ নয়। একটু পরে আবার চেষ্টা করুন।',
     'verify.description':
       'AyahSpring-এর সনদের নম্বর যাচাই করুন। অ্যাকাউন্ট লাগে না — শুধু নম্বরটিই দরকার।',
     'verify.lede':
@@ -266,6 +295,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'এখানে দেখানো কোর্সের শিরোনাম ও সংস্করণ সনদ দেওয়ার সময় যেমন ছিল তেমনই। এগুলো সনদেই লেখা আছে এবং পরে বদলানো যায় না।',
   },
   hi: {
+    'verify.unchecked': 'इस प्रमाणपत्र की जाँच अभी नहीं हो सकी।',
+    'verify.uncheckedBody':
+      'यह हमारी ओर की गड़बड़ी है। इसका यह मतलब नहीं कि प्रमाणपत्र मान्य नहीं है। थोड़ी देर बाद फिर कोशिश करें।',
     'verify.description':
       'AyahSpring के प्रमाणपत्र का नंबर जाँचें। खाते की ज़रूरत नहीं — केवल नंबर चाहिए।',
     'verify.lede':
@@ -297,6 +329,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'यहाँ दिखाया गया कोर्स का शीर्षक और संस्करण वही है जो प्रमाणपत्र जारी होते समय था। ये प्रमाणपत्र पर ही दर्ज हैं और बाद में बदले नहीं जा सकते।',
   },
   fr: {
+    'verify.unchecked': 'Ce certificat n’a pas pu être vérifié pour le moment.',
+    'verify.uncheckedBody':
+      'L’erreur vient de notre côté. Cela ne veut pas dire que le certificat n’est pas valide. Réessayez dans un instant.',
     'verify.description':
       'Vérifiez un numéro de certificat AyahSpring. Aucun compte n’est nécessaire — seul le numéro est requis.',
     'verify.lede':
@@ -328,6 +363,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Le titre et la version du cours affichés ici sont ceux qu’ils étaient lorsque le certificat a été délivré. Ils sont inscrits sur le certificat lui-même et ne peuvent plus être modifiés.',
   },
   es: {
+    'verify.unchecked': 'Este certificado no se ha podido comprobar en este momento.',
+    'verify.uncheckedBody':
+      'Es un fallo nuestro. No significa que el certificado no sea válido. Inténtelo de nuevo en un momento.',
     'verify.description':
       'Verifique un número de certificado de AyahSpring. No hace falta cuenta: solo se necesita el número.',
     'verify.lede':
@@ -359,6 +397,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'El título y la versión del curso que se muestran aquí son los que eran cuando se emitió el certificado. Constan en el propio certificado y no pueden cambiarse después.',
   },
   pt: {
+    'verify.unchecked': 'Não foi possível verificar este certificado agora.',
+    'verify.uncheckedBody':
+      'A falha é do nosso lado. Não significa que o certificado não seja válido. Tente novamente daqui a pouco.',
     'verify.description':
       'Verifique um número de certificado da AyahSpring. Não é preciso conta — só o número é necessário.',
     'verify.lede':
@@ -390,6 +431,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'O título e a versão do curso aqui mostrados são os que eram quando o certificado foi emitido. Constam do próprio certificado e não podem ser alterados depois.',
   },
   sw: {
+    'verify.unchecked': 'Cheti hiki hakikuweza kukaguliwa sasa hivi.',
+    'verify.uncheckedBody':
+      'Hili ni kosa la upande wetu. Haimaanishi kwamba cheti si halali. Jaribu tena baada ya muda mfupi.',
     'verify.description':
       'Hakiki namba ya cheti cha AyahSpring. Akaunti haihitajiki — namba pekee ndiyo inayohitajika.',
     'verify.lede':
@@ -421,6 +465,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Jina la kozi na toleo vinavyoonyeshwa hapa ni vile vilivyokuwa cheti kilipotolewa. Vimeandikwa kwenye cheti chenyewe na haviwezi kubadilishwa baadaye.',
   },
   af: {
+    'verify.unchecked': 'Hierdie sertifikaat kon nie nou nagegaan word nie.',
+    'verify.uncheckedBody':
+      'Dit is ’n fout aan ons kant. Dit beteken nie dat die sertifikaat nie geldig is nie. Probeer oor ’n oomblik weer.',
     'verify.description':
       'Kontroleer ’n AyahSpring-sertifikaatnommer. Geen rekening is nodig nie — net die nommer word vereis.',
     'verify.lede':
@@ -452,6 +499,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Die kursustitel en weergawe wat hier gewys word, is soos dit was toe die sertifikaat uitgereik is. Dit is op die sertifikaat self aangeteken en kan nie daarna verander word nie.',
   },
   'zh-hans': {
+    'verify.unchecked': '暂时无法查验这张证书。',
+    'verify.uncheckedBody':
+      '这是我们这边的故障，并不表示证书无效。请稍后再试。',
     'verify.description': '查验 AyahSpring 证书编号。无需账号——只需要编号。',
     'verify.lede': '每张 AyahSpring 证书都有一个编号。查验它可以知道证书是否由这里颁发、颁发给谁、对应哪门课程，以及之后是否被撤销。',
     'verify.numberLabel': '证书编号',
@@ -476,6 +526,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'verify.frozen': '这里显示的课程名称和版本是证书颁发时的内容。它们记录在证书上，之后无法更改。',
   },
   'zh-hant': {
+    'verify.unchecked': '暫時無法查驗這張證書。',
+    'verify.uncheckedBody':
+      '這是我們這邊的故障，並不表示證書無效。請稍後再試。',
     'verify.description': '查驗 AyahSpring 證書編號。無需帳號——只需要編號。',
     'verify.lede': '每張 AyahSpring 證書都有一個編號。查驗它可以知道證書是否由這裡頒發、頒發給誰、對應哪門課程，以及之後是否被撤銷。',
     'verify.numberLabel': '證書編號',
@@ -500,6 +553,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'verify.frozen': '這裡顯示的課程名稱和版本是證書頒發時的內容。它們記錄在證書上，之後無法更改。',
   },
   vi: {
+    'verify.unchecked': 'Hiện chưa thể kiểm tra chứng chỉ này.',
+    'verify.uncheckedBody':
+      'Đây là lỗi từ phía chúng tôi. Điều đó không có nghĩa là chứng chỉ không hợp lệ. Hãy thử lại sau giây lát.',
     'verify.description':
       'Tra cứu số chứng chỉ AyahSpring. Không cần tài khoản — chỉ cần số chứng chỉ.',
     'verify.lede':
@@ -530,6 +586,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Tên và phiên bản khóa học hiển thị ở đây là đúng như khi chứng chỉ được cấp. Chúng được ghi trên chính chứng chỉ và không thể thay đổi về sau.',
   },
   th: {
+    'verify.unchecked': 'ขณะนี้ยังตรวจสอบประกาศนียบัตรนี้ไม่ได้',
+    'verify.uncheckedBody':
+      'นี่เป็นข้อผิดพลาดจากฝั่งเรา ไม่ได้หมายความว่าประกาศนียบัตรใช้ไม่ได้ โปรดลองอีกครั้งในอีกสักครู่',
     'verify.description':
       'ตรวจสอบหมายเลขประกาศนียบัตรของ AyahSpring ไม่ต้องมีบัญชี — ใช้เพียงหมายเลขเท่านั้น',
     'verify.lede':
@@ -560,6 +619,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'ชื่อหลักสูตรและฉบับที่แสดงที่นี่เป็นไปตามที่เป็นอยู่เมื่อออกประกาศนียบัตร ทั้งสองอย่างบันทึกอยู่บนประกาศนียบัตรและเปลี่ยนภายหลังไม่ได้',
   },
   fil: {
+    'verify.unchecked': 'Hindi masuri ang sertipikong ito sa ngayon.',
+    'verify.uncheckedBody':
+      'Pagkakamali ito sa aming panig. Hindi ito nangangahulugang walang bisa ang sertipiko. Subukan muli maya-maya.',
     'verify.description':
       'Tingnan ang numero ng sertipiko ng AyahSpring. Hindi kailangan ng account — ang numero lang ang kailangan.',
     'verify.lede':
@@ -591,6 +653,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Ang pamagat at bersyon ng kurso na ipinapakita rito ay kung ano ang mga ito noong ibinigay ang sertipiko. Nakatala ang mga ito sa mismong sertipiko at hindi na mababago pagkatapos.',
   },
   uz: {
+    'verify.unchecked': 'Bu sertifikatni hozir tekshirib boʻlmadi.',
+    'verify.uncheckedBody':
+      'Bu bizning tomonimizdagi nosozlik. Bu sertifikat haqiqiy emas degani emas. Birozdan soʻng qayta urinib koʻring.',
     'verify.description':
       'AyahSpring sertifikati raqamini tekshiring. Hisob kerak emas — faqat raqamning oʻzi kifoya.',
     'verify.lede':
@@ -622,6 +687,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu yerda koʻrsatilgan kurs nomi va versiyasi sertifikat berilgan paytdagidek. Ular sertifikatning oʻzida qayd etilgan va keyin oʻzgartirib boʻlmaydi.',
   },
   kk: {
+    'verify.unchecked': 'Бұл сертификатты дәл қазір тексеру мүмкін болмады.',
+    'verify.uncheckedBody':
+      'Бұл — біздің тараптағы ақау. Сертификат жарамсыз деген сөз емес. Сәлден кейін қайталап көріңіз.',
     'verify.description':
       'AyahSpring сертификатының нөмірін тексеріңіз. Аккаунт қажет емес — тек нөмірдің өзі жеткілікті.',
     'verify.lede':
@@ -653,6 +721,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Мұнда көрсетілген курс атауы мен нұсқасы сертификат берілген кездегідей. Олар сертификаттың өзінде жазылған және кейін өзгертуге болмайды.',
   },
   az: {
+    'verify.unchecked': 'Bu sertifikatı hazırda yoxlamaq mümkün olmadı.',
+    'verify.uncheckedBody':
+      'Bu, bizim tərəfimizdəki nasazlıqdır. Sertifikatın etibarlı olmadığı demək deyil. Bir azdan yenidən cəhd edin.',
     'verify.description':
       'AyahSpring sertifikatının nömrəsini yoxlayın. Hesab lazım deyil — yalnız nömrə kifayətdir.',
     'verify.lede':
@@ -684,6 +755,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Burada göstərilən kurs adı və versiyası sertifikat verilən vaxtdakı kimidir. Onlar sertifikatın özündə qeyd olunub və sonradan dəyişdirilə bilməz.',
   },
   tg: {
+    'verify.unchecked': 'Ин шаҳодатномаро ҳозир тафтиш кардан муяссар нашуд.',
+    'verify.uncheckedBody':
+      'Ин хато аз ҷониби мост. Ин маънои онро надорад, ки шаҳодатнома эътиборнок нест. Каме баъдтар боз кӯшиш кунед.',
     'verify.description':
       'Рақами шаҳодатномаи AyahSpring-ро санҷед. Ҳисоб лозим нест — танҳо худи рақам кифоя аст.',
     'verify.lede':
@@ -715,6 +789,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Номи курс ва нусхаи он, ки дар ин ҷо нишон дода шудааст, ҳамон аст, ки ҳангоми дода шудани шаҳодатнома буд. Онҳо дар худи шаҳодатнома сабт шудаанд ва баъдан тағйир дода намешаванд.',
   },
   ky: {
+    'verify.unchecked': 'Бул сертификатты азыр текшерүү мүмкүн болгон жок.',
+    'verify.uncheckedBody':
+      'Бул — биз тараптагы ката. Сертификат жараксыз дегенди билдирбейт. Бир аздан кийин кайра аракет кылыңыз.',
     'verify.description':
       'AyahSpring сертификатынын номерин текшериңиз. Аккаунт керек эмес — номердин өзү эле жетиштүү.',
     'verify.lede':
@@ -746,6 +823,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Бул жерде көрсөтүлгөн курстун аталышы жана версиясы сертификат берилген учурдагыдай. Алар сертификаттын өзүндө жазылган жана кийин өзгөртүүгө болбойт.',
   },
   tk: {
+    'verify.unchecked': 'Bu şahadatnamany häzir barlap bolmady.',
+    'verify.uncheckedBody':
+      'Bu biziň tarapymyzdaky näsazlyk. Şahadatnamanyň hakyky däldigini aňlatmaýar. Biraz wagtdan soň gaýtadan synanyşyň.',
     'verify.description':
       'AyahSpring şahadatnamasynyň belgisini barlaň. Hasap gerek däl — diňe belginiň özi ýeterlik.',
     'verify.lede':
@@ -777,6 +857,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'Bu ýerde görkezilen kursuň ady we wersiýasy şahadatnama berlen wagtyndaky ýalydyr. Olar şahadatnamanyň özünde ýazylan we soňra üýtgedip bolmaýar.',
   },
   ta: {
+    'verify.unchecked': 'இந்தச் சான்றிதழை இப்போது சரிபார்க்க முடியவில்லை.',
+    'verify.uncheckedBody':
+      'இது எங்கள் பக்கத்தில் ஏற்பட்ட கோளாறு. சான்றிதழ் செல்லுபடியாகாது என்று இதற்குப் பொருள் இல்லை. சிறிது நேரம் கழித்து மீண்டும் முயலவும்.',
     'verify.description':
       'AyahSpring சான்றிதழ் எண்ணைச் சரிபாருங்கள். கணக்கு தேவையில்லை — எண் மட்டுமே தேவை.',
     'verify.lede':
@@ -808,6 +891,9 @@ export const VERIFY: Partial<Record<LocaleCode, Partial<Messages>>> = {
       'இங்கே காட்டப்படும் பாடநெறியின் தலைப்பும் பதிப்பும் சான்றிதழ் வழங்கப்பட்டபோது இருந்தவையே. அவை சான்றிதழிலேயே பதிவாகியுள்ளன; பின்னர் மாற்ற முடியாது.',
   },
   ne: {
+    'verify.unchecked': 'यो प्रमाणपत्र अहिले जाँच गर्न सकिएन।',
+    'verify.uncheckedBody':
+      'यो हाम्रो तर्फको गडबडी हो। यसको अर्थ प्रमाणपत्र मान्य छैन भन्ने होइन। केही बेरपछि फेरि प्रयास गर्नुहोस्।',
     'verify.description':
       'AyahSpring को प्रमाणपत्र नम्बर जाँच्नुहोस्। खाता चाहिँदैन — नम्बर मात्र भए पुग्छ।',
     'verify.lede':

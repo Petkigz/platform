@@ -3126,6 +3126,10 @@ export const en = {
     'That does not look like a certificate number. They look like {number} — the letters AS, the year, then eight digits.',
   'verify.heading': 'Verify a certificate',
   'verify.none': 'No certificate matches that number.',
+  // A check that could not be made is not an answer about the certificate.
+  'verify.unchecked': 'This certificate could not be checked just now.',
+  'verify.uncheckedBody':
+    'That is a fault on our side. It does not mean the certificate is not valid. Try again in a moment.',
   'verify.noneBody': 'Check for a transcription error. Certificate numbers look like {number}.',
   'verify.valid': 'This certificate is valid.',
   'verify.validBody': 'It was issued by AyahSpring and has not been revoked.',

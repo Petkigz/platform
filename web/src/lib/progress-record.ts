@@ -261,3 +261,17 @@ export function barWidth(percent: number): string {
   const p = Number.isFinite(percent) ? percent : 0;
   return `${Math.min(100, Math.max(0, Math.round(p)))}%`;
 }
+
+/**
+ * Whether the record on the page is the reader's own.
+ *
+ * It decides "Your progress" or "Maryam's progress", and "your best" or
+ * "their best". An account with no learner of its own used to count as the
+ * owner of whatever record it opened: a parent who is not a learner opened a
+ * child's record and read "Your progress". A record is the reader's own only
+ * when the reader's learner is known and is this one; when that could not be
+ * read, the page names the learner, which is true of either.
+ */
+export function isOwnRecord(own: { id: string } | null | undefined, learnerId: string): boolean {
+  return own?.id === learnerId;
+}

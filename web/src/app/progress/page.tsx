@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchOwnLearner } from '@/lib/family';
+import { isOwnRecord } from '@/lib/progress-record';
 import { fetchProgressRecord } from '@/lib/progress-record-query';
 import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { ProgressRecordView } from './progress-record-view';
@@ -68,8 +69,30 @@ export default async function ProgressPage({
   const t = translator(shown.code);
   const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
 
-  const own = await fetchOwnLearner(supabase, user.id).catch(() => null);
-  const learnerId = requested && /^[0-9a-f-]{36}$/i.test(requested) ? requested : own?.id ?? null;
+  // Whether this account is a learner is read, and the read can fail. A
+  // failure used to be taken for "not a learner": the page then told a
+  // learner they were not one and offered to make them one.
+  const own = await fetchOwnLearner(supabase, user.id).then(
+    (learner) => ({ read: true as const, learner }),
+    (error: unknown) => {
+      console.error('progress: the learner could not be read:', error instanceof Error ? error.message : error);
+      return { read: false as const, learner: null };
+    },
+  );
+  const learnerId = requested && /^[0-9a-f-]{36}$/i.test(requested) ? requested : own.learner?.id ?? null;
+
+  if (!learnerId && !own.read) {
+    return (
+      <div className="container section" {...frame}>
+        <p className="eyebrow">{t('nav.learn')}</p>
+        <h1>{t('prog.title')}</h1>
+        <div className="notice" role="alert">{t('prog.unread')}</div>
+        <p className="muted" style={{ marginTop: '1rem' }}>
+          <Link href="/learn">{t('course.back')}</Link>
+        </p>
+      </div>
+    );
+  }
 
   if (!learnerId) {
     return (
@@ -134,7 +157,7 @@ export default async function ProgressPage({
     <div className="container section" {...frame}>
       <ProgressRecordView
         record={outcome.record}
-        isSelf={!own || own.id === learnerId}
+        isSelf={isOwnRecord(own.learner, learnerId)}
         code={shown.code}
       />
     </div>

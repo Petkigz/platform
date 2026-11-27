@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchCertificates } from '@/lib/certificates';
 import { LOCALE_COOKIE, chooseLocale, formatDay, formatNumber, languageShownFor, translator } from '@/lib/i18n';
+import { languageName } from '@/lib/i18n/language-name';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +77,7 @@ export default async function CertificatesPage() {
                   {c.status === 'issued' ? t('cert.issued') : t('cert.revoked')}
                 </span>
                 {c.courseLanguage && (
-                  <span className="badge neutral">{c.courseLanguage}</span>
+                  <span className="badge neutral">{languageName(shown.code, c.courseLanguage)}</span>
                 )}
               </div>
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { translator } from './i18n/index.ts';
+import { formatNumber, translator } from './i18n/index.ts';
 import { CATALOGUES } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
 import { PROGRESS } from './i18n/messages/progress.ts';
@@ -169,4 +169,24 @@ test('the page, the view and the strip print no English of their own', () => {
   assert.match(read('../app/learn/page.tsx'), /<EngagementStrip engagement=\{engagement\} code=\{shown\.code\} \/>/u);
   assert.match(read('../app/family/page.tsx'), /<EngagementStrip engagement=\{engagement\} subject=\{child\.displayName\} code=\{shown\.code\} \/>/u);
   assert.ok(!read('../app/family/page.tsx').includes('{...english}'));
+});
+
+test('a badge counted in something this page has no word for is not counted in lessons', () => {
+  // Found by drawing the page, 2026-11-26: a unit the page did not know was
+  // said as lessons, so "four more recitations" read "Four more lessons".
+  for (const code of ['en', 'ar', 'sw', 'fr'] as const) {
+    const words = progressWords(code);
+    const known = words.badgeProgress(badge({ have: 6, need: 10, unit: 'lesson' }));
+    const unknown = words.badgeProgress(badge({ have: 6, need: 10, unit: 'recitation' }));
+    assert.notEqual(unknown, known, code);
+    // The two numbers, held in one direction so "6 / 10" is not read "10 / 6".
+    assert.match(unknown, /^\u2066\S+ \/ \S+\u2069$/u, code);
+    // A name that is on every object is not a unit either.
+    assert.equal(words.badgeProgress(badge({ have: 6, need: 10, unit: 'toString' })), unknown, code);
+  }
+  assert.equal(progressWords('en').badgeProgress(badge({ have: 6, need: 10, unit: 'recitation' })), '\u20666 / 10\u2069');
+  // In the page's own digits, whichever those are.
+  assert.equal(progressWords('ar').badgeProgress(badge({ have: 6, need: 10, unit: 'recitation' })), `\u2066${formatNumber('ar', 6)} / ${formatNumber('ar', 10)}\u2069`);
+  // Earned is earned whatever it was counted in.
+  assert.equal(progressWords('en').badgeProgress(badge({ have: 10, need: 10, unit: 'recitation' })), 'Earned');
 });

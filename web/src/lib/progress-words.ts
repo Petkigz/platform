@@ -138,7 +138,11 @@ export function progressWords(code: LocaleCode) {
       const remaining = Math.max(0, badge.need - badge.have);
       // The database will catch up; never say "0 more".
       if (remaining === 0) return t('prog.earned');
-      const keys = Object.hasOwn(MORE, badge.unit) ? MORE[badge.unit]! : MORE.lesson!;
+      // A unit with no word here is said in numbers. It used to be said as
+      // lessons, which was a sentence about the wrong thing. The two numbers
+      // are held left to right, so a right-to-left page does not swap them.
+      if (!Object.hasOwn(MORE, badge.unit)) return `\u2066${num(badge.have)} / ${num(badge.need)}\u2069`;
+      const keys = MORE[badge.unit]!;
       if (code !== 'en') return countLabel(code, remaining, keys);
       const word = numberWord(remaining);
       return t(remaining === 1 ? keys.one : keys.other, { count: `${word[0]!.toUpperCase()}${word.slice(1)}` });

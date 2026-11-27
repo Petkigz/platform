@@ -12,6 +12,7 @@ import type { LiveSession } from '@/lib/live';
 import { liveWords } from '@/lib/live-words';
 import { EngagementStrip } from '@/components/engagement-strip';
 import { isFlagEnabled } from '@/lib/flags';
+import { languageName } from '@/lib/i18n/language-name';
 import {
   LOCALE_COOKIE,
   chooseLocale,
@@ -360,7 +361,7 @@ export default async function LearnPage() {
                 <div className="badges" style={{ margin: '0.5rem 0 0.75rem' }}>
                   <span className="badge">{statusLabel(r.status, t)}</span>
                   <span className="badge neutral">{versionNumber(r)}</span>
-                  <span className="badge neutral">{language(r).toUpperCase()}</span>
+                  <span className="badge neutral">{languageName(shown.code, language(r)) ?? '?'}</span>
                 </div>
 
                 {progressOn && (

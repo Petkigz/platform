@@ -498,7 +498,9 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // the page of one class.)
   // (Eighty-six more the same day: the parts of the course page behind
   // switches — dated classes, save for later, ratings — and the sample lesson.)
-  assert.equal(unwrittenKeys.length, 2265);
+  // (Two more on 2026-11-27: what the certificate check says when the check
+  // itself could not be made.)
+  assert.equal(unwrittenKeys.length, 2267);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cparts.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('live.')).length, 28);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cpage.')).length, 34);

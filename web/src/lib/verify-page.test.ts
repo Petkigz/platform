@@ -20,7 +20,7 @@ const LANGUAGES = [
 ] as const;
 
 test('all twenty-seven languages have every sentence, with the number where English has it', () => {
-  assert.equal(KEYS.length, 21);
+  assert.equal(KEYS.length, 23);
   const blanks = (text: string) => (text.match(/\{[a-zA-Z]+\}/gu) ?? []).sort().join(' ');
   const withNumber = KEYS.filter((key) => en[key].includes('{number}'));
   assert.deepEqual(withNumber, ['verify.whereBody', 'verify.notANumber', 'verify.noneBody']);
@@ -89,4 +89,22 @@ test('what a person wrote and the number are set apart from the page’s words',
 test('Arabic is read in Arabic, and English says what the library says', () => {
   assert.equal(languageShownFor('ar', 'verify').code, 'ar');
   assert.equal(translator('en')('verify.notANumber').replace('{number}', 'AS-2026-00000001'), numberProblem('12345'));
+});
+
+test('a check that failed is never an answer about the certificate', () => {
+  // Found by refusing every read while the page was drawn, 2026-11-27: the
+  // page caught the failure and said "No certificate matches that number."
+  // to somebody holding a real one.
+  for (const code of ['en', ...LANGUAGES] as const) {
+    const t = translator(code);
+    const said = [t('verify.unchecked'), t('verify.valid'), t('verify.invalid'), t('verify.none')];
+    assert.equal(new Set(said).size, 4, code);
+    assert.ok(t('verify.uncheckedBody').length > 0, code);
+  }
+  assert.ok(!answer.includes('.catch(() => null)'), 'a failed check is still swallowed');
+  assert.match(answer, /const unchecked = result === null;/u);
+  // Said in its own notice, before anything is said about a match.
+  assert.match(answer, /\{unchecked \? \([\s\S]*?t\('verify\.unchecked'\)[\s\S]*?t\('verify\.uncheckedBody'\)[\s\S]*?\) : missing \? \(/u);
+  // The database's own words go to the log, never to the page.
+  assert.match(answer, /console\.error\('verify: the check could not be made:'/u);
 });

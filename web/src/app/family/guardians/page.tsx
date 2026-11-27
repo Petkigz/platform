@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { consentTone, myGuardianConsents } from '@/lib/guardian-consent';
+import { consentTone, myGuardianConsents, reviewerSaid } from '@/lib/guardian-consent';
 import { guardianWords } from '@/lib/guardian-words';
 import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { ConsentForm } from './consent-form';
@@ -120,6 +120,7 @@ export default async function FamilyGuardiansPage() {
           <ul className="lessons stacked">
             {mine.consents.map((c) => {
               const warning = words.warning(c);
+              const said = reviewerSaid(c);
               return (
                 <li key={c.relationshipId}>
                   <span className="t">
@@ -143,9 +144,11 @@ export default async function FamilyGuardiansPage() {
                   <p className="muted">{words.permissions(c).join(' ')}</p>
                   {warning && <p className="danger">{warning}</p>}
                   {c.policyChanged && <p className="muted">{t('guard.policyChanged')}</p>}
-                  {c.lastDecision?.reason && (
-                    <p className="muted">
-                      {t('guard.reviewerSaid')} <bdi>{c.lastDecision.reason}</bdi>
+                  {/* What was asked for, when more was asked for; otherwise the
+                      reason of the last decision. See `reviewerSaid()`. */}
+                  {said && (
+                    <p className="muted" data-reviewer-said>
+                      {t('guard.reviewerSaid')} <bdi>{said}</bdi>
                     </p>
                   )}
                   {c.revokedReason && (
