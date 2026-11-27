@@ -1,15 +1,29 @@
 import { ArabicBlock, ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
+import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { languageName } from '@/lib/i18n/language-name';
 import { fetchInstructorProfile } from '@/lib/instructor-profiles';
 import { one, type Embedded } from '@/lib/embed';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * A teacher's public page.
+ *
+ * **In the reader's language** since 2026-11-27 (`messages/teacher-page.ts`):
+ * the seven things the page itself says. The name, the headline, the
+ * biography and each course's title and description are the teacher's own
+ * words and are shown as written, each in its own direction.
+ *
+ * Courses that could not be read are said to be unread. Until then a failed
+ * read threw, and a visitor was shown the page that says the site broke
+ * where only the list under the teacher was missing.
+ */
 export default async function PublicTeacherPage({ params }: { params: Promise<{ slug: string }> }) {
   if (!isSupabaseConfigured()) notFound();
   const { slug } = await params;
@@ -26,7 +40,8 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
     .is('courses.deleted_at', null)
     .is('courses.suspended_at', null)
     .order('published_at', { ascending: false });
-  if (error) throw new Error(error.message);
+  const unread = Boolean(error);
+  if (error) console.error(`teacher page: the courses could not be read: ${error.message}`);
   const courses = ((data ?? []) as unknown as {
     id: string; version_number: number; language: string;
     // One course per version: PostgREST sends an object.
@@ -36,14 +51,25 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
     return course ? [{ ...course, versionId: version.id, language: version.language }] : [];
   });
 
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  const shown = languageShownFor(locale, 'tpub');
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const [byBefore = '', byAfter = ''] = t('tpub.coursesBy').split('{name}');
+
   const socials = [
-    ['Website', profile.websiteUrl], ['Instagram', profile.instagramUrl],
+    [t('tpub.website'), profile.websiteUrl], ['Instagram', profile.instagramUrl],
     ['YouTube', profile.youtubeUrl], ['TikTok', profile.tiktokUrl], ['Facebook', profile.facebookUrl],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
 
   return (
-    <div className="container section">
-      <p className="eyebrow">AyahSpring teacher</p>
+    <div className="container section" {...frame}>
+      <p className="eyebrow">{t('tpub.eyebrow')}</p>
       <header className="card">
         <ArabicBlock as="h1" style={{ marginTop: 0 }} text={profile.displayName} />
         {profile.headline && <ArabicBlock className="lede" text={profile.headline} />}
@@ -51,7 +77,7 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
           <ArabicBlock as="div" style={{ whiteSpace: 'pre-wrap' }} text={profile.biography} />
         )}
         {socials.length > 0 && (
-          <nav aria-label="Teacher links" className="row" style={{ flexWrap: 'wrap', marginTop: '1rem' }}>
+          <nav aria-label={t('tpub.links')} className="row" style={{ flexWrap: 'wrap', marginTop: '1rem' }}>
             {socials.map(([name, url]) => <a key={name} href={url} target="_blank" rel="noreferrer" className="chip">{name}</a>)}
           </nav>
         )}
@@ -59,18 +85,20 @@ export default async function PublicTeacherPage({ params }: { params: Promise<{ 
 
       <section className="section">
         <h2>
-          Courses by <ArabicInline text={profile.displayName} />
+          {byBefore}<bdi><ArabicInline text={profile.displayName} /></bdi>{byAfter}
         </h2>
-        {courses.length === 0 ? (
-          <p className="empty">No published courses yet.</p>
+        {unread ? (
+          <div className="notice error" role="alert" data-teacher-courses="unread">{t('tpub.unread')}</div>
+        ) : courses.length === 0 ? (
+          <p className="empty">{t('tpub.none')}</p>
         ) : (
           <div className="grid cols-2">
             {courses.map((course) => (
               <article className="card" key={course.versionId}>
-                <p className="eyebrow">{languageName('en', course.language)}</p>
-                <h3><Link href={`/courses/${course.slug}`}>{course.title}</Link></h3>
-                {course.description && <p className="muted">{course.description}</p>}
-                <Link href={`/courses/${course.slug}`} className="btn secondary">View course</Link>
+                <p className="eyebrow">{languageName(shown.code, course.language)}</p>
+                <h3 dir="auto"><Link href={`/courses/${course.slug}`}>{course.title}</Link></h3>
+                {course.description && <p className="muted" dir="auto">{course.description}</p>}
+                <Link href={`/courses/${course.slug}`} className="btn secondary">{t('tpub.view')}</Link>
               </article>
             ))}
           </div>

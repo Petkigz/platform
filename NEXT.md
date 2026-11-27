@@ -11000,3 +11000,39 @@ started: recitation correction, native apps, push notifications.
   nobody has seen them live; no speaker has read the 72 sentences; a
   help article is shown as staff wrote it, in whatever language that was;
   and `/admin/support` is English.
+- **Asking about a lesson, and a teacher's public page, in the reader's
+  language (2026-11-27).** `/learn/ask` (`messages/ask.ts`, 29 sentences)
+  and `/teachers/<slug>` (`messages/teacher-page.ts`, 7), in the
+  twenty-seven languages with nothing held.
+  *The ask page.* `ai_support_ask()` returns an English sentence and an
+  English line about the rules with every answer, and the box printed
+  both. It prints neither now: the page says what each status means in
+  its own words (found; a question for a teacher, with a request opened
+  or without; nothing found; switched off). The database is unchanged
+  and still sends its English; this page no longer prints it.
+  A refusal travels by name (`code`). **Two things that were wrong:** an
+  answer in a shape the page will not render was a 500 with a sentence
+  that did not say the question had been recorded (it has, and a request
+  for help may have been opened); it is a 502 now, and the box says the
+  answer could not be read, that the question may have been recorded,
+  and to look before asking again. And the page said the assistant was
+  "not switched on" when the switch could not be read; it draws the box
+  then, and the database has the last word.
+  *The teacher's page.* The seven things the page itself says; the
+  teacher's own words are shown as written. A failed read of the courses
+  threw, which showed a visitor the page that says the site broke; the
+  teacher is shown now and the list is said to be unread.
+  *Checked by:* `ask-teacher-pages.test.ts`, more cases in
+  `ai-support.test.ts`, and `scripts/ask-teacher-route-smoke.mjs` against
+  a synthetic Auth and REST (in `ci.yml`, and with a browser in the
+  responsive workflow: three languages at 320, 390 and 1440px and at
+  320px with the largest text and the dyslexia font, the box worked in
+  Arabic through every kind of answer).
+  **Not done:** `learning.ai_support` is a code flag and is off, so no
+  question has been asked of the hosted database from this page;
+  `teaching.public_profile` was not checked on hosted, and no real
+  teacher's page was looked at; no speaker has read the 36 sentences.
+  The example in the box names the Arabic letter ح as each language was
+  guessed to name it.
+  **Still English:** `/panel` and `/review` (scholars' pages), and the
+  staff areas (`/admin`, `/teach`, `/institution`).

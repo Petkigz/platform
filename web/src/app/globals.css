@@ -2715,3 +2715,7 @@ p.support-small { margin: 0; }
 .support-list .t { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
 .support-list .badge { white-space: normal; overflow-wrap: anywhere; max-inline-size: 100%; }
 .support-badges .badge { white-space: normal; overflow-wrap: anywhere; max-inline-size: 100%; }
+/* A lesson an answer points to: the line quoted from it is its own block, so
+   that it sets its own direction, and a long word in it breaks. */
+.ask-lessons .t { min-width: 0; overflow-wrap: anywhere; }
+.ask-lessons .ask-line { display: block; }

@@ -131,9 +131,74 @@ export function normaliseAiSupportAnswer(raw: unknown): AiSupportAnswer | null {
   };
 }
 
+/**
+ * Why a question was not answered, by name (2026-11-27). The English
+ * sentence beside it is for a caller with no words of its own; the page says
+ * the name in the reader's language.
+ *
+ * `unsure` is not a refusal. It is an answer nobody could read: a reply from
+ * the database with no state, or one in a shape this module will not render.
+ * In the second case the question **was** recorded, and a request for help
+ * may have been opened, so the page says to look before asking again.
+ */
+export type AskRefusalCode = 'signed_out' | 'too_short' | 'too_long' | 'not_sent' | 'unsure';
+
 export type AskResult =
   | { ok: true; answer: AiSupportAnswer }
-  | { ok: false; message: string };
+  | { ok: false; message: string; code: AskRefusalCode };
+
+/** The status the route answers each name with. Only `unsure` is not a refusal. */
+export function askStatusOf(code: AskRefusalCode): number {
+  if (code === 'unsure') return 502;
+  if (code === 'signed_out') return 401;
+  return 422;
+}
+
+/** What a form says for a reply from the route: only a four hundred that names itself is a refusal. */
+export type AskRefusal = 'signedOut' | 'tooShort' | 'tooLong' | 'notSent' | 'unsure';
+export function askRefusalOf(status: number, code: unknown): AskRefusal {
+  if (status < 400 || status >= 500) return 'unsure';
+  if (status === 401 || code === 'signed_out') return 'signedOut';
+  if (code === 'too_short') return 'tooShort';
+  if (code === 'too_long') return 'tooLong';
+  return 'notSent';
+}
+
+/** The longest question the database takes. */
+export const ASK_MAX = 1000;
+
+/** Every sentence the question box says, handed over by the page. */
+export type AskWords = {
+  label: string;
+  example: string;
+  look: string;
+  looking: string;
+  status: Record<AiSupportStatus, string>;
+  /** What each status means; a question for a teacher has two, with a request opened and without. */
+  says: { answered: string; teacherCase: string; teacherNoCase: string; noMatch: string; closed: string };
+  /** `{number}` is still in it. */
+  openCase: string;
+  rules: string;
+  refusals: Record<AskRefusal, string>;
+};
+
+/** Which sentence an answer gets. */
+export function askSaysKey(answer: Pick<AiSupportAnswer, 'status' | 'supportCaseNumber'>): keyof AskWords['says'] {
+  if (answer.status === 'answered') return 'answered';
+  if (answer.status === 'no_match') return 'noMatch';
+  if (answer.status === 'closed') return 'closed';
+  return answer.supportCaseNumber ? 'teacherCase' : 'teacherNoCase';
+}
+
+function askCodeOf(error: { message: string; code?: string | null }): AskRefusalCode {
+  if (/ai_support:not_signed_in/.test(error.message)) return 'signed_out';
+  if (/ai_support:too_short/.test(error.message)) return 'too_short';
+  if (/ai_support:too_long/.test(error.message)) return 'too_long';
+  // No state at all, or a connection that went: not the database refusing.
+  const state = error.code ?? '';
+  if (state === '' || state.startsWith('08')) return 'unsure';
+  return 'not_sent';
+}
 
 /** `ai_support:<key>` and the two length refusals, as sentences. */
 export function mapAskRefusal(message: string): string {
@@ -149,22 +214,30 @@ export async function askAiSupport(
 ): Promise<AskResult> {
   const question = args.question.trim();
   if (question.length < 3) {
-    return { ok: false, message: 'Write a little more so the question means something.' };
+    return { ok: false, code: 'too_short', message: 'Write a little more so the question means something.' };
   }
-  if (question.length > 1000) {
-    return { ok: false, message: 'That is longer than 1000 characters. Shorten it and try again.' };
+  if (question.length > ASK_MAX) {
+    return { ok: false, code: 'too_long', message: 'That is longer than 1000 characters. Shorten it and try again.' };
   }
 
   const { data, error } = await supabase.rpc('ai_support_ask', {
     p_question: question,
     p_course_id: args.courseId ?? null,
   });
-  if (error) return { ok: false, message: mapAskRefusal(error.message) };
+  if (error) {
+    const code = askCodeOf(error);
+    return {
+      ok: false,
+      code,
+      message: code === 'unsure' ? 'The answer could not be read.' : mapAskRefusal(error.message),
+    };
+  }
 
   const answer = normaliseAiSupportAnswer(data);
   if (!answer) {
     return {
       ok: false,
+      code: 'unsure',
       message: 'The answer came back in a shape this page will not render, so it is not being shown.',
     };
   }

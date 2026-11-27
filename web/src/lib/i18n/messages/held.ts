@@ -134,6 +134,8 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'downloads',
   'ease',
   'support',
+  'ask',
+  'tpub',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

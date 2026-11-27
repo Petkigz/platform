@@ -3663,6 +3663,48 @@ export const en = {
     'That cannot be done to this request as it stands. Load the page again to see where it stands.',
   'support.unsureSaved':
     'Nobody can say whether that was saved. Load the page again and look at the conversation before trying again.',
+  // Asking about a lesson (`/learn/ask`), 2026-11-27. The page and its box
+  // said everything in English, the database's sentences included; the page
+  // now says what the database's answer means in its own words. `{number}`
+  // is a request's number and `{max}` a count in the reader's digits.
+  'ask.title': 'Ask about a lesson',
+  'ask.crumbLearn': 'My learning',
+  'ask.crumb': 'Ask',
+  'ask.eyebrow': 'Study help',
+  'ask.ruleHead': 'It points, it does not rule.',
+  'ask.rule': 'An answer here is a lesson from your courses: its title, where it sits, and a line of text you can already read. Nothing on this page writes an answer of its own. A question that asks for a religious ruling goes to a teacher.',
+  'ask.offHead': 'The study assistant is not switched on yet.',
+  'ask.off': 'Ask your teacher in the lesson, or ask for help.',
+  'ask.help': 'Ask for help',
+  'ask.back': 'Back to my learning',
+  'ask.label': 'What would you like to understand?',
+  'ask.example': 'For example: how is the letter ha pronounced?',
+  'ask.look': 'Look it up',
+  'ask.looking': 'Looking…',
+  'ask.found': 'Found in your courses',
+  'ask.forTeacher': 'A question for a teacher',
+  'ask.nothing': 'Nothing in your courses yet',
+  'ask.closed': 'Not switched on',
+  'ask.foundSays': 'This is what your courses cover on that. It points to a lesson; it is not an answer written for you.',
+  'ask.teacherCase': 'That is a question for a teacher, and this assistant does not answer those. A request for help has been opened so that a person can answer it.',
+  'ask.teacherNoCase': 'That is a question for a teacher, and this assistant does not answer those. Ask your teacher in the lesson.',
+  'ask.nothingSays': 'Nothing in your courses covers this yet. A teacher can answer it: ask in the lesson, or ask for help.',
+  'ask.openCase': 'Open request {number}',
+  'ask.rules': 'A lesson you can open, or no answer. Questions that ask for a ruling go to a teacher.',
+  'ask.tooShort': 'Write a little more so that the question means something.',
+  'ask.tooLong': 'That is too long. The most characters a question can hold: {max}',
+  'ask.signedOut': 'Sign in to ask a question.',
+  'ask.notSent': 'The question could not be sent. Nothing was recorded.',
+  'ask.unsure': 'The answer could not be read. Your question may have been recorded; look at your requests for help before asking it again.',
+  // A teacher's public page (`/teachers/<slug>`), 2026-11-27. `{name}` is
+  // the teacher's name as they wrote it.
+  'tpub.eyebrow': 'AyahSpring teacher',
+  'tpub.links': 'This teacher elsewhere',
+  'tpub.website': 'Website',
+  'tpub.coursesBy': 'Courses by {name}',
+  'tpub.none': 'No published courses yet.',
+  'tpub.view': 'View course',
+  'tpub.unread': 'This teacher’s courses could not be read just now. Try again in a moment.',
 } as const;
 
 export type MessageKey = keyof typeof en;

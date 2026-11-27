@@ -31,7 +31,8 @@ test('the pages that showed "ar" ask for the name', () => {
   assert.match(read('certificates/page.tsx'), /languageName\(shown\.code, c\.courseLanguage\)/u);
   assert.match(read('learn/page.tsx'), /languageName\(shown\.code, language\(r\)\)/u);
   assert.match(read('learn/[enrolmentId]/page.tsx'), /language: languageName\(/u);
-  assert.match(read('teachers/[slug]/page.tsx'), /languageName\('en', course\.language\)/u);
+  // In the page's language since 2026-11-27; it was pinned to English while the page was.
+  assert.match(read('teachers/[slug]/page.tsx'), /languageName\(shown\.code, course\.language\)/u);
   for (const page of ['verify/[number]/page.tsx', 'certificates/page.tsx', 'learn/page.tsx', 'learn/[enrolmentId]/page.tsx']) {
     assert.doesNotMatch(read(page), /anguage[^\n]*\.toUpperCase\(\)/u, page);
   }

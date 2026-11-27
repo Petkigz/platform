@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ASK_MAX,
   askAiSupport,
+  askRefusalOf,
+  askSaysKey,
+  askStatusOf,
   describeAiSupportStatus,
   mapAskRefusal,
   normaliseAiSupportAnswer,
@@ -141,6 +145,49 @@ test('each refusal has a sentence, and an unreadable payload says so', async () 
   const result = await askAiSupport(shapeless.client, { question: 'the positions of the prayer' });
   assert.equal(result.ok, false);
   if (!result.ok) assert.match(result.message, /will not render/);
+});
+
+test('a refusal travels by name, and an answer nobody could read is not one', async () => {
+  // 2026-11-27. The form says the name in the page's language.
+  const ask = async (reply: { data?: unknown; error?: { message: string; code?: string } }, question = 'the positions of the prayer') =>
+    askAiSupport(stub(reply).client, { question });
+  const code = (result: Awaited<ReturnType<typeof ask>>) => (result.ok ? null : result.code);
+
+  assert.equal(code(await ask({ data: null }, 'ab')), 'too_short');
+  assert.equal(code(await ask({ data: null }, 'x'.repeat(ASK_MAX + 1))), 'too_long');
+  assert.equal(code(await ask({ error: { message: 'ai_support:not_signed_in', code: '42501' } })), 'signed_out');
+  assert.equal(code(await ask({ error: { message: 'ai_support:too_long', code: '22023' } })), 'too_long');
+  assert.equal(code(await ask({ error: { message: 'permission denied', code: '42501' } })), 'not_sent');
+  // No state, or a connection that went: nobody can say.
+  assert.equal(code(await ask({ error: { message: '<html>bad gateway</html>' } })), 'unsure');
+  assert.equal(code(await ask({ error: { message: 'fetch failed', code: '' } })), 'unsure');
+  assert.equal(code(await ask({ error: { message: 'connection failure', code: '08006' } })), 'unsure');
+  // An answer in a shape that is not rendered: the question was recorded.
+  assert.equal(code(await ask({ data: { status: 'answered', message: 'yes' } })), 'unsure');
+  const gateway = await ask({ error: { message: '<html>bad gateway</html>' } });
+  if (!gateway.ok) assert.doesNotMatch(gateway.message, /html/u);
+
+  assert.equal(askStatusOf('unsure'), 502);
+  assert.equal(askStatusOf('signed_out'), 401);
+  assert.equal(askStatusOf('too_short'), 422);
+  assert.equal(askStatusOf('not_sent'), 422);
+
+  assert.equal(askRefusalOf(401, undefined), 'signedOut');
+  assert.equal(askRefusalOf(422, 'too_short'), 'tooShort');
+  assert.equal(askRefusalOf(422, 'too_long'), 'tooLong');
+  assert.equal(askRefusalOf(422, 'not_sent'), 'notSent');
+  assert.equal(askRefusalOf(400, undefined), 'notSent');
+  for (const status of [0, 200, 500, 502, 503]) assert.equal(askRefusalOf(status, 'too_short'), 'unsure', String(status));
+
+  assert.equal(askSaysKey({ status: 'answered', supportCaseNumber: null }), 'answered');
+  assert.equal(askSaysKey({ status: 'no_match', supportCaseNumber: null }), 'noMatch');
+  assert.equal(askSaysKey({ status: 'closed', supportCaseNumber: null }), 'closed');
+  assert.equal(askSaysKey({ status: 'refused_ruling', supportCaseNumber: 'SC-000012' }), 'teacherCase');
+  assert.equal(askSaysKey({ status: 'refused_ruling', supportCaseNumber: null }), 'teacherNoCase');
+
+  // What the route sends is read a second time in the browser, and reads the same.
+  const once = normaliseAiSupportAnswer(answer());
+  assert.deepEqual(normaliseAiSupportAnswer(JSON.parse(JSON.stringify(once))), once);
 });
 
 test('each status has one line, and none of them claims to have answered', () => {

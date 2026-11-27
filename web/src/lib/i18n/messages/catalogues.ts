@@ -61,6 +61,8 @@ import { SAVED } from './saved.ts';
 import { PATHS } from './paths.ts';
 import { DOWNLOADS } from './downloads.ts';
 import { SUPPORT } from './support.ts';
+import { ASK } from './ask.ts';
+import { TPUB } from './teacher-page.ts';
 import { EASE } from './ease.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
@@ -933,6 +935,10 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   EASE,
   // Asking for help, on the same rule.
   SUPPORT,
+  // Asking about a lesson, on the same rule.
+  ASK,
+  // A teacher's public page, on the same rule.
+  TPUB,
 );
 
 /**

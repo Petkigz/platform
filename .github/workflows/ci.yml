@@ -129,6 +129,9 @@ jobs:
       - name: Help page, one request and the support route synthetic HTTP regression
         run: node scripts/support-route-smoke.mjs
 
+      - name: Ask page, its route and a teacher's public page synthetic HTTP regression
+        run: node scripts/ask-teacher-route-smoke.mjs
+
       - name: Export pages and export route synthetic HTTP regression
         run: node scripts/export-route-smoke.mjs
 

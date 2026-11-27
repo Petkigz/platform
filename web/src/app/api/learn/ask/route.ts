@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { askAiSupport } from '@/lib/ai-support';
+import { askAiSupport, askStatusOf } from '@/lib/ai-support';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: 'Sign in to ask a question.' }, { status: 401 });
+    return NextResponse.json({ error: 'Sign in to ask a question.', code: 'signed_out' }, { status: 401 });
   }
 
   let body: { question?: unknown; courseId?: unknown };
@@ -44,11 +44,12 @@ export async function POST(request: Request) {
 
   const result = await askAiSupport(supabase, { question, courseId });
   if (!result.ok) {
-    // 422 for a refusal the person can act on, 500 only when the payload was
-    // unreadable — a distinction the form uses to decide whether to keep the text
-    // in the box.
-    const status = /will not render/.test(result.message) ? 500 : 422;
-    return NextResponse.json({ error: result.message }, { status });
+    // 422 for a refusal the person can act on, and 502 when nobody can say
+    // what happened: the database's reply had no state, or its answer was in
+    // a shape that is not rendered (then the question was recorded). The
+    // form says each by its name, in the page's language (2026-11-27; it
+    // was the English sentence, and an unreadable answer was a 500).
+    return NextResponse.json({ error: result.message, code: result.code }, { status: askStatusOf(result.code) });
   }
 
   return NextResponse.json({ ok: true, answer: result.answer });

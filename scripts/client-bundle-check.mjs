@@ -266,6 +266,14 @@ for (const [file, key] of [
   ['support.ts', 'support.privacy'],
   ['support.ts', 'support.unsureSent'],
   ['support.ts', 'support.closeFinal'],
+  // Asking about a lesson and a teacher's public page (2026-11-27): the
+  // question box is a script handed its words. What the page promises about
+  // rulings, and what it says when an answer could not be read, must be in
+  // nothing a browser downloads.
+  ['ask.ts', 'ask.rule'],
+  ['ask.ts', 'ask.teacherCase'],
+  ['ask.ts', 'ask.unsure'],
+  ['teacher-page.ts', 'tpub.unread'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);
