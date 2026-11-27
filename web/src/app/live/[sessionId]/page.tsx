@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { throwUnlessWrongAddress } from '@/lib/read-failed';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { liveWords } from '@/lib/live-words';
@@ -56,7 +57,7 @@ export default async function LiveSessionPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/live/${sessionId}`);
 
-  const { data: sessionData } = await supabase
+  const { data: sessionData, error: sessionError } = await supabase
     .from('live_sessions')
     .select(
       'id,course_id,title,description,starts_at,ends_at,scheduled_zone,status,' +
@@ -64,6 +65,9 @@ export default async function LiveSessionPage({
     )
     .eq('id', sessionId)
     .maybeSingle();
+  // A read that failed is not a thing that does not exist: the site's error
+  // page, not "not found" and not an empty list.
+  throwUnlessWrongAddress(sessionError);
 
   const session = sessionData as unknown as
     | {
@@ -91,7 +95,7 @@ export default async function LiveSessionPage({
   const readerZone =
     (zoneRow as unknown as { timezone: string | null } | null)?.timezone ?? 'UTC';
 
-  const [{ data: roll }, { data: mine }] = await Promise.all([
+  const [{ data: roll, error: rollError }, { data: mine, error: mineError }] = await Promise.all([
     supabase.rpc('live_session_roster', { p_session_id: session.id }),
     supabase
       .from('course_enrolments')
@@ -100,6 +104,9 @@ export default async function LiveSessionPage({
       .in('status', ['active', 'completed'])
       .is('deleted_at', null),
   ]);
+  // Unread is not "nobody came" and not "you have no place in this class".
+  if (rollError) throw new Error(rollError.message);
+  if (mineError) throw new Error(mineError.message);
 
   type Attendance = {
     learner_profile_id: string;

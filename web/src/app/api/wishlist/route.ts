@@ -7,8 +7,8 @@ import { saveCodeOf } from '@/lib/course-parts';
 
 /**
  * A refusal, with its name beside the sentence when it has one. The course
- * page says the name in the reader's language (`course-parts.ts`); the
- * saved-courses list still prints the sentence.
+ * page and the saved-courses list say the name in the reader's language
+ * (`course-parts.ts`, `wishlist-shared.ts`); the sentence is for a log.
  */
 function refused(error: string, status: number) {
   const code = saveCodeOf(error);

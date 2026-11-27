@@ -64,11 +64,13 @@ export default async function FamilyGuardiansPage() {
 
   // Children this person could plausibly ask about: learner profiles in a family
   // they belong to. RLS narrows this to what they may see.
-  const { data: memberships } = await supabase
+  const { data: memberships, error: membershipsError } = await supabase
     .from('family_memberships')
     .select('families ( id, name, learner_profiles ( id, display_name, learner_type ) )')
     .eq('user_id', user.id)
     .eq('status', 'active');
+  // Unread is not "no children": the page would offer nobody to consent for.
+  if (membershipsError) throw new Error(membershipsError.message);
 
   type ChildRow = { id: string; display_name: string; learner_type: string };
   const children: ChildRow[] = ((memberships ?? []) as {

@@ -161,7 +161,9 @@ export default async function CourseViewPage({
       fetchProgress(supabase, enrolment.id),
       fetchSummary(supabase, enrolment.id),
       fetchCompletion(supabase, enrolment.id).catch(() => null),
-      fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => []),
+      // Null when the read failed, so the page can say a part is missing
+      // instead of drawing a course that seems to have no assessments.
+      fetchAssessmentsForVersion(supabase, enrolment.course_version_id).catch(() => null),
       fetchCourseAssignments(supabase, {
         courseId: enrolment.course_id,
         courseVersionId: enrolment.course_version_id,
@@ -358,7 +360,9 @@ export default async function CourseViewPage({
         ))
       )}
 
-      {assessmentsOn && assessments.length > 0 && (
+      {assessmentsOn && assessments === null && <div className="notice warn">{t('subs.partUnread')}</div>}
+
+      {assessmentsOn && assessments !== null && assessments.length > 0 && (
         <div>
           <div className="outline-h">
             <h3>{t('assess.heading')}</h3>

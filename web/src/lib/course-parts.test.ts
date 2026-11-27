@@ -305,7 +305,9 @@ test('the three routes send the name beside the sentence, and still send the sen
   for (const route of [wishlist, reviews]) {
     assert.match(route, /NextResponse\.json\(\{ error, \.\.\.\(code \? \{ code \} : \{\}\) \}, \{ status \}\)/);
   }
-  // The pages that are still English read the sentence and are not changed.
-  assert.match(read('../app/saved/saved-item.tsx'), /json\.error/);
+  // The saved list reads the name too since 2026-11-27, and never the sentence.
+  assert.match(read('../app/saved/saved-item.tsx'), /savedRefusalOf\(status, code\)/);
+  assert.doesNotMatch(read('../app/saved/saved-item.tsx'), /json\.error/);
+  // The page that is still English reads the sentence and is not changed.
   assert.match(read('../app/teach/[courseId]/cohorts/cohort-manager.tsx'), /result\.message/);
 });

@@ -72,7 +72,10 @@ export default async function AdminRetentionPage({ searchParams }: { searchParam
   // The sign-ins this database cannot delete. Read separately from the plan
   // because it is not a clock: nothing here falls due, and a screen that folded
   // it into "total to delete" would promise a deletion the cleanup cannot make.
-  const { data: queueData } = await supabase.rpc('identity_removal_queue', {});
+  const { data: queueData, error: queueError } = await supabase.rpc('identity_removal_queue', {});
+  // An unread queue is not an empty one: "no sign-ins waiting to be deleted"
+  // is a promise kept, and this page must not say it about a read that failed.
+  if (queueError) throw new Error(queueError.message);
   const queue: IdentityQueue = queueData
     ? parseIdentityQueue(queueData)
     : EMPTY_IDENTITY_QUEUE;

@@ -3,6 +3,7 @@ import { ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
 import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { throwUnlessWrongAddress } from '@/lib/read-failed';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import {
@@ -258,7 +259,7 @@ export default async function LessonPage({
     signIn: t('lesson.studySignIn'),
   };
 
-  const { data: enrolmentData } = await supabase
+  const { data: enrolmentData, error: enrolmentError } = await supabase
     .from('course_enrolments')
     .select(
       'id, learner_profile_id, status, source, course_version_id, courses ( id, title )',
@@ -266,6 +267,9 @@ export default async function LessonPage({
     .eq('id', enrolmentId)
     .is('deleted_at', null)
     .maybeSingle();
+  // A read that failed is not a thing that does not exist: the site's error
+  // page, not "not found" and not an empty list.
+  throwUnlessWrongAddress(enrolmentError);
 
   const enrolment = enrolmentData as unknown as EnrolmentRow | null;
   if (!enrolment) notFound();
@@ -273,11 +277,12 @@ export default async function LessonPage({
   // Not a permission check so much as a sanity check: RLS already hides
   // someone else's enrolment, so this fires when the id is stale or wrong.
   if (enrolment.learner_profile_id) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('learner_profiles')
       .select('id')
       .eq('id', enrolment.learner_profile_id)
       .maybeSingle();
+    if (profileError) throw new Error(profileError.message);
     if (!profile) notFound();
   }
 

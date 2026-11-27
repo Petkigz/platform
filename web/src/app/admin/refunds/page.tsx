@@ -52,11 +52,14 @@ export default async function AdminRefundsPage() {
   // The window is read from the register, which staff may read. A page that
   // enforced a number it could not show would leave the person changing it
   // guessing at the current value.
-  const { data: windowRow } = await supabase
+  const { data: windowRow, error: windowError } = await supabase
     .from('platform_settings')
     .select('value_text')
     .eq('key', 'commerce.refund_window_hours')
     .maybeSingle();
+  // The default is for a setting that was never written, not for one that
+  // could not be read: 72 shown here would be a number nobody read.
+  if (windowError) throw new Error(windowError.message);
   const windowHours = Number((windowRow as { value_text?: string } | null)?.value_text ?? 72);
 
   return (

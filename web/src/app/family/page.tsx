@@ -250,7 +250,9 @@ async function FamilyBlock({
     Promise.all(
       family.children.map(async (c) => ({
         child: c,
-        courses: await fetchChildCourses(supabase, c.id).catch(() => []),
+        // Null when the read failed: "not enrolled in anything" is said only
+        // of a child whose courses were read.
+        courses: await fetchChildCourses(supabase, c.id).catch(() => null),
         engagement: showChildEngagement
           ? await fetchEngagement(supabase, c.id).catch(() => null)
           : null,
@@ -446,7 +448,9 @@ async function FamilyBlock({
                 </div>
               )}
 
-              {courses.length === 0 ? (
+              {courses === null ? (
+                <p className="notice warn" style={{ marginBottom: 0 }}>{t('subs.partUnread')}</p>
+              ) : courses.length === 0 ? (
                 <p className="empty" style={{ marginBottom: 0 }}>{t('family.notEnrolled')}</p>
               ) : (
                 courses.map((c) => (

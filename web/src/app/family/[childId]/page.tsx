@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { throwUnlessWrongAddress } from '@/lib/read-failed';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { ageBandLabel } from '@/lib/age-band';
@@ -93,12 +94,15 @@ export default async function ChildHomePage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/family/${childId}`);
 
-  const { data } = await supabase
+  const { data, error: learnerError } = await supabase
     .from('learner_profiles')
     .select('id, display_name, age_band, learner_type, family_id')
     .eq('id', childId)
     .is('deleted_at', null)
     .maybeSingle();
+  // A read that failed is not a thing that does not exist: the site's error
+  // page, not "not found" and not an empty list.
+  throwUnlessWrongAddress(learnerError);
 
   const learner = data as unknown as Learner | null;
   if (!learner) notFound();
@@ -128,9 +132,11 @@ export default async function ChildHomePage({
   // page remembering to check it. It is also the only place that knows a learner's
   // certificate and when they last opened a lesson, which are the two facts a
   // guardian actually wants beside the progress bar.
-  const { data: courseData } = await supabase.rpc('learner_across_courses', {
+  const { data: courseData, error: coursesError } = await supabase.rpc('learner_across_courses', {
     p_learner_profile_id: learner.id,
   });
+  // Unread is not "no courses": a parent would be told their child has none.
+  if (coursesError) throw new Error(coursesError.message);
   const courses = parseLearnerCourses(courseData);
   const { active, finished, stopped } = groupLearnerCourses(courses);
   const everything = [...active, ...finished, ...stopped];

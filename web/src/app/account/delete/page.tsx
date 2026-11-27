@@ -56,11 +56,14 @@ export default async function DeleteAccountPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/account/delete');
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('user_profiles')
     .select('display_name, account_status, deleted_at')
     .eq('user_id', user.id)
     .maybeSingle();
+  // A profile that could not be read is not an account with no profile: the
+  // site's error page, not a silent return to the dashboard.
+  if (error) throw new Error(error.message);
 
   if (!data) redirect('/learn');
   const profile = data as unknown as {

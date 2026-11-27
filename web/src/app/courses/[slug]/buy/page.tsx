@@ -72,12 +72,15 @@ export default async function BuyPage({
   } = await supabase.auth.getUser();
   if (!user) redirect(`/sign-in?next=/courses/${slug}/buy`);
 
-  const { data: courseData } = await supabase
+  const { data: courseData, error: courseError } = await supabase
     .from('courses')
     .select('id, slug, title, status, deleted_at')
     .eq('slug', slug)
     .is('deleted_at', null)
     .maybeSingle();
+  // A read that failed is not a thing that does not exist: the site's error
+  // page, not "not found" and not an empty list.
+  if (courseError) throw new Error(courseError.message);
 
   const course = courseData as unknown as
     | { id: string; slug: string; title: string; status: string }
@@ -94,12 +97,14 @@ export default async function BuyPage({
   // say who it is for. RLS limits this list to the caller's own profile and the
   // learners in families they belong to, and the writer checks the same thing
   // again — this list is a convenience, not the control.
-  const { data: learnerRows } = await supabase
+  const { data: learnerRows, error: learnersError } = await supabase
     .from('learner_profiles')
     .select('id,display_name,learner_type')
     .eq('status', 'active')
     .is('deleted_at', null)
     .order('display_name');
+  // Unread is not "nobody to buy for": the form would offer no learner at all.
+  if (learnersError) throw new Error(learnersError.message);
   const learners = ((learnerRows ?? []) as
     { id: string; display_name: string; learner_type: string }[]).map((row) => ({
       id: row.id,

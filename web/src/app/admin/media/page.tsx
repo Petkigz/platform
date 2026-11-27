@@ -65,7 +65,9 @@ export default async function AdminMediaPage() {
     used_percent: number | null;
     over_quota: boolean;
   };
-  const { data: storageRows } = await supabase.rpc('media_storage_overview', { p_limit: 20 });
+  const { data: storageRows, error: storageError } = await supabase.rpc('media_storage_overview', { p_limit: 20 });
+  // Unread is not "nobody is using any storage".
+  if (storageError) throw new Error(storageError.message);
   const storage = (storageRows ?? []) as StorageRow[];
 
   return (
