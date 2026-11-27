@@ -742,7 +742,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // thirty-five for the about page (7.46%, now 7%), then
   // eighteen for the saved-courses list (7.41%, still 7%), then
   // twenty-five for the two learning-path pages (7.34%, still 7%), then
-  // the lessons kept on this device for the lessons kept on this device (7.21%, still 7%).
+  // forty-five for the lessons kept on this device (7.21%, still 7%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
