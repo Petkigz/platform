@@ -10749,3 +10749,17 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   `engines` in `web/package.json` carry the commands and Node 22;
   `docs/deploy/README.md` 4.2 gives the import steps, including that `main`
   is empty. No project was visible through the connector at 20:45 UTC.
+- *369 asked for, 2026-11-27.* The owner asked ("give me the 369 link").
+  Read first through the connector: 368 recorded, no Auth user, no learner,
+  no `provider_events`. Trigger commit `03b0f0d`, run `45955982524`,
+  **waiting for the owner's approval**. Once it has run it is spent: never
+  push its trigger words again, never rerun it. Read the result and record
+  it in `docs/deploy/README.md` (the paragraph "The 369th has a job").
+- *Vercel project exists, 2026-11-27.* The owner imported it by hand
+  (project `platform` under `petkigz`). Seen only through GitHub's commit
+  statuses, because the connector lists nothing: `main` failed (expected);
+  the branch's commits `bf0142c` and `03b0f0d` built ("Deployment has
+  completed"). They are Preview deployments until Production's branch is
+  set to `arena/4f30fd1d-platform`. Not known: the address, which variables
+  are set, whether a page loads. Supabase's site address is still
+  `http://localhost:3000`.
