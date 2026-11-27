@@ -10889,9 +10889,34 @@ Looked at and left as they are, on purpose:
   marked as stored English. Saying it from the catalogue would need three
   sentences in 27 languages for one reader. Not built.
 
-Still open from that list: the learner pages in English only (`about`,
-`support`, `saved`, `downloads`, `learn/ask`, then `paths` and `panel`,
-which are behind switches that are off) and every staff page;
-institution single sign-on; the second half of accessibility
-(`FLAGS.md`). Never started: recitation correction, native apps, push
-notifications.
+Still open from that list, as it stood before "finish them up" the same
+day: the learner pages in English only and every staff page; institution
+single sign-on; the second half of accessibility (`FLAGS.md`). Never
+started: recitation correction, native apps, push notifications.
+
+### "Finish them up", 2026-11-27
+
+- **`/about`, `/saved`, `/paths` and `/paths/[slug]` are said in the
+  reader's language** (27 written languages; none read by a speaker). The
+  pattern is the one every translated page uses: sentences in `en.ts`, a
+  section file under `messages/`, a page test beside the others
+  (`about-page.test.ts`, `saved-page.test.ts`, `paths-page.test.ts`).
+  `/about` now counts its languages from the register and no longer says a
+  child never has a login.
+- **`/saved` used to promise something the database refuses.** With
+  `learning.wishlist` off it said a saved course was "still yours to edit
+  or remove"; `guard_course_wishlist()` allows only removal. The page now
+  says so, hides the note button while the switch reads off, and a failed
+  read of the switch is "not known" rather than "off".
+- **A failed read is not said as "none".** Every page was surveyed for a
+  read whose `error` was dropped (`failed-read.test.ts`). Eleven learner
+  reads and three staff reads now stop on the site's error page or say
+  that part could not be read (`read-failed.ts`; an id in the address that
+  is not an id is still "not found"). Eight learner reads are left on
+  purpose, each with its reason in the test, and a new one fails it.
+  **Not done:** 31 permission checks on staff pages (they fail closed:
+  safe, but they say "not allowed" where the truth is "could not
+  check") and 17 other staff and teaching reads, pinned by the test so
+  the number can only fall; and the `.catch(() => [])` form, which the
+  test does not look for (seen on `/family` for the family's members and
+  adults, and on the lesson page for practice questions).
