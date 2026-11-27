@@ -491,14 +491,15 @@ try {
   calls.length = 0;
   assert.deepEqual(await notice({}), { status: 200, json: { signedIn: false } });
   assert.equal(calls.length, 0, 'something was read for a visitor');
-  // Signed in and never agreed to anything: the terms are waiting, and nothing changed.
-  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [] } });
-  // Agreed to version 2, and version 3 is in force: changed. A slug and a number, and no title.
+  // Signed in and never agreed to anything: nothing changed, and the terms
+  // are waiting for an account nobody asked. A slug and a number, and no title.
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [], waiting: [{ slug: TERMS, version: 3 }] } });
+  // Agreed to version 2, and version 3 is in force: changed, and not "waiting".
   state.history = [[TERMS, 2]];
-  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [{ slug: TERMS, version: 3 }] } });
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [{ slug: TERMS, version: 3 }], waiting: [] } });
   // Agreed to version 3 as well: nothing to tell.
   state.agreed[TERMS] = AGREED_AT;
-  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [] } });
+  assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: [], waiting: [] } });
   // Not read is not "nothing changed", and is not an error status on a page that is fine.
   state = fresh(); state.broken = new Set(['/rest/v1/rpc/my_policy_standing']);
   assert.deepEqual(await notice(), { status: 200, json: { signedIn: true, changed: null } });
@@ -668,13 +669,61 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
     }
-    // Signed in, never agreed to anything: the terms are waiting, which is
-    // said on their page and on the account page. It is not a change.
+    // Signed in, never agreed to anything: an account Google made from the
+    // sign-in page, where there is no box. It is asked, in words of its own:
+    // nothing "changed" for somebody who never saw a version.
     {
       state = fresh();
       const { context, tab, errors, asked } = await visit('/policies', 'en', 390);
+      const notice = tab.locator(NOTICE);
+      await notice.waitFor();
       assert.equal(asked.length, 1);
-      assert.equal(await tab.locator(NOTICE).count(), 0, 'a new account was told a document had changed');
+      assert.equal(await notice.getAttribute('data-policy-notice-kind'), 'waiting');
+      assert.equal((await notice.locator('p').textContent()).trim(), 'Documents waiting for your agreement: 1');
+      assert.equal(await notice.getByRole('link', { name: 'Your agreement', exact: true }).getAttribute('href'), `/policies/${TERMS}`);
+      assert.equal(await notice.getByText('changed', { exact: false }).count(), 0, 'a new account was told a document had changed');
+      assert.ok(await fits(tab), 'the notice widens the page');
+      await shot(tab, 'policy-notice-waiting-en-390');
+      // On the document's page the button records the agreement and the notice goes.
+      await notice.getByRole('link', { name: 'Your agreement', exact: true }).click();
+      await tab.waitForURL(`**/policies/${TERMS}`);
+      await tab.locator(NOTICE).waitFor();
+      await tab.getByRole('button', { name: 'Agree to this version', exact: true }).click();
+      await tab.locator(NOTICE).waitFor({ state: 'detached' });
+      assert.equal(asked.length, 1, 'the notice asked again within one opening');
+      assert.deepEqual(errors, []);
+      await context.close();
+    }
+    // The same account, having ticked the box on the sign-up page a moment
+    // ago: the layout is recording that on this very page, and it is not
+    // asked a second time meanwhile.
+    {
+      state = fresh();
+      const context = await browser.newContext({ viewport: { width: 390, height: 900 }, locale: 'en' });
+      await context.addCookies([{ name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin }, { name: 'ayahspring_locale', value: 'en', url: origin }]);
+      await context.addInitScript((slug) => {
+        if (!window.sessionStorage.getItem('synthetic-once')) {
+          window.sessionStorage.setItem('synthetic-once', '1');
+          window.localStorage.setItem('ayahspring.policy.signup', JSON.stringify({ at: Date.now(), items: [{ slug, version: 3 }] }));
+        }
+      }, TERMS);
+      const tab = await context.newPage();
+      const errors = []; tab.on('pageerror', (e) => errors.push(String(e)));
+      const posted = []; tab.on('request', (r) => { if (r.url().endsWith('/api/policies') && r.method() === 'POST') posted.push(r.postDataJSON()); });
+      const seen = [];
+      await tab.exposeFunction('syntheticSaw', (kind) => seen.push(kind));
+      await tab.addInitScript(() => {
+        new MutationObserver(() => { if (document.querySelector('[data-policy-notice]')) window.syntheticSaw('notice'); }).observe(document, { childList: true, subtree: true });
+      });
+      await tab.goto(`${origin}/policies`, { waitUntil: 'networkidle' });
+      // (A development server runs an effect twice, so it may be sent twice; a built site sends it once.)
+      assert.ok(posted.length >= 1, 'what was ticked at sign-up was not recorded');
+      for (const body of posted) assert.deepEqual(body, { slug: TERMS, version: 3 });
+      assert.deepEqual(seen, [], 'somebody who ticked the box a moment ago was asked again');
+      assert.equal(await tab.evaluate(() => window.localStorage.getItem('ayahspring.policy.signup')), null);
+      // And not on the next page either: it is recorded.
+      await tab.goto(`${origin}/policies`, { waitUntil: 'networkidle' });
+      assert.equal(await tab.locator(NOTICE).count(), 0);
       assert.deepEqual(errors, []);
       await context.close();
     }
@@ -785,7 +834,7 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
     }
-    console.log('Notice of a changed document: a visitor is not asked about; a new account is not told of a change; asked once an opening and not again on the next page; a version published during a session is not announced on it and is at the next opening; agreeing takes the document out; put away stays away for that version on this device and comes back for the next; a failed read is asked again; Arabic at 320 and English marked for a held language.');
+    console.log('Notice of a changed document: a visitor is not asked about; a new account is not told of a change but asked, in its own words, and not asked while what it ticked at sign-up is being recorded; asked once an opening and not again on the next page; a version published during a session is not announced on it and is at the next opening; agreeing takes the document out; put away stays away for that version on this device and comes back for the next; a failed read is asked again; Arabic at 320 and English marked for a held language.');
   }
   console.log('Policies HTTP smoke passed. Not real Auth, RLS or the writer’s own rules; every document in it is invented.');
 } catch (e) { console.error(seen.logs.slice(-4000)); throw e; }

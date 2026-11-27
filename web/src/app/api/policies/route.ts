@@ -10,7 +10,7 @@ import {
   policyStatusOf,
   type PolicyOutcome,
 } from '@/lib/policy-outcome';
-import { changedSince } from '@/lib/policy-notice';
+import { changedSince, neverAsked } from '@/lib/policy-notice';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,7 +95,8 @@ export async function POST(request: Request) {
 const noStore = { 'cache-control': 'no-store' } as const;
 
 /**
- * Which documents changed since this reader agreed to them.
+ * Which documents changed since this reader agreed to them, and, for an
+ * account that has agreed to nothing at all, which are waiting.
  *
  * Asked by the notice under every page, once each time the application is
  * opened (`_shared/policy-notice.tsx`). The root layout cannot ask on the
@@ -125,12 +126,19 @@ export async function GET() {
     () => ({ data: null, error: { message: 'no answer' } }),
   );
   const changed = standing.error ? null : changedSince(standing.data);
-  if (changed === null) {
+  // An account that has agreed to nothing at all: made by Google from the
+  // sign-in page, where there is no box. It is asked by the same notice.
+  const waiting = standing.error ? null : neverAsked(standing.data);
+  if (changed === null || waiting === null) {
     console.error('policies: what changed could not be read for the notice:', standing.error?.message ?? 'a reply that was not a standing');
     return NextResponse.json({ signedIn: true, changed: null }, { headers: noStore });
   }
   return NextResponse.json(
-    { signedIn: true, changed: changed.map((doc) => ({ slug: doc.slug, version: doc.version })) },
+    {
+      signedIn: true,
+      changed: changed.map((doc) => ({ slug: doc.slug, version: doc.version })),
+      waiting: waiting.map((doc) => ({ slug: doc.slug, version: doc.version })),
+    },
     { headers: noStore },
   );
 }

@@ -8,7 +8,8 @@ import { formatNumber } from '@/lib/i18n/format';
 import type { LocaleCode } from '@/lib/i18n/locales';
 import {
   AGREED_EVENT, DISMISSED_KEY, OPENING_KEY,
-  noticeHref, parseNoticeAnswer, readDismissed, readOpening, stillToTell, storeDismissed, storeOpening, withoutSlug,
+  SIGNUP_KEY,
+  notOnItsWay, noticeHref, parseNoticeAnswer, readDismissed, readOpening, stillToTell, storeDismissed, storeOpening, withoutSlug,
   type NoticeItem,
 } from '@/lib/policy-notice';
 
@@ -19,6 +20,9 @@ export type PolicyNoticeWords = {
   /** With `{count}` in it. */
   changed: string;
   open: string;
+  /** For an account that was never asked: how many documents are waiting, and the way to them. */
+  waiting: string;
+  agree: string;
   dismiss: string;
 };
 
@@ -50,6 +54,12 @@ function write(store: 'session' | 'local', key: string, value: string | null): v
  * mounted twice, and each would otherwise ask.
  */
 let opening: Promise<NoticeItem[] | null> | null = null;
+/**
+ * The documents agreed to on this page. An agreement can be recorded while
+ * the question above is still on its way back, and the answer then names a
+ * document that is no longer waiting.
+ */
+const agreedHere = new Set<string>();
 
 function openingOnce(): Promise<NoticeItem[] | null> {
   opening ??= (async () => {
@@ -124,7 +134,11 @@ export function PolicyNotice({
   useEffect(() => {
     let here = true;
     const show = (changed: NoticeItem[]) => {
-      if (here) setItems(stillToTell(changed, readDismissed(read('local', DISMISSED_KEY))));
+      if (!here) return;
+      // What was ticked at sign-up is being recorded by the layout on this
+      // same page: that person is not asked a second time meanwhile.
+      const due = notOnItsWay(changed, read('local', SIGNUP_KEY), Date.now());
+      setItems(stillToTell(due, readDismissed(read('local', DISMISSED_KEY))));
     };
 
     void openingOnce().then((answer) => {
@@ -132,7 +146,10 @@ export function PolicyNotice({
       // since then has taken a document out of it. With no storage there is
       // only the answer.
       const told = readOpening(read('session', OPENING_KEY)) ?? answer;
-      if (told !== null) show(told);
+      if (told === null) return;
+      const left = told.filter((item) => !agreedHere.has(item.slug));
+      if (left.length !== told.length) write('session', OPENING_KEY, storeOpening(left));
+      show(left);
     });
 
     // The agreement button is on a page under this same layout. When it
@@ -140,6 +157,7 @@ export function PolicyNotice({
     const agreed = (event: Event) => {
       const slug = (event as CustomEvent<unknown>).detail;
       if (typeof slug !== 'string') return;
+      agreedHere.add(slug);
       const kept = readOpening(read('session', OPENING_KEY));
       if (kept === null) return;
       const left = withoutSlug(kept, slug);
@@ -160,15 +178,26 @@ export function PolicyNotice({
     setItems([]);
   };
 
+  // An account that was never asked has nothing that "changed": it is told
+  // how many documents are waiting and shown the way to them.
+  const asking = items.some((item) => item.first);
+
   return (
-    <aside className="policy-notice" role="status" data-policy-notice={items.length} lang={lang} dir={dir}>
+    <aside
+      className="policy-notice"
+      role="status"
+      data-policy-notice={items.length}
+      data-policy-notice-kind={asking ? 'waiting' : 'changed'}
+      lang={lang}
+      dir={dir}
+    >
       <div className="container policy-notice-inner">
         <p>
-          <Say text={words.changed} parts={{ count: <bdi>{formatNumber(locale, items.length)}</bdi> }} />
+          <Say text={asking ? words.waiting : words.changed} parts={{ count: <bdi>{formatNumber(locale, items.length)}</bdi> }} />
         </p>
         <div className="policy-notice-ways">
           <Link href={noticeHref(items)} className="btn" data-policy-notice-open>
-            {words.open}
+            {asking ? words.agree : words.open}
           </Link>
           <button type="button" className="btn ghost" onClick={dismiss} data-policy-notice-dismiss>
             {words.dismiss}

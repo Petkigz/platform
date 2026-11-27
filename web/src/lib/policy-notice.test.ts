@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import {
   AGREED_EVENT, DISMISSED_KEY, OPENING_KEY,
   changedSince, noticeHref, parseNoticeAnswer, readDismissed, readOpening, stillToTell, storeDismissed, storeOpening,
-  withoutSlug, SIGNUP_KEPT_MS, readSignupAgreement, storeSignupAgreement,
+  withoutSlug, SIGNUP_KEPT_MS, readSignupAgreement, storeSignupAgreement, neverAsked, notOnItsWay,
 } from './policy-notice.ts';
 
 const SRC = new URL('../', import.meta.url);
@@ -176,4 +176,75 @@ test('what was ticked at sign-up is kept for an hour, whole or not at all', () =
   ]) {
     assert.equal(readSignupAgreement(bad, now), null, String(bad));
   }
+});
+
+// An account made by "Continue with Google" on the sign-in page ticked no box:
+// there is none there, and Google makes the account on the way back. It owed
+// every document and was told so only if it happened to open its account page.
+test('an account that has agreed to nothing is asked, and one that has agreed to anything is not', () => {
+  const fresh = { acceptanceRequired: [row('terms', 3, null), row('privacy', 2, null)], outstanding: 2, history: [] };
+  assert.deepEqual(neverAsked(fresh), [{ slug: 'terms', version: 3 }, { slug: 'privacy', version: 2 }]);
+  // Agreed to one of them, at any version: this account has been asked. What
+  // is left is waiting (its account page) or changed (the other notice).
+  assert.deepEqual(neverAsked({ ...fresh, history: [agreed('terms', 1)] }), []);
+  assert.deepEqual(neverAsked({ acceptanceRequired: [row('terms', 3, '2026-10-29T08:00:00+00:00')], outstanding: 0, history: [agreed('terms', 3)] }), []);
+  // Nothing is in force that asks for agreement: nothing to ask.
+  assert.deepEqual(neverAsked({ acceptanceRequired: [], outstanding: 0, history: [] }), []);
+  // A row that is not one is left out; a reply that is not a standing is not "nothing owed".
+  assert.deepEqual(neverAsked({ acceptanceRequired: [null, { slug: '../x', versionNumber: 1, acceptedAt: null }, row('terms', 3, null)], history: [] }), [{ slug: 'terms', version: 3 }]);
+  for (const reply of [null, undefined, 'ok', [], {}, { acceptanceRequired: [] }, { history: [] }]) assert.equal(neverAsked(reply), null, JSON.stringify(reply));
+  // Never both: an account is told of a change only after it agreed to something.
+  for (const standing of [fresh, { ...fresh, history: [agreed('terms', 1)] }]) {
+    assert.ok(neverAsked(standing)!.length === 0 || changedSince(standing)!.length === 0);
+  }
+});
+
+test('the notice is told which it is, keeps that for the opening, and sends the reader to where the box is', () => {
+  const asked = parseNoticeAnswer({ signedIn: true, changed: [], waiting: [{ slug: 'terms', version: 3 }, { slug: 'privacy', version: 2 }] });
+  assert.deepEqual(asked, [{ slug: 'terms', version: 3, first: true }, { slug: 'privacy', version: 2, first: true }]);
+  // A route that does not say is one where nobody is waiting.
+  assert.deepEqual(parseNoticeAnswer({ signedIn: true, changed: [{ slug: 'terms', version: 2 }] }), [{ slug: 'terms', version: 2 }]);
+  // Half an answer is none.
+  for (const waiting of ['none', {}, [null], [{ slug: 'Terms', version: 1 }], [{ slug: 'terms' }]]) {
+    assert.equal(parseNoticeAnswer({ signedIn: true, changed: [], waiting }), null, JSON.stringify(waiting));
+  }
+  // Kept for the opening as it was told, and read back the same.
+  assert.deepEqual(readOpening(storeOpening(asked!)), asked);
+  assert.deepEqual(readOpening(storeOpening([{ slug: 'terms', version: 2 }])), [{ slug: 'terms', version: 2 }]);
+  // One document: its own page, which has the button. Several: the account page, which lists them.
+  assert.equal(noticeHref([{ slug: 'terms', version: 3, first: true }]), '/policies/terms');
+  assert.equal(noticeHref(asked!), '/account');
+  assert.equal(noticeHref([{ slug: 'terms', version: 2 }, { slug: 'privacy', version: 5 }]), '/notifications');
+  // Put away and agreed to like any other.
+  assert.deepEqual(stillToTell(asked!, readDismissed(storeDismissed([], asked!))), []);
+  assert.deepEqual(withoutSlug(asked!, 'terms'), [{ slug: 'privacy', version: 2, first: true }]);
+});
+
+test('somebody who ticked the box at sign-up is not asked while that agreement is on its way', () => {
+  const asked = [{ slug: 'terms', version: 3, first: true as const }, { slug: 'privacy', version: 2, first: true as const }];
+  const now = Date.UTC(2026, 10, 27, 9);
+  const ticked = storeSignupAgreement([{ slug: 'terms', version: 3 }, { slug: 'privacy', version: 2 }], now);
+  // Being recorded by the layout on this same page: not asked a second time.
+  assert.deepEqual(notOnItsWay(asked, ticked, now + 1000), []);
+  // Nothing ticked, or ticked more than an hour ago: asked.
+  assert.deepEqual(notOnItsWay(asked, null, now), asked);
+  assert.deepEqual(notOnItsWay(asked, ticked, now + SIGNUP_KEPT_MS + 1), asked);
+  assert.deepEqual(notOnItsWay(asked, '{', now), asked);
+  // A change is told whatever was ticked.
+  assert.deepEqual(notOnItsWay([{ slug: 'terms', version: 4 }], ticked, now), [{ slug: 'terms', version: 4 }]);
+
+  const notice = read('app/_shared/policy-notice.tsx');
+  assert.match(notice, /notOnItsWay\(/u);
+  // An agreement recorded before the answer arrived is not asked for after it.
+  assert.match(notice, /agreedHere\.add\(slug\)/u);
+  assert.match(notice, /agreedHere\.has\(/u);
+  // Its own sentence and its own way on: nobody is told a document "changed" that they never saw.
+  assert.match(notice, /asking \? words\.waiting : words\.changed/u);
+  assert.match(notice, /asking \? words\.agree : words\.open/u);
+  const layout = read('app/layout.tsx');
+  assert.match(layout, /waiting: policyWords\('policy\.waitingCount'\)/u);
+  assert.match(layout, /agree: policyWords\('policy\.agreeTitle'\)/u);
+  const route = read('app/api/policies/route.ts');
+  assert.match(route, /neverAsked\(standing\.data\)/u);
+  assert.match(route, /waiting: waiting\.map\(/u);
 });

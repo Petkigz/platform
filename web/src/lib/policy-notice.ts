@@ -78,8 +78,46 @@ export function changedSince(standing: unknown): ChangedPolicy[] | null {
   return changed;
 }
 
-/** What the notice keeps about one document: which one, and which version. */
-export type NoticeItem = { slug: string; version: number };
+/**
+ * What the notice keeps about one document: which one, and which version.
+ *
+ * `first` is on a document this account was never asked about at all (see
+ * `neverAsked`). It is absent, not false, on a document that changed, so
+ * what was kept before this existed reads as it always did.
+ */
+export type NoticeItem = { slug: string; version: number; first?: true };
+
+/**
+ * The documents waiting for an account that has agreed to nothing, ever.
+ *
+ * Somebody who signs up ticks a box first, on the sign-up page. Somebody
+ * who presses "Continue with Google" on the sign-in page with no account
+ * gets one made on the way back and ticked nothing: there is no box there,
+ * and putting one there would ask everybody who already has an account to
+ * agree again each time they sign in. So the account is asked at its first
+ * opening instead, by the same notice, in its own words.
+ *
+ * Only an account with no agreement of any kind. One that agreed to
+ * anything has been asked; what it still owes is on its account page, and
+ * what changed since is `changedSince`. So the two are never both said.
+ *
+ * Null when the reply is not a standing: not "nothing is owed".
+ */
+export function neverAsked(standing: unknown): NoticeItem[] | null {
+  if (!standing || typeof standing !== 'object' || Array.isArray(standing)) return null;
+  const read = standing as Record<string, unknown>;
+  if (!Array.isArray(read.acceptanceRequired) || !Array.isArray(read.history)) return null;
+  if (read.history.length > 0) return [];
+  const waiting: NoticeItem[] = [];
+  for (const entry of read.acceptanceRequired) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    if (!isSlug(row.slug) || !isVersion(row.versionNumber)) continue;
+    if (row.acceptedAt !== null && row.acceptedAt !== undefined) continue;
+    waiting.push({ slug: row.slug, version: row.versionNumber });
+  }
+  return waiting;
+}
 
 /**
  * What `GET /api/policies` answered, read without trusting its shape.
@@ -91,13 +129,19 @@ export function parseNoticeAnswer(value: unknown): NoticeItem[] | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const read = value as Record<string, unknown>;
   if (read.signedIn !== true || !Array.isArray(read.changed)) return null;
+  // A route that does not say who is waiting is one where nobody is.
+  const waiting = read.waiting === undefined ? [] : read.waiting;
+  if (!Array.isArray(waiting)) return null;
   const items: NoticeItem[] = [];
-  for (const entry of read.changed) {
-    if (!entry || typeof entry !== 'object') return null;
+  const take = (entry: unknown, first: boolean): boolean => {
+    if (!entry || typeof entry !== 'object') return false;
     const row = entry as Record<string, unknown>;
-    if (!isSlug(row.slug) || !isVersion(row.version)) return null;
-    items.push({ slug: row.slug, version: row.version });
-  }
+    if (!isSlug(row.slug) || !isVersion(row.version)) return false;
+    items.push(first || row.first === true ? { slug: row.slug, version: row.version, first: true } : { slug: row.slug, version: row.version });
+    return true;
+  };
+  for (const entry of read.changed) if (!take(entry, false)) return null;
+  for (const entry of waiting) if (!take(entry, true)) return null;
   return items;
 }
 
@@ -112,7 +156,9 @@ const mark = (item: NoticeItem): string => `${item.slug}:${item.version}`;
 
 /** This opening's answer as it is stored. */
 export function storeOpening(items: readonly NoticeItem[]): string {
-  return JSON.stringify(items.map((item) => ({ slug: item.slug, version: item.version })));
+  return JSON.stringify(
+    items.map((item) => (item.first ? { slug: item.slug, version: item.version, first: true } : { slug: item.slug, version: item.version })),
+  );
 }
 
 /**
@@ -165,11 +211,14 @@ export function withoutSlug(items: readonly NoticeItem[], slug: string): NoticeI
 }
 
 /**
- * Where the notice's link goes: the document when there is one, and the
- * notifications page, which lists each of them, when there are several.
+ * Where the notice's link goes: the document when there is one, which is
+ * the page with the button. When there are several, the page that lists
+ * them: the notifications page for documents that changed, the account
+ * page for an account that was never asked.
  */
 export function noticeHref(items: readonly NoticeItem[]): string {
-  return items.length === 1 ? `/policies/${items[0]!.slug}` : '/notifications';
+  if (items.length === 1) return `/policies/${items[0]!.slug}`;
+  return items.some((item) => item.first) ? '/account' : '/notifications';
 }
 
 /**
@@ -217,4 +266,17 @@ export function readSignupAgreement(raw: string | null, now: number): NoticeItem
     items.push({ slug: one.slug, version: one.version });
   }
   return items;
+}
+
+/**
+ * What is left to say while an agreement ticked at sign-up may still be on
+ * its way to the account.
+ *
+ * The layout records that agreement on the first page somebody is signed in
+ * on, which is the same page the notice first asks on. Until it lands the
+ * account looks as if it had agreed to nothing, and the person would be
+ * asked for what they ticked a minute ago. A change is told either way.
+ */
+export function notOnItsWay(items: readonly NoticeItem[], signupKept: string | null, now: number): NoticeItem[] {
+  return readSignupAgreement(signupKept, now) === null ? [...items] : items.filter((item) => !item.first);
 }

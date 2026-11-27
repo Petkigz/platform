@@ -188,6 +188,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           words={{
             changed: policyWords('policy.noticeChanged'),
             open: policyWords('policy.noticeOpen'),
+            waiting: policyWords('policy.waitingCount'),
+            agree: policyWords('policy.agreeTitle'),
             dismiss: policyWords('policy.noticeDismiss'),
           }}
           {...(policyShown.code !== code ? { lang: policyShown.code, dir: policyShown.dir } : {})}
