@@ -130,6 +130,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'cparts',
   'about',
   'saved',
+  'paths',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

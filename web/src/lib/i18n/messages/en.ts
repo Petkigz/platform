@@ -3465,6 +3465,37 @@ export const en = {
   'saved.gone': 'A course that is no longer here',
   'saved.unsure': 'That could not be confirmed. Reload the page to see what your list holds.',
   'saved.notePaused': 'A note cannot be changed while saving is switched off.',
+  // The two learning-path pages (`paths.ts`), in the same twenty-seven
+  // languages as the dashboard since 2026-11-27. `{done}`, `{total}` and
+  // `{number}` are numbers already in the reader's digits and each follows a
+  // colon or stands alone; `{percent}` is a percentage as the language writes
+  // it. "Completed", "Not started" and "Sign in" are the lesson page's words.
+  'paths.title': 'Learning paths',
+  'paths.eyebrow': 'Guided learning',
+  'paths.unconnected': 'The catalogue is not connected yet.',
+  'paths.off': 'Guided paths are being prepared. Until they are open, every course is in the catalogue.',
+  'paths.lede':
+    'Follow a chosen sequence of courses at your own pace. Each course keeps its own enrolment and its own rules for who may open it.',
+  'paths.none': 'No learning paths are published yet.',
+  'paths.forBoth': 'Children and adults',
+  'paths.forChildren': 'For children',
+  'paths.forAdults': 'For adults',
+  'paths.courseGone': 'A course that is not offered now',
+  'paths.optional': 'Optional',
+  'paths.required': 'Required',
+  'paths.view': 'View the path and your progress',
+  'paths.signIn': 'Sign in to follow your progress through this path.',
+  'paths.noLearner': 'Your learner profile is not ready yet. You can still open any course below.',
+  'paths.progressLabel': 'Your progress through this path',
+  'paths.done': 'Required courses completed: {done} of {total}',
+  'paths.percent': 'Completed: {percent}',
+  'paths.noRequired': 'This path has no required courses to follow.',
+  'paths.empty': 'There are no published courses in this path yet.',
+  'paths.position': 'Course {number}',
+  'paths.actReview': 'Look over the course',
+  'paths.actContinue': 'Continue the course',
+  'paths.actStart': 'Start the course',
+  'paths.actView': 'See the course',
 } as const;
 
 export type MessageKey = keyof typeof en;

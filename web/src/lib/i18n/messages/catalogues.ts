@@ -58,6 +58,7 @@ import { HIFZ } from './hifz.ts';
 import { COURSE_PARTS } from './course-parts.ts';
 import { ABOUT } from './about.ts';
 import { SAVED } from './saved.ts';
+import { PATHS } from './paths.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -921,6 +922,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ABOUT,
   // The saved-courses list, on the same rule.
   SAVED,
+  // The two learning-path pages, on the same rule.
+  PATHS,
 );
 
 /**
