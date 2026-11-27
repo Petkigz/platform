@@ -3568,7 +3568,9 @@ memory of it, starts from the repository and not from a conversation.
     a speaker's reading of the ky, tk, ta and ne drafts; a qualified
     reading of privacy notice v3 (a draft, English only) and the three
     legal questions; trademark and domain clearance for the name.
-  - **Half done in the code:** a hosted job for the 369th migration; no
+  - **Half done in the code** *(most of this list was finished on
+    2026-11-27; see "What was half done" at the end of this file for which
+    and how)*: a hosted job for the 369th migration; no
     link anywhere to `/discuss`; no page for `board_kept_post()`; no
     `board_reported` sentence in the notifications catalogue; no agreement
     box on `/sign-in`; learner pages still in English only (`saved`,
@@ -3598,7 +3600,8 @@ memory of it, starts from the repository and not from a conversation.
   `/certificates`, `/handover`, `/family/guardians`, `/verify` and
   `/admin/connections` against a stand-in Supabase: with nothing to show and
   with something, at 320, 390 and 1280 in English and at 390 in Arabic,
-  signed out, and as a member who is not the owner. 54 drawings. It checks
+  signed out, and as a member who is not the owner. 54 drawings (64 since
+  2026-11-27, with every read refused). It checks
   where each lands, the sentences, that nothing runs off the side, that the
   console is silent and that neither a database error's text nor an
   account's or a family's id is in the page.
@@ -10828,3 +10831,67 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   on the live site, or its "current page" mark inside `/admin`.
   `askRole()` (a failed role question is asked again, never read as "no")
   was written while looking for the cause and stays; it was not the cause.
+
+### What was half done, 2026-11-27
+
+The owner asked for what was missing, half done or wrong to be carried on
+with. Each of these is one commit, with its test written first.
+
+- *A course's language is named* (`5d6d530`). Five pages printed the code
+  (`ar`, `sw`). `languageName()` says it in the page's language; a code
+  nobody can name is shown as written.
+- *A failed read is never said as "none"* (`5d6d530`). `/verify/<number>`
+  said "no such certificate" when the database had not answered, which to
+  an employer reads as a forgery: it now says the certificate could not be
+  checked (`verify.unchecked`, 27 languages, **written here and unread by a
+  speaker**). `/progress` says the record could not be read; `/handover`
+  shows the error page. **Other server pages were not surveyed for the
+  same fault.**
+- *A parent on a child's record* no longer reads "Your progress"
+  (`isOwnRecord()`): a record is the reader's own only when their learner
+  is known and is this one.
+- *The drawn smoke* draws 64 pages, the last ten with every read refused.
+- *`notify.lead`* (`72ea3b4`). The owner is no longer told "nothing is
+  emailed" while `delivery.notifications` is on: one kind, a board report,
+  is emailed to them.
+- *`/discuss` is linked* (`346afea`) from `/learn` while either board is on
+  and from `/teach` while the teachers' board is on. Both are off.
+- *`board_kept_post()` has a page* (`346afea`): `/admin/boards#kept`. A
+  thread address or id, a reply id if it was a reply, and a reason of ten
+  characters; the words are shown once, in the page's memory only, and
+  each look is another audit entry. A moderator reading a thread gets a
+  link from any post that reads `[erased]`. Walked in Chromium at 390
+  against the stand-in (`scripts/boards-route-smoke.mjs`). **Not run
+  against the hosted function with a real closed account.**
+- *The agreement nobody asked for* (`ba7b34f`). The list said "no box on
+  `/sign-in`". A box there would make every returning Google user agree
+  again at each sign-in, so it was not built. Instead the notice under
+  every page asks an account that has agreed to nothing at all
+  (`neverAsked()`; "Documents waiting for your agreement: N"), once an
+  opening, with sentences the catalogue already had. `GET /api/policies`
+  answers `waiting` beside `changed`. Somebody who ticked the box on
+  `/sign-up` is not asked while that tick is being recorded
+  (`notOnItsWay()`). Read through the connector the same day: the hosted
+  project has one account and no agreement recorded, so **the owner's own
+  account is shown this notice at its next opening**. That is the notice
+  working, not a fault.
+
+Looked at and left as they are, on purpose:
+
+- *fr `star5` = "Excellent"* is French. *fil `revCountOne` = "{count}
+  rating"* may be right (Filipino borrows the word and marks no plural);
+  it is a speaker's call, not a defect found.
+- *`board_reported` in the notifications catalogue.* The message goes to
+  the owner only, links to a staff desk that is English, and
+  `my_notification_preferences()` does not list the kind, so it must not
+  be added to `NOTIFICATION_KINDS` (the page would then draw a switch the
+  database does not know). In another language the page already shows it
+  marked as stored English. Saying it from the catalogue would need three
+  sentences in 27 languages for one reader. Not built.
+
+Still open from that list: the learner pages in English only (`about`,
+`support`, `saved`, `downloads`, `learn/ask`, then `paths` and `panel`,
+which are behind switches that are off) and every staff page;
+institution single sign-on; the second half of accessibility
+(`FLAGS.md`). Never started: recitation correction, native apps, push
+notifications.
