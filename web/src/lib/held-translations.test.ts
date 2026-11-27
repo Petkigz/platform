@@ -504,7 +504,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cparts.')).length, 86);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('live.')).length, 28);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cpage.')).length, 34);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('verify.')).length, 21);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('verify.')).length, 23);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('prog.')).length, 89);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('cert.')).length, 15);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('handover.')).length, 34);
