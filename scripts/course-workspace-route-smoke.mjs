@@ -107,7 +107,7 @@ try {
   {
     const html = await (await request({ cookie })).text();
     assert.equal(workspace(html), '<div class="container section course-workspace">');
-    for (const text of ['My learning', 'Version 2 · EN', '0 of 1 lessons complete · 0%', 'Still to do:', 'Start the course', 'Open lesson 1', 'Lesson 1 of 1', 'Mark complete', 'Back to my learning']) assert.ok(html.includes(text), `English: ${text}`);
+    for (const text of ['My learning', 'Version 2 · English', '0 of 1 lessons complete · 0%', 'Still to do:', 'Start the course', 'Open lesson 1', 'Lesson 1 of 1', 'Mark complete', 'Back to my learning']) assert.ok(html.includes(text), `English: ${text}`);
     for (const text of ['<h3>Assessments</h3>', '>Practice<', '>Graded<', '>Final assessment<', '>Practise<', '>Take<', 'Synthetic practice quiz']) assert.ok(visible(html).includes(text), `English assessment list: ${text}`);
     for (const text of ['Dated classes for this enrolment', 'Synthetic evening class', 'Starts ', 'Ends ', '>Leave class<', 'UTC']) assert.ok(visible(html).includes(text), `English class list: ${text}`);
     // Nothing needs marking as English on an English page.
@@ -116,7 +116,7 @@ try {
   {
     const html = await (await request({ cookie, 'accept-language': 'ar' })).text();
     assert.match(html, /<html[^>]*lang="ar"[^>]*dir="rtl"/); assert.equal(workspace(html), '<div class="container section course-workspace">');
-    for (const text of ['aria-label="التقدّم في الدورة"', 'الإصدار 2 · EN', 'الدروس المكتملة: 0 من 1 · 0%', 'ما زال مطلوبًا:', 'تحديد كمكتمل', 'العودة إلى تعلّمي', 'الدرس 1 من 1']) assert.ok(html.includes(text), `Arabic: ${text}`);
+    for (const text of ['aria-label="التقدّم في الدورة"', 'الإصدار 2 · الإنجليزية', 'الدروس المكتملة: 0 من 1 · 0%', 'ما زال مطلوبًا:', 'تحديد كمكتمل', 'العودة إلى تعلّمي', 'الدرس 1 من 1']) assert.ok(html.includes(text), `Arabic: ${text}`);
     for (const text of ['Course progress', 'lessons complete', 'Still to do', 'Mark complete', 'Back to my learning', 'My learning', 'Start the course', 'Lesson 1 of 1']) assert.equal(visible(html).includes(text), false, `Arabic page still says "${text}"`);
     // The database's reason stays English, and says so.
     assert.match(html, /<ul[^>]*lang="en" dir="ltr"[^>]*><li>Synthetic reason from the database<\/li>/);
