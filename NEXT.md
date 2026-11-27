@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 370 migrations and 183 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 371 migrations and 184 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -11164,3 +11164,50 @@ started: recitation correction, native apps, push notifications.
   starts its own server, so nothing crosses the split. Each half is
   about twelve minutes of the 25. The next unit's check goes in
   whichever half is shorter.
+- **A review is decided by the reviewer it was given to, in their own
+  name (migration 371, written 2026-11-27, NOT applied to the hosted
+  project).** Found while `/review/[assignmentId]` was being read for
+  translation, and each measured first on a database built from the 370:
+  1. `set_course_version_status()` believed the actor it was handed. An
+     account with no role approved a submitted version by naming an
+     administrator; an author approved their own course the same way.
+     Publishing was refused by the publication gate. Read and not tried:
+     the same call could have retired a published version, and
+     `re_pin_enrolment()` believed its actor in the same way.
+  2. Anybody holding the reviewer role could approve or return any
+     submitted version with no assignment and no decision.
+  3. The reviewer on an assignment could point it at another course
+     version, so read it and play its lessons, or record an approval of
+     a course they wrote; change its scope, who assigned it and its
+     deadline; and reopen one staff had cancelled or they had declined.
+  4. A decision could be recorded on an assignment only offered,
+     declined or cancelled, and several on one; such an approval counted
+     towards publication.
+  5. A reviewer who had declared a conflict about a course could still
+     decide it, though the page they declare on says it bars them at
+     once.
+  *Now:* both functions refuse a signed-in caller who names somebody
+  else (the server's own key is believed as before); a reviewer who is
+  not staff moves a version only with a decision of their own on it,
+  recorded since it was submitted, that says the same; an assignment
+  keeps its version, reviewer and scope for anybody signed in; its
+  reviewer may accept or decline an offer and mark it in progress, and
+  the database writes the times; a decision needs an accepted, open
+  review and no unheard or disqualifying conflict, and completes the
+  assignment. In the application, `/api/review` no longer reads a
+  missing or misspelt answer to an offer as "decline".
+  *Checked by:* `supabase/tests/review_own_name.test.mjs` (18 tests);
+  three older suites recorded a decision on an assignment made already
+  completed, or had the reviewer mark it completed themselves, and now
+  do what a reviewer does. `DB_SUITES='a,b' node supabase/tests/run.mjs`
+  runs a few suites while writing one.
+  **Not done:** the hosted project is at 370 and has every one of these
+  holes until the 371st is applied by a job of its own, which is not
+  written because the owner has not asked for it. Read on 2026-11-27:
+  it holds one account and no course version, enrolment, reviewer,
+  assignment or decision, so nothing existed that they could be used
+  on. The other functions that answer a question about a user id they
+  are handed (`is_privileged(uuid)`, `has_role(uuid, text)`, several
+  `can_…(uuid)`) tell anybody signed in (the first two, anybody at all)
+  whether an account is staff; they write nothing and were left.
+  Nothing here was tried through PostgREST or a real session.

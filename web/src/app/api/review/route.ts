@@ -72,9 +72,17 @@ export async function POST(request: Request) {
 
   // ---------------------------------------------------------------------
   if (b.action === 'respond') {
+    // Until 2026-11-27 anything that was not `true` declined: a request that
+    // left the answer out, or sent the word "true", turned an offer down.
+    if (typeof b.accept !== 'boolean') {
+      return NextResponse.json(
+        { ok: false, code: 'rejected', message: 'Say whether you accept or decline.' },
+        { status: 400 },
+      );
+    }
     const outcome = await respondToAssignment(supabase, {
       assignmentId: b.assignmentId,
-      accept: b.accept === true,
+      accept: b.accept,
     });
     return json(outcome);
   }

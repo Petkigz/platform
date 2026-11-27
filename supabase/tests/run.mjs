@@ -62,6 +62,7 @@ import { run as ownerAlertEmail } from './owner_alert_email.test.mjs';
 import { run as privacyNoticeBoardsDraft } from './privacy_notice_boards_draft.test.mjs';
 import { run as providerEvents } from './provider_events.test.mjs';
 import { run as duplicateSubjects } from './duplicate_subjects.test.mjs';
+import { run as reviewOwnName } from './review_own_name.test.mjs';
 import { run as translateButton } from './translate_button.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -219,6 +220,13 @@ const GLOBAL_SETTINGS = [
   // and a suite that leaves it on changes what every later suite is testing.
   ['family.child_login', 'false'],
 ];
+
+// For a quick look while writing one: `DB_SUITES='review,review own name' node
+// supabase/tests/run.mjs` runs only those. The whole run is the one that
+// counts (a suite can lean on what an earlier one left), and CI never sets it.
+const ONLY = process.env.DB_SUITES
+  ? new Set(process.env.DB_SUITES.split(',').map((name) => name.trim()).filter(Boolean))
+  : null;
 
 const ctx = await createHarness();
 const suites = [];
@@ -394,6 +402,7 @@ for (const [name, fn] of [
   ['privacy_notice_boards_draft', privacyNoticeBoardsDraft],
   ['provider_events', providerEvents],
   ['duplicate_subjects', duplicateSubjects],
+  ['review own name', reviewOwnName],
   ['translate_button', translateButton],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],
@@ -408,7 +417,7 @@ for (const [name, fn] of [
   ['course_language', courseLanguage],
   ['translation_reviews', translationReviews],
   ['assessments', assessments],
-]) {
+].filter(([name]) => ONLY === null || ONLY.has(name))) {
   console.log(`\n--- ${name} ---\n`);
   const suiteStarted = Date.now();
   await ctx.q(

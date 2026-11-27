@@ -281,8 +281,8 @@ export async function run(ctx) {
     const technical = await committed(() => q(
       `insert into public.content_review_assignments
          (course_version_id, reviewer_profile_id, review_scope, assigned_by,
-          assignment_status, accepted_at, completed_at)
-       values ($1,$2,'technical',$3,'completed',now(),now()) returning id`,
+          assignment_status, accepted_at)
+       values ($1,$2,'technical',$3,'accepted',now()) returning id`,
       [vPublish, profileB, admin]).then((r) => r.rows[0].id));
 
     await asActor(reviewerB,

@@ -275,3 +275,11 @@ test('a length is printed in the digits the page was given, or not at all', () =
   // Every length the checks can name is one the page writes out.
   for (const max of [200, 2000]) assert.ok((REGISTER_LIMITS as readonly number[]).includes(max), String(max));
 });
+
+test('an answer to an offer that says neither yes nor no declines nothing', () => {
+  const route = readFileSync(new URL('../app/api/review/route.ts', import.meta.url), 'utf8');
+  const respond = route.slice(route.indexOf("b.action === 'respond'"), route.indexOf("b.action === 'decide'"));
+  assert.match(respond, /typeof b\.accept !== 'boolean'[\s\S]*status: 400[\s\S]*respondToAssignment/u, 'the answer is checked before the database is asked');
+  assert.doesNotMatch(respond, /accept: b\.accept === true/u, 'anything but true must not be read as declining');
+});
+

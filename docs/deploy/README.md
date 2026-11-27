@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-370 files in `supabase/migrations/`, applied in filename order — the 14-digit
+371 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -456,6 +456,39 @@ job that does not refuse a project holding accounts, because the site is
 deployed; instead its rehearsal on the hosted database must show the two
 duplicates retired, the two that stay active and the number of subjects
 unchanged, or nothing is applied.
+
+The 371st, `20261281164000_review_decided_in_own_name.sql`, was written on
+2026-11-27 and **is not applied: the hosted project is at 370 and behaves as
+described here until it is.** It closes six things measured on a database
+built from the 370, signed in as an ordinary account through the API:
+
+- `set_course_version_status()` and `re_pin_enrolment()` believed the actor
+  they were handed. An account with no role moved a submitted version to
+  approved by naming an administrator (whose id is on every assignment that
+  administrator made); an author approved their own course the same way.
+  Publishing was refused by the publication gate. Read from the two
+  functions and not tried: a published version could have been retired,
+  and anybody's enrolment moved to another published version of its course.
+- Anybody holding the reviewer role could approve or return any submitted
+  version with no assignment and no decision.
+- The reviewer named on an assignment could point it at another course
+  version (and so read it and play its lessons, or record an approval of a
+  course they wrote), change its scope, who assigned it and when it is due,
+  and reopen one that staff had cancelled or that they had declined.
+- A decision could be recorded on an assignment only offered, declined or
+  cancelled, and several on one assignment; such an approval counted towards
+  publication.
+- A reviewer who had declared a conflict about a course could still decide it.
+
+It adds no table or column and changes no row. It needs a one-time job of
+its own (as the 370th had), which is not written: the owner has not asked for
+it. Read through the read-only connector on 2026-11-27: the hosted project
+is at 370, its `set_course_version_status()` does not check the caller and
+the guard trigger is absent, so the holes are there; and it holds one
+account, no course version, no enrolment, no reviewer, no assignment, no
+decision and no re-pin, so there was nothing they could have been used on.
+That stops being true with the first course somebody writes. Suite:
+`supabase/tests/review_own_name.test.mjs`.
 
 Read back afterwards through the read-only connector, separately from the job:
 

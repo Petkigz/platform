@@ -648,8 +648,8 @@ export async function run(ctx) {
     const assignment = await asActor(governance,
       `insert into public.content_review_assignments
          (course_version_id, reviewer_profile_id, review_scope, assigned_by,
-          assignment_status, accepted_at, completed_at)
-       values ($1,$2,'scholarly',$3,'completed',now(),now()) returning id`,
+          assignment_status, accepted_at)
+       values ($1,$2,'scholarly',$3,'accepted',now()) returning id`,
       [version, candidate.reviewerProfileId, governance]).then((r) => r.rows[0].id);
 
     await asActor(candidateUser,

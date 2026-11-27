@@ -268,10 +268,13 @@ export async function run(ctx) {
     // Recording a review and moving the version are two separate acts, and the
     // reviewer does both. The decision is evidence; the transition is the claim
     // that the evidence is enough.
-    await asActor(reviewer,
-      `update public.content_review_assignments
-          set assignment_status = 'completed', completed_at = now()
-        where id = $1`, [assignment]);
+    // Since 20261281164000 the decision is what completes the review: the
+    // reviewer no longer says so themselves, and cannot.
+    const review = (await q(
+      'select assignment_status, completed_at from public.content_review_assignments where id = $1',
+      [assignment])).rows[0];
+    assert(review.assignment_status === 'completed' && review.completed_at !== null,
+      `after the decision the review is ${review.assignment_status}`);
 
     await call(reviewer, 'set_course_version_status($1,$2,$3,$4)',
       [version, 'approved', reviewer, 'Accurate and clearly written.']);
