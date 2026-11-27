@@ -1661,8 +1661,24 @@ loses the passphrase loses every copy made with it.**
     with a value, a new column on an empty table, a table found nowhere
     else). Run `45844781633`: the column was added and reported, and all
     194 tables and 480 rows came back the same.
-- **Not yet seen: a run against the project that passes.** Record it here
-  when it has happened.
+- **The second run against the project passed and kept its copy.** Run
+  `45846024710`, approved by the owner, finished 2026-11-26 20:39 UTC with
+  the passphrase secret in place. The project: PostgreSQL 17.11, 193 tables,
+  810 functions, 281 policies, 205 triggers, 476 rows. The copy: schema
+  2,723,614 bytes, data 218,326 bytes (192 tables of `public`; no Auth table
+  holds a row yet, so 26 were left out, with the 10 storage and webhook
+  tables). Put back into an empty PostgreSQL 17.11 and found the same: every
+  table's rows, every sequence, the counts, and the 1,476 privileges of
+  `anon` and `authenticated` with the same 4 defaults. Kept as the run's
+  artifact `ayahspring-backup-45846024710`: `ayahspring-2026-11-26.tar.gz.gpg`,
+  528,746 bytes, sha256
+  `0085de3582e742a5bbcaa9754a5b6811a2f164f235d4ceba3a0293babbeb82a3`,
+  which opened again with the passphrase to the same bytes. GitHub deletes
+  it on 2027-02-24: download it before then.
+- **What that run did not show:** a copy that holds accounts. The project
+  has none, so the path that adds newer Auth columns to the scratch database
+  has run in the drill only, never against the project's real Auth tables.
+  Run the job again after the first people have signed up.
 - **Never tried, and not possible on the free tier with two projects in use:**
   a restore into a new *hosted* project. The scratch database is local.
 

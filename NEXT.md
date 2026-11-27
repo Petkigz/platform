@@ -10737,3 +10737,15 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   pinned to commit `45422cb`. Nobody has pushed its trigger. It refuses
   once the project has an Auth user, so it goes before the first sign-up.
   **Waiting for the owner's word**, then the owner's approval of the run.
+- *The real backup passed.* Run `45846024710` (approved by the owner, 20:39
+  UTC): copied, put back into an empty database, found the same, encrypted
+  and kept as artifact `ayahspring-backup-45846024710` (528,746 bytes,
+  deleted by GitHub on 2027-02-24). It held no account, because the project
+  has none: **run it again after the first sign-ups**, which is the first
+  time the newer-Auth path meets real Auth rows. Never done: a restore into
+  a hosted project; the weekly schedule (variable
+  `AYAHSPRING_BACKUP_SCHEDULE=yes`, and the workflow on `main`).
+- *Vercel by hand.* The connector stayed read-only. `web/vercel.json` and
+  `engines` in `web/package.json` carry the commands and Node 22;
+  `docs/deploy/README.md` 4.2 gives the import steps, including that `main`
+  is empty. No project was visible through the connector at 20:45 UTC.
