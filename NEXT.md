@@ -10787,3 +10787,16 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   (`docs/deploy/README.md` section 3); the CORS rule on both buckets with
   the site's address; then `auth.google_sign_in` at `/admin`.
 - *Not done:* a sign-in of any kind on the live site; an upload; an email.
+- *Migration 370, 2026-11-27.* `20261281163000_duplicate_subjects_retired.sql`
+  with suite `duplicate_subjects` (4): the first seed's `aqidah` and
+  `islamic-history` are retired; `aqeedah` and `history` stay. CI green on
+  `b41bfdc` (full database suite included). Its hosted job
+  (`scripts/hosted-migration-370.mjs`, test 7, workflow pinned to `113d63f`)
+  is the first that does not refuse a project with accounts. Read through
+  the connector before triggering: 369 recorded, both duplicates and both
+  kept subjects active, 37 subjects, **1 Auth user holding 1 role** (the
+  owner has made the first account). Trigger commit `e0ed95b`, run
+  `45965517473`, **waiting for the owner's approval**. Once it has run it
+  is spent. Read the result and record it in `docs/deploy/README.md`.
+- *A new migration also needs:* `node scripts/postgrest-schema-snapshot.mjs`
+  and the result committed, or CI's database job stops before the suites.
