@@ -67,9 +67,15 @@ async function signedIn(): Promise<boolean> {
  * of right-to-left ones are counted from the register when the page is drawn,
  * so neither can go stale.
  *
- * What this page does not pretend: it does not change the language, it does not
- * read the page aloud, and it is stored per browser rather than per account —
- * each of those is said here rather than left to be discovered.
+ * What this page does not pretend: it does not change the language, and it is
+ * stored per browser rather than per account; each of those is said here
+ * rather than left to be discovered.
+ *
+ * **The second half, 2026-11-27** (`messages/ease.ts`). A fourth setting, the
+ * shape of the letters: OpenDyslexic, under the SIL Open Font License, for
+ * Latin and Cyrillic text only, offered as a choice and not as a remedy. And
+ * the page now says that a lesson can be read aloud by the device's own
+ * voice, where it used to say that nothing reads a lesson aloud.
  */
 export default async function AccessibilityPage() {
   const jar = await cookies();
@@ -107,6 +113,13 @@ export default async function AccessibilityPage() {
         reduce: { label: t('reading.motionReduce'), note: t('reading.motionReduceNote') },
       },
     },
+    letters: {
+      legend: t('ease.lettersLegend'),
+      choices: {
+        normal: { label: t('ease.lettersNormal'), note: t('ease.lettersNormalNote') },
+        dyslexic: { label: t('ease.lettersDyslexic'), note: t('ease.lettersDyslexicNote') },
+      },
+    },
   };
 
   // Counted from the register, not typed: a language a reader can choose,
@@ -121,11 +134,13 @@ export default async function AccessibilityPage() {
     ['reading.names', 'reading.namesNote'],
     ['reading.arabic', 'reading.arabicNote'],
     ['reading.mixed', 'reading.mixedNote'],
+    // 2026-11-27: read by the device's own voice, from the lesson page.
+    ['ease.speech', 'ease.speechNote'],
   ] as const;
-  const missing = [
-    ['reading.noSpeech', 'reading.noSpeechNote'],
-    ['reading.noFont', 'reading.noFontNote'],
-  ] as const;
+  // Until 2026-11-27 this list was "no text-to-speech" and "no
+  // dyslexia-friendly font". Both are built now; what is left is what nobody
+  // has done, not what nobody has made.
+  const missing = [['ease.untested', 'ease.untestedNote']] as const;
 
   return (
     <div className="page narrow" {...frame}>

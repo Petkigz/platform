@@ -43,7 +43,7 @@ const fake = createServer(async (req, res) => {
     await new Promise((r) => setTimeout(r, 60));
     active.delete(path);
   }
-  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify([{ id: 'enrolment', learner_profile_id: 'learner', status: 'active', source: 'free', course_version_id: 'version', courses: { id: 'course', title: 'Synthetic course' } }]));
+  if (path === '/rest/v1/course_enrolments') res.end(JSON.stringify([{ id: 'enrolment', learner_profile_id: 'learner', status: 'active', source: 'free', course_version_id: 'version', courses: { id: 'course', title: 'Synthetic course', language_code: 'en' } }]));
   else if (path === '/rest/v1/learner_profiles') res.end(JSON.stringify([{ id: 'learner' }]));
   else if (path === '/rest/v1/lessons') res.end(JSON.stringify({ id: 'lesson', section_id: 'section', title: 'Synthetic lesson', description: 'Synthetic reading text.', type: 'video', position: 1, duration_seconds: 120, is_preview: false, course_sections: { title: 'Synthetic section', course_version_id: mismatch ? 'other-version' : 'version' } }));
   else if (path === '/rest/v1/lesson_resources') res.end(JSON.stringify([
@@ -159,6 +159,12 @@ try {
   {
     const html = await (await request({ cookie })).text(); const body = visible(html);
     assert.equal(wrapper(html), '<div class="page lesson-page">');
+    // Reading aloud (2026-11-27). The button is drawn only in a browser that can
+    // speak, so the page as sent has none; what it would say, and the language
+    // whose voice it would ask for, are handed over with the page.
+    assert.equal(body.includes('Read aloud'), false, 'a read-aloud button was drawn before anybody knew the browser can speak');
+    for (const text of ['Read aloud', 'Stop reading', 'A sentence that holds a verse written with its vowel marks is left out.', 'Your device has no voice for this lesson’s language.']) assert.ok(html.includes(text), `the words for reading aloud were not handed over: ${text}`);
+    assert.match(html, /\\"language\\":\\"en\\"/, 'the course language was not handed to the read-aloud button');
     for (const text of ['aria-label="Breadcrumb"', '>My learning<', 'Not started', '>Transcript<', '>Materials<', '>Video<', 'Mark complete', 'Back to course', 'aria-label="Lesson navigation"', 'Course contents', 'Lesson 1 of 2', '>Discussion<', 'Discussion is not open on this lesson.']) assert.ok(body.includes(text), `English: ${text}`);
     assert.equal(body.includes('lang="en"'), false, 'an English lesson marks part of itself as English');
     assert.match(body, /<section class="section"[^>]*>\s*<button type="button" class="linklike"[^>]*>Report a problem<\/button>/);

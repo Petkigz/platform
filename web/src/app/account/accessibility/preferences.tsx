@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import {
   CONTRASTS,
   DEFAULTS,
+  LETTERS,
   MOTIONS,
   TEXT_SIZES,
   htmlAttributes,
@@ -13,6 +14,7 @@ import {
   samePreferences,
   type A11yPreferences,
   type Contrast,
+  type Letters,
   type Motion,
   type TextSize,
 } from '@/lib/a11y';
@@ -31,6 +33,7 @@ export type ReadingWords = {
   text: { legend: string; choices: Record<TextSize, Choice> };
   contrast: { legend: string; choices: Record<Contrast, Choice> };
   motion: { legend: string; choices: Record<Motion, Choice> };
+  letters: { legend: string; choices: Record<Letters, Choice> };
 };
 
 /**
@@ -70,7 +73,7 @@ export function ReadingPreferences({ initial, words }: { initial: A11yPreference
       kept = false;
     }
     const root = document.documentElement;
-    for (const key of ['data-text', 'data-contrast', 'data-motion']) root.removeAttribute(key);
+    for (const key of ['data-text', 'data-contrast', 'data-motion', 'data-letters']) root.removeAttribute(key);
     for (const [key, value] of Object.entries(htmlAttributes(next))) root.setAttribute(key, value);
     setSaid(kept ? 'saved' : 'notKept');
   }
@@ -90,6 +93,10 @@ export function ReadingPreferences({ initial, words }: { initial: A11yPreference
           <li>
             <span className="muted">{words.motion.legend}</span>{' '}
             <strong>{words.motion.choices[prefs.motion].label}</strong>
+          </li>
+          <li>
+            <span className="muted">{words.letters.legend}</span>{' '}
+            <strong>{words.letters.choices[prefs.letters].label}</strong>
           </li>
         </ul>
         {said !== 'notKept' && (
@@ -157,6 +164,26 @@ export function ReadingPreferences({ initial, words }: { initial: A11yPreference
               <strong>{words.motion.choices[value].label}</strong>
               <br />
               <span className="muted">{words.motion.choices[value].note}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset className="card reading-choices">
+        <legend>{words.letters.legend}</legend>
+        {LETTERS.map((value) => (
+          <label key={value} className="radio">
+            <input
+              type="radio"
+              name="letters"
+              value={value}
+              checked={prefs.letters === value}
+              onChange={() => apply({ ...prefs, letters: value })}
+            />
+            <span>
+              <strong>{words.letters.choices[value].label}</strong>
+              <br />
+              <span className="muted">{words.letters.choices[value].note}</span>
             </span>
           </label>
         ))}

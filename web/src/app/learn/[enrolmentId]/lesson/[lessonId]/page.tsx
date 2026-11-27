@@ -1,3 +1,4 @@
+import { ReadAloud, type ReadAloudWords } from './read-aloud';
 import { fetchTranscripts } from '@/lib/transcripts';
 import { ArabicInline } from '@/app/_shared/arabic-text';
 import Link from 'next/link';
@@ -53,7 +54,10 @@ type EnrolmentRow = {
   status: string;
   source: string;
   course_version_id: string;
-  courses: { id: string; title: string } | { id: string; title: string }[] | null;
+  courses:
+    | { id: string; title: string; language_code?: string | null }
+    | { id: string; title: string; language_code?: string | null }[]
+    | null;
 };
 
 /** Why a lesson can or cannot be saved, as `lesson_download_standing()` says it. */
@@ -262,7 +266,7 @@ export default async function LessonPage({
   const { data: enrolmentData, error: enrolmentError } = await supabase
     .from('course_enrolments')
     .select(
-      'id, learner_profile_id, status, source, course_version_id, courses ( id, title )',
+      'id, learner_profile_id, status, source, course_version_id, courses ( id, title, language_code )',
     )
     .eq('id', enrolmentId)
     .is('deleted_at', null)
@@ -447,6 +451,16 @@ export default async function LessonPage({
   // in the language the lesson was saved in.
   const courseTitle = namedCourse ?? t('course.fallbackTitle');
   const duration = durationLabel(shown.code, lesson.durationSeconds);
+  // Reading aloud (2026-11-27) is the device's own voice, chosen by the
+  // course's language. A course with no language has no button: a voice of
+  // another language would spell the letters out.
+  const courseLanguage = one(enrolment.courses)?.language_code ?? null;
+  const aloudWords: ReadAloudWords = {
+    read: t('ease.read'),
+    stop: t('ease.stop'),
+    note: t('ease.readNote'),
+    noVoice: t('ease.noVoice'),
+  };
 
   return (
     <div
@@ -489,6 +503,7 @@ export default async function LessonPage({
         <section className="card">
           {/* The teacher's words, in the teacher's direction. */}
           <p dir="auto">{lesson.description}</p>
+          <ReadAloud text={lesson.description} language={courseLanguage} words={aloudWords} />
         </section>
       )}
 
@@ -496,6 +511,7 @@ export default async function LessonPage({
         <section className="card">
           <h2>{t('lesson.transcript')}</h2>
           <p style={{ whiteSpace: 'pre-wrap' }} dir="auto">{transcript}</p>
+          <ReadAloud text={transcript} language={courseLanguage} words={aloudWords} />
         </section>
       )}
 

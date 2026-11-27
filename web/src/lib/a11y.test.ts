@@ -8,6 +8,7 @@ import {
   A11Y_COOKIE,
   CONTRASTS,
   DEFAULTS,
+  LETTERS,
   MOTIONS,
   TEXT_SIZES,
   encodePreferences,
@@ -22,8 +23,47 @@ import {
 
 describe('reading preferences', () => {
   it('round-trips through the cookie value', () => {
-    const prefs = { text: 'larger', contrast: 'high', motion: 'reduce' } as const;
+    const prefs = { text: 'larger', contrast: 'high', motion: 'reduce', letters: 'normal' } as const;
     assert.deepEqual(parsePreferences(encodePreferences(prefs)), prefs);
+    const other = { ...prefs, letters: 'dyslexic' } as const;
+    assert.deepEqual(parsePreferences(encodePreferences(other)), other);
+  });
+
+  it('keeps the cookie it always wrote, and reads an old one as the device\'s letters', () => {
+    // The fourth setting (2026-11-27) is a fifth part, written only when chosen.
+    assert.equal(encodePreferences({ text: 'large', contrast: 'high', motion: 'reduce', letters: 'normal' }), 'v1.large.high.reduce');
+    assert.equal(encodePreferences({ ...DEFAULTS, letters: 'dyslexic' }), 'v1.normal.normal.system.dyslexic');
+    assert.equal(parsePreferences('v1.large.high.reduce').letters, 'normal');
+    assert.equal(parsePreferences('v1.large.high.reduce.dyslexic').letters, 'dyslexic');
+    assert.equal(parsePreferences('v1.large.high.reduce.comic').letters, 'normal');
+    assert.deepEqual(LETTERS, ['normal', 'dyslexic']);
+    assert.equal(isDefault({ ...DEFAULTS, letters: 'dyslexic' }), false);
+    assert.equal(samePreferences(DEFAULTS, { ...DEFAULTS, letters: 'dyslexic' }), false);
+    assert.deepEqual(htmlAttributes({ ...DEFAULTS, letters: 'dyslexic' }), { 'data-letters': 'dyslexic' });
+    assert.match(A11Y_BOOT, /p\[4\]==='dyslexic'\)h\.setAttribute\('data-letters','dyslexic'\)/);
+  });
+
+  it('carries the font it offers, with its licence, and asks for it only when chosen', () => {
+    const folder = new URL('../../public/fonts/opendyslexic/', import.meta.url);
+    for (const file of ['OpenDyslexic-Regular.woff2', 'OpenDyslexic-Bold.woff2']) {
+      const bytes = readFileSync(new URL(file, folder));
+      assert.equal(bytes.subarray(0, 4).toString('latin1'), 'wOF2', file);
+      assert.ok(bytes.length > 50_000, file);
+    }
+    const licence = readFileSync(new URL('OFL.txt', folder), 'utf8');
+    assert.match(licence, /SIL OPEN FONT LICENSE Version 1\.1/);
+    assert.match(licence, /Reserved Font Name OpenDyslexic/);
+    const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
+    assert.equal([...css.matchAll(/font-family: 'OpenDyslexic';\n {2}src: url\('\/fonts\/opendyslexic\/OpenDyslexic-(Regular|Bold)\.woff2'\) format\('woff2'\);/g)].length, 2);
+    // Only under the attribute: the plain page names the font nowhere else.
+    const uses = css.split('\n').filter((line) => line.includes("'OpenDyslexic'") && !line.includes('font-family:'));
+    assert.equal(uses.length, 1);
+    assert.match(css, /html\[data-letters='dyslexic'\] \{\n {2}--font: 'OpenDyslexic',/);
+    // A font is sent without asking who is signed in.
+    const middleware = readFileSync(new URL('../middleware.ts', import.meta.url), 'utf8');
+    assert.match(middleware, /\(\?!_next\/static\|_next\/image\|fonts\/\|/);
+    // It has no Arabic letters, and is not offered any.
+    assert.doesNotMatch(css.match(/unicode-range: [^;]+;/)?.[0] ?? 'U+0600', /U\+06/);
   });
 
   it('reads nothing as the platform defaults', () => {
@@ -44,10 +84,10 @@ describe('reading preferences', () => {
   });
 
   it('sets one attribute per changed preference', () => {
-    assert.deepEqual(htmlAttributes({ text: 'large', contrast: 'normal', motion: 'system' }), {
+    assert.deepEqual(htmlAttributes({ text: 'large', contrast: 'normal', motion: 'system', letters: 'normal' }), {
       'data-text': 'large',
     });
-    assert.deepEqual(htmlAttributes({ text: 'normal', contrast: 'high', motion: 'reduce' }), {
+    assert.deepEqual(htmlAttributes({ text: 'normal', contrast: 'high', motion: 'reduce', letters: 'normal' }), {
       'data-contrast': 'high',
       'data-motion': 'reduce',
     });
@@ -65,7 +105,7 @@ describe('reading preferences', () => {
   });
 
   it('reads the settings back out of a cookie string, or says there are none', () => {
-    const prefs = { text: 'large', contrast: 'high', motion: 'reduce' } as const;
+    const prefs = { text: 'large', contrast: 'high', motion: 'reduce', letters: 'normal' } as const;
     const cookie = preferenceCookie(prefs).split(';')[0];
     assert.deepEqual(preferencesInCookie(`other=1; ${cookie}; more=2`), prefs);
     assert.deepEqual(preferencesInCookie(cookie), prefs);
@@ -108,12 +148,12 @@ describe('reading preferences', () => {
     assert.match(controls, /role="alert"/);
     assert.match(controls, /role="status"/);
     // No words of its own, and no way to ask the catalogue for any.
-    assert.doesNotMatch(controls, /useT|@\/lib\/i18n|'reading\./);
+    assert.doesNotMatch(controls, /useT|@\/lib\/i18n|'reading\.|'ease\./);
     assert.match(controls, /words: ReadingWords/);
   });
 
   it('writes a cookie that lasts a year and stays on this site', () => {
-    const cookie = preferenceCookie({ text: 'large', contrast: 'high', motion: 'reduce' });
+    const cookie = preferenceCookie({ text: 'large', contrast: 'high', motion: 'reduce', letters: 'normal' });
     assert.match(cookie, new RegExp(`^${A11Y_COOKIE}=v1\\.large\\.high\\.reduce`));
     assert.match(cookie, /Path=\//);
     assert.match(cookie, /Max-Age=31536000/);

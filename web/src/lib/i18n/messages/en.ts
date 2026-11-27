@@ -1511,7 +1511,7 @@ export const en = {
   'reading.title': 'How this reads',
   'reading.crumb': 'Reading',
   'reading.lede':
-    'Three settings, applied the moment you choose them. They belong to this browser, not to your account: a phone and a laptop want different sizes, and a shared device should not inherit somebody else’s choice. You do not need to be signed in to use them.',
+    'Four settings, applied the moment you choose them. They belong to this browser, not to your account: a phone and a laptop want different sizes, and a shared device should not inherit somebody else’s choice. You do not need to be signed in to use them.',
   'reading.now': 'These are the settings in this browser.',
   'reading.saved': 'Saved for this browser.',
   'reading.notKept':
@@ -1571,12 +1571,6 @@ export const en = {
   'reading.unreviewedNote':
     'They were written by the people who built the platform. If a word looks wrong to you, that is our mistake, and the language page says so for every language it offers.',
   'reading.missingHeading': 'What is not here yet',
-  'reading.noSpeech': 'No text-to-speech.',
-  'reading.noSpeechNote':
-    'The platform does not read a lesson aloud. It is built to work with a screen reader, but nobody who relies on one has tested it yet.',
-  'reading.noFont': 'No dyslexia-friendly font.',
-  'reading.noFontNote':
-    'None is included. The text size and contrast settings are the substitutes for now.',
   'reading.back': 'Back to my account',
 
   // Putting a copy of your data back, and the words its form says
@@ -3559,6 +3553,27 @@ export const en = {
     'The server recorded the removal of the device. Copies and keys kept on that device were not erased from here.',
   'downloads.devRemovedUnrefreshed':
     'The server recorded the removal, but the list of devices could not be refreshed.',
+  // The second half of the reading settings (`ease.ts`), 2026-11-27: the
+  // shape of the letters, and a lesson read aloud by the device's own voice.
+  // The first five and the next four are said on the reading page; the last
+  // four by the button on a lesson. "OpenDyslexic" is the font's name.
+  'ease.lettersLegend': 'Letters',
+  'ease.lettersNormal': 'As on your device',
+  'ease.lettersNormalNote': 'The letters the rest of the platform uses.',
+  'ease.lettersDyslexic': 'A font made for dyslexia',
+  'ease.lettersDyslexicNote':
+    'OpenDyslexic: each letter is heavier at the bottom, so it is harder to mistake for another. It changes Latin and Cyrillic letters only; Arabic and every other script stay as they are. Some readers find it easier; studies have not shown that it helps everyone.',
+  'ease.speech': 'A lesson can be read aloud.',
+  'ease.speechNote':
+    'A lesson’s description and its transcript each have a button that reads them in your device’s own voice, where the device has a voice for the lesson’s language. The words are sent nowhere. A sentence that holds a verse written with its vowel marks is left out: a verse is not for a machine’s voice.',
+  'ease.untested': 'Not tested with a screen reader.',
+  'ease.untestedNote':
+    'The platform is built to work with a screen reader, but nobody who relies on one has tested it yet. Reading aloud has not been heard on every device either.',
+  'ease.read': 'Read aloud',
+  'ease.stop': 'Stop reading',
+  'ease.readNote':
+    'Read by your device’s own voice. A sentence that holds a verse written with its vowel marks is left out.',
+  'ease.noVoice': 'Your device has no voice for this lesson’s language.',
 } as const;
 
 export type MessageKey = keyof typeof en;

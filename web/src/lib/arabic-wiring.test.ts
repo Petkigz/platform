@@ -111,7 +111,7 @@ test('every right-to-left language a reader can choose is named, from the regist
   // languages, all complete" was true once and stayed on the page for a month
   // after it stopped being true.
   for (const [key, sentence] of Object.entries(en)) {
-    if (!key.startsWith('reading.')) continue;
+    if (!key.startsWith('reading.') && !key.startsWith('ease.')) continue;
     assert.doesNotMatch(sentence, /\b(?:thirty|forty|fifty)[- ]/iu, `${key} types a count of languages`);
   }
 });
@@ -143,10 +143,21 @@ test('the accessibility page tells the truth about the translation', () => {
 
   // And it must still admit what it has not got, rather than listing only what
   // works.
-  assert.equal(said('reading.noSpeech'), 'No text-to-speech.');
-  assert.equal(said('reading.noFont'), 'No dyslexia-friendly font.');
-  assert.match(page, /'reading\.noSpeech', 'reading\.noSpeechNote'/u);
-  assert.match(page, /'reading\.noFont', 'reading\.noFontNote'/u);
+  // Until 2026-11-27 that was "no text-to-speech" and "no dyslexia-friendly
+  // font". Both are built; neither sentence may linger, and what is left is
+  // what nobody has done.
+  for (const text of Object.values(en)) {
+    assert.doesNotMatch(text, /No text-to-speech|No dyslexia-friendly font/u);
+  }
+  assert.equal(said('ease.untested'), 'Not tested with a screen reader.');
+  assert.match(page, /const missing = \[\['ease\.untested', 'ease\.untestedNote'\]\] as const;/u);
+  // The font is offered as a choice, with its limits said beside it.
+  assert.match(said('ease.lettersDyslexicNote'), /Latin and Cyrillic letters only/u);
+  assert.match(said('ease.lettersDyslexicNote'), /studies have not shown that it helps everyone/u);
+  // Reading aloud: whose voice, that the words go nowhere, and what is left out.
+  assert.match(said('ease.speechNote'), /your device’s own voice/u);
+  assert.match(said('ease.speechNote'), /The words are sent nowhere/u);
+  assert.match(said('ease.speechNote'), /a verse is not for a machine’s voice/u);
 });
 
 test('the accessibility page claims only what was built or measured', () => {
@@ -154,12 +165,13 @@ test('the accessibility page claims only what was built or measured', () => {
   // label", "no control is reachable only by a mouse", "every image that is
   // decoration is marked". They are not said in any sentence now.
   for (const [key, sentence] of Object.entries(en)) {
-    if (!key.startsWith('reading.')) continue;
+    if (!key.startsWith('reading.') && !key.startsWith('ease.')) continue;
     assert.doesNotMatch(sentence, /\bEvery (?:input|button|table|image|colour)\b/iu, key);
     assert.doesNotMatch(sentence, /no control is reachable/iu, key);
   }
   // What is not known is said: nobody who relies on a screen reader tested it.
-  assert.match(en['reading.noSpeechNote'], /nobody who relies on one has tested it yet/u);
+  assert.match(en['ease.untestedNote'], /nobody who relies on one has tested it yet/u);
+  assert.match(en['ease.untestedNote'], /has not been heard on every device/u);
   // The contrast check is of the normal design, and says so.
   assert.match(en['reading.coloursNote'], /of the normal design/u);
 

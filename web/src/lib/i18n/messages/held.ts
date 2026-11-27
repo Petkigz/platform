@@ -132,6 +132,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'saved',
   'paths',
   'downloads',
+  'ease',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

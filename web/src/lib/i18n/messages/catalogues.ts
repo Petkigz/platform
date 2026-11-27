@@ -60,6 +60,7 @@ import { ABOUT } from './about.ts';
 import { SAVED } from './saved.ts';
 import { PATHS } from './paths.ts';
 import { DOWNLOADS } from './downloads.ts';
+import { EASE } from './ease.ts';
 import { LESSON } from './lesson.ts';
 import { isHeld } from './held.ts';
 import { ASIA_AZ } from './asia-az.ts';
@@ -927,6 +928,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   PATHS,
   // The lessons kept on this device, on the same rule.
   DOWNLOADS,
+  // The letters and reading a lesson aloud, on the same rule.
+  EASE,
 );
 
 /**

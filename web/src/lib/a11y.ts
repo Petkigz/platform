@@ -1,7 +1,8 @@
 /**
  * Reading preferences, as the browser applies them.
  *
- * Three settings, and no more: text size, contrast and motion. They are a
+ * Four settings: text size, contrast, motion and, since 2026-11-27, the
+ * shape of the letters. They are a
  * cookie rather than database rows because they describe a
  * *screen*, not a person — a phone and a desktop want different sizes, and a
  * shared machine should not inherit somebody else's choice. The page says that
@@ -9,6 +10,19 @@
  *
  * The boot script in the root layout applies these before the first paint, so a
  * person who needs larger text does not see a flash of the small one.
+ *
+ * **The letters.** `dyslexic` sets Latin and Cyrillic text in OpenDyslexic,
+ * the author's own files under the SIL Open Font License
+ * (`public/fonts/opendyslexic`, with the licence beside them). The font has
+ * no Arabic, Bengali, Devanagari, Tamil, Thai or Chinese letters, so those
+ * are drawn as before, and the page says so. A browser downloads the files
+ * only for a reader who chose them. It is offered as a choice and not as a
+ * remedy: studies have not shown that such a font helps every reader with
+ * dyslexia, and the page says that too.
+ *
+ * The cookie has a fifth part for it, written only for these letters. A
+ * cookie written before has four and reads as the device's own letters, so
+ * nobody's choice was lost.
  */
 
 export const A11Y_COOKIE = 'ayahspring_a11y';
@@ -16,14 +30,16 @@ export const A11Y_COOKIE = 'ayahspring_a11y';
 export type TextSize = 'normal' | 'large' | 'larger';
 export type Contrast = 'normal' | 'high';
 export type Motion = 'system' | 'reduce';
+export type Letters = 'normal' | 'dyslexic';
 
 export type A11yPreferences = {
   text: TextSize;
   contrast: Contrast;
   motion: Motion;
+  letters: Letters;
 };
 
-export const DEFAULTS: A11yPreferences = { text: 'normal', contrast: 'normal', motion: 'system' };
+export const DEFAULTS: A11yPreferences = { text: 'normal', contrast: 'normal', motion: 'system', letters: 'normal' };
 
 /**
  * The choices, in the order the page lists them.
@@ -36,6 +52,7 @@ export const DEFAULTS: A11yPreferences = { text: 'normal', contrast: 'normal', m
 export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
 export const CONTRASTS: readonly Contrast[] = ['normal', 'high'];
 export const MOTIONS: readonly Motion[] = ['system', 'reduce'];
+export const LETTERS: readonly Letters[] = ['normal', 'dyslexic'];
 
 function textSize(value: unknown): TextSize {
   return value === 'large' || value === 'larger' ? value : 'normal';
@@ -49,9 +66,15 @@ function motion(value: unknown): Motion {
   return value === 'reduce' ? 'reduce' : 'system';
 }
 
+function letters(value: unknown): Letters {
+  return value === 'dyslexic' ? 'dyslexic' : 'normal';
+}
+
 /** A cookie value is a compact, versioned string rather than JSON. */
 export function encodePreferences(prefs: A11yPreferences): string {
-  return `v1.${prefs.text}.${prefs.contrast}.${prefs.motion}`;
+  // The fifth part is written only when it says something, so a cookie for
+  // the device's own letters is the cookie it always was.
+  return `v1.${prefs.text}.${prefs.contrast}.${prefs.motion}${prefs.letters === 'dyslexic' ? '.dyslexic' : ''}`;
 }
 
 export function parsePreferences(raw: string | null | undefined): A11yPreferences {
@@ -62,6 +85,7 @@ export function parsePreferences(raw: string | null | undefined): A11yPreference
     text: textSize(parts[1]),
     contrast: contrast(parts[2]),
     motion: motion(parts[3]),
+    letters: letters(parts[4]),
   };
 }
 
@@ -75,6 +99,7 @@ export function htmlAttributes(prefs: A11yPreferences): Record<string, string> {
   if (prefs.text !== 'normal') attributes['data-text'] = prefs.text;
   if (prefs.contrast === 'high') attributes['data-contrast'] = 'high';
   if (prefs.motion === 'reduce') attributes['data-motion'] = 'reduce';
+  if (prefs.letters === 'dyslexic') attributes['data-letters'] = 'dyslexic';
   return attributes;
 }
 
@@ -82,7 +107,8 @@ export function htmlAttributes(prefs: A11yPreferences): Record<string, string> {
 export function isDefault(prefs: A11yPreferences): boolean {
   return prefs.text === DEFAULTS.text
     && prefs.contrast === DEFAULTS.contrast
-    && prefs.motion === DEFAULTS.motion;
+    && prefs.motion === DEFAULTS.motion
+    && prefs.letters === DEFAULTS.letters;
 }
 
 /**
@@ -92,7 +118,7 @@ export function isDefault(prefs: A11yPreferences): boolean {
  * page rendered before the cookie was set and a page rendered after it agree.
  * Nothing here trusts the value: each one is checked against its own list.
  */
-export const A11Y_BOOT = `(function(){try{var m=document.cookie.match(/(?:^|; )${A11Y_COOKIE}=([^;]*)/);if(!m)return;var p=decodeURIComponent(m[1]).split('.');if(p[0]!=='v1')return;var h=document.documentElement;if(p[1]==='large'||p[1]==='larger')h.setAttribute('data-text',p[1]);if(p[2]==='high')h.setAttribute('data-contrast','high');if(p[3]==='reduce')h.setAttribute('data-motion','reduce');}catch(e){}})();`;
+export const A11Y_BOOT = `(function(){try{var m=document.cookie.match(/(?:^|; )${A11Y_COOKIE}=([^;]*)/);if(!m)return;var p=decodeURIComponent(m[1]).split('.');if(p[0]!=='v1')return;var h=document.documentElement;if(p[1]==='large'||p[1]==='larger')h.setAttribute('data-text',p[1]);if(p[2]==='high')h.setAttribute('data-contrast','high');if(p[3]==='reduce')h.setAttribute('data-motion','reduce');if(p[4]==='dyslexic')h.setAttribute('data-letters','dyslexic');}catch(e){}})();`;
 
 /**
  * What a browser's cookie string says the settings are, or `null` when the
@@ -112,9 +138,9 @@ export function preferencesInCookie(cookie: string | null | undefined): A11yPref
   }
 }
 
-/** Whether two sets of settings are the same three choices. */
+/** Whether two sets of settings are the same four choices. */
 export function samePreferences(a: A11yPreferences, b: A11yPreferences): boolean {
-  return a.text === b.text && a.contrast === b.contrast && a.motion === b.motion;
+  return a.text === b.text && a.contrast === b.contrast && a.motion === b.motion && a.letters === b.letters;
 }
 
 /**

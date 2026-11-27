@@ -10920,3 +10920,38 @@ started: recitation correction, native apps, push notifications.
   the number can only fall; and the `.catch(() => [])` form, which the
   test does not look for (seen on `/family` for the family's members and
   adults, and on the lesson page for practice questions).
+- **`/downloads` is said in the reader's language** (`7fdef90`; 45
+  sentences, 27 languages). The player's refusals travel by name, not as
+  an English sentence; a size is written in the language's digits. Three
+  things it said wrongly are corrected: a switch that could not be read
+  was shown as "New saves are not open"; the server's English sentence
+  was printed to every reader; and what to do about a lapsed copy was
+  only a tooltip.
+- **The companion browser smoke was red on `61ca3b3` and is fixed**
+  (`0cdf994`). It looked for "8%" on a Hausa reader's `/language`; the
+  pages written since make it 7% (192 of the sentences counted).
+  `held-translations.test.ts` knew the number and the browser smoke, which
+  runs only in CI, did not. Whenever the count of sentences changes, both
+  are looked at.
+- **The second half of accessibility is built; what is left is people.**
+  *A font for dyslexia:* a fourth reading setting, "Letters", sets the
+  page in OpenDyslexic. It is free (SIL Open Font License; the licence is
+  beside the two files in `web/public/fonts/opendyslexic`), it is the
+  platform's first downloaded font, and a browser fetches it only for a
+  reader who chose it. It has Latin, Greek and Cyrillic letters only, so
+  Arabic and every other script are drawn as before; the page says that,
+  and that studies have not shown such a font helps everyone. *Reading
+  aloud:* a lesson's description and transcript each have a button that
+  reads them in the device's own voice (`lib/read-aloud.ts`): no provider
+  and no bill, and the words are sent nowhere. The voice is chosen by the
+  course's language; a device with no voice for it is told so, and a
+  course with no language has no button. **A sentence written as a verse
+  is written (with its vowel marks, in ornate brackets, or with a mushaf's
+  signs) is left out**: a machine's voice has no tajwid. A verse typed
+  with no marks at all is not recognised and would be read.
+  **Not done:** the button has been heard in no browser by anybody (what
+  it is given to read is tested; the speaking is the browser's, and there
+  is no browser on the machine this was written on); the font has been
+  looked at in a browser only by CI's smoke, at one width, on one page;
+  nobody with dyslexia and nobody who relies on a screen reader has tried
+  either. Thirteen sentences in 27 languages, read by no speaker.

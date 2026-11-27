@@ -9,8 +9,9 @@
 // digits, in French by the reader's own choice, and in English for a language
 // held for review; the count of languages and the list of right-to-left ones
 // come from the register. In a browser: the first press of Tab shows the link
-// that skips to the content; each of the three settings changes the document
-// the moment it is chosen and is still there on the next page; "saved" is
+// that skips to the content; each of the four settings changes the document
+// the moment it is chosen and is still there on the next page (the fourth,
+// the letters, brings its font from this site and asks it for no Arabic); "saved" is
 // said only when the browser kept the cookie, and a browser that keeps
 // nothing is told so; the outline is thicker with stronger outlines on,
 // including on the links in the top bar; and every input on three public
@@ -78,7 +79,7 @@ try {
   const footer = (html) => html.slice(html.indexOf('<footer'), html.indexOf('</footer>')).replaceAll('<!-- -->', '');
   const wrapper = (html) => inner(html).match(/<div class="page narrow"([^>]*)>/)?.[1];
   const page = async (headers) => { const response = await request(PATH, headers); assert.equal(response.status, 200, `${PATH}\n${logs.slice(-2000)}`); return response.text(); };
-  const ENGLISH_ONLY = ['How this reads', 'Three settings', 'Text size', 'Stronger outlines', 'Follow my device', 'Always reduce', 'Back to the defaults', 'already true', 'The keyboard works', 'not here yet', 'No text-to-speech', 'Languages offered', 'These are the settings', 'Reading preferences'];
+  const ENGLISH_ONLY = ['How this reads', 'Four settings', 'Text size', 'Stronger outlines', 'Follow my device', 'Always reduce', 'Back to the defaults', 'already true', 'The keyboard works', 'not here yet', 'Not tested with a screen reader', 'A font made for dyslexia', 'can be read aloud', 'Languages offered', 'These are the settings', 'Reading preferences'];
 
   // ------------------------------------------------- not signed in, English
   // The page used to send this reader to sign in: somebody who needed larger
@@ -91,7 +92,11 @@ try {
     'What is already true without setting anything', 'The keyboard works.', 'Text colours are measured.',
     'Languages offered besides English: 46.', 'are in English for everyone',
     'No translation has been read by a first-language speaker yet.',
-    'What is not here yet', 'No text-to-speech.', 'nobody who relies on one has tested it yet', 'No dyslexia-friendly font.',
+    // 2026-11-27: the fourth setting, and reading aloud, which this page used to list as missing.
+    'Four settings', 'Letters', 'As on your device', 'A font made for dyslexia',
+    'It changes Latin and Cyrillic letters only', 'studies have not shown that it helps everyone',
+    'A lesson can be read aloud.', 'The words are sent nowhere.', 'a verse is not for a machine’s voice',
+    'What is not here yet', 'Not tested with a screen reader.', 'nobody who relies on one has tested it yet',
   ]) assert.ok(inner(anonymous).includes(sentence), `English reading page lost "${sentence}"`);
   assert.equal(wrapper(anonymous), '', 'an English page marks its own reading page as a different language');
   assert.equal(inner(anonymous).includes('{'), false, 'a gap in an English sentence was left unfilled');
@@ -108,9 +113,9 @@ try {
   const inputs = (html) => [...inner(html).matchAll(/<input\b[^>]*type="radio"[^>]*>/g)].map((m) => ({ name: m[0].match(/name="(\w+)"/)?.[1], value: m[0].match(/value="(\w+)"/)?.[1], on: /\bchecked=""/.test(m[0]) }));
   const radios = (html) => inputs(html).map((i) => `${i.name}=${i.value}`);
   const checked = (html) => inputs(html).filter((i) => i.on).map((i) => `${i.name}=${i.value}`);
-  assert.deepEqual(radios(anonymous), ['text=normal', 'text=large', 'text=larger', 'contrast=normal', 'contrast=high', 'motion=system', 'motion=reduce']);
-  assert.deepEqual(checked(anonymous), ['text=normal', 'contrast=normal', 'motion=system']);
-  assert.equal((inner(anonymous).match(/<fieldset class="card reading-choices"><legend>/g) ?? []).length, 3, 'each group of choices is a fieldset with a legend');
+  assert.deepEqual(radios(anonymous), ['text=normal', 'text=large', 'text=larger', 'contrast=normal', 'contrast=high', 'motion=system', 'motion=reduce', 'letters=normal', 'letters=dyslexic']);
+  assert.deepEqual(checked(anonymous), ['text=normal', 'contrast=normal', 'motion=system', 'letters=normal']);
+  assert.equal((inner(anonymous).match(/<fieldset class="card reading-choices"><legend>/g) ?? []).length, 4, 'each group of choices is a fieldset with a legend');
   // The five right-to-left languages a reader can choose, each in its own
   // script and marked as that language. Dhivehi is right-to-left and
   // withheld, so it is not promised.
@@ -131,13 +136,19 @@ try {
 
   // ------------------------------------------------------ the cookie is read
   const kept = await page({ 'accept-language': 'en', cookie: 'ayahspring_a11y=v1.larger.high.reduce' });
-  assert.deepEqual(checked(kept), ['text=larger', 'contrast=high', 'motion=reduce']);
+  assert.deepEqual(checked(kept), ['text=larger', 'contrast=high', 'motion=reduce', 'letters=normal']);
   assert.match(inner(kept), /<span class="muted">Text size<\/span> <strong>Largest<\/strong>/);
   assert.match(inner(kept), /<span class="muted">Contrast<\/span> <strong>Stronger outlines<\/strong>/);
   assert.match(inner(kept), /<span class="muted">Motion<\/span> <strong>Always reduce motion<\/strong>/);
   // A cookie nobody wrote is the defaults, not an error.
+  // The fourth setting is a fifth part of the cookie, and an older cookie has none.
+  const lettered = await page({ 'accept-language': 'en', cookie: 'ayahspring_a11y=v1.normal.normal.system.dyslexic' });
+  assert.deepEqual(checked(lettered), ['text=normal', 'contrast=normal', 'motion=system', 'letters=dyslexic']);
+  assert.match(inner(lettered), /<span class="muted">Letters<\/span> <strong>A font made for dyslexia<\/strong>/);
+  // The font is asked for by the stylesheet, never by the page: nobody who did not choose it is sent it.
+  for (const html of [anonymous, lettered]) assert.equal(/opendyslexic/i.test(html.replace(/A font made for dyslexia|OpenDyslexic: each letter/g, '')), false, 'the page itself names the font file');
   const nonsense = await page({ 'accept-language': 'en', cookie: 'ayahspring_a11y=v9.enormous.%E0%A4%A' });
-  assert.deepEqual(checked(nonsense), ['text=normal', 'contrast=normal', 'motion=system']);
+  assert.deepEqual(checked(nonsense), ['text=normal', 'contrast=normal', 'motion=system', 'letters=normal']);
 
   // -------------------------------------------------------------- signed in
   const member = await page({ 'accept-language': 'en', cookie });
@@ -149,7 +160,7 @@ try {
   const arabic = await page({ 'accept-language': 'ar' });
   assert.match(htmlRoot(arabic), /lang="ar"/); assert.match(htmlRoot(arabic), /dir="rtl"/);
   assert.equal(wrapper(arabic), '', 'an Arabic reader’s page is marked as another language');
-  for (const sentence of ['طريقة العرض', 'هذه هي الإعدادات في هذا المتصفّح.', 'حجم النص', 'الأكبر', 'حدود أوضح', 'قلّل الحركة دائمًا', 'العودة إلى الإعدادات الافتراضية', 'عدد اللغات المعروضة غير الإنجليزية: 46.', 'لا توجد قراءة صوتية للنص.']) {
+  for (const sentence of ['طريقة العرض', 'هذه هي الإعدادات في هذا المتصفّح.', 'حجم النص', 'الأكبر', 'حدود أوضح', 'قلّل الحركة دائمًا', 'العودة إلى الإعدادات الافتراضية', 'عدد اللغات المعروضة غير الإنجليزية: 46.', 'أربعة إعدادات', 'خط مصمَّم لعسر القراءة', 'يغيّر الحروف اللاتينية والسيريلية فقط', 'يمكن قراءة الدرس بصوت مسموع.', 'فالآية لا تُقرأ بصوت آلة.', 'لم تُختبر بقارئ شاشة.']) {
     assert.ok(inner(arabic).includes(sentence), `Arabic reading page lost "${sentence}"`);
   }
   for (const word of ENGLISH_ONLY) assert.equal(inner(arabic).includes(word), false, `Arabic reading page still says "${word}"`);
@@ -164,15 +175,16 @@ try {
   const persian = await page({ 'accept-language': 'fa' });
   assert.ok(inner(persian).includes('شمار زبان‌های عرضه‌شده جز انگلیسی: ۴۶.'), 'the count of languages is not in Persian digits');
   assert.ok(inner(persian).includes('شیوهٔ نمایش'));
+  assert.ok(inner(persian).includes('قلمی که برای خوانش‌پریشی ساخته شده') && inner(persian).includes('آیه برای صدای ماشین نیست.'), 'the Persian page lost the fourth setting or reading aloud');
 
   // ------------------------------------------------ French, by own choice
   const french = await page({ 'accept-language': 'ar', cookie: 'ayahspring_locale=fr' });
   assert.match(htmlRoot(french), /lang="fr"/);
-  for (const sentence of ['Confort de lecture', 'Taille du texte', 'La plus grande', 'Contours renforcés', 'Toujours réduire le mouvement', 'Nombre de langues proposées en plus de l’anglais\u00a0: 46.', 'Pas de synthèse vocale.']) {
+  for (const sentence of ['Confort de lecture', 'Taille du texte', 'La plus grande', 'Contours renforcés', 'Toujours réduire le mouvement', 'Nombre de langues proposées en plus de l’anglais\u00a0: 46.', 'Quatre réglages', 'Une police conçue pour la dyslexie', 'Une leçon peut être lue à voix haute.', 'Non testée avec un lecteur d’écran.']) {
     assert.ok(inner(french).includes(sentence), `French reading page lost "${sentence}"`);
   }
   for (const word of ENGLISH_ONLY) assert.equal(inner(french).includes(word), false, `French reading page still says "${word}"`);
-  assert.deepEqual(checked(french), ['text=normal', 'contrast=normal', 'motion=system']);
+  assert.deepEqual(checked(french), ['text=normal', 'contrast=normal', 'motion=system', 'letters=normal']);
 
   // ------------------------------------- a language held for review: English
   for (const [code, dir, languageName] of [['ha', 'ltr', 'Harshe'], ['ps', 'rtl', 'ژبه']]) {
@@ -195,7 +207,7 @@ try {
   // Nothing on this page asked the database a question as nobody about
   // anybody: the settings are a cookie.
   assert.equal(calls.some((c) => c.path === '/rest/v1/user_profiles' && !c.signedIn), false);
-  console.log('Reading page: open to a reader who is not signed in (200, no way back to an account offered); signed in adds the crumb and the way back; the cookie marks the three choices and a cookie nobody wrote is the defaults; English, Arabic, Persian (46 languages in its own digits), French by choice; Hausa and Pashto readers get it in English, marked, with the language link in their own language; a withheld language is English throughout; five right-to-left languages named from the register, each marked as itself; the skip link is first in the body and the footer of every page leads here.');
+  console.log('Reading page: open to a reader who is not signed in (200, no way back to an account offered); signed in adds the crumb and the way back; the cookie marks the four choices (the fourth, the letters, is a fifth part an older cookie does not have) and a cookie nobody wrote is the defaults; English, Arabic, Persian (46 languages in its own digits), French by choice; Hausa and Pashto readers get it in English, marked, with the language link in their own language; a withheld language is English throughout; five right-to-left languages named from the register, each marked as itself; the skip link is first in the body and the footer of every page leads here.');
 
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
@@ -253,9 +265,9 @@ try {
       assert.equal(await rootSize(tab), '16px');
       assert.equal(await main.getByRole('status').filter({ hasText: 'These are the settings in this browser.' }).count(), 1);
       assert.equal(await main.getByRole('alert').count(), 0);
-      // Three groups, each announced by its legend, and every choice by its name.
-      for (const group of ['Text size', 'Contrast', 'Motion']) assert.equal(await main.getByRole('group', { name: group, exact: true }).count(), 1, group);
-      assert.equal(await main.getByRole('radio').count(), 7);
+      // Four groups, each announced by its legend, and every choice by its name.
+      for (const group of ['Text size', 'Contrast', 'Motion', 'Letters']) assert.equal(await main.getByRole('group', { name: group, exact: true }).count(), 1, group);
+      assert.equal(await main.getByRole('radio').count(), 9);
       assert.deepEqual(await unnamed(tab), [], 'a control on the reading page has no name');
 
       // Largest: the document changes at once, with no button to press.
@@ -322,9 +334,38 @@ try {
       assert.equal(await stored(context), 'v1.normal.normal.system');
       assert.equal(await main.getByRole('radio', { name: /^Normal/ }).first().isChecked(), true);
       assert.equal(await main.getByRole('alert').count(), 0);
+
+      // The fourth setting, 2026-11-27: the letters. Chosen, the document is
+      // marked at once, the font arrives from this site, and the page is set
+      // in it; the cookie gains its fifth part. Undone, all of that goes.
+      const lettersOf = () => tab.evaluate(() => document.documentElement.getAttribute('data-letters'));
+      const face = () => tab.evaluate(() => getComputedStyle(document.querySelector('main p')).fontFamily);
+      assert.equal(await lettersOf(), null);
+      assert.doesNotMatch(await face(), /OpenDyslexic/);
+      await main.getByRole('radio', { name: /^A font made for dyslexia/ }).check();
+      assert.equal(await lettersOf(), 'dyslexic');
+      assert.match(await face(), /^"?OpenDyslexic/);
+      assert.equal(await stored(context), 'v1.normal.normal.system.dyslexic');
+      const arrived = await tab.evaluate(async () => {
+        const faces = await document.fonts.load('16px OpenDyslexic', 'Reading');
+        return faces.map((f) => `${f.family.replaceAll('"', '')} ${f.weight} ${f.status}`);
+      });
+      assert.deepEqual(arrived, ['OpenDyslexic 400 loaded'], 'the font did not arrive from this site');
+      // Arabic keeps its own letters: the font has none, and is not asked for any.
+      assert.equal(await tab.evaluate(async () => (await document.fonts.load('16px OpenDyslexic', 'العربية')).length), 0);
+      await fits(tab, 1280, 'reading en 1280, the dyslexia font');
+      if (process.env.RESPONSIVE_SCREENSHOTS) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/reading-en-letters.png`, fullPage: true });
+      await tab.goto(`${origin}/language`, { waitUntil: 'networkidle' });
+      assert.equal(await lettersOf(), 'dyslexic', 'the next page does not start in the chosen letters');
+      await tab.goto(`${origin}${PATH}`, { waitUntil: 'networkidle' });
+      assert.equal(await main.getByRole('radio', { name: /^A font made for dyslexia/ }).isChecked(), true);
+      await main.getByRole('button', { name: 'Back to the defaults', exact: true }).click();
+      assert.equal(await lettersOf(), null);
+      assert.doesNotMatch(await face(), /OpenDyslexic/);
+      assert.equal(await stored(context), 'v1.normal.normal.system');
       assert.deepEqual(errors, []);
       await context.close();
-      console.log('Reading settings in a browser: each of the three changes the document the moment it is chosen (root text 16px to 20px, white behind the page, outline 3px on a control and on the top bar, nothing left with a transition, an animation or smooth scrolling), "Saved for this browser." only after the cookie reads back, the language and sign-in pages start the same way, and one button puts the defaults back. Every input on the reading, language and sign-in pages has a name.');
+      console.log('Reading settings in a browser: the letters change to the dyslexia font and back (the font arrives from this site, Arabic is not asked of it, the next page starts in it); each of the three changes the document the moment it is chosen (root text 16px to 20px, white behind the page, outline 3px on a control and on the top bar, nothing left with a transition, an animation or smooth scrolling), "Saved for this browser." only after the cookie reads back, the language and sign-in pages start the same way, and one button puts the defaults back. Every input on the reading, language and sign-in pages has a name.');
     }
 
     // ------------------------------------- a browser that keeps no cookie

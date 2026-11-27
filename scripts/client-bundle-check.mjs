@@ -83,7 +83,14 @@ for (const [file, key] of [
   // English. What a reader is told when the browser keeps nothing, and what
   // the page says nobody has tested, must be in that page and in no script.
   ['reading.ts', 'reading.notKept'],
-  ['reading.ts', 'reading.noSpeechNote'],
+  // (2026-11-27: the fourth setting and the button that reads a lesson aloud
+  // are client components handed their words too. What the font does not
+  // change, and what a reader is told when the device has no voice for the
+  // lesson's language, must be in the page and in no script.)
+  ['ease.ts', 'ease.lettersDyslexicNote'],
+  ['ease.ts', 'ease.untestedNote'],
+  ['ease.ts', 'ease.noVoice'],
+  ['ease.ts', 'ease.readNote'],
   // The form that puts a copy back is a client component handed its words.
   // What a reader is told when nobody can say whether the file was put back,
   // and what the page says no file ever puts back, must be in that page and

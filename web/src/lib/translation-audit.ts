@@ -150,7 +150,7 @@ const BRAND_SET = new Set(BRANDS.map((word) => word.toLowerCase()));
  * named, like a brand: twenty-eight findings that were each correct were a
  * reason to stop reading the list. `plus` in small letters is still found.
  */
-const PRODUCT_NAMES: ReadonlySet<string> = new Set(['Numbers', 'Sheets', 'Plus']);
+const PRODUCT_NAMES: ReadonlySet<string> = new Set(['Numbers', 'Sheets', 'Plus', 'OpenDyslexic']);
 
 /** Characters that join or format rather than say something: never findings. */
 const INVISIBLE = /[\u0640\u200c\u200d\u00ad\ufeff]/gu;

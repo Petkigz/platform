@@ -7,7 +7,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except static assets and images.
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Everything except static assets and images, and (2026-11-27) the font
+    // files under /fonts: a font is the same for everybody, and asking who
+    // is signed in before sending one would put a question to the database
+    // in front of every letter.
+    '/((?!_next/static|_next/image|fonts/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

@@ -1818,6 +1818,53 @@ blockquote.tapply-written { margin: 0; padding-inline-start: 0.75rem; border-inl
 html[data-text='large'] { font-size: 112.5%; }
 html[data-text='larger'] { font-size: 125%; }
 
+/* The letters (2026-11-27). OpenDyslexic, the author's own files, under the
+   SIL Open Font License: see public/fonts/opendyslexic. A browser asks for a
+   file only when a letter is drawn in it, so a reader who did not choose this
+   downloads nothing. The font has Latin, Greek and Cyrillic letters and no
+   others; `unicode-range` says so, which keeps Arabic, Bengali, Devanagari,
+   Tamil, Thai and Chinese in the device's own fonts instead of whatever a
+   missing glyph falls back to.
+
+   It replaces `--font`, so everything that inherits the platform's face
+   changes with it, and the display serif of headings is given up too: a
+   reader who asked for these letters asked for them in the headings. Two
+   things keep their own face on purpose: `.arabic`, whose Naskh stack is the
+   point of that class, and anything in monospace, where the shape of a
+   character is the information. The headings of the certificate sheet keep
+   their serif as well: it is a document somebody prints. */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('/fonts/opendyslexic/OpenDyslexic-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-024F, U+0259, U+02B0-036F, U+0370-03FF, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF;
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('/fonts/opendyslexic/OpenDyslexic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-024F, U+0259, U+02B0-036F, U+0370-03FF, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF;
+}
+html[data-letters='dyslexic'] {
+  --font: 'OpenDyslexic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+  /* The letters are wide and tall; a little more room between lines. */
+  line-height: 1.7;
+}
+html[data-letters='dyslexic'] body { line-height: 1.7; }
+html[data-letters='dyslexic'] :is(h1, h2, h3, h4, .display, blockquote, .quote):not(.arabic):not(.certificate-sheet *) {
+  font-family: var(--font);
+  letter-spacing: 0;
+}
+
+/* The button that reads a lesson's words in the device's own voice
+   (2026-11-27), under the words it reads. */
+.read-aloud { margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+
 /* At the largest step, a two-column card row becomes one column: the alternative
    is a column so narrow that a word breaks mid-syllable. */
 html[data-text='larger'] .row,

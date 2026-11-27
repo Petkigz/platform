@@ -3,7 +3,8 @@ import type { Messages } from './en.ts';
 
 /**
  * The reading settings (`app/account/accessibility/page.tsx`) and the words
- * its three controls say.
+ * its controls say (four of them since 2026-11-27; the fourth and what the
+ * page says about reading aloud are in `ease.ts`).
  *
  * Same rule as `learn.ts`, `course.ts`, `lesson.ts`, `assess.ts`, `assign.ts`,
  * `missing.ts`, `broke.ts`, `player.ts`, `account.ts`, `family.ts`, `buy.ts`,
@@ -35,7 +36,7 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.title': 'طريقة العرض',
     'reading.crumb': 'القراءة',
     'reading.lede':
-      'ثلاثة إعدادات تُطبَّق لحظة اختيارها. وهي تخصّ هذا المتصفّح لا حسابك: فالهاتف والحاسوب المحمول يحتاجان إلى حجمين مختلفين، والجهاز المشترك لا ينبغي أن يرث اختيار شخص آخر. ولا يلزمك تسجيل الدخول لاستخدامها.',
+      'أربعة إعدادات تُطبَّق لحظة اختيارها. وهي تخصّ هذا المتصفّح لا حسابك: فالهاتف والحاسوب المحمول يحتاجان إلى حجمين مختلفين، والجهاز المشترك لا ينبغي أن يرث اختيار شخص آخر. ولا يلزمك تسجيل الدخول لاستخدامها.',
     'reading.now': 'هذه هي الإعدادات في هذا المتصفّح.',
     'reading.saved': 'حُفظت لهذا المتصفّح.',
     'reading.notKept':
@@ -93,19 +94,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'كتبها من بنوا المنصة. وإن بدت لك كلمة خطأ فذلك خطؤنا نحن، وصفحة اللغة تقول ذلك عن كل لغة تعرضها.',
     'reading.missingHeading': 'ما ليس متوفرًا هنا بعد',
-    'reading.noSpeech': 'لا توجد قراءة صوتية للنص.',
-    'reading.noSpeechNote':
-      'المنصة لا تقرأ الدرس بصوت مسموع. وهي مبنيّة لتعمل مع قارئ الشاشة، لكن لم يختبرها بعدُ أحد ممن يعتمدون عليه.',
-    'reading.noFont': 'لا يوجد خط ملائم لعسر القراءة.',
-    'reading.noFontNote':
-      'لم يُضمَّن أي خط من هذا النوع. وإعدادا حجم النص والتباين هما البديل في الوقت الحاضر.',
     'reading.back': 'العودة إلى حسابي',
   },
   ur: {
     'reading.title': 'یہ کیسا دکھتا ہے',
     'reading.crumb': 'پڑھائی',
     'reading.lede':
-      'تین ترتیبات، جو چنتے ہی لاگو ہو جاتی ہیں۔ یہ اسی براؤزر کی ہیں، آپ کے اکاؤنٹ کی نہیں: فون اور لیپ ٹاپ کو الگ الگ سائز چاہیے، اور مشترکہ ڈیوائس کو کسی اور کا انتخاب ورثے میں نہیں ملنا چاہیے۔ انہیں استعمال کرنے کے لیے سائن اِن ہونا ضروری نہیں۔',
+      'چار ترتیبات، جو چنتے ہی لاگو ہو جاتی ہیں۔ یہ اسی براؤزر کی ہیں، آپ کے اکاؤنٹ کی نہیں: فون اور لیپ ٹاپ کو الگ الگ سائز چاہیے، اور مشترکہ ڈیوائس کو کسی اور کا انتخاب ورثے میں نہیں ملنا چاہیے۔ انہیں استعمال کرنے کے لیے سائن اِن ہونا ضروری نہیں۔',
     'reading.now': 'اس براؤزر میں یہ ترتیبات ہیں۔',
     'reading.saved': 'اس براؤزر کے لیے محفوظ ہو گیا۔',
     'reading.notKept':
@@ -164,19 +159,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'یہ پلیٹ فارم بنانے والوں نے لکھے ہیں۔ اگر کوئی لفظ آپ کو غلط لگے تو وہ ہماری غلطی ہے، اور زبان کا صفحہ اپنی پیش کردہ ہر زبان کے بارے میں یہی کہتا ہے۔',
     'reading.missingHeading': 'جو ابھی یہاں نہیں ہے',
-    'reading.noSpeech': 'متن کو آواز میں پڑھنے کی سہولت نہیں۔',
-    'reading.noSpeechNote':
-      'پلیٹ فارم سبق بلند آواز میں نہیں پڑھتا۔ یہ اسکرین ریڈر کے ساتھ کام کرنے کے لیے بنایا گیا ہے، مگر ابھی تک اس پر انحصار کرنے والے کسی شخص نے اسے آزمایا نہیں۔',
-    'reading.noFont': 'ڈسلیکسیا کے لیے موزوں فونٹ نہیں۔',
-    'reading.noFontNote':
-      'کوئی ایسا فونٹ شامل نہیں۔ فی الحال متن کے سائز اور تضاد کی ترتیبات ہی اس کا بدل ہیں۔',
     'reading.back': 'میرے اکاؤنٹ پر واپس',
   },
   fa: {
     'reading.title': 'شیوهٔ نمایش',
     'reading.crumb': 'خواندن',
     'reading.lede':
-      'سه تنظیم که همان لحظهٔ انتخاب اعمال می‌شوند. این تنظیم‌ها به همین مرورگر تعلق دارند، نه به حساب شما: تلفن و لپ‌تاپ اندازه‌های متفاوتی می‌خواهند و دستگاه مشترک نباید انتخاب کس دیگری را به ارث ببرد. برای استفاده از آن‌ها لازم نیست وارد حساب شده باشید.',
+      'چهار تنظیم که همان لحظهٔ انتخاب اعمال می‌شوند. این تنظیم‌ها به همین مرورگر تعلق دارند، نه به حساب شما: تلفن و لپ‌تاپ اندازه‌های متفاوتی می‌خواهند و دستگاه مشترک نباید انتخاب کس دیگری را به ارث ببرد. برای استفاده از آن‌ها لازم نیست وارد حساب شده باشید.',
     'reading.now': 'تنظیم‌های این مرورگر این‌ها هستند.',
     'reading.saved': 'برای این مرورگر ذخیره شد.',
     'reading.notKept':
@@ -235,19 +224,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'این ترجمه‌ها را سازندگان این سکو نوشته‌اند. اگر واژه‌ای به نظرتان نادرست آمد، آن اشتباه از ماست، و صفحهٔ زبان همین را دربارهٔ هر زبانی که عرضه می‌کند می‌گوید.',
     'reading.missingHeading': 'آنچه هنوز اینجا نیست',
-    'reading.noSpeech': 'خواندن متن با صدا در کار نیست.',
-    'reading.noSpeechNote':
-      'سکو درس را با صدای بلند نمی‌خواند. برای کار با صفحه‌خوان ساخته شده است، اما هنوز کسی که به صفحه‌خوان تکیه دارد آن را نیازموده است.',
-    'reading.noFont': 'قلم ویژهٔ خوانش‌پریشی در کار نیست.',
-    'reading.noFontNote':
-      'هیچ قلمی از این دست گنجانده نشده است. فعلاً تنظیم‌های اندازهٔ متن و تضاد رنگ جایگزین آن‌اند.',
     'reading.back': 'بازگشت به حساب من',
   },
   'fa-af': {
     'reading.title': 'طرز نمایش',
     'reading.crumb': 'خواندن',
     'reading.lede':
-      'سه تنظیم که همان لحظهٔ انتخاب عملی می‌شوند. این تنظیم‌ها مربوط به همین مرورگر است، نه به حساب شما: تلفون و لپ‌تاپ اندازه‌های متفاوت می‌خواهند و وسیلهٔ مشترک نباید انتخاب کس دیگری را به ارث ببرد. برای استفاده از آن‌ها لازم نیست وارد حساب شده باشید.',
+      'چهار تنظیم که همان لحظهٔ انتخاب عملی می‌شوند. این تنظیم‌ها مربوط به همین مرورگر است، نه به حساب شما: تلفون و لپ‌تاپ اندازه‌های متفاوت می‌خواهند و وسیلهٔ مشترک نباید انتخاب کس دیگری را به ارث ببرد. برای استفاده از آن‌ها لازم نیست وارد حساب شده باشید.',
     'reading.now': 'تنظیم‌های این مرورگر همین‌ها است.',
     'reading.saved': 'برای این مرورگر ذخیره شد.',
     'reading.notKept':
@@ -306,19 +289,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'این ترجمه‌ها را کسانی نوشته‌اند که سامانه را ساخته‌اند. اگر کلمه‌ای به نظر شما نادرست می‌آید، کوتاهی از ماست، و صفحهٔ زبان همین را دربارهٔ هر زبانی که عرضه می‌کند می‌گوید.',
     'reading.missingHeading': 'آنچه هنوز اینجا نیست',
-    'reading.noSpeech': 'خواندن متن با صدا وجود ندارد.',
-    'reading.noSpeechNote':
-      'سامانه درس را با صدای بلند نمی‌خواند. برای کار با صفحه‌خوان ساخته شده است، اما هنوز کسی که به صفحه‌خوان تکیه دارد آن را نیازموده است.',
-    'reading.noFont': 'قلم مناسب برای خوانش‌پریشی وجود ندارد.',
-    'reading.noFontNote':
-      'هیچ قلمی از این نوع شامل نشده است. فعلاً تنظیم‌های اندازهٔ متن و تضاد رنگ جای آن را می‌گیرند.',
     'reading.back': 'برگشت به حساب من',
   },
   tr: {
     'reading.title': 'Bu nasıl okunur',
     'reading.crumb': 'Okuma',
     'reading.lede':
-      'Seçtiğiniz anda uygulanan üç ayar. Bunlar hesabınıza değil bu tarayıcıya aittir: telefon ile dizüstü bilgisayar farklı boyutlar ister, ortak kullanılan bir cihaz da başkasının seçimini devralmamalıdır. Bunları kullanmak için oturum açmış olmanız gerekmez.',
+      'Seçtiğiniz anda uygulanan dört ayar. Bunlar hesabınıza değil bu tarayıcıya aittir: telefon ile dizüstü bilgisayar farklı boyutlar ister, ortak kullanılan bir cihaz da başkasının seçimini devralmamalıdır. Bunları kullanmak için oturum açmış olmanız gerekmez.',
     'reading.now': 'Bu tarayıcıdaki ayarlar bunlardır.',
     'reading.saved': 'Bu tarayıcı için kaydedildi.',
     'reading.notKept':
@@ -377,19 +354,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Çevirileri platformu kuranlar yazdı. Bir kelime size yanlış görünüyorsa o hata bizimdir; dil sayfası sunduğu her dil için bunu söyler.',
     'reading.missingHeading': 'Henüz burada olmayanlar',
-    'reading.noSpeech': 'Metni seslendirme yok.',
-    'reading.noSpeechNote':
-      'Platform dersi sesli okumaz. Ekran okuyucuyla çalışacak biçimde kuruldu, ama ekran okuyucuya bağlı olan hiç kimse onu henüz denemedi.',
-    'reading.noFont': 'Disleksi dostu yazı tipi yok.',
-    'reading.noFontNote':
-      'Böyle bir yazı tipi eklenmedi. Şimdilik onun yerini metin boyutu ve karşıtlık ayarları tutuyor.',
     'reading.back': 'Hesabıma dön',
   },
   id: {
     'reading.title': 'Tampilan bacaan',
     'reading.crumb': 'Bacaan',
     'reading.lede':
-      'Tiga pengaturan, diterapkan begitu Anda memilihnya. Pengaturan ini milik peramban ini, bukan akun Anda: ponsel dan laptop memerlukan ukuran yang berbeda, dan perangkat yang dipakai bersama tidak semestinya mewarisi pilihan orang lain. Anda tidak perlu masuk untuk menggunakannya.',
+      'Empat pengaturan, diterapkan begitu Anda memilihnya. Pengaturan ini milik peramban ini, bukan akun Anda: ponsel dan laptop memerlukan ukuran yang berbeda, dan perangkat yang dipakai bersama tidak semestinya mewarisi pilihan orang lain. Anda tidak perlu masuk untuk menggunakannya.',
     'reading.now': 'Inilah pengaturan di peramban ini.',
     'reading.saved': 'Disimpan untuk peramban ini.',
     'reading.notKept':
@@ -449,19 +420,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Terjemahan ditulis oleh orang-orang yang membangun platform. Bila ada kata yang tampak keliru bagi Anda, itu kesalahan kami, dan halaman bahasa mengatakannya untuk setiap bahasa yang ditawarkannya.',
     'reading.missingHeading': 'Yang belum ada di sini',
-    'reading.noSpeech': 'Tidak ada pembacaan teks dengan suara.',
-    'reading.noSpeechNote':
-      'Platform tidak membacakan pelajaran. Platform dibuat agar dapat dipakai dengan pembaca layar, tetapi belum ada orang yang bergantung pada pembaca layar yang mengujinya.',
-    'reading.noFont': 'Tidak ada fon ramah disleksia.',
-    'reading.noFontNote':
-      'Tidak ada fon semacam itu yang disertakan. Untuk saat ini, pengaturan ukuran teks dan kontras menjadi penggantinya.',
     'reading.back': 'Kembali ke akun saya',
   },
   ms: {
     'reading.title': 'Cara paparan dibaca',
     'reading.crumb': 'Bacaan',
     'reading.lede':
-      'Tiga tetapan, digunakan sebaik sahaja anda memilihnya. Tetapan ini milik pelayar ini, bukan akaun anda: telefon dan komputer riba memerlukan saiz yang berbeza, dan peranti yang dikongsi tidak sepatutnya mewarisi pilihan orang lain. Anda tidak perlu log masuk untuk menggunakannya.',
+      'Empat tetapan, digunakan sebaik sahaja anda memilihnya. Tetapan ini milik pelayar ini, bukan akaun anda: telefon dan komputer riba memerlukan saiz yang berbeza, dan peranti yang dikongsi tidak sepatutnya mewarisi pilihan orang lain. Anda tidak perlu log masuk untuk menggunakannya.',
     'reading.now': 'Inilah tetapan pada pelayar ini.',
     'reading.saved': 'Disimpan untuk pelayar ini.',
     'reading.notKept':
@@ -521,19 +486,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Terjemahan ditulis oleh mereka yang membina platform ini. Jika ada perkataan yang kelihatan salah kepada anda, itu kesilapan kami, dan halaman bahasa menyatakannya bagi setiap bahasa yang ditawarkannya.',
     'reading.missingHeading': 'Perkara yang belum ada di sini',
-    'reading.noSpeech': 'Tiada bacaan teks dengan suara.',
-    'reading.noSpeechNote':
-      'Platform tidak membacakan pelajaran. Ia dibina untuk berfungsi dengan pembaca skrin, tetapi belum ada sesiapa yang bergantung pada pembaca skrin yang mengujinya.',
-    'reading.noFont': 'Tiada fon mesra disleksia.',
-    'reading.noFontNote':
-      'Tiada fon sebegitu disertakan. Buat masa ini, tetapan saiz teks dan kontras menjadi penggantinya.',
     'reading.back': 'Kembali ke akaun saya',
   },
   bn: {
     'reading.title': 'এটি কেমন দেখায়',
     'reading.crumb': 'পড়া',
     'reading.lede':
-      'তিনটি সেটিং, বেছে নেওয়ার সঙ্গে সঙ্গে প্রয়োগ হয়। এগুলো এই ব্রাউজারের, আপনার অ্যাকাউন্টের নয়: ফোন আর ল্যাপটপে আলাদা আকার দরকার হয়, আর ভাগাভাগি করা ডিভাইসে অন্য কারও পছন্দ চলে আসা উচিত নয়। এগুলো ব্যবহার করতে সাইন ইন করা লাগে না।',
+      'চারটি সেটিং, বেছে নেওয়ার সঙ্গে সঙ্গে প্রয়োগ হয়। এগুলো এই ব্রাউজারের, আপনার অ্যাকাউন্টের নয়: ফোন আর ল্যাপটপে আলাদা আকার দরকার হয়, আর ভাগাভাগি করা ডিভাইসে অন্য কারও পছন্দ চলে আসা উচিত নয়। এগুলো ব্যবহার করতে সাইন ইন করা লাগে না।',
     'reading.now': 'এই ব্রাউজারে এই সেটিংগুলো আছে।',
     'reading.saved': 'এই ব্রাউজারের জন্য সংরক্ষিত হয়েছে।',
     'reading.notKept':
@@ -591,19 +550,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'এগুলো প্ল্যাটফর্মটি যাঁরা তৈরি করেছেন তাঁরাই লিখেছেন। কোনো শব্দ আপনার কাছে ভুল মনে হলে সেই ভুল আমাদের, আর ভাষার পাতা তার দেওয়া প্রতিটি ভাষার জন্য এ কথাই বলে।',
     'reading.missingHeading': 'যা এখনও এখানে নেই',
-    'reading.noSpeech': 'লেখা পড়ে শোনানোর ব্যবস্থা নেই।',
-    'reading.noSpeechNote':
-      'প্ল্যাটফর্ম পাঠ জোরে পড়ে শোনায় না। এটি স্ক্রিন রিডারের সঙ্গে কাজ করার জন্য তৈরি, তবে স্ক্রিন রিডারের ওপর নির্ভর করেন এমন কেউ এখনও এটি পরীক্ষা করেননি।',
-    'reading.noFont': 'ডিসলেক্সিয়া-বান্ধব ফন্ট নেই।',
-    'reading.noFontNote':
-      'এমন কোনো ফন্ট যুক্ত করা হয়নি। আপাতত লেখার আকার ও কনট্রাস্টের সেটিংই তার বিকল্প।',
     'reading.back': 'আমার অ্যাকাউন্টে ফিরে যান',
   },
   hi: {
     'reading.title': 'यह कैसा दिखता है',
     'reading.crumb': 'पढ़ना',
     'reading.lede':
-      'तीन सेटिंग, जो चुनते ही लागू हो जाती हैं। ये इस ब्राउज़र की हैं, आपके खाते की नहीं: फ़ोन और लैपटॉप को अलग-अलग आकार चाहिए, और साझा डिवाइस को किसी और का चुनाव विरासत में नहीं मिलना चाहिए। इन्हें इस्तेमाल करने के लिए साइन इन होना ज़रूरी नहीं।',
+      'चार सेटिंग, जो चुनते ही लागू हो जाती हैं। ये इस ब्राउज़र की हैं, आपके खाते की नहीं: फ़ोन और लैपटॉप को अलग-अलग आकार चाहिए, और साझा डिवाइस को किसी और का चुनाव विरासत में नहीं मिलना चाहिए। इन्हें इस्तेमाल करने के लिए साइन इन होना ज़रूरी नहीं।',
     'reading.now': 'इस ब्राउज़र में ये सेटिंग हैं।',
     'reading.saved': 'इस ब्राउज़र के लिए सहेजा गया।',
     'reading.notKept':
@@ -663,19 +616,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'इन्हें प्लेटफ़ॉर्म बनाने वालों ने लिखा है। कोई शब्द आपको ग़लत लगे तो वह ग़लती हमारी है, और भाषा पृष्ठ अपनी हर उपलब्ध भाषा के बारे में यही कहता है।',
     'reading.missingHeading': 'जो अभी यहाँ नहीं है',
-    'reading.noSpeech': 'पाठ को बोलकर सुनाने की सुविधा नहीं है।',
-    'reading.noSpeechNote':
-      'प्लेटफ़ॉर्म पाठ को ज़ोर से नहीं पढ़ता। इसे स्क्रीन रीडर के साथ काम करने के लिए बनाया गया है, पर स्क्रीन रीडर पर निर्भर किसी व्यक्ति ने अभी तक इसे परखा नहीं है।',
-    'reading.noFont': 'डिस्लेक्सिया के अनुकूल फ़ॉन्ट नहीं है।',
-    'reading.noFontNote':
-      'ऐसा कोई फ़ॉन्ट शामिल नहीं है। फ़िलहाल पाठ के आकार और कंट्रास्ट की सेटिंग ही उसका विकल्प हैं।',
     'reading.back': 'मेरे खाते पर वापस जाएँ',
   },
   fr: {
     'reading.title': 'Confort de lecture',
     'reading.crumb': 'Lecture',
     'reading.lede':
-      'Trois réglages, appliqués dès que vous les choisissez. Ils appartiennent à ce navigateur, pas à votre compte : un téléphone et un ordinateur portable demandent des tailles différentes, et un appareil partagé ne doit pas hériter du choix de quelqu’un d’autre. Il n’est pas nécessaire d’être connecté pour les utiliser.',
+      'Quatre réglages, appliqués dès que vous les choisissez. Ils appartiennent à ce navigateur, pas à votre compte : un téléphone et un ordinateur portable demandent des tailles différentes, et un appareil partagé ne doit pas hériter du choix de quelqu’un d’autre. Il n’est pas nécessaire d’être connecté pour les utiliser.',
     'reading.now': 'Voici les réglages de ce navigateur.',
     'reading.saved': 'Enregistré pour ce navigateur.',
     'reading.notKept':
@@ -736,19 +683,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Elles ont été écrites par ceux qui ont construit la plateforme. Si un mot vous paraît faux, c’est notre erreur, et la page des langues le dit pour chaque langue qu’elle propose.',
     'reading.missingHeading': 'Ce qui n’est pas encore ici',
-    'reading.noSpeech': 'Pas de synthèse vocale.',
-    'reading.noSpeechNote':
-      'La plateforme ne lit pas une leçon à voix haute. Elle est construite pour fonctionner avec un lecteur d’écran, mais aucune personne qui en dépend ne l’a encore essayée.',
-    'reading.noFont': 'Pas de police adaptée à la dyslexie.',
-    'reading.noFontNote':
-      'Aucune n’est incluse. Les réglages de taille du texte et de contraste en tiennent lieu pour l’instant.',
     'reading.back': 'Retour à mon compte',
   },
   es: {
     'reading.title': 'Cómo se lee esto',
     'reading.crumb': 'Lectura',
     'reading.lede':
-      'Tres ajustes, que se aplican en cuanto los elige. Pertenecen a este navegador, no a su cuenta: un teléfono y un portátil piden tamaños distintos, y un dispositivo compartido no debe heredar la elección de otra persona. No hace falta haber iniciado sesión para usarlos.',
+      'Cuatro ajustes, que se aplican en cuanto los elige. Pertenecen a este navegador, no a su cuenta: un teléfono y un portátil piden tamaños distintos, y un dispositivo compartido no debe heredar la elección de otra persona. No hace falta haber iniciado sesión para usarlos.',
     'reading.now': 'Estos son los ajustes de este navegador.',
     'reading.saved': 'Guardado para este navegador.',
     'reading.notKept':
@@ -809,19 +750,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Las escribieron quienes construyeron la plataforma. Si una palabra le parece incorrecta, el error es nuestro, y la página de idiomas lo dice de cada idioma que ofrece.',
     'reading.missingHeading': 'Lo que todavía no está aquí',
-    'reading.noSpeech': 'No hay lectura del texto en voz alta.',
-    'reading.noSpeechNote':
-      'La plataforma no lee una lección en voz alta. Está construida para funcionar con un lector de pantalla, pero todavía no la ha probado nadie que dependa de uno.',
-    'reading.noFont': 'No hay tipografía adaptada a la dislexia.',
-    'reading.noFontNote':
-      'No se incluye ninguna. Por ahora la sustituyen los ajustes de tamaño del texto y de contraste.',
     'reading.back': 'Volver a mi cuenta',
   },
   pt: {
     'reading.title': 'Como isto se lê',
     'reading.crumb': 'Leitura',
     'reading.lede':
-      'Três definições, aplicadas no momento em que as escolhe. Pertencem a este navegador, não à sua conta: um telemóvel e um portátil pedem tamanhos diferentes, e um dispositivo partilhado não deve herdar a escolha de outra pessoa. Não precisa de ter iniciado sessão para as usar.',
+      'Quatro definições, aplicadas no momento em que as escolhe. Pertencem a este navegador, não à sua conta: um telemóvel e um portátil pedem tamanhos diferentes, e um dispositivo partilhado não deve herdar a escolha de outra pessoa. Não precisa de ter iniciado sessão para as usar.',
     'reading.now': 'Estas são as definições deste navegador.',
     'reading.saved': 'Guardado para este navegador.',
     'reading.notKept':
@@ -881,19 +816,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Foram escritas por quem construiu a plataforma. Se alguma palavra lhe parecer errada, o erro é nosso, e a página de idiomas di-lo para cada idioma que oferece.',
     'reading.missingHeading': 'O que ainda não está aqui',
-    'reading.noSpeech': 'Não há leitura do texto em voz alta.',
-    'reading.noSpeechNote':
-      'A plataforma não lê uma lição em voz alta. Foi construída para funcionar com um leitor de ecrã, mas ainda ninguém que dependa de um a experimentou.',
-    'reading.noFont': 'Não há tipo de letra adaptado à dislexia.',
-    'reading.noFontNote':
-      'Nenhum está incluído. Por agora, as definições de tamanho do texto e de contraste fazem as suas vezes.',
     'reading.back': 'Voltar à minha conta',
   },
   sw: {
     'reading.title': 'Jinsi ukurasa unavyosomeka',
     'reading.crumb': 'Usomaji',
     'reading.lede':
-      'Mipangilio mitatu, inayotumika mara tu unapoichagua. Ni ya kivinjari hiki, si ya akaunti yako: simu na kompyuta ndogo huhitaji ukubwa tofauti, na kifaa kinachotumiwa na watu wengi hakipaswi kurithi chaguo la mtu mwingine. Huhitaji kuwa umeingia ili kuitumia.',
+      'Mipangilio minne, inayotumika mara tu unapoichagua. Ni ya kivinjari hiki, si ya akaunti yako: simu na kompyuta ndogo huhitaji ukubwa tofauti, na kifaa kinachotumiwa na watu wengi hakipaswi kurithi chaguo la mtu mwingine. Huhitaji kuwa umeingia ili kuitumia.',
     'reading.now': 'Hii ndiyo mipangilio katika kivinjari hiki.',
     'reading.saved': 'Imehifadhiwa kwa kivinjari hiki.',
     'reading.notKept':
@@ -952,19 +881,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Ziliandikwa na waliojenga jukwaa. Neno likionekana si sahihi kwako, kosa hilo ni letu, na ukurasa wa lugha husema hivyo kwa kila lugha unayoitoa.',
     'reading.missingHeading': 'Yasiyokuwepo hapa bado',
-    'reading.noSpeech': 'Hakuna usomaji wa maandishi kwa sauti.',
-    'reading.noSpeechNote':
-      'Jukwaa halisomi somo kwa sauti. Limejengwa ili kufanya kazi na kisoma skrini, lakini bado hakuna mtu anayekitegemea aliyelijaribu.',
-    'reading.noFont': 'Hakuna fonti inayofaa wenye disleksia.',
-    'reading.noFontNote':
-      'Hakuna iliyojumuishwa. Kwa sasa mipangilio ya ukubwa wa maandishi na utofautishaji wa rangi ndiyo mbadala.',
     'reading.back': 'Rudi kwenye akaunti yangu',
   },
   af: {
     'reading.title': 'Hoe dit lees',
     'reading.crumb': 'Lees',
     'reading.lede':
-      'Drie instellings, toegepas die oomblik wat jy hulle kies. Hulle behoort aan hierdie blaaier, nie aan jou rekening nie: ’n foon en ’n skootrekenaar vra verskillende groottes, en ’n gedeelde toestel behoort nie iemand anders se keuse te erf nie. Jy hoef nie aangemeld te wees om hulle te gebruik nie.',
+      'Vier instellings, toegepas die oomblik wat jy hulle kies. Hulle behoort aan hierdie blaaier, nie aan jou rekening nie: ’n foon en ’n skootrekenaar vra verskillende groottes, en ’n gedeelde toestel behoort nie iemand anders se keuse te erf nie. Jy hoef nie aangemeld te wees om hulle te gebruik nie.',
     'reading.now': 'Dit is die instellings in hierdie blaaier.',
     'reading.saved': 'Gestoor vir hierdie blaaier.',
     'reading.notKept':
@@ -1024,18 +947,12 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Hulle is geskryf deur die mense wat die platform gebou het. As ’n woord vir jou verkeerd lyk, is dit ons fout, en die taalbladsy sê dit vir elke taal wat dit aanbied.',
     'reading.missingHeading': 'Wat nog nie hier is nie',
-    'reading.noSpeech': 'Geen teks-na-spraak nie.',
-    'reading.noSpeechNote':
-      'Die platform lees nie ’n les hardop nie. Dit is gebou om met ’n skermleser te werk, maar niemand wat op een staatmaak, het dit nog getoets nie.',
-    'reading.noFont': 'Geen disleksievriendelike lettertipe nie.',
-    'reading.noFontNote':
-      'Geen is ingesluit nie. Die instellings vir teksgrootte en kontras is vir eers die plaasvervangers.',
     'reading.back': 'Terug na my rekening',
   },
   'zh-hans': {
     'reading.title': '阅读显示',
     'reading.crumb': '阅读',
-    'reading.lede': '三项设置，选择后立即生效。它们属于此浏览器，而不属于你的账户：手机和笔记本电脑需要不同的字号，共用的设备也不应沿用别人的选择。使用它们无需登录。',
+    'reading.lede': '四项设置，选择后立即生效。它们属于此浏览器，而不属于你的账户：手机和笔记本电脑需要不同的字号，共用的设备也不应沿用别人的选择。使用它们无需登录。',
     'reading.now': '这是此浏览器中的设置。',
     'reading.saved': '已为此浏览器保存。',
     'reading.notKept': '此浏览器未能保留该设置。它只对本页生效，到下一页就会消失。',
@@ -1082,16 +999,12 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewed': '目前还没有任何译文由母语者读过。',
     'reading.unreviewedNote': '译文是由搭建这个平台的人写的。如果某个词在你看来不对，那是我们的错误；语言页面对它提供的每种语言都这样说明。',
     'reading.missingHeading': '这里还没有的功能',
-    'reading.noSpeech': '没有文字转语音。',
-    'reading.noSpeechNote': '平台不会朗读课程。它是按照可配合屏幕阅读器使用来搭建的，但还没有依赖屏幕阅读器的人测试过。',
-    'reading.noFont': '没有适合阅读障碍者的字体。',
-    'reading.noFontNote': '平台没有内置这类字体。目前以文字大小和对比度设置作为替代。',
     'reading.back': '返回我的账户',
   },
   'zh-hant': {
     'reading.title': '閱讀顯示',
     'reading.crumb': '閱讀',
-    'reading.lede': '三項設定，選擇後立即生效。它們屬於此瀏覽器，而不屬於你的帳號：手機和筆記型電腦需要不同的字級，共用的裝置也不應沿用別人的選擇。使用它們不必登入。',
+    'reading.lede': '四項設定，選擇後立即生效。它們屬於此瀏覽器，而不屬於你的帳號：手機和筆記型電腦需要不同的字級，共用的裝置也不應沿用別人的選擇。使用它們不必登入。',
     'reading.now': '這是此瀏覽器中的設定。',
     'reading.saved': '已為此瀏覽器儲存。',
     'reading.notKept': '此瀏覽器未能保留該設定。它只對本頁生效，到下一頁就會消失。',
@@ -1138,17 +1051,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewed': '目前還沒有任何翻譯由母語者讀過。',
     'reading.unreviewedNote': '翻譯是由建立這個平台的人寫的。如果某個詞在你看來不對，那是我們的錯誤；語言頁面對它提供的每種語言都這樣說明。',
     'reading.missingHeading': '這裡還沒有的功能',
-    'reading.noSpeech': '沒有文字轉語音。',
-    'reading.noSpeechNote': '平台不會朗讀課程。它是按照可搭配螢幕閱讀器使用來建立的，但還沒有依賴螢幕閱讀器的人測試過。',
-    'reading.noFont': '沒有適合閱讀障礙者的字型。',
-    'reading.noFontNote': '平台沒有內建這類字型。目前以文字大小和對比度設定作為替代。',
     'reading.back': '返回我的帳號',
   },
   vi: {
     'reading.title': 'Cách hiển thị để đọc',
     'reading.crumb': 'Đọc',
     'reading.lede':
-      'Ba thiết lập, được áp dụng ngay khi bạn chọn. Chúng thuộc về trình duyệt này, không thuộc về tài khoản của bạn: điện thoại và máy tính xách tay cần cỡ chữ khác nhau, và một thiết bị dùng chung không nên thừa hưởng lựa chọn của người khác. Bạn không cần đăng nhập để dùng chúng.',
+      'Bốn thiết lập, được áp dụng ngay khi bạn chọn. Chúng thuộc về trình duyệt này, không thuộc về tài khoản của bạn: điện thoại và máy tính xách tay cần cỡ chữ khác nhau, và một thiết bị dùng chung không nên thừa hưởng lựa chọn của người khác. Bạn không cần đăng nhập để dùng chúng.',
     'reading.now': 'Đây là các thiết lập trong trình duyệt này.',
     'reading.saved': 'Đã lưu cho trình duyệt này.',
     'reading.notKept':
@@ -1209,19 +1118,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Các bản dịch được viết bởi những người dựng nên nền tảng. Nếu một từ có vẻ sai với bạn, đó là lỗi của chúng tôi, và trang ngôn ngữ nói điều đó về mọi ngôn ngữ mà nó cung cấp.',
     'reading.missingHeading': 'Những gì chưa có ở đây',
-    'reading.noSpeech': 'Không có tính năng đọc văn bản thành tiếng.',
-    'reading.noSpeechNote':
-      'Nền tảng không đọc to bài học. Nó được dựng để hoạt động với trình đọc màn hình, nhưng chưa có ai phụ thuộc vào trình đọc màn hình thử nghiệm nó.',
-    'reading.noFont': 'Không có phông chữ thân thiện với người mắc chứng khó đọc.',
-    'reading.noFontNote':
-      'Không có phông nào như vậy được đưa vào. Hiện tại các thiết lập cỡ chữ và độ tương phản là giải pháp thay thế.',
     'reading.back': 'Về tài khoản của tôi',
   },
   th: {
     'reading.title': 'การแสดงผลสำหรับอ่าน',
     'reading.crumb': 'การอ่าน',
     'reading.lede':
-      'การตั้งค่าสามอย่าง มีผลทันทีที่คุณเลือก การตั้งค่าเหล่านี้เป็นของเบราว์เซอร์นี้ ไม่ใช่ของบัญชีคุณ: โทรศัพท์กับแล็ปท็อปต้องการขนาดต่างกัน และอุปกรณ์ที่ใช้ร่วมกันไม่ควรรับช่วงตัวเลือกของคนอื่น คุณไม่จำเป็นต้องเข้าสู่ระบบเพื่อใช้การตั้งค่าเหล่านี้',
+      'การตั้งค่าสี่อย่าง มีผลทันทีที่คุณเลือก การตั้งค่าเหล่านี้เป็นของเบราว์เซอร์นี้ ไม่ใช่ของบัญชีคุณ: โทรศัพท์กับแล็ปท็อปต้องการขนาดต่างกัน และอุปกรณ์ที่ใช้ร่วมกันไม่ควรรับช่วงตัวเลือกของคนอื่น คุณไม่จำเป็นต้องเข้าสู่ระบบเพื่อใช้การตั้งค่าเหล่านี้',
     'reading.now': 'นี่คือการตั้งค่าในเบราว์เซอร์นี้',
     'reading.saved': 'บันทึกสำหรับเบราว์เซอร์นี้แล้ว',
     'reading.notKept':
@@ -1279,19 +1182,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'ผู้ที่สร้างแพลตฟอร์มเป็นผู้เขียนคำแปล หากคำใดดูไม่ถูกต้อง ข้อผิดพลาดเป็นของเรา และหน้าภาษาบอกเช่นนั้นสำหรับทุกภาษาที่มีให้เลือก',
     'reading.missingHeading': 'สิ่งที่ยังไม่มีที่นี่',
-    'reading.noSpeech': 'ไม่มีการอ่านข้อความออกเสียง',
-    'reading.noSpeechNote':
-      'แพลตฟอร์มไม่อ่านบทเรียนออกเสียง แพลตฟอร์มสร้างขึ้นให้ทำงานกับโปรแกรมอ่านหน้าจอได้ แต่ยังไม่มีผู้ที่พึ่งพาโปรแกรมอ่านหน้าจอทดสอบ',
-    'reading.noFont': 'ไม่มีแบบอักษรที่เหมาะกับผู้มีภาวะอ่านลำบาก',
-    'reading.noFontNote':
-      'ไม่มีแบบอักษรเช่นนั้นรวมอยู่ ตอนนี้การตั้งค่าขนาดตัวอักษรและความคมชัดของสีใช้ทดแทน',
     'reading.back': 'กลับไปที่บัญชีของฉัน',
   },
   fil: {
     'reading.title': 'Paano ito binabasa',
     'reading.crumb': 'Pagbasa',
     'reading.lede':
-      'Tatlong setting, inilalapat sa sandaling piliin mo. Sa browser na ito ang mga iyon, hindi sa iyong akawnt: magkaibang laki ang kailangan ng telepono at ng laptop, at ang device na pinaghahatian ay hindi dapat magmana ng pinili ng iba. Hindi mo kailangang naka-sign in para gamitin ang mga ito.',
+      'Apat na setting, inilalapat sa sandaling piliin mo. Sa browser na ito ang mga iyon, hindi sa iyong akawnt: magkaibang laki ang kailangan ng telepono at ng laptop, at ang device na pinaghahatian ay hindi dapat magmana ng pinili ng iba. Hindi mo kailangang naka-sign in para gamitin ang mga ito.',
     'reading.now': 'Ito ang mga setting sa browser na ito.',
     'reading.saved': 'Na-save para sa browser na ito.',
     'reading.notKept':
@@ -1352,19 +1249,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Isinulat ang mga ito ng mga taong bumuo ng platform. Kung may salitang mali sa iyong paningin, pagkakamali namin iyon, at sinasabi iyon ng pahina ng wika para sa bawat wikang iniaalok nito.',
     'reading.missingHeading': 'Ang wala pa rito',
-    'reading.noSpeech': 'Walang pagbasa ng teksto nang malakas.',
-    'reading.noSpeechNote':
-      'Hindi binabasa nang malakas ng platform ang aralin. Ginawa ito upang gumana sa screen reader, ngunit wala pang taong umaasa sa screen reader ang sumubok dito.',
-    'reading.noFont': 'Walang font na angkop sa may dyslexia.',
-    'reading.noFontNote':
-      'Walang kasamang ganoon. Sa ngayon, ang mga setting ng laki ng teksto at contrast ang pamalit.',
     'reading.back': 'Bumalik sa aking akawnt',
   },
   uz: {
     'reading.title': 'Oʻqish koʻrinishi',
     'reading.crumb': 'Oʻqish',
     'reading.lede':
-      'Uchta sozlama, tanlashingiz bilanoq qoʻllanadi. Ular hisobingizga emas, shu brauzerga tegishli: telefon va noutbuk turli oʻlchamni talab qiladi, umumiy qurilma esa boshqa birovning tanlovini meros qilib olmasligi kerak. Ulardan foydalanish uchun tizimga kirish shart emas.',
+      'Toʻrtta sozlama, tanlashingiz bilanoq qoʻllanadi. Ular hisobingizga emas, shu brauzerga tegishli: telefon va noutbuk turli oʻlchamni talab qiladi, umumiy qurilma esa boshqa birovning tanlovini meros qilib olmasligi kerak. Ulardan foydalanish uchun tizimga kirish shart emas.',
     'reading.now': 'Shu brauzerdagi sozlamalar mana shular.',
     'reading.saved': 'Shu brauzer uchun saqlandi.',
     'reading.notKept':
@@ -1424,19 +1315,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Ularni platformani qurganlar yozgan. Biror soʻz sizga notoʻgʻri tuyulsa, xato bizniki, til sahifasi esa buni oʻzi taklif etadigan har bir til haqida aytadi.',
     'reading.missingHeading': 'Bu yerda hali yoʻq narsalar',
-    'reading.noSpeech': 'Matnni ovoz chiqarib oʻqish yoʻq.',
-    'reading.noSpeechNote':
-      'Platforma darsni ovoz chiqarib oʻqimaydi. U ekran oʻquvchi dastur bilan ishlaydigan qilib qurilgan, lekin unga tayanadigan hech kim uni hali sinab koʻrmagan.',
-    'reading.noFont': 'Disleksiyaga qulay shrift yoʻq.',
-    'reading.noFontNote':
-      'Bunday shrift kiritilmagan. Hozircha matn oʻlchami va kontrast sozlamalari uning oʻrnini bosadi.',
     'reading.back': 'Hisobimga qaytish',
   },
   kk: {
     'reading.title': 'Оқу көрінісі',
     'reading.crumb': 'Оқу',
     'reading.lede':
-      'Үш баптау, таңдаған сәтте қолданылады. Олар аккаунтыңызға емес, осы браузерге тиесілі: телефон мен ноутбукке әртүрлі өлшем керек, ал ортақ құрылғы басқа біреудің таңдауын мұраға алмауы тиіс. Оларды пайдалану үшін жүйеге кіру міндетті емес.',
+      'Төрт баптау, таңдаған сәтте қолданылады. Олар аккаунтыңызға емес, осы браузерге тиесілі: телефон мен ноутбукке әртүрлі өлшем керек, ал ортақ құрылғы басқа біреудің таңдауын мұраға алмауы тиіс. Оларды пайдалану үшін жүйеге кіру міндетті емес.',
     'reading.now': 'Осы браузердегі баптаулар осылар.',
     'reading.saved': 'Осы браузер үшін сақталды.',
     'reading.notKept':
@@ -1496,19 +1381,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Оларды платформаны салғандар жазды. Бір сөз сізге дұрыс көрінбесе, қате біздікі, ал тіл беті мұны өзі ұсынатын әр тіл туралы айтады.',
     'reading.missingHeading': 'Мұнда әлі жоқ нәрселер',
-    'reading.noSpeech': 'Мәтінді дауыстап оқу жоқ.',
-    'reading.noSpeechNote':
-      'Платформа сабақты дауыстап оқымайды. Ол экраннан оқу бағдарламасымен жұмыс істейтіндей жасалған, бірақ оған сүйенетін ешкім оны әлі сынап көрген жоқ.',
-    'reading.noFont': 'Дислексияға қолайлы қаріп жоқ.',
-    'reading.noFontNote':
-      'Мұндай қаріп енгізілмеген. Әзірге мәтін өлшемі мен контраст баптаулары оның орнын басады.',
     'reading.back': 'Аккаунтыма оралу',
   },
   az: {
     'reading.title': 'Oxu görünüşü',
     'reading.crumb': 'Oxu',
     'reading.lede':
-      'Üç ayar, seçdiyiniz anda tətbiq olunur. Onlar hesabınıza deyil, bu brauzerə aiddir: telefon və noutbuk fərqli ölçülər istəyir, ortaq cihaz isə başqasının seçimini miras almamalıdır. Onlardan istifadə etmək üçün daxil olmağınız lazım deyil.',
+      'Dörd ayar, seçdiyiniz anda tətbiq olunur. Onlar hesabınıza deyil, bu brauzerə aiddir: telefon və noutbuk fərqli ölçülər istəyir, ortaq cihaz isə başqasının seçimini miras almamalıdır. Onlardan istifadə etmək üçün daxil olmağınız lazım deyil.',
     'reading.now': 'Bu brauzerdəki ayarlar bunlardır.',
     'reading.saved': 'Bu brauzer üçün yadda saxlanıldı.',
     'reading.notKept':
@@ -1568,19 +1447,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Onları platformanı quranlar yazıb. Bir söz sizə səhv görünürsə, səhv bizimdir və dil səhifəsi bunu təklif etdiyi hər dil üçün deyir.',
     'reading.missingHeading': 'Hələ burada olmayanlar',
-    'reading.noSpeech': 'Mətni səslə oxuma yoxdur.',
-    'reading.noSpeechNote':
-      'Platforma dərsi ucadan oxumur. O, ekran oxuyucusu ilə işləmək üçün qurulub, lakin ondan asılı olan heç kim onu hələ sınamayıb.',
-    'reading.noFont': 'Disleksiyaya uyğun şrift yoxdur.',
-    'reading.noFontNote':
-      'Belə bir şrift daxil edilməyib. Hələlik mətn ölçüsü və kontrast ayarları onu əvəz edir.',
     'reading.back': 'Hesabıma qayıt',
   },
   tg: {
     'reading.title': 'Намуди хониш',
     'reading.crumb': 'Хониш',
     'reading.lede':
-      'Се танзим, ки ҳамон лаҳзаи интихоб татбиқ мешаванд. Онҳо ба ҳамин браузер тааллуқ доранд, на ба ҳисоби шумо: телефон ва ноутбук андозаҳои гуногун мехоҳанд ва дастгоҳи муштарак набояд интихоби каси дигарро мерос гирад. Барои истифодаи онҳо ворид шудан шарт нест.',
+      'Чор танзим, ки ҳамон лаҳзаи интихоб татбиқ мешаванд. Онҳо ба ҳамин браузер тааллуқ доранд, на ба ҳисоби шумо: телефон ва ноутбук андозаҳои гуногун мехоҳанд ва дастгоҳи муштарак набояд интихоби каси дигарро мерос гирад. Барои истифодаи онҳо ворид шудан шарт нест.',
     'reading.now': 'Танзимҳои ин браузер ҳаминҳоянд.',
     'reading.saved': 'Барои ин браузер нигоҳ дошта шуд.',
     'reading.notKept':
@@ -1640,19 +1513,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Онҳоро одамоне навиштаанд, ки платформаро сохтаанд. Агар калимае ба назари шумо нодуруст бошад, ин хатои мост ва саҳифаи забон инро дар бораи ҳар забоне, ки пешниҳод мекунад, мегӯяд.',
     'reading.missingHeading': 'Он чи ҳанӯз дар ин ҷо нест',
-    'reading.noSpeech': 'Хондани матн бо овоз нест.',
-    'reading.noSpeechNote':
-      'Платформа дарсро бо овози баланд намехонад. Он барои кор бо барномаи хонандаи экран сохта шудааст, вале ҳанӯз касе, ки ба чунин барнома такя мекунад, онро наозмудааст.',
-    'reading.noFont': 'Ҳуруфи мувофиқ барои дислексия нест.',
-    'reading.noFontNote':
-      'Чунин ҳуруф дохил карда нашудааст. Ҳоло танзимҳои андозаи матн ва тазод ҷои онро мегиранд.',
     'reading.back': 'Бозгашт ба ҳисоби ман',
   },
   ky: {
     'reading.title': 'Окуу көрүнүшү',
     'reading.crumb': 'Окуу',
     'reading.lede':
-      'Үч жөндөө, тандаган заматта колдонулат. Алар аккаунтуңузга эмес, ушул браузерге таандык: телефон менен ноутбукка ар башка өлчөм керек, ал эми жалпы колдонулган түзмөк башка бирөөнүн тандоосун мураска албашы керек. Аларды колдонуу үчүн кирүүнүн кереги жок.',
+      'Төрт жөндөө, тандаган заматта колдонулат. Алар аккаунтуңузга эмес, ушул браузерге таандык: телефон менен ноутбукка ар башка өлчөм керек, ал эми жалпы колдонулган түзмөк башка бирөөнүн тандоосун мураска албашы керек. Аларды колдонуу үчүн кирүүнүн кереги жок.',
     'reading.now': 'Ушул браузердеги жөндөөлөр мына ушулар.',
     'reading.saved': 'Ушул браузер үчүн сакталды.',
     'reading.notKept':
@@ -1712,19 +1579,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Аларды платформаны курган адамдар жазган. Бир сөз сизге туура эмес көрүнсө, ал биздин катабыз, жана тил барагы муну өзү сунуштаган ар бир тил тууралуу айтат.',
     'reading.missingHeading': 'Бул жерде азырынча жок нерселер',
-    'reading.noSpeech': 'Текстти үн чыгарып окуу жок.',
-    'reading.noSpeechNote':
-      'Платформа сабакты үн чыгарып окубайт. Ал экрандан окуу программасы менен иштей тургандай курулган, бирок ага таянган эч ким аны азырынча сынап көрө элек.',
-    'reading.noFont': 'Дислексияга ылайыктуу арип жок.',
-    'reading.noFontNote':
-      'Мындай арип киргизилген эмес. Азырынча тексттин өлчөмү жана контраст жөндөөлөрү анын ордун басат.',
     'reading.back': 'Аккаунтума кайтуу',
   },
   tk: {
     'reading.title': 'Okalyş görnüşi',
     'reading.crumb': 'Okamak',
     'reading.lede':
-      'Üç sazlama, saýlan badyňyza ulanylýar. Olar hasabyňyza däl-de, şu brauzere degişli: telefon bilen noutbuk dürli ölçegi isleýär, umumy ulanylýan enjam bolsa başga biriniň saýlawyny miras almaly däl. Olary ulanmak üçin ulgama girmek hökman däl.',
+      'Dört sazlama, saýlan badyňyza ulanylýar. Olar hasabyňyza däl-de, şu brauzere degişli: telefon bilen noutbuk dürli ölçegi isleýär, umumy ulanylýan enjam bolsa başga biriniň saýlawyny miras almaly däl. Olary ulanmak üçin ulgama girmek hökman däl.',
     'reading.now': 'Şu brauzerdäki sazlamalar şulardyr.',
     'reading.saved': 'Şu brauzer üçin ýatda saklandy.',
     'reading.notKept':
@@ -1784,19 +1645,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'Olary platformany guran adamlar ýazdy. Bir söz size nädogry görünse, bu biziň ýalňyşlygymyz, dil sahypasy bolsa muny hödürleýän her dili barada aýdýar.',
     'reading.missingHeading': 'Bu ýerde entek ýok zatlar',
-    'reading.noSpeech': 'Teksti ses bilen okamak ýok.',
-    'reading.noSpeechNote':
-      'Platforma sapagy sesli okamaýar. Ol ekran okaýjy bilen işlär ýaly guruldy, ýöne oňa bil baglaýan hiç kim ony entek synap görmedi.',
-    'reading.noFont': 'Disleksiýa üçin amatly şrift ýok.',
-    'reading.noFontNote':
-      'Şeýle şrift goşulmady. Häzirlikçe tekstiň ölçegi we kontrast sazlamalary onuň ornuny tutýar.',
     'reading.back': 'Hasabyma gaýt',
   },
   ta: {
     'reading.title': 'வாசிப்புத் தோற்றம்',
     'reading.crumb': 'வாசிப்பு',
     'reading.lede':
-      'மூன்று அமைப்புகள்; தேர்ந்தெடுத்த உடனே பொருந்தும். அவை இந்த உலாவிக்கு உரியவை, உங்கள் கணக்குக்கு அல்ல: தொலைபேசிக்கும் மடிக்கணினிக்கும் வெவ்வேறு அளவுகள் தேவை, பகிர்ந்து பயன்படுத்தும் சாதனம் வேறொருவரின் தேர்வைப் பெற்றுக்கொள்ளக் கூடாது. இவற்றைப் பயன்படுத்த உள்நுழைந்திருக்க வேண்டியதில்லை.',
+      'நான்கு அமைப்புகள்; தேர்ந்தெடுத்த உடனே பொருந்தும். அவை இந்த உலாவிக்கு உரியவை, உங்கள் கணக்குக்கு அல்ல: தொலைபேசிக்கும் மடிக்கணினிக்கும் வெவ்வேறு அளவுகள் தேவை, பகிர்ந்து பயன்படுத்தும் சாதனம் வேறொருவரின் தேர்வைப் பெற்றுக்கொள்ளக் கூடாது. இவற்றைப் பயன்படுத்த உள்நுழைந்திருக்க வேண்டியதில்லை.',
     'reading.now': 'இந்த உலாவியில் உள்ள அமைப்புகள் இவை.',
     'reading.saved': 'இந்த உலாவிக்காகச் சேமிக்கப்பட்டது.',
     'reading.notKept':
@@ -1857,19 +1712,13 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'அவற்றைத் தளத்தைக் கட்டியவர்கள் எழுதினார்கள். ஏதேனும் சொல் தவறாகத் தோன்றினால், தவறு எங்களுடையது; மொழிப் பக்கம் தான் வழங்கும் ஒவ்வொரு மொழிக்கும் இதையே சொல்கிறது.',
     'reading.missingHeading': 'இங்கே இன்னும் இல்லாதவை',
-    'reading.noSpeech': 'உரையைக் குரலாக வாசிக்கும் வசதி இல்லை.',
-    'reading.noSpeechNote':
-      'தளம் பாடத்தை உரக்க வாசிப்பதில்லை. திரை வாசிப்பானுடன் வேலை செய்யும்படி அது கட்டப்பட்டுள்ளது; ஆனால் அதை நம்பியிருக்கும் எவரும் இன்னும் அதைச் சோதிக்கவில்லை.',
-    'reading.noFont': 'வாசிப்புக் குறைபாட்டுக்கு ஏற்ற எழுத்துரு இல்லை.',
-    'reading.noFontNote':
-      'அப்படி எதுவும் சேர்க்கப்படவில்லை. இப்போதைக்கு எழுத்தின் அளவு, நிற வேறுபாடு அமைப்புகளே மாற்று.',
     'reading.back': 'என் கணக்குக்குத் திரும்பு',
   },
   ne: {
     'reading.title': 'पढ्ने देखावट',
     'reading.crumb': 'पढाइ',
     'reading.lede':
-      'तीन सेटिङ, छान्नेबित्तिकै लागू हुन्छन्। ती यही ब्राउजरका हुन्, तपाईंको खाताका होइनन्: फोन र ल्यापटपलाई फरक आकार चाहिन्छ, र साझा यन्त्रले अरू कसैको रोजाइ पाउनु हुँदैन। यी प्रयोग गर्न साइन इन भएको हुनुपर्दैन।',
+      'चार सेटिङ, छान्नेबित्तिकै लागू हुन्छन्। ती यही ब्राउजरका हुन्, तपाईंको खाताका होइनन्: फोन र ल्यापटपलाई फरक आकार चाहिन्छ, र साझा यन्त्रले अरू कसैको रोजाइ पाउनु हुँदैन। यी प्रयोग गर्न साइन इन भएको हुनुपर्दैन।',
     'reading.now': 'यस ब्राउजरका सेटिङ यिनै हुन्।',
     'reading.saved': 'यस ब्राउजरका लागि सुरक्षित गरियो।',
     'reading.notKept':
@@ -1928,12 +1777,6 @@ export const READING: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'reading.unreviewedNote':
       'ती यो मञ्च बनाउनेहरूले लेखेका हुन्। कुनै शब्द गलत लाग्यो भने गल्ती हाम्रै हो, र भाषा पृष्ठले आफूले उपलब्ध गराउने हरेक भाषाका बारेमा यही भन्छ।',
     'reading.missingHeading': 'यहाँ अझै नभएका कुरा',
-    'reading.noSpeech': 'पाठलाई आवाजमा पढ्ने सुविधा छैन।',
-    'reading.noSpeechNote':
-      'मञ्चले पाठ ठूलो स्वरमा पढ्दैन। यो स्क्रिन रिडरसँग काम गर्ने गरी बनाइएको छ, तर त्यसमा भर पर्ने कसैले अझै यसलाई जाँचेका छैनन्।',
-    'reading.noFont': 'डिस्लेक्सियाका लागि उपयुक्त फन्ट छैन।',
-    'reading.noFontNote':
-      'त्यस्तो कुनै फन्ट समावेश गरिएको छैन। अहिलेका लागि पाठको आकार र कन्ट्रास्टका सेटिङ नै त्यसका विकल्प हुन्।',
     'reading.back': 'मेरो खातामा फर्कनुहोस्',
   },
 };
