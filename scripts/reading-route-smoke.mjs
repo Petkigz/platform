@@ -388,6 +388,24 @@ try {
       console.log('A browser that keeps no cookie, in Arabic: the text still grows, one alert says the setting will be gone on the next page, and "saved" is not said.');
     }
 
+    // ------------------------------- the dyslexia font, where it is tightest
+    // (2026-11-27) Its letters are wider than the device's. The largest text
+    // on the narrowest phone is where a word would first push a card wider
+    // than the screen, on this page and on the two pages before an account.
+    for (const width of [320, 390]) {
+      for (const path of [PATH, '/language', '/sign-in']) {
+        const { context, tab, errors } = await open(path, 'en', width, { cookies: [{ name: 'ayahspring_a11y', value: 'v1.larger.normal.system.dyslexic' }] });
+        assert.equal(await tab.evaluate(() => document.documentElement.getAttribute('data-letters')), 'dyslexic');
+        await tab.evaluate(() => document.fonts.ready);
+        assert.equal(await tab.evaluate(() => document.fonts.check('16px OpenDyslexic', 'Reading')), true, `${path} ${width}: the font is not in use`);
+        await fits(tab, width, `${path} en ${width}, largest text in the dyslexia font`);
+        assert.deepEqual(errors, [], `${path} ${width}: page errors`);
+        if (process.env.RESPONSIVE_SCREENSHOTS && path === PATH) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/reading-en-${width}-letters.png`, fullPage: true });
+        await context.close();
+      }
+    }
+    console.log('The dyslexia font with the largest text at 320 and 390px: the reading, language and sign-in pages do not scroll sideways and nothing in a card is wider than the card.');
+
     // ------------------------------------------------------------- it fits
     for (const [code, heading, direction] of [['en', 'How this reads', 'ltr'], ['ar', 'طريقة العرض', 'rtl'], ['fr', 'Confort de lecture', 'ltr'], ['ur', 'یہ کیسا دکھتا ہے', 'rtl']]) {
       for (const width of [320, 390, 1440]) {
@@ -402,18 +420,18 @@ try {
           await fits(tab, width, `reading ${code} ${width} ${size}`);
           // Each name sits above its note rather than beside it in a squeezed column.
           const rows = await tab.locator('main ul.lessons.stacked li').evaluateAll((els) => els.map((el) => { const name = el.querySelector('strong').getBoundingClientRect(); const note = el.querySelector('div').getBoundingClientRect(); return note.top >= name.bottom - 1; }));
-          assert.equal(rows.length, 12, `${code} ${width}: six things true, four about language, two missing`);
+          assert.equal(rows.length, 12, `${code} ${width}: seven things true, four about language, one not here yet`);
           assert.ok(rows.every(Boolean), `${code} ${width}: a note sits beside its name`);
           // A choice is its circle and then its words, on one line of the card.
           const choices = await tab.locator('main label.radio').evaluateAll((els) => els.map((el) => { const box = el.querySelector('input').getBoundingClientRect(); const words = el.querySelector('span').getBoundingClientRect(); return box.width > 8 && box.width < 40 && words.width > 100; }));
-          assert.equal(choices.length, 7);
+          assert.equal(choices.length, 9);
           assert.ok(choices.every(Boolean), `${code} ${width} ${size}: a choice's circle is stretched or its words are squeezed`);
           assert.deepEqual(errors, [], `${code} ${width}: page errors`);
           if (process.env.RESPONSIVE_SCREENSHOTS && (width === 1440 || (width === 390 && size === 'larger'))) await tab.screenshot({ path: `${process.env.RESPONSIVE_SCREENSHOTS}/reading-${code}-${width}-${size}.png`, fullPage: true });
           await context.close();
         }
       }
-      console.log(`Synthetic reading page in ${code}: fits at 320, 390 and 1440px, and at 320 and 390px with the largest text; twelve names, each above its note; seven choices, each a circle beside its words`);
+      console.log(`Synthetic reading page in ${code}: fits at 320, 390 and 1440px, and at 320 and 390px with the largest text; twelve names, each above its note; nine choices, each a circle beside its words`);
     }
   }
   console.log('Reading HTTP smoke passed. Not real Auth, and not a test by anybody who relies on a screen reader or a magnifier.');
