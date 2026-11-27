@@ -10967,3 +10967,36 @@ started: recitation correction, native apps, push notifications.
   eleven languages, and on no telephone; nobody with dyslexia and nobody
   who relies on a screen reader has tried either. Fourteen sentences in
   27 languages, read by no speaker.
+- **Asking for help, in the reader's language (2026-11-27).** `/support`
+  and `/support/<caseNumber>` were English for everybody. They are now in
+  the twenty-seven languages with nothing held (`messages/support.ts`, 72
+  sentences): the help search, the request form, the list, one request
+  with its conversation, the reply and the withdrawal. Topics and states
+  have a key each (`CATEGORY_KEY`, `STATUS_KEY` in `lib/support.ts`), and
+  a test holds the English of each equal to the label the staff queue
+  prints. A subject and a message stay as written, each setting its own
+  direction, with the Translate button under a message somebody else
+  wrote when `platform.translate` is on. *What staff see under a request
+  did not change and is still English:* it moved, word for word, into
+  `staff-panel.tsx` and `staff-case-actions.tsx`, marked `lang="en"`, and
+  the person who asked is no longer sent the staff form's code.
+  **Three things that were wrong and are corrected.** The route's English
+  sentence was printed under the form whatever the page's language; a
+  refusal now travels by name (`code`) and the form says it in the page's
+  words. A reply that was no answer at all (a gateway's page, a dropped
+  connection) was shown as "The request was not sent", which nobody knew;
+  from the database it is a 502 now, and the person is
+  told that nobody can say whether it was sent and to look before sending
+  again. A closed account's refusal arrived as `42501` and was answered
+  409 where 403 was meant. And the page said support was "not taking
+  requests" when the switch could not be read; it says that only when the
+  switch is known to be off.
+  *Checked by:* `support-page.test.ts`, and `scripts/support-route-smoke.mjs`
+  against a synthetic Auth and REST (in `ci.yml`, and with a browser in
+  the responsive workflow: three languages at 320, 390 and 1440px and at
+  320px with the largest text and the dyslexia font).
+  **Not done:** no request was opened, answered or withdrawn against the
+  hosted database from these pages; `platform.support` is off there, so
+  nobody has seen them live; no speaker has read the 72 sentences; a
+  help article is shown as staff wrote it, in whatever language that was;
+  and `/admin/support` is English.

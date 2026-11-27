@@ -2,68 +2,60 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  BODY_MAX,
-  SUPPORT_PRIORITIES,
-  PRIORITY_LABEL,
-  type SupportPriority,
-  type SupportStatus,
-} from '@/lib/support';
+import { BODY_MAX, supportRefusalOf, type CaseWords } from '@/lib/support';
 
 /**
- * What can be done to a case from its own page.
+ * What the person who asked can do to their own request: add to it, or
+ * withdraw it.
  *
- * Two different endpoints, because two different sets of rules apply: a
- * requester replies and may withdraw, staff answer, triage, resolve and close.
- * The split is in the database too — this component only decides which door to
- * knock on, and what it offers to show.
+ * (Staff have `staff-case-actions.tsx`. Until 2026-11-27 one component served
+ * both seats, in English.)
  *
- * The wording on resolve is the part worth getting right. Resolving is what the
- * requester reads, so the field says so; and a reply that reopens a resolved
- * case is expected behaviour, not a failure, so nothing here discourages it.
+ * A reply that reopens a resolved request is expected behaviour, not a
+ * failure, so nothing here discourages it: the page hands over a sentence that
+ * says so when the request is resolved.
+ *
+ * It carries no sentence of its own. The page hands it `words` in the reader's
+ * language; a refusal is said by its name (`supportRefusalOf`), and an answer
+ * that never arrived, or that is not a refusal, is "nobody can say whether
+ * that was saved". The route's English sentence is never printed.
  */
-export function CaseActions({
-  caseId,
-  status,
-  priority,
-  assignedTo,
-  isStaff,
-  myUserId,
-}: {
-  caseId: string;
-  status: SupportStatus;
-  priority: SupportPriority;
-  assignedTo: string | null;
-  isStaff: boolean;
-  myUserId: string;
-}) {
+export function CaseActions({ caseId, words }: { caseId: string; words: CaseWords }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [busy, setBusy] = useState(false);
   const [reply, setReply] = useState('');
-  const [internal, setInternal] = useState(false);
-  const [note, setNote] = useState('');
   const [reason, setReason] = useState('');
-  const [nextPriority, setNextPriority] = useState<string>(priority);
   const [message, setMessage] = useState<string | null>(null);
   const [tone, setTone] = useState<'info' | 'error'>('info');
 
-  const closed = status === 'closed';
-  const endpoint = isStaff ? '/api/admin/support' : '/api/support';
+  const refuse = (sentence: string) => {
+    setTone('error');
+    setMessage(sentence);
+  };
 
-  /** Returns whether the change landed — state updates are not visible to the
-   *  caller in the same tick, so the outcome has to come back as a value. */
-  async function send(payload: Record<string, unknown>, success: string): Promise<boolean> {
+  /** Whether the change landed: the caller clears its box only then. */
+  async function send(payload: Record<string, unknown>, success: string, empty: string): Promise<boolean> {
     setMessage(null);
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ caseId, ...payload }),
-    });
-    const json = (await res.json().catch(() => ({}))) as { error?: string };
+    setBusy(true);
+    let status = 0;
+    let code: unknown;
+    try {
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ caseId, ...payload }),
+      });
+      status = res.status;
+      code = ((await res.json().catch(() => ({}))) as { code?: unknown }).code;
+    } catch {
+      // No answer at all: a status of zero, which is "nobody can say".
+    }
+    setBusy(false);
 
-    if (!res.ok) {
-      setTone('error');
-      setMessage(json.error ?? 'That change was not saved.');
+    if (status < 200 || status > 299) {
+      const why = supportRefusalOf(status, code);
+      refuse(why === 'empty' ? empty : why === 'tooMany' || why === 'needSubject' ? words.refused : words[why]);
       return false;
     }
 
@@ -74,46 +66,25 @@ export function CaseActions({
   }
 
   async function submitReply() {
-    if (!reply.trim()) {
-      setTone('error');
-      setMessage('Write a reply first.');
-      return;
-    }
-    const isInternalNote = isStaff && internal;
-    const ok = await send(
-      { action: 'reply', body: reply, isInternal: isInternalNote },
-      isInternalNote
-        ? 'Internal note added. The requester cannot see it.'
-        : status === 'resolved'
-          ? 'Reply sent — this reopens the request.'
-          : 'Reply sent.',
-    );
-    if (ok) {
-      setReply('');
-      setInternal(false);
-    }
+    if (!reply.trim()) return refuse(words.needReply);
+    if (await send({ action: 'reply', body: reply }, words.replySent, words.needReply)) setReply('');
   }
 
-  if (closed) {
-    return (
-      <section className="card">
-        <h2>This request is closed</h2>
-        <p className="muted" style={{ marginBottom: 0 }}>
-          Closed cases cannot be replied to. Open a new request if you still
-          need help — it will start fresh, with a new case number.
-        </p>
-      </section>
-    );
+  async function withdraw() {
+    if (!reason.trim()) return refuse(words.needReason);
+    if (await send({ action: 'close', reason }, words.withdrawn, words.needReason)) setReason('');
   }
+
+  const waiting = busy || pending;
 
   return (
-    <section className="card">
-      <h2>{isStaff ? 'Answer this request' : 'Add to your request'}</h2>
+    <section className="card" data-support-form="case">
+      <h2>{words.heading}</h2>
 
-      <div style={{ display: 'grid', gap: '0.75rem' }}>
+      <div className="support-fields">
         <div>
           <label className="eyebrow" htmlFor={`reply-${caseId}`}>
-            Reply
+            {words.reply}
           </label>
           <textarea
             id={`reply-${caseId}`}
@@ -121,139 +92,50 @@ export function CaseActions({
             value={reply}
             maxLength={BODY_MAX}
             onChange={(e) => setReply(e.target.value)}
-            placeholder={
-              isStaff
-                ? 'What you found, and what happens next.'
-                : 'Anything else we should know. Replying to a resolved request reopens it.'
-            }
-            disabled={pending}
+            placeholder={words.replyExample}
+            aria-describedby={words.replyReopens ? `reply-note-${caseId}` : undefined}
+            disabled={waiting}
+            dir="auto"
           />
-        </div>
-
-        {isStaff && (
-          <label className="row" style={{ gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="checkbox"
-              checked={internal}
-              onChange={(e) => setInternal(e.target.checked)}
-              disabled={pending}
-            />
-            <span className="muted">
-              Internal note — visible to staff only, never to the requester
+          {words.replyReopens && (
+            <span className="muted support-small" id={`reply-note-${caseId}`}>
+              {words.replyReopens}
             </span>
-          </label>
-        )}
-
-        <div className="row" style={{ gap: '0.5rem' }}>
-          <button type="button" className="btn" disabled={pending} onClick={submitReply}>
-            {pending ? 'Sending…' : isStaff && internal ? 'Add internal note' : 'Send reply'}
-          </button>
+          )}
         </div>
+
+        <button type="button" className="btn" disabled={waiting} onClick={submitReply}>
+          {waiting ? words.sending : words.sendReply}
+        </button>
       </div>
 
-      {isStaff && (
-        <div
-          className="section"
-          style={{ borderTop: '1px solid var(--line, #e6e8e6)', marginTop: '1rem', paddingTop: '1rem', display: 'grid', gap: '0.75rem' }}
-        >
-          <h3 style={{ margin: 0 }}>Triage</h3>
-
-          <div className="row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-            <label className="eyebrow" htmlFor={`priority-${caseId}`}>
-              Priority
-            </label>
-            <select
-              id={`priority-${caseId}`}
-              value={nextPriority}
-              onChange={(e) => setNextPriority(e.target.value)}
-              disabled={pending}
-            >
-              {SUPPORT_PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {PRIORITY_LABEL[p]}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="btn secondary"
-              disabled={pending || nextPriority === priority}
-              onClick={() => send({ action: 'priority', priority: nextPriority }, 'Priority updated.')}
-            >
-              Set priority
-            </button>
-            {assignedTo !== myUserId && (
-              <button
-                type="button"
-                className="btn secondary"
-                disabled={pending || status === 'resolved'}
-                onClick={() => send({ action: 'assign' }, 'Assigned to you.')}
-              >
-                Assign to me
-              </button>
-            )}
-          </div>
-
-          <div>
-            <label className="eyebrow" htmlFor={`note-${caseId}`}>
-              Resolution — the requester reads this
-            </label>
-            <textarea
-              id={`note-${caseId}`}
-              rows={2}
-              value={note}
-              maxLength={BODY_MAX}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="What was done, in the words you want them to see."
-              disabled={pending}
-            />
-            <button
-              type="button"
-              className="btn"
-              disabled={pending || status === 'resolved'}
-              onClick={() => send({ action: 'resolve', note }, 'Marked resolved.')}
-            >
-              Mark resolved
-            </button>
-          </div>
+      <div className="support-fields support-apart">
+        <h3>{words.withdrawHeading}</h3>
+        <div>
+          <label className="eyebrow" htmlFor={`reason-${caseId}`}>
+            {words.reason}
+          </label>
+          <input
+            id={`reason-${caseId}`}
+            value={reason}
+            maxLength={BODY_MAX}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={words.reasonExample}
+            aria-describedby={`reason-note-${caseId}`}
+            disabled={waiting}
+            dir="auto"
+          />
         </div>
-      )}
-
-      <div
-        className="section"
-        style={{ borderTop: '1px solid var(--line, #e6e8e6)', marginTop: '1rem', paddingTop: '1rem', display: 'grid', gap: '0.5rem' }}
-      >
-        <h3 style={{ margin: 0 }}>{isStaff ? 'Close this case' : 'Withdraw my request'}</h3>
-        <label className="eyebrow" htmlFor={`reason-${caseId}`}>
-          Reason (required)
-        </label>
-        <input
-          id={`reason-${caseId}`}
-          value={reason}
-          maxLength={BODY_MAX}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder={
-            isStaff
-              ? 'For example: duplicate of SC-000123, or settled by phone.'
-              : 'For example: I found the answer myself.'
-          }
-          disabled={pending}
-        />
-        <button
-          type="button"
-          className="btn ghost"
-          disabled={pending}
-          onClick={() => send({ action: 'close', reason }, 'Closed.')}
-        >
-          {isStaff ? 'Close case' : 'Withdraw request'}
+        <button type="button" className="btn ghost" disabled={waiting} onClick={withdraw}>
+          {words.withdraw}
         </button>
-        <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-          Closing is final: neither side can reply afterwards.
+        <p className="muted support-small" id={`reason-note-${caseId}`}>
+          {words.final}
         </p>
       </div>
 
       {message && (
-        <div className={`notice ${tone === 'error' ? 'error' : 'warn'}`} role="status">
+        <div className={`notice ${tone === 'error' ? 'error' : 'warn'}`} role={tone === 'error' ? 'alert' : 'status'}>
           {message}
         </div>
       )}

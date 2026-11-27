@@ -2679,3 +2679,39 @@ html[data-motion='reduce'] *::after {
 .translate-result { inline-size: 100%; padding-inline-start: 0.75rem; border-inline-start: 3px solid var(--border); min-width: 0; }
 .translate-note { margin: 0; color: var(--text-soft); font-size: 0.85rem; overflow-wrap: anywhere; }
 .translate-text { margin: 0.25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Asking for help (2026-11-27): /support and one request. The facts under a
+   subject (its number, its topic, its day) are separate pieces with a gap
+   between them, not a sentence with dots in it, so they wrap and mirror by
+   themselves. What somebody wrote keeps its line breaks and may break
+   anywhere: a long address or an order number must not widen a phone. */
+.support-facts { display: flex; flex-wrap: wrap; gap: 0.15rem 0.75rem; min-width: 0; overflow-wrap: anywhere; }
+.support-said { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+p.support-said { margin: 0.2rem 0 0; }
+.support-article { margin: 0.25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.support-small { font-size: 0.85rem; }
+p.support-small { margin: 0; }
+.support-last { margin-bottom: 0; }
+.support-badges { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; min-width: 0; }
+/* One card under another on these two pages, with air between them. */
+.support-page > .card + .card, .support-page > .card + .support-staff { margin-top: 1rem; }
+.support-fields { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); justify-items: start; }
+.support-fields > div { inline-size: 100%; min-width: 0; }
+.support-fields input, .support-fields textarea, .support-fields select { inline-size: 100%; max-inline-size: 100%; }
+.support-fields > .notice { inline-size: 100%; }
+.support-fields h3 { margin: 0; }
+.support-apart { border-top: 1px solid var(--border); margin-top: 1rem; padding-top: 1rem; gap: 0.5rem; }
+.support-fields + .notice, .support-apart + .notice { margin-top: 0.75rem; }
+.support-thread { align-items: flex-start; }
+.support-thread > li { display: grid; gap: 0.25rem; inline-size: 100%; grid-template-columns: minmax(0, 1fr); justify-items: start; }
+.support-internal { white-space: normal; overflow-wrap: anywhere; }
+/* What staff alone see under a request stays in English and left to right. */
+.support-staff { display: grid; gap: 1rem; margin-top: 1rem; min-width: 0; text-align: start; }
+.support-staff > .eyebrow { margin: 0; }
+/* A request in the list: its subject and facts, then its state. On a narrow
+   phone with large text the state goes under the subject rather than past
+   the edge, and a long state may break. */
+.support-list > li { flex-wrap: wrap; }
+.support-list .t { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.support-list .badge { white-space: normal; overflow-wrap: anywhere; max-inline-size: 100%; }
+.support-badges .badge { white-space: normal; overflow-wrap: anywhere; max-inline-size: 100%; }

@@ -20,7 +20,13 @@ test('owner hold data is validated rather than treating a failed list as empty',
 });
 
 test('pause controls are owner-only and describe their limits and uncertain results', () => {
-  const page=readFileSync(new URL('../app/support/[caseNumber]/page.tsx',import.meta.url),'utf8');
+  // (2026-11-27: what staff alone see moved out of the page, unchanged, into
+  // `staff-panel.tsx` when the page was put into the reader's language. The
+  // page mounts the panel for staff only.)
+  const mount=readFileSync(new URL('../app/support/[caseNumber]/page.tsx',import.meta.url),'utf8');
+  assert.match(mount, /\{isStaff \? \(\s*<StaffPanel /);
+  assert.match(mount, /const isStaff = privileged === true;/);
+  const page=readFileSync(new URL('../app/support/[caseNumber]/staff-panel.tsx',import.meta.url),'utf8');
   const action=readFileSync(new URL('../app/support/[caseNumber]/cleanup-hold-action.ts',import.meta.url),'utf8');
   const list=readFileSync(new URL('../app/admin/retention/page.tsx',import.meta.url),'utf8');
   assert.match(page, /owner && <section/);

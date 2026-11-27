@@ -1,22 +1,33 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import {
-  CATEGORY_LABEL,
-  fetchCaseByNumber,
-  PRIORITY_LABEL,
-  STATUS_LABEL,
-} from '@/lib/support';
+import { LOCALE_COOKIE, chooseLocale, formatDateTime, formatDay, languageShownFor, translator } from '@/lib/i18n';
+import { CATEGORY_KEY, fetchCaseByNumber, STATUS_KEY, type CaseWords } from '@/lib/support';
 import { TranslateButton } from '@/components/translate-button';
 import { translateFor } from '@/lib/translate-reader';
 import { CaseActions } from './case-actions';
-import { CaseHistory } from './case-history';
-import { parseSupportCleanupHoldStatus, parseSupportCleanupHoldHistory, parseSupportHeldVersions, SUPPORT_HOLD_ID } from '@/lib/support-case-cleanup-hold';
-import { changeCleanupHold } from './cleanup-hold-action';
+import { StaffPanel } from './staff-panel';
 
-export const metadata = { title: 'Support request' };
 export const dynamic = 'force-dynamic';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'support') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('support.caseTitle') };
+}
 
 /**
  * One support case, by its human reference.
@@ -31,10 +42,18 @@ export const dynamic = 'force-dynamic';
  * one would not make the page safer — RLS already is — and it would break the
  * staff queue, which links here.
  *
- * One part is not the same for both seats: the history panel below is mounted for
- * staff only. It reads tables the requester cannot see, through a function that
- * refuses anybody who is not staff, so showing it to a requester would render an
- * error where their conversation should be.
+ * One part is not the same for both seats: under the conversation the person
+ * who asked gets the form that replies and withdraws, and staff get
+ * `StaffPanel` instead (priority, the owner's pause on cleanup, the history,
+ * triage). The panel reads tables the requester cannot see, through functions
+ * that refuse anybody who is not staff.
+ *
+ * **In the reader's language** since 2026-11-27 (`messages/support.ts`): the
+ * head, the conversation and the asker's form. The staff panel stays in
+ * English and is marked as English. What somebody wrote (the subject, a
+ * message, how it was resolved, why it was closed) is shown as written, in
+ * its own direction; a moment is written in the page's language and names its
+ * time zone.
  */
 export default async function SupportCasePage({
   params, searchParams,
@@ -63,178 +82,121 @@ export default async function SupportCasePage({
   // translate what the other wrote. Null when translation is off.
   const translate = await translateFor(supabase);
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const moment = (iso: string) => formatDateTime(shown.code, iso, 'UTC');
+
   const { supportCase: supportCaseRow, messages } = found;
   const open = supportCaseRow.status !== 'closed';
-  const query = await searchParams;
-  const result = query.cleanupHold;
-  const ownerResult = isStaff ? await supabase.rpc('safeguarding_owner_status') : null;
-  const owner = !ownerResult?.error && ownerResult?.data?.is_owner === true;
-  const holdResult = owner ? await supabase.rpc('support_case_cleanup_hold_status', { p_case_id: supportCaseRow.id }) : null;
-  const hold = holdResult && !holdResult.error ? parseSupportCleanupHoldStatus(holdResult.data) : null;
-  const eventCursorValid = !query.holdEventAfter || SUPPORT_HOLD_ID.test(query.holdEventAfter);
-  const eventResult = owner && eventCursorValid ? await supabase.rpc('support_case_cleanup_hold_history', {
-    p_case_id: supportCaseRow.id, p_after: query.holdEventAfter ?? null, p_limit: 51,
-  }) : null;
-  const events = eventResult && !eventResult.error ? parseSupportCleanupHoldHistory(eventResult.data) : null;
-  const eventNext = events && events.length > 50 ? events[49]?.id : null;
-  const versionCursorValid = !query.heldVersionAfter || SUPPORT_HOLD_ID.test(query.heldVersionAfter);
-  const versionResult = owner && hold?.held && versionCursorValid ? await supabase.rpc('support_case_held_version_page', {
-    p_case_id: supportCaseRow.id, p_after: query.heldVersionAfter ?? null, p_limit: 21,
-  }) : null;
-  const versions = versionResult && !versionResult.error ? parseSupportHeldVersions(versionResult.data) : null;
-  const versionNext = versions && versions.length > 20 ? versions[19]?.id : null;
+  const badge = supportCaseRow.status === 'resolved' ? 'ok' : supportCaseRow.status === 'closed' ? 'neutral' : 'warn';
 
+  const words: CaseWords = {
+    heading: t('support.addHeading'),
+    reply: t('support.reply'),
+    replyExample: t('support.replyExample'),
+    replyReopens: supportCaseRow.status === 'resolved' ? t('support.replyReopens') : null,
+    sendReply: t('support.sendReply'),
+    sending: t('auth.sending'),
+    replySent: t(supportCaseRow.status === 'resolved' ? 'support.replyReopened' : 'support.replySent'),
+    needReply: t('support.needReply'),
+    withdrawHeading: t('support.withdrawHeading'),
+    reason: t('support.reason'),
+    reasonExample: t('support.reasonExample'),
+    withdraw: t('support.withdraw'),
+    withdrawn: t('support.withdrawn'),
+    needReason: t('support.needReason'),
+    final: t('support.final'),
+    tooLong: t('support.tooLong'),
+    notTaking: t('support.notTaking'),
+    signedOut: t('support.signedOut'),
+    gone: t('support.gone'),
+    refused: t('support.refused'),
+    unsure: t('support.unsureSaved'),
+  };
 
   return (
-    <div className="page">
+    <div className="page support-page" {...frame}>
       <nav className="crumbs">
-        <Link href="/support">Help</Link>
+        <Link href="/support">{t('footer.help')}</Link>
         <span aria-hidden>›</span>
-        <span>{supportCaseRow.caseNumber}</span>
+        <bdi dir="ltr">{supportCaseRow.caseNumber}</bdi>
       </nav>
 
       <div className="page-head">
-        <p className="eyebrow">
-          {supportCaseRow.caseNumber} · {CATEGORY_LABEL[supportCaseRow.category] ?? supportCaseRow.category}
-          {' · opened '}
-          {new Date(supportCaseRow.createdAt).toLocaleDateString()}
-          {isStaff ? ` · priority ${PRIORITY_LABEL[supportCaseRow.priority] ?? supportCaseRow.priority}` : ''}
-        </p>
-        <h1>{supportCaseRow.subject}</h1>
-        <div className="row" style={{ gap: '0.5rem', marginTop: '0.75rem' }}>
-          <span
-            className={`badge ${
-              supportCaseRow.status === 'resolved'
-                ? 'ok'
-                : supportCaseRow.status === 'closed'
-                  ? 'neutral'
-                  : 'warn'
-            }`}
-          >
-            {STATUS_LABEL[supportCaseRow.status] ?? supportCaseRow.status}
+        <p className="eyebrow support-facts">
+          <bdi dir="ltr">{supportCaseRow.caseNumber}</bdi>
+          <span>{CATEGORY_KEY[supportCaseRow.category] ? t(CATEGORY_KEY[supportCaseRow.category]) : supportCaseRow.category}</span>
+          <span>
+            {t('support.opened')} <bdi>{formatDay(shown.code, supportCaseRow.createdAt)}</bdi>
           </span>
-          {isStaff && supportCaseRow.assigneeName && (
-            <span className="badge neutral">With {supportCaseRow.assigneeName}</span>
-          )}
+        </p>
+        <h1 dir="auto">{supportCaseRow.subject}</h1>
+        <div className="support-badges">
+          <span className={`badge ${badge}`} data-support-status={supportCaseRow.status}>
+            {STATUS_KEY[supportCaseRow.status] ? t(STATUS_KEY[supportCaseRow.status]) : supportCaseRow.status}
+          </span>
         </div>
       </div>
 
       {supportCaseRow.status === 'resolved' && supportCaseRow.resolutionNote && (
-        <section className="card">
-          <h2>How this was resolved</h2>
-          <p>{supportCaseRow.resolutionNote}</p>
-          <p className="muted" style={{ marginBottom: 0 }}>
-            If this did not fix it, reply below and the request reopens.
-          </p>
+        <section className="card" data-support-part="resolved">
+          <h2>{t('support.resolvedHeading')}</h2>
+          <p dir="auto">{supportCaseRow.resolutionNote}</p>
+          <p className="muted support-last">{t('support.resolvedNote')}</p>
         </section>
       )}
 
       {supportCaseRow.status === 'closed' && supportCaseRow.closeReason && (
-        <section className="card">
-          <h2>Closed</h2>
-          <p className="muted">{supportCaseRow.closeReason}</p>
+        <section className="card" data-support-part="closed">
+          <h2>{t('support.stClosed')}</h2>
+          <p className="muted" dir="auto">{supportCaseRow.closeReason}</p>
         </section>
       )}
 
-      <section className="card">
-        <h2>Conversation</h2>
+      <section className="card" data-support-part="conversation">
+        <h2>{t('support.conversation')}</h2>
 
-        <ol className="lessons" style={{ alignItems: 'flex-start' }}>
-          <li style={{ display: 'grid', gap: '0.25rem', width: '100%' }}>
-            <span className="t">{supportCaseRow.body}</span>
+        <ol className="lessons support-thread">
+          <li>
+            <span className="t support-said" dir="auto">{supportCaseRow.body}</span>
             <TranslateButton text={`${supportCaseRow.subject}\n\n${supportCaseRow.body}`} words={translate} />
-            <span className="muted">
-              {supportCaseRow.requesterName ?? 'You'} ·{' '}
-              {new Date(supportCaseRow.createdAt).toLocaleString()}
+            <span className="muted support-facts">
+              {supportCaseRow.requesterName ? <bdi>{supportCaseRow.requesterName}</bdi> : <span>{t('support.you')}</span>}
+              <bdi>{moment(supportCaseRow.createdAt)}</bdi>
             </span>
           </li>
 
-          {messages.map((m) => (
-            <li key={m.id} style={{ display: 'grid', gap: '0.25rem', width: '100%' }}>
-              <span className="t">{m.body}</span>
-              {m.authorIsMe ? null : <TranslateButton text={m.body} words={translate} />}
-              <span className="muted">
-                {m.authorIsMe
-                  ? 'You'
-                  : m.authorIsStaff
-                    ? (m.authorName ?? 'AyahSpring support')
-                    : (m.authorName ?? 'You')}
-                {' · '}
-                {new Date(m.createdAt).toLocaleString()}
-              </span>
-              {m.isInternal && (
-                <span className="badge neutral" style={{ justifySelf: 'start' }}>
-                  Internal note — not visible to the requester
+          {messages.map((m) => {
+            const named = m.authorIsMe ? null : m.authorName;
+            return (
+              <li key={m.id}>
+                <span className="t support-said" dir="auto">{m.body}</span>
+                {m.authorIsMe ? null : <TranslateButton text={m.body} words={translate} />}
+                <span className="muted support-facts">
+                  {named ? <bdi>{named}</bdi> : <span>{t(m.authorIsStaff && !m.authorIsMe ? 'support.staff' : 'support.you')}</span>}
+                  <bdi>{moment(m.createdAt)}</bdi>
                 </span>
-              )}
-            </li>
-          ))}
+                {m.isInternal && <span className="badge neutral support-internal">{t('support.internal')}</span>}
+              </li>
+            );
+          })}
         </ol>
-
-        {!open && (
-          <p className="muted">
-            This request is closed. If you still need help,{' '}
-            <Link href="/support">open a new one</Link>.
-          </p>
-        )}
       </section>
 
-      {owner && <section id="cleanup-hold" className="card">
-        <h2>Pause scheduled case cleanup</h2>
-        <p className="muted">Owner only. This pauses scheduled deletion and defers account-closure erasure of this case and its messages. Existing support access still applies. It cannot restore erased information or protect against every other deletion path or loss of external copies. Review the concern separately.</p>
-        <p className="muted"><Link href="/admin/retention#support-case-holds">View paused cases</Link>. Reasons are kept privately after release; avoid names and sensitive details.</p>
-        {result === 'held' && <p role="status">Scheduled cleanup was paused.</p>}
-        {result === 'released' && <p role="status">The pause was released. Any deferred account-closure erasure was applied; if the case is due, cleanup may remove it immediately.</p>}
-        {result === 'already' && <p role="status">No change was needed; check the current status.</p>}
-        {result === 'uncertain' && <p className="notice warn" role="alert">The action could not be confirmed. Refresh and check the current status before trying again.</p>}
-        {result === 'invalid' && <p className="notice warn" role="alert">Confirm the action and give a reason.</p>}
-        {hold?.held && <section aria-label="Saved prior versions">
-          <h3>Saved prior versions</h3>
-          <p className="muted">Private to the safeguarding owner. When a held case or message is edited, its previous version is saved here. The current conversation is above. Versions are erased on release; review the evidence before releasing. Earlier losses and outside copies cannot be restored. Entries are ordered by ID, not date; check the first page again for new entries.</p>
-          {versions === null ? <p className="notice warn">Saved versions could not be loaded. Do not assume there are none.</p>
-            : versions.length === 0 ? <p className="muted">No prior versions were returned on this page.</p>
-            : versions.slice(0,20).map(version => <details key={version.id}>
-              <summary>{version.sourceKind === 'case' ? 'Case' : 'Message'} · saved {new Date(version.capturedAt).toLocaleString()}</summary>
-              <dl>{Object.entries(version.content).map(([key,value]) => <div key={key}>
-                <dt>{key.replaceAll('_',' ')}</dt><dd style={{overflowWrap:'anywhere',whiteSpace:'pre-wrap'}}>{value === null ? '—' : typeof value === 'string' ? value : JSON.stringify(value)}</dd>
-              </div>)}</dl>
-            </details>)}
-          {query.heldVersionAfter && <p><Link href={`/support/${supportCaseRow.caseNumber}#cleanup-hold`}>First versions page</Link></p>}
-          {versionNext && <p><Link href={`/support/${supportCaseRow.caseNumber}?${new URLSearchParams({ heldVersionAfter: versionNext })}#cleanup-hold`}>More prior versions</Link></p>}
-        </section>}
-        <h3>Pause history</h3>
-        <p className="muted">Entries are ordered by event ID, not by date. New entries can appear on an earlier page, so return to the first page to check again. History for a case that has since been deleted is retained privately but is not displayed here.</p>
-        {events === null ? <p className="notice warn">History could not be loaded; do not assume there were no earlier actions.</p>
-          : events.length === 0 ? <p className="muted">No history was returned on this page.</p>
-          : <ul className="lessons">{events.slice(0, 50).map((event) => <li key={event.id}>
-            <span className="t">{event.action === 'held' ? 'Paused' : 'Released'} · {new Date(event.occurredAt).toLocaleString()}<br /><span className="muted">{event.reason}</span></span>
-          </li>)}</ul>}
-        {query.holdEventAfter && <p><Link href={`/support/${supportCaseRow.caseNumber}#cleanup-hold`}>First history page</Link></p>}
-        {eventNext && <p><Link href={`/support/${supportCaseRow.caseNumber}?${new URLSearchParams({ holdEventAfter: eventNext })}#cleanup-hold`}>More history</Link></p>}
-        {hold === null ? <p className="notice warn">The pause status could not be loaded. Do not assume the case is protected.</p> : <>
-          <p>{hold.held ? 'Scheduled cleanup is paused for this case.' : 'Scheduled cleanup is not paused for this case.'}</p>
-          {hold.held && <p className="muted">Reason: {hold.reason}</p>}
-          <form action={changeCleanupHold} style={{ display: 'grid', gap: '.5rem' }}>
-            <input type="hidden" name="caseId" value={supportCaseRow.id} />
-            <input type="hidden" name="caseNumber" value={supportCaseRow.caseNumber} />
-            <input type="hidden" name="action" value={hold.held ? 'release' : 'hold'} />
-            <label>Reason <textarea name="reason" required minLength={3} maxLength={1000} rows={2} /></label>
-            <label><input type="checkbox" name="reviewed" value="yes" required /> I understand releasing this pause deletes saved prior versions, applies deferred account-closure and child-link erasure immediately and may allow scheduled deletion.</label>
-            <button className="btn ghost" type="submit">{hold.held ? 'Release cleanup pause' : 'Pause scheduled cleanup'}</button>
-          </form>
-        </>}
-      </section>}
-
-      {isStaff && <CaseHistory caseId={supportCaseRow.id} />}
-
-      <CaseActions
-        caseId={supportCaseRow.id}
-        status={supportCaseRow.status}
-        priority={supportCaseRow.priority}
-        assignedTo={supportCaseRow.assignedTo}
-        isStaff={isStaff}
-        myUserId={user.id}
-      />
+      {isStaff ? (
+        <StaffPanel supabase={supabase} supportCaseRow={supportCaseRow} myUserId={user.id} query={await searchParams} />
+      ) : open ? (
+        <CaseActions caseId={supportCaseRow.id} words={words} />
+      ) : (
+        <section className="card" data-support-part="over">
+          <h2>{t('support.closedHeading')}</h2>
+          <p className="muted">{t('support.closedNote')}</p>
+          <Link href="/support" className="btn secondary">
+            {t('support.heading')}
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

@@ -258,6 +258,14 @@ for (const [file, key] of [
   ['downloads.ts', 'downloads.devConfirm'],
   ['downloads.ts', 'downloads.removeUnconfirmed'],
   ['downloads.ts', 'downloads.needConnection'],
+  // Asking for help (2026-11-27): two server pages and three scripts handed
+  // their words. What a person is promised about who reads a request, and
+  // what they are told when nobody can say whether it was sent, must be in
+  // nothing a browser downloads.
+  ['support.ts', 'support.lede'],
+  ['support.ts', 'support.privacy'],
+  ['support.ts', 'support.unsureSent'],
+  ['support.ts', 'support.closeFinal'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

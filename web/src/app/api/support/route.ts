@@ -69,6 +69,10 @@ export async function GET() {
 /**
  * POST /api/support — open a case, reply to one, or withdraw one.
  *
+ * A refusal carries its English sentence and, where the reason is one the
+ * person can act on, a `code` (see `SupportRefusalCode`): the pages are
+ * written in the reader's language and say their own sentence for the name.
+ *
  * No actor id is accepted: every function takes identity from the session, so
  * there is nothing here to spoof. The flag is checked for opening, which is the
  * only action the switch is meant to stop — a requester reply to a case that is
@@ -96,8 +100,11 @@ export async function POST(request: Request) {
   }
 
   if (payload.action === 'open') {
-    const accepting = await isFlagEnabled(supabase, 'platform.support').catch(() => false);
-    if (!accepting) {
+    // A switch that could not be read is not a switch that is off
+    // (2026-11-27): the request goes on to the database, which reads the
+    // switch itself and refuses in its own words if it is off.
+    const accepting = await isFlagEnabled(supabase, 'platform.support').catch(() => null);
+    if (accepting === false) {
       return NextResponse.json(
         { error: 'Support is not accepting new requests right now.', code: 'flag_disabled' },
         { status: 409 },
@@ -111,7 +118,7 @@ export async function POST(request: Request) {
       orderId: payload.orderId,
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return NextResponse.json({ error: result.error, code: result.code }, { status: result.status });
     }
     return NextResponse.json({ ok: true, id: result.value.id }, { status: 201 });
   }
@@ -131,7 +138,7 @@ export async function POST(request: Request) {
       isInternal: false,
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return NextResponse.json({ error: result.error, code: result.code }, { status: result.status });
     }
     return NextResponse.json({ ok: true, id: result.value.id });
   }
@@ -142,7 +149,7 @@ export async function POST(request: Request) {
       reason: typeof payload.reason === 'string' ? payload.reason : '',
     });
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return NextResponse.json({ error: result.error, code: result.code }, { status: result.status });
     }
     return NextResponse.json({ ok: true });
   }

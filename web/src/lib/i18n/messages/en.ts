@@ -3578,6 +3578,91 @@ export const en = {
   'ease.readNote':
     'Read by your device’s own voice. A sentence that holds a verse written with its vowel marks is left out.',
   'ease.noVoice': 'Your device has no voice for this lesson’s language.',
+  // Asking for help (`support.ts`), 2026-11-27: the page a request is sent
+  // from, the list of a person's requests, and one request with its
+  // conversation, as the person who asked sees them. What staff alone are
+  // shown on the same page (priority, history, triage) is not here and
+  // stays in English. `{max}` is a number already in the reader's digits
+  // and follows a colon. "AyahSpring" is the platform's name.
+  'support.eyebrow': 'Support',
+  'support.heading': 'Ask for help',
+  'support.lede': 'Tell us what is not working. A person reads every request. There is no bot in front of this queue.',
+  'support.findHeading': 'Find platform help',
+  'support.findNote':
+    'Search the instructions for using AyahSpring. Nothing here writes an answer for you, and nothing here is a religious ruling.',
+  'support.findLabel': 'Search help',
+  'support.findExample': 'For example: courses',
+  'support.findNone': 'No help article matches. Try other words, or send a request when support is open.',
+  'support.helpUnread': 'The help articles could not be read just now.',
+  'support.pausedHeading': 'Support is not open right now',
+  'support.pausedNote':
+    'No new requests are being taken at the moment. A request you already sent is still being worked on. If a lesson looks wrong, the form for reporting a problem on that lesson still reaches the people who review it.',
+  'support.mine': 'My requests',
+  'support.mineNoneOpen': 'Nothing yet. If you need us, the form above is the way.',
+  'support.mineNone': 'No requests on this account.',
+  'support.privacy':
+    'Nothing you write here is published. What staff note for each other on a request is never shown to you, and your messages are seen only by the people answering.',
+  'support.catAccount': 'My account',
+  'support.catPayment': 'Payment or refund',
+  'support.catAccess': 'Cannot open a course or lesson',
+  'support.catContent': 'Something wrong with a lesson',
+  'support.catCertificate': 'Certificate',
+  'support.catFamily': 'Family and child profiles',
+  'support.catOther': 'Something else',
+  'support.stOpen': 'Waiting for us',
+  'support.stAssigned': 'Someone is on it',
+  'support.stWaiting': 'Waiting for you',
+  'support.stResolved': 'Resolved',
+  'support.stClosed': 'Closed',
+  'support.formHeading': 'What do you need help with?',
+  'support.topic': 'Topic',
+  'support.subject': 'Subject',
+  'support.subjectExample': 'For example: charged twice for one course',
+  'support.what': 'What happened?',
+  'support.whatExample': 'Tell us what you did, what you saw, and what you expected to happen.',
+  'support.limit': 'The most characters it can hold: {max}',
+  'support.send': 'Send request',
+  'support.sent': 'Sent. Our reply will appear on this page.',
+  'support.needSubject': 'Add a short subject, so the team knows what this is about.',
+  'support.needWhat': 'Describe the problem: what happened, and what you expected.',
+  'support.tooLong': 'That is too long to send. Shorten it and send it again.',
+  'support.notTaking': 'Support is not taking requests right now, so this was not sent.',
+  'support.tooMany':
+    'You already have five requests open. Wait for a reply, or withdraw one, before sending another.',
+  'support.notSent': 'That was refused, and nothing was sent.',
+  'support.signedOut': 'You are signed out, so this was not sent. Sign in and send it again.',
+  'support.unsureSent': 'Nobody can say whether that was sent. Look at your requests below before sending it again.',
+  'support.caseTitle': 'Support request',
+  'support.opened': 'Opened:',
+  'support.resolvedHeading': 'How this was resolved',
+  'support.resolvedNote': 'If this did not fix it, reply below and the request is opened again.',
+  'support.conversation': 'Conversation',
+  'support.you': 'You',
+  'support.staff': 'AyahSpring support',
+  'support.internal': 'A note among staff. The person who asked cannot see it.',
+  'support.closedHeading': 'This request is closed',
+  'support.closedNote':
+    'A closed request cannot be replied to. If you still need help, send a new request. It starts afresh, with a new number.',
+  'support.addHeading': 'Add to your request',
+  'support.reply': 'Reply',
+  'support.replyExample': 'Anything else we should know.',
+  'support.replyReopens': 'A reply to a resolved request opens it again.',
+  'support.sendReply': 'Send reply',
+  'support.replySent': 'Reply sent.',
+  'support.replyReopened': 'Reply sent. The request is open again.',
+  'support.needReply': 'Write a reply first.',
+  'support.withdrawHeading': 'Withdraw my request',
+  'support.reason': 'Reason (it must be given)',
+  'support.reasonExample': 'For example: I found the answer myself.',
+  'support.withdraw': 'Withdraw request',
+  'support.withdrawn': 'Withdrawn. The request is now closed.',
+  'support.needReason': 'Write the reason first.',
+  'support.final': 'Closing is final: neither side can reply afterwards.',
+  'support.gone': 'This request can no longer be found.',
+  'support.refused':
+    'That cannot be done to this request as it stands. Load the page again to see where it stands.',
+  'support.unsureSaved':
+    'Nobody can say whether that was saved. Load the page again and look at the conversation before trying again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

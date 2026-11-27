@@ -499,6 +499,8 @@ try {
     // with the box that asks for agreement before writing on a board.)
     // (Later on 2026-11-27: 192 of 2672, 7.19%, still 7%, with the letters
     // and reading a lesson aloud.)
+    // (And 192 of 2744 with asking for help: 7.00%, which still rounds to
+    // 7%. About two hundred more sentences and it is 6%.)
     // (2026-11-27: 192 of 2662, which is 7% (7.21%): the about page, the
     // saved list, the learning paths and the lessons kept on a device were
     // written in twenty-seven languages and in none that is held. This

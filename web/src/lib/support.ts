@@ -18,6 +18,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { one, type Embedded } from './embed.ts';
+import type { MessageKey } from './i18n/messages/en.ts';
 
 export const SUPPORT_CATEGORIES = [
   { value: 'account', label: 'My account' },
@@ -69,6 +70,126 @@ export const CATEGORY_LABEL: Record<SupportCategory, string> = {
   certificate: 'Certificate',
   family: 'Family and child profiles',
   other: 'Something else',
+};
+
+/**
+ * The same names as catalogue keys (2026-11-27), for the pages the person who
+ * asked reads: `/support` and `/support/<number>` say a topic and a status in
+ * the reader's language. The English tables above are what the staff queue
+ * still prints.
+ */
+export const CATEGORY_KEY: Record<SupportCategory, MessageKey> = {
+  account: 'support.catAccount',
+  payment: 'support.catPayment',
+  access: 'support.catAccess',
+  content: 'support.catContent',
+  certificate: 'support.catCertificate',
+  family: 'support.catFamily',
+  other: 'support.catOther',
+};
+
+export const STATUS_KEY: Record<SupportStatus, MessageKey> = {
+  open: 'support.stOpen',
+  assigned: 'support.stAssigned',
+  waiting_on_user: 'support.stWaiting',
+  resolved: 'support.stResolved',
+  closed: 'support.stClosed',
+};
+
+/**
+ * Why a request, a reply or a withdrawal was not taken, as a name.
+ *
+ * The routes answer with an English sentence, some of them the database's own.
+ * A page in another language cannot print that, so since 2026-11-27 a refusal
+ * also carries one of these names where the reason is one the person can act
+ * on, and the page has a sentence for each.
+ */
+export type SupportRefusalCode =
+  | 'flag_disabled'
+  | 'too_many'
+  | 'category'
+  | 'subject_short'
+  | 'empty'
+  | 'too_long'
+  | 'not_found';
+
+/** What the form says: one of the page's own sentences, by name. */
+export type SupportRefusal =
+  | 'notTaking'
+  | 'tooMany'
+  | 'needSubject'
+  | 'empty'
+  | 'tooLong'
+  | 'gone'
+  | 'signedOut'
+  | 'refused'
+  | 'unsure';
+
+/**
+ * Only an answer in the four hundreds is a refusal. Anything else (a five
+ * hundred, no answer at all, an answer that is not JSON) leaves nobody able to
+ * say whether the write happened, and the form says exactly that.
+ */
+export function supportRefusalOf(status: number, code: unknown): SupportRefusal {
+  if (status < 400 || status >= 500) return 'unsure';
+  if (code === 'flag_disabled') return 'notTaking';
+  if (code === 'too_many') return 'tooMany';
+  if (code === 'subject_short') return 'needSubject';
+  if (code === 'empty') return 'empty';
+  if (code === 'too_long') return 'tooLong';
+  if (status === 401) return 'signedOut';
+  if (status === 404 || code === 'not_found') return 'gone';
+  return 'refused';
+}
+
+/** Every sentence the form that opens a request says, handed over by the page. */
+export type NewCaseWords = {
+  heading: string;
+  topic: string;
+  topics: { value: SupportCategory; label: string }[];
+  subject: string;
+  subjectExample: string;
+  what: string;
+  whatExample: string;
+  /** The ceiling is already in it. */
+  limit: string;
+  send: string;
+  sending: string;
+  sent: string;
+  needSubject: string;
+  needWhat: string;
+  tooLong: string;
+  notTaking: string;
+  tooMany: string;
+  signedOut: string;
+  refused: string;
+  unsure: string;
+};
+
+/** Every sentence the person who asked is shown under their own request. */
+export type CaseWords = {
+  heading: string;
+  reply: string;
+  replyExample: string;
+  /** Said only under a resolved request. */
+  replyReopens: string | null;
+  sendReply: string;
+  sending: string;
+  replySent: string;
+  needReply: string;
+  withdrawHeading: string;
+  reason: string;
+  reasonExample: string;
+  withdraw: string;
+  withdrawn: string;
+  needReason: string;
+  final: string;
+  tooLong: string;
+  notTaking: string;
+  signedOut: string;
+  gone: string;
+  refused: string;
+  unsure: string;
 };
 
 export type SupportCase = {
@@ -168,7 +289,7 @@ function toCase(r: CaseRow): SupportCase {
 
 export type SupportResult<T = undefined> =
   | { ok: true; value: T }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; code?: SupportRefusalCode };
 
 /**
  * Turn a database refusal into a status and a sentence.
@@ -178,15 +299,38 @@ export type SupportResult<T = undefined> =
  * cases that matter are the ones a caller can act on: not allowed (403), not
  * found (404), and not permitted in this state or while the feature is off
  * (409).
+ *
+ * A fourth is not a refusal at all: an answer that carries no state (502).
  */
 export function mapSupportError(error: { message: string; code?: string }): SupportResult<never> {
   const message = error.message;
-  if (error.code === 'P0002' || /not found/i.test(message)) {
-    return { ok: false, status: 404, error: message };
+  // An answer with no state at all is not the database refusing: it is a
+  // gateway's page, or a connection that went (`08…`). Nobody can say whether
+  // the write happened, and until 2026-11-27 this was sent on as a 409, which
+  // a form reads as "refused, nothing changed". It is a 502 now, and the
+  // person is told to look before trying again.
+  const state = error.code ?? '';
+  if (state === '' || state.startsWith('08')) {
+    return { ok: false, status: 502, error: 'The change could not be confirmed.' };
   }
-  if (error.code === 'insufficient_privilege'
+  if (error.code === 'P0002' || /not found/i.test(message)) {
+    return { ok: false, status: 404, error: message, code: 'not_found' };
+  }
+  // `42501` is what PostgREST sends for `insufficient_privilege`: the name is
+  // what the migration writes, the five characters are what arrive. Until
+  // 2026-11-27 only the name was looked for, so a closed account's refusal
+  // (whose sentence matches none of the words below) was a 409.
+  if (error.code === 'insufficient_privilege' || error.code === '42501'
       || /only staff|only platform staff|cannot|sign in/i.test(message)) {
     return { ok: false, status: 403, error: message };
+  }
+  // Two refusals the person who asked can do something about are named
+  // (2026-11-27), so their page can say them in its own language.
+  if (/platform\.support is off/i.test(message)) {
+    return { ok: false, status: 409, error: message, code: 'flag_disabled' };
+  }
+  if (/five open requests/i.test(message)) {
+    return { ok: false, status: 409, error: message, code: 'too_many' };
   }
   return { ok: false, status: 409, error: message };
 }
@@ -209,26 +353,26 @@ export type OpenCaseInput = {
  */
 export function validateOpenCaseInput(input: OpenCaseInput):
   | { ok: true; category: SupportCategory; subject: string; body: string; learnerProfileId: string | null; orderId: string | null }
-  | { ok: false; status: number; error: string } {
+  | { ok: false; status: number; error: string; code: SupportRefusalCode } {
   const category = typeof input.category === 'string' ? input.category : '';
   if (!SUPPORT_CATEGORIES.some((c) => c.value === category)) {
-    return { ok: false, status: 400, error: 'Choose what this is about.' };
+    return { ok: false, status: 400, error: 'Choose what this is about.', code: 'category' };
   }
 
   const subject = typeof input.subject === 'string' ? input.subject.trim() : '';
   if (subject.length < 3) {
-    return { ok: false, status: 400, error: 'Add a short subject.' };
+    return { ok: false, status: 400, error: 'Add a short subject.', code: 'subject_short' };
   }
   if (subject.length > SUBJECT_MAX) {
-    return { ok: false, status: 400, error: `Keep the subject under ${SUBJECT_MAX} characters.` };
+    return { ok: false, status: 400, error: `Keep the subject under ${SUBJECT_MAX} characters.`, code: 'too_long' };
   }
 
   const body = typeof input.body === 'string' ? input.body.trim() : '';
   if (!body) {
-    return { ok: false, status: 400, error: 'Describe the problem so it can be answered.' };
+    return { ok: false, status: 400, error: 'Describe the problem so it can be answered.', code: 'empty' };
   }
   if (body.length > BODY_MAX) {
-    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.` };
+    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.`, code: 'too_long' };
   }
 
   const learnerProfileId =
@@ -272,11 +416,11 @@ export async function openSupportCase(
 
 export function validateReplyBody(value: unknown):
   | { ok: true; body: string }
-  | { ok: false; status: number; error: string } {
+  | { ok: false; status: number; error: string; code: SupportRefusalCode } {
   const body = typeof value === 'string' ? value.trim() : '';
-  if (!body) return { ok: false, status: 400, error: 'Write a reply first.' };
+  if (!body) return { ok: false, status: 400, error: 'Write a reply first.', code: 'empty' };
   if (body.length > BODY_MAX) {
-    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.` };
+    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.`, code: 'too_long' };
   }
   return { ok: true, body };
 }
@@ -303,13 +447,13 @@ export async function replyToSupportCase(
 
 export function validateReason(value: unknown, label: string):
   | { ok: true; reason: string }
-  | { ok: false; status: number; error: string } {
+  | { ok: false; status: number; error: string; code: SupportRefusalCode } {
   const reason = typeof value === 'string' ? value.trim() : '';
   if (!reason) {
-    return { ok: false, status: 400, error: `${label} needs a written reason.` };
+    return { ok: false, status: 400, error: `${label} needs a written reason.`, code: 'empty' };
   }
   if (reason.length > BODY_MAX) {
-    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.` };
+    return { ok: false, status: 400, error: `Please keep it under ${BODY_MAX} characters.`, code: 'too_long' };
   }
   return { ok: true, reason };
 }
