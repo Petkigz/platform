@@ -21,3 +21,50 @@ export function availabilityLabel(c: SavedCourse): string {
   if (c.availability === 'unpublished') return 'Not published yet';
   return 'Available now';
 }
+
+/** The names of what a saved course's badge can say; the page has a sentence for each. */
+export type SavedState = 'enrolledYou' | 'enrolledFor' | 'enrolledFamily' | 'retired' | 'unpublished' | 'available';
+
+/**
+ * The same decision as `availabilityLabel`, as a name instead of an English
+ * sentence, so the saved list can say it in the reader's language.
+ */
+export function savedStateOf(c: Pick<SavedCourse, 'enrolledWho' | 'availability'>): SavedState {
+  if (c.enrolledWho === 'self') return 'enrolledYou';
+  if (c.enrolledWho === 'named') return 'enrolledFor';
+  if (c.enrolledWho === 'unnamed') return 'enrolledFamily';
+  if (c.availability === 'retired') return 'retired';
+  if (c.availability === 'unpublished') return 'unpublished';
+  return 'available';
+}
+
+/** Every sentence one row of the saved list says, handed over by the page. */
+export type SavedWords = {
+  remove: string;
+  noNote: string;
+  noteEdit: string;
+  noteAdd: string;
+  noteLabel: string;
+  notePlaceholder: string;
+  noteSave: string;
+  cancel: string;
+  removedDone: string;
+  noteSaved: string;
+  unsure: string;
+  notePaused: string;
+  /** The ceiling is already in it. */
+  limit: string;
+  gone: string;
+};
+
+/**
+ * What to say when the list's route refused: a four hundred that names a
+ * reason this list knows is that reason, and anything else is "could not be
+ * confirmed". The route's own English sentence is never printed.
+ */
+export function savedRefusalOf(status: number, code: unknown): 'limit' | 'gone' | 'notePaused' | 'unsure' {
+  if (status < 400 || status > 499) return 'unsure';
+  if (code === 'limit' || code === 'gone') return code;
+  if (code === 'flag_disabled') return 'notePaused';
+  return 'unsure';
+}

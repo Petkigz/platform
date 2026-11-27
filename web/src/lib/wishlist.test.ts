@@ -265,6 +265,11 @@ test('an enrolment says whose it is, and yours reads as yours', async () => {
   const saved = await fetchSavedCourses(client, { userId: 'me' });
   assert.equal(availabilityLabel(saved[0]!), 'You are enrolled');
   assert.equal(availabilityLabel(saved[1]!), 'Enrolled for Amina');
+  // The same, with no English in it, for a page in another language.
+  assert.equal(saved[0]!.enrolledWho, 'self');
+  assert.equal(saved[1]!.enrolledWho, 'named');
+  assert.equal(saved[1]!.enrolledAs, 'Amina');
+  assert.equal(saved[0]!.courseKnown, true);
 
   // One enrolment query for the whole list, not one per saved course: a list
   // may hold a hundred rows.

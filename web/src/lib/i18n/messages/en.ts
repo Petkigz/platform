@@ -3440,6 +3440,31 @@ export const en = {
     'A payment record is never rewritten: a correction is a new entry beside the old one, not an edit to it. A learner’s review of a course is either published as they wrote it or withdrawn with a reason they can see. Staff cannot rewrite it into something else.',
   'about.cost':
     'Looking costs nothing. A course is bought for one named learner: one purchase covers one learner, never a household.',
+  // The saved-courses list (`saved.ts`), in the same twenty-seven languages as
+  // the dashboard since 2026-11-27. Its title is `learn.saved`, and the words
+  // for a note are the course page's (`cparts.note*`). `{date}` is a day
+  // already written in the reader's calendar; `{name}` is a learner's name.
+  'saved.crumb': 'Saved',
+  'saved.eyebrow': 'Private to you',
+  'saved.lede':
+    'Courses you kept to come back to. Nobody else can see this list, and a note is only for you: who a course is for, or what you were waiting on.',
+  'saved.paused':
+    'Saving new courses is switched off on this platform right now. What you already saved is still here and you can still remove it. A note cannot be changed until saving is switched on again.',
+  'saved.empty': 'Nothing saved yet.',
+  'saved.foot':
+    'Saving a course does not reserve a seat or hold a price. Prices and availability are on the course page.',
+  'saved.remove': 'Remove',
+  'saved.on': 'Saved {date}',
+  'saved.noNote': 'No note.',
+  'saved.enrolledYou': 'You are enrolled',
+  'saved.enrolledFor': 'Enrolled for {name}',
+  'saved.enrolledFamily': 'Someone in your family is enrolled',
+  'saved.retired': 'No longer offered',
+  'saved.unpublished': 'Not published yet',
+  'saved.available': 'Available now',
+  'saved.gone': 'A course that is no longer here',
+  'saved.unsure': 'That could not be confirmed. Reload the page to see what your list holds.',
+  'saved.notePaused': 'A note cannot be changed while saving is switched off.',
 } as const;
 
 export type MessageKey = keyof typeof en;

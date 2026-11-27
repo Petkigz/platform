@@ -43,6 +43,14 @@ export type SavedCourse = {
   availability: 'available' | 'unpublished' | 'retired';
   /** Whose enrolment this is, or null when nobody in the family has it yet. */
   enrolledAs: string | null;
+  /**
+   * The same, without a word of English in it: the reader, a learner of theirs
+   * whose name is in `enrolledAs`, or one whose name could not be read. A page
+   * in another language says it from this, and a child called "you" stays a child.
+   */
+  enrolledWho: 'self' | 'named' | 'unnamed' | null;
+  /** False when the course row itself did not come back: the title is then a stand-in. */
+  courseKnown: boolean;
 };
 
 export type SavedOutcome<T = undefined> =
@@ -261,14 +269,17 @@ export async function fetchSavedCourses(
   ]);
   if (enrolments.error) throw new Error(enrolments.error.message);
 
-  const enrolled = new Map<string, string>();
+  const enrolled = new Map<string, { name: string; who: NonNullable<SavedCourse['enrolledWho']> }>();
   for (const e of (enrolments.data ?? []) as unknown as EnrolmentRow[]) {
-    const name =
+    const theirs = one(e.learner_profiles)?.display_name ?? null;
+    const entry =
       e.learner_profile_id === myProfileId
-        ? 'you'
-        : (one(e.learner_profiles)?.display_name ?? 'someone in your family');
+        ? ({ name: 'you', who: 'self' } as const)
+        : theirs !== null
+          ? ({ name: theirs, who: 'named' } as const)
+          : ({ name: 'someone in your family', who: 'unnamed' } as const);
     // First enrolment wins; a course taken by two children still reads as taken.
-    if (!enrolled.has(e.course_id)) enrolled.set(e.course_id, name);
+    if (!enrolled.has(e.course_id)) enrolled.set(e.course_id, entry);
   }
 
   return rows.map((r) => {
@@ -291,7 +302,9 @@ export async function fetchSavedCourses(
       note: r.note,
       savedAt: r.created_at,
       availability,
-      enrolledAs: enrolled.get(r.course_id) ?? null,
+      enrolledAs: enrolled.get(r.course_id)?.name ?? null,
+      enrolledWho: enrolled.get(r.course_id)?.who ?? null,
+      courseKnown: Boolean(course),
     };
   });
 }

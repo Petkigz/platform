@@ -1,0 +1,641 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The saved-courses list: its heading, what the badge on a saved course says,
+ * and what the row says when the list's route refuses.
+ *
+ * Written on 2026-11-27, in the same twenty-seven languages as the
+ * dashboard. **Written by the people who built the site and read by no
+ * speaker.**
+ *
+ * `{date}` is a day already written in the reader's calendar and digits.
+ * `{name}` is a learner's name as the family wrote it; where a language would
+ * have to put the name in a case, the sentence is turned so that the name
+ * follows a colon instead. The title of the page is `learn.saved` and the
+ * words for a note are the course page's (`cparts.note*`), so a reader meets
+ * the same words for the same thing in both places.
+ */
+export const SAVED: Partial<Record<LocaleCode, Partial<Messages>>> = {
+  ar: {
+    'saved.crumb': 'المحفوظات',
+    'saved.eyebrow': 'خاصّ بك',
+    'saved.lede':
+      'دورات احتفظت بها لتعود إليها. لا أحد غيرك يرى هذه القائمة، والملاحظة لك وحدك: لمن هذه الدورة، أو ما الذي كنت تنتظره.',
+    'saved.paused':
+      'حفظ دورات جديدة متوقّف على هذه المنصّة الآن. ما حفظته من قبل ما زال هنا ويمكنك حذفه. لا يمكن تغيير الملاحظة حتى يُعاد تشغيل الحفظ.',
+    'saved.empty': 'لم تحفظ شيئًا بعد.',
+    'saved.foot': 'حفظ الدورة لا يحجز مقعدًا ولا يثبّت سعرًا. الأسعار والتوفّر في صفحة الدورة.',
+    'saved.remove': 'حذف',
+    'saved.on': 'حُفظت في {date}',
+    'saved.noNote': 'لا ملاحظة.',
+    'saved.enrolledYou': 'أنت مسجَّل فيها',
+    'saved.enrolledFor': 'مسجَّل فيها: {name}',
+    'saved.enrolledFamily': 'أحد أفراد أسرتك مسجَّل فيها',
+    'saved.retired': 'لم تعد معروضة',
+    'saved.unpublished': 'لم تُنشر بعد',
+    'saved.available': 'متاحة الآن',
+    'saved.gone': 'دورة لم تعد موجودة هنا',
+    'saved.unsure': 'تعذّر التأكّد من ذلك. أعد تحميل الصفحة لترى ما في قائمتك.',
+    'saved.notePaused': 'لا يمكن تغيير الملاحظة ما دام الحفظ متوقّفًا.',
+  },
+  ur: {
+    'saved.crumb': 'محفوظ',
+    'saved.eyebrow': 'صرف آپ کے لیے',
+    'saved.lede':
+      'وہ کورس جو آپ نے بعد میں دیکھنے کے لیے رکھے۔ یہ فہرست کوئی اور نہیں دیکھ سکتا، اور نوٹ صرف آپ کے لیے ہے: کورس کس کے لیے ہے، یا آپ کس چیز کا انتظار کر رہے تھے۔',
+    'saved.paused':
+      'اس پلیٹ فارم پر نئے کورس محفوظ کرنا اس وقت بند ہے۔ جو آپ پہلے محفوظ کر چکے ہیں وہ اب بھی یہاں ہے اور آپ اسے ہٹا سکتے ہیں۔ جب تک محفوظ کرنا دوبارہ چالو نہ ہو، نوٹ بدلا نہیں جا سکتا۔',
+    'saved.empty': 'ابھی تک کچھ محفوظ نہیں کیا گیا۔',
+    'saved.foot':
+      'کورس محفوظ کرنے سے نہ نشست محفوظ ہوتی ہے نہ قیمت برقرار رہتی ہے۔ قیمتیں اور دستیابی کورس کے صفحے پر ہیں۔',
+    'saved.remove': 'ہٹائیں',
+    'saved.on': '{date} کو محفوظ کیا گیا',
+    'saved.noNote': 'کوئی نوٹ نہیں۔',
+    'saved.enrolledYou': 'آپ اس میں داخل ہیں',
+    'saved.enrolledFor': '{name} اس میں داخل ہے',
+    'saved.enrolledFamily': 'آپ کے خاندان کا کوئی فرد اس میں داخل ہے',
+    'saved.retired': 'اب پیش نہیں کیا جاتا',
+    'saved.unpublished': 'ابھی شائع نہیں ہوا',
+    'saved.available': 'اب دستیاب ہے',
+    'saved.gone': 'ایک کورس جو اب یہاں نہیں ہے',
+    'saved.unsure': 'اس کی تصدیق نہیں ہو سکی۔ اپنی فہرست دیکھنے کے لیے صفحہ دوبارہ لوڈ کریں۔',
+    'saved.notePaused': 'جب تک محفوظ کرنا بند ہے، نوٹ بدلا نہیں جا سکتا۔',
+  },
+  fa: {
+    'saved.crumb': 'ذخیره‌شده‌ها',
+    'saved.eyebrow': 'فقط برای شما',
+    'saved.lede':
+      'دوره‌هایی که نگه داشته‌اید تا به آن‌ها برگردید. هیچ‌کس دیگری این فهرست را نمی‌بیند و یادداشت فقط برای خود شماست: دوره برای چه کسی است، یا منتظر چه بودید.',
+    'saved.paused':
+      'ذخیرهٔ دوره‌های تازه اکنون در این سکو خاموش است. آنچه پیش‌تر ذخیره کرده‌اید هنوز اینجاست و می‌توانید آن را بردارید. تا وقتی ذخیره دوباره روشن نشود، یادداشت را نمی‌توان تغییر داد.',
+    'saved.empty': 'هنوز چیزی ذخیره نشده است.',
+    'saved.foot':
+      'ذخیرهٔ یک دوره نه جایی را نگه می‌دارد و نه قیمتی را ثابت می‌کند. قیمت‌ها و موجود بودن در صفحهٔ دوره آمده است.',
+    'saved.remove': 'برداشتن',
+    'saved.on': 'ذخیره‌شده در {date}',
+    'saved.noNote': 'بدون یادداشت.',
+    'saved.enrolledYou': 'شما ثبت‌نام کرده‌اید',
+    'saved.enrolledFor': 'ثبت‌نام‌شده برای {name}',
+    'saved.enrolledFamily': 'یکی از اعضای خانوادهٔ شما ثبت‌نام کرده است',
+    'saved.retired': 'دیگر ارائه نمی‌شود',
+    'saved.unpublished': 'هنوز منتشر نشده است',
+    'saved.available': 'اکنون در دسترس است',
+    'saved.gone': 'دوره‌ای که دیگر اینجا نیست',
+    'saved.unsure': 'این تأیید نشد. صفحه را دوباره بارگیری کنید تا ببینید در فهرستتان چه هست.',
+    'saved.notePaused': 'تا وقتی ذخیره خاموش است، یادداشت را نمی‌توان تغییر داد.',
+  },
+  'fa-af': {
+    'saved.crumb': 'ذخیره‌شده‌ها',
+    'saved.eyebrow': 'تنها برای شما',
+    'saved.lede':
+      'کورس‌هایی که نگه داشته‌اید تا دوباره به آن‌ها برگردید. هیچ کس دیگری این فهرست را دیده نمی‌تواند و یادداشت تنها برای خود شماست: کورس برای کیست، یا منتظر چه بودید.',
+    'saved.paused':
+      'ذخیره کردن کورس‌های نو همین حالا در این پلتفرم خاموش است. آنچه پیش‌تر ذخیره کرده‌اید هنوز اینجاست و می‌توانید آن را حذف کنید. تا زمانی که ذخیره کردن دوباره روشن نشود، یادداشت را تغییر داده نمی‌توانید.',
+    'saved.empty': 'تا هنوز چیزی ذخیره نشده است.',
+    'saved.foot':
+      'ذخیره کردن یک کورس نه جایی را نگه می‌دارد و نه قیمتی را ثابت می‌کند. قیمت‌ها و موجود بودن در صفحهٔ کورس آمده است.',
+    'saved.remove': 'حذف',
+    'saved.on': 'ذخیره‌شده به تاریخ {date}',
+    'saved.noNote': 'یادداشتی نیست.',
+    'saved.enrolledYou': 'شما شامل این کورس هستید',
+    'saved.enrolledFor': '{name} شامل این کورس است',
+    'saved.enrolledFamily': 'یکی از اعضای خانوادهٔ شما شامل این کورس است',
+    'saved.retired': 'دیگر ارائه نمی‌شود',
+    'saved.unpublished': 'هنوز نشر نشده است',
+    'saved.available': 'همین حالا در دسترس است',
+    'saved.gone': 'کورسی که دیگر اینجا نیست',
+    'saved.unsure': 'این تأیید نشد. صفحه را دوباره باز کنید تا ببینید در فهرست‌تان چه است.',
+    'saved.notePaused': 'تا زمانی که ذخیره کردن خاموش است، یادداشت را تغییر داده نمی‌توانید.',
+  },
+  tr: {
+    'saved.crumb': 'Kaydedilenler',
+    'saved.eyebrow': 'Yalnızca size özel',
+    'saved.lede':
+      'Sonra dönmek için ayırdığınız kurslar. Bu listeyi sizden başka kimse göremez ve not yalnızca sizin içindir: kursun kimin için olduğu ya da neyi beklediğiniz.',
+    'saved.paused':
+      'Bu platformda yeni kurs kaydetme şu anda kapalı. Daha önce kaydettikleriniz hâlâ burada ve onları kaldırabilirsiniz. Kaydetme yeniden açılana kadar not değiştirilemez.',
+    'saved.empty': 'Henüz bir şey kaydedilmedi.',
+    'saved.foot':
+      'Bir kursu kaydetmek yer ayırmaz, fiyatı da sabitlemez. Fiyatlar ve uygunluk kurs sayfasındadır.',
+    'saved.remove': 'Kaldır',
+    'saved.on': 'Kaydedildi: {date}',
+    'saved.noNote': 'Not yok.',
+    'saved.enrolledYou': 'Bu kursa kayıtlısınız',
+    'saved.enrolledFor': 'Kayıtlı öğrenci: {name}',
+    'saved.enrolledFamily': 'Ailenizden biri bu kursa kayıtlı',
+    'saved.retired': 'Artık sunulmuyor',
+    'saved.unpublished': 'Henüz yayımlanmadı',
+    'saved.available': 'Şu anda mevcut',
+    'saved.gone': 'Artık burada olmayan bir kurs',
+    'saved.unsure': 'Bu doğrulanamadı. Listenizde ne olduğunu görmek için sayfayı yeniden yükleyin.',
+    'saved.notePaused': 'Kaydetme kapalıyken not değiştirilemez.',
+  },
+  id: {
+    'saved.crumb': 'Tersimpan',
+    'saved.eyebrow': 'Hanya untuk Anda',
+    'saved.lede':
+      'Kursus yang Anda simpan untuk dibuka lagi nanti. Tidak ada orang lain yang dapat melihat daftar ini, dan catatan hanya untuk Anda: kursus itu untuk siapa, atau apa yang sedang Anda tunggu.',
+    'saved.paused':
+      'Menyimpan kursus baru sedang dimatikan di platform ini. Yang sudah Anda simpan masih ada di sini dan masih dapat Anda hapus. Catatan tidak dapat diubah sampai penyimpanan dinyalakan kembali.',
+    'saved.empty': 'Belum ada yang disimpan.',
+    'saved.foot':
+      'Menyimpan kursus tidak memesan tempat dan tidak menahan harga. Harga dan ketersediaan ada di halaman kursus.',
+    'saved.remove': 'Hapus',
+    'saved.on': 'Disimpan pada {date}',
+    'saved.noNote': 'Tidak ada catatan.',
+    'saved.enrolledYou': 'Anda terdaftar',
+    'saved.enrolledFor': 'Terdaftar untuk {name}',
+    'saved.enrolledFamily': 'Seseorang di keluarga Anda terdaftar',
+    'saved.retired': 'Tidak lagi ditawarkan',
+    'saved.unpublished': 'Belum diterbitkan',
+    'saved.available': 'Tersedia sekarang',
+    'saved.gone': 'Kursus yang sudah tidak ada di sini',
+    'saved.unsure': 'Hal itu tidak dapat dipastikan. Muat ulang halaman untuk melihat isi daftar Anda.',
+    'saved.notePaused': 'Catatan tidak dapat diubah selama penyimpanan dimatikan.',
+  },
+  ms: {
+    'saved.crumb': 'Disimpan',
+    'saved.eyebrow': 'Untuk anda sahaja',
+    'saved.lede':
+      'Kursus yang anda simpan untuk dibuka semula nanti. Tiada orang lain boleh melihat senarai ini, dan nota hanya untuk anda: kursus itu untuk siapa, atau apa yang anda tunggu.',
+    'saved.paused':
+      'Menyimpan kursus baharu dimatikan di platform ini sekarang. Apa yang telah anda simpan masih ada di sini dan anda masih boleh membuangnya. Nota tidak boleh diubah sehingga penyimpanan dihidupkan semula.',
+    'saved.empty': 'Belum ada yang disimpan.',
+    'saved.foot':
+      'Menyimpan kursus tidak menempah tempat dan tidak mengekalkan harga. Harga dan ketersediaan ada di halaman kursus.',
+    'saved.remove': 'Buang',
+    'saved.on': 'Disimpan pada {date}',
+    'saved.noNote': 'Tiada nota.',
+    'saved.enrolledYou': 'Anda telah mendaftar',
+    'saved.enrolledFor': 'Didaftarkan untuk {name}',
+    'saved.enrolledFamily': 'Seseorang dalam keluarga anda telah mendaftar',
+    'saved.retired': 'Tidak lagi ditawarkan',
+    'saved.unpublished': 'Belum diterbitkan',
+    'saved.available': 'Tersedia sekarang',
+    'saved.gone': 'Kursus yang sudah tiada di sini',
+    'saved.unsure':
+      'Perkara itu tidak dapat disahkan. Muat semula halaman untuk melihat kandungan senarai anda.',
+    'saved.notePaused': 'Nota tidak boleh diubah semasa penyimpanan dimatikan.',
+  },
+  bn: {
+    'saved.crumb': 'সংরক্ষিত',
+    'saved.eyebrow': 'শুধু আপনার জন্য',
+    'saved.lede':
+      'যে কোর্সগুলো আপনি পরে ফিরে আসার জন্য রেখেছেন। এই তালিকা আর কেউ দেখতে পায় না, আর নোট শুধু আপনার জন্য: কোর্সটি কার জন্য, বা আপনি কীসের অপেক্ষায় ছিলেন।',
+    'saved.paused':
+      'এই প্ল্যাটফর্মে নতুন কোর্স সংরক্ষণ এখন বন্ধ আছে। আগে যা সংরক্ষণ করেছেন তা এখনো এখানে আছে এবং আপনি তা সরাতে পারেন। সংরক্ষণ আবার চালু না হওয়া পর্যন্ত নোট বদলানো যাবে না।',
+    'saved.empty': 'এখনো কিছু সংরক্ষণ করা হয়নি।',
+    'saved.foot':
+      'কোর্স সংরক্ষণ করলে আসন সংরক্ষিত হয় না, দামও ধরে রাখা হয় না। দাম ও প্রাপ্যতা কোর্সের পাতায় আছে।',
+    'saved.remove': 'সরান',
+    'saved.on': '{date} তারিখে সংরক্ষিত',
+    'saved.noNote': 'কোনো নোট নেই।',
+    'saved.enrolledYou': 'আপনি ভর্তি আছেন',
+    'saved.enrolledFor': '{name}-এর জন্য ভর্তি করা হয়েছে',
+    'saved.enrolledFamily': 'আপনার পরিবারের কেউ ভর্তি আছে',
+    'saved.retired': 'আর দেওয়া হয় না',
+    'saved.unpublished': 'এখনো প্রকাশিত হয়নি',
+    'saved.available': 'এখন পাওয়া যাচ্ছে',
+    'saved.gone': 'একটি কোর্স যা আর এখানে নেই',
+    'saved.unsure': 'এটি নিশ্চিত করা যায়নি। আপনার তালিকায় কী আছে দেখতে পাতাটি আবার লোড করুন।',
+    'saved.notePaused': 'সংরক্ষণ বন্ধ থাকা অবস্থায় নোট বদলানো যাবে না।',
+  },
+  hi: {
+    'saved.crumb': 'सहेजे गए',
+    'saved.eyebrow': 'केवल आपके लिए',
+    'saved.lede':
+      'वे कोर्स जो आपने बाद में लौटने के लिए रखे हैं। यह सूची कोई और नहीं देख सकता, और नोट केवल आपके लिए है: कोर्स किसके लिए है, या आप किस बात का इंतज़ार कर रहे थे।',
+    'saved.paused':
+      'इस प्लेटफ़ॉर्म पर नए कोर्स सहेजना अभी बंद है। जो आपने पहले सहेजा था वह अब भी यहाँ है और आप उसे हटा सकते हैं। जब तक सहेजना फिर से चालू नहीं होता, नोट बदला नहीं जा सकता।',
+    'saved.empty': 'अभी तक कुछ सहेजा नहीं गया है।',
+    'saved.foot':
+      'कोर्स सहेजने से न सीट आरक्षित होती है, न कीमत रुकी रहती है। कीमतें और उपलब्धता कोर्स के पेज पर हैं।',
+    'saved.remove': 'हटाएँ',
+    'saved.on': '{date} को सहेजा गया',
+    'saved.noNote': 'कोई नोट नहीं।',
+    'saved.enrolledYou': 'आप नामांकित हैं',
+    'saved.enrolledFor': '{name} के लिए नामांकित',
+    'saved.enrolledFamily': 'आपके परिवार का कोई सदस्य नामांकित है',
+    'saved.retired': 'अब उपलब्ध नहीं कराया जाता',
+    'saved.unpublished': 'अभी प्रकाशित नहीं हुआ',
+    'saved.available': 'अभी उपलब्ध है',
+    'saved.gone': 'एक कोर्स जो अब यहाँ नहीं है',
+    'saved.unsure': 'इसकी पुष्टि नहीं हो सकी। अपनी सूची में क्या है यह देखने के लिए पेज फिर से लोड करें।',
+    'saved.notePaused': 'जब तक सहेजना बंद है, नोट बदला नहीं जा सकता।',
+  },
+  fr: {
+    'saved.crumb': 'Enregistrés',
+    'saved.eyebrow': 'Visible par vous seul',
+    'saved.lede':
+      'Les cours que vous avez gardés pour y revenir. Personne d’autre ne peut voir cette liste, et une note n’est que pour vous : pour qui est le cours, ou ce que vous attendiez.',
+    'saved.paused':
+      'L’enregistrement de nouveaux cours est désactivé sur cette plateforme pour le moment. Ce que vous avez déjà enregistré est toujours là et vous pouvez encore le retirer. Une note ne peut pas être modifiée tant que l’enregistrement n’est pas réactivé.',
+    'saved.empty': 'Rien d’enregistré pour l’instant.',
+    'saved.foot':
+      'Enregistrer un cours ne réserve pas de place et ne bloque pas un prix. Les prix et la disponibilité figurent sur la page du cours.',
+    'saved.remove': 'Retirer',
+    'saved.on': 'Enregistré le {date}',
+    'saved.noNote': 'Aucune note.',
+    'saved.enrolledYou': 'Vous y êtes inscrit',
+    'saved.enrolledFor': 'Inscription pour {name}',
+    'saved.enrolledFamily': 'Une personne de votre famille y est inscrite',
+    'saved.retired': 'N’est plus proposé',
+    'saved.unpublished': 'Pas encore publié',
+    'saved.available': 'Disponible maintenant',
+    'saved.gone': 'Un cours qui n’est plus ici',
+    'saved.unsure': 'Cela n’a pas pu être confirmé. Rechargez la page pour voir ce que contient votre liste.',
+    'saved.notePaused': 'Une note ne peut pas être modifiée tant que l’enregistrement est désactivé.',
+  },
+  es: {
+    'saved.crumb': 'Guardados',
+    'saved.eyebrow': 'Solo para ti',
+    'saved.lede':
+      'Cursos que guardaste para volver a ellos. Nadie más puede ver esta lista, y una nota es solo para ti: para quién es el curso, o qué estabas esperando.',
+    'saved.paused':
+      'Guardar cursos nuevos está desactivado en esta plataforma en este momento. Lo que ya guardaste sigue aquí y todavía puedes quitarlo. Una nota no se puede cambiar hasta que se vuelva a activar el guardado.',
+    'saved.empty': 'Todavía no hay nada guardado.',
+    'saved.foot':
+      'Guardar un curso no reserva una plaza ni mantiene un precio. Los precios y la disponibilidad están en la página del curso.',
+    'saved.remove': 'Quitar',
+    'saved.on': 'Guardado el {date}',
+    'saved.noNote': 'Sin nota.',
+    'saved.enrolledYou': 'Estás inscrito',
+    'saved.enrolledFor': 'Inscripción para {name}',
+    'saved.enrolledFamily': 'Alguien de tu familia está inscrito',
+    'saved.retired': 'Ya no se ofrece',
+    'saved.unpublished': 'Aún no publicado',
+    'saved.available': 'Disponible ahora',
+    'saved.gone': 'Un curso que ya no está aquí',
+    'saved.unsure': 'No se pudo confirmar. Vuelve a cargar la página para ver qué hay en tu lista.',
+    'saved.notePaused': 'Una nota no se puede cambiar mientras el guardado esté desactivado.',
+  },
+  pt: {
+    'saved.crumb': 'Guardados',
+    'saved.eyebrow': 'Só para si',
+    'saved.lede':
+      'Cursos que guardou para voltar a eles. Mais ninguém pode ver esta lista, e uma nota é só para si: para quem é o curso, ou de que estava à espera.',
+    'saved.paused':
+      'Guardar novos cursos está desativado nesta plataforma neste momento. O que já guardou continua aqui e ainda o pode remover. Uma nota não pode ser alterada até que guardar volte a estar ativado.',
+    'saved.empty': 'Ainda não há nada guardado.',
+    'saved.foot':
+      'Guardar um curso não reserva um lugar nem mantém um preço. Os preços e a disponibilidade estão na página do curso.',
+    'saved.remove': 'Remover',
+    'saved.on': 'Guardado em {date}',
+    'saved.noNote': 'Sem nota.',
+    'saved.enrolledYou': 'Está inscrito',
+    'saved.enrolledFor': 'Inscrição para {name}',
+    'saved.enrolledFamily': 'Alguém da sua família está inscrito',
+    'saved.retired': 'Já não é oferecido',
+    'saved.unpublished': 'Ainda não publicado',
+    'saved.available': 'Disponível agora',
+    'saved.gone': 'Um curso que já não está aqui',
+    'saved.unsure': 'Não foi possível confirmar. Recarregue a página para ver o que a sua lista contém.',
+    'saved.notePaused': 'Uma nota não pode ser alterada enquanto guardar estiver desativado.',
+  },
+  sw: {
+    'saved.crumb': 'Zilizohifadhiwa',
+    'saved.eyebrow': 'Ni yako peke yako',
+    'saved.lede':
+      'Kozi ulizoziweka ili uzirudie baadaye. Hakuna mtu mwingine anayeweza kuona orodha hii, na dokezo ni lako tu: kozi ni ya nani, au ulikuwa unasubiri nini.',
+    'saved.paused':
+      'Kuhifadhi kozi mpya kumezimwa kwenye jukwaa hili kwa sasa. Ulichokwisha kuhifadhi bado kipo hapa na bado unaweza kukiondoa. Dokezo haliwezi kubadilishwa hadi kuhifadhi kuwashwe tena.',
+    'saved.empty': 'Bado hakuna kilichohifadhiwa.',
+    'saved.foot':
+      'Kuhifadhi kozi hakuwekei nafasi wala hakushikilii bei. Bei na upatikanaji viko kwenye ukurasa wa kozi.',
+    'saved.remove': 'Ondoa',
+    'saved.on': 'Imehifadhiwa {date}',
+    'saved.noNote': 'Hakuna dokezo.',
+    'saved.enrolledYou': 'Umejiandikisha',
+    'saved.enrolledFor': 'Ameandikishwa: {name}',
+    'saved.enrolledFamily': 'Mtu wa familia yako amejiandikisha',
+    'saved.retired': 'Haitolewi tena',
+    'saved.unpublished': 'Bado haijachapishwa',
+    'saved.available': 'Inapatikana sasa',
+    'saved.gone': 'Kozi ambayo haipo hapa tena',
+    'saved.unsure':
+      'Hilo halikuweza kuthibitishwa. Pakia ukurasa upya ili uone kilichomo kwenye orodha yako.',
+    'saved.notePaused': 'Dokezo haliwezi kubadilishwa wakati kuhifadhi kumezimwa.',
+  },
+  af: {
+    'saved.crumb': 'Gestoor',
+    'saved.eyebrow': 'Net vir jou',
+    'saved.lede':
+      'Kursusse wat jy gehou het om na terug te kom. Niemand anders kan hierdie lys sien nie, en ’n nota is net vir jou: vir wie die kursus is, of waarvoor jy gewag het.',
+    'saved.paused':
+      'Die stoor van nuwe kursusse is tans op hierdie platform afgeskakel. Wat jy reeds gestoor het, is steeds hier en jy kan dit steeds verwyder. ’n Nota kan nie verander word voordat stoor weer aangeskakel is nie.',
+    'saved.empty': 'Nog niks gestoor nie.',
+    'saved.foot':
+      'Om ’n kursus te stoor, bespreek nie ’n plek nie en hou nie ’n prys vas nie. Pryse en beskikbaarheid is op die kursusblad.',
+    'saved.remove': 'Verwyder',
+    'saved.on': 'Gestoor op {date}',
+    'saved.noNote': 'Geen nota nie.',
+    'saved.enrolledYou': 'Jy is ingeskryf',
+    'saved.enrolledFor': 'Ingeskryf vir {name}',
+    'saved.enrolledFamily': 'Iemand in jou gesin is ingeskryf',
+    'saved.retired': 'Word nie meer aangebied nie',
+    'saved.unpublished': 'Nog nie gepubliseer nie',
+    'saved.available': 'Nou beskikbaar',
+    'saved.gone': '’n Kursus wat nie meer hier is nie',
+    'saved.unsure': 'Dit kon nie bevestig word nie. Herlaai die blad om te sien wat in jou lys is.',
+    'saved.notePaused': '’n Nota kan nie verander word terwyl stoor afgeskakel is nie.',
+  },
+  'zh-hans': {
+    'saved.crumb': '已保存',
+    'saved.eyebrow': '仅你可见',
+    'saved.lede': '你留下来以后再看的课程。别人看不到这份列表，备注也只给你自己看：这门课是给谁的，或者你当时在等什么。',
+    'saved.paused': '本平台目前已关闭保存新课程。你之前保存的内容仍在这里，仍然可以移除。在重新开启保存之前，备注无法修改。',
+    'saved.empty': '还没有保存任何课程。',
+    'saved.foot': '保存课程不会预留名额，也不会锁定价格。价格和开放情况请看课程页面。',
+    'saved.remove': '移除',
+    'saved.on': '保存于 {date}',
+    'saved.noNote': '没有备注。',
+    'saved.enrolledYou': '你已报名',
+    'saved.enrolledFor': '已为 {name} 报名',
+    'saved.enrolledFamily': '你的家人中有人已报名',
+    'saved.retired': '已不再提供',
+    'saved.unpublished': '尚未发布',
+    'saved.available': '现在可以报名',
+    'saved.gone': '一门已不在这里的课程',
+    'saved.unsure': '无法确认这一操作。请重新加载页面，查看你的列表里有什么。',
+    'saved.notePaused': '保存功能关闭期间无法修改备注。',
+  },
+  'zh-hant': {
+    'saved.crumb': '已儲存',
+    'saved.eyebrow': '僅你可見',
+    'saved.lede': '你留下來以後再看的課程。別人看不到這份清單，備註也只給你自己看：這門課是給誰的，或者你當時在等什麼。',
+    'saved.paused': '本平台目前已關閉儲存新課程。你之前儲存的內容仍在這裡，仍然可以移除。在重新開啟儲存之前，備註無法修改。',
+    'saved.empty': '還沒有儲存任何課程。',
+    'saved.foot': '儲存課程不會保留名額，也不會鎖定價格。價格和開放情況請看課程頁面。',
+    'saved.remove': '移除',
+    'saved.on': '儲存於 {date}',
+    'saved.noNote': '沒有備註。',
+    'saved.enrolledYou': '你已報名',
+    'saved.enrolledFor': '已為 {name} 報名',
+    'saved.enrolledFamily': '你的家人中有人已報名',
+    'saved.retired': '已不再提供',
+    'saved.unpublished': '尚未發布',
+    'saved.available': '現在可以報名',
+    'saved.gone': '一門已不在這裡的課程',
+    'saved.unsure': '無法確認這項操作。請重新載入頁面，查看你的清單裡有什麼。',
+    'saved.notePaused': '儲存功能關閉期間無法修改備註。',
+  },
+  vi: {
+    'saved.crumb': 'Đã lưu',
+    'saved.eyebrow': 'Chỉ riêng bạn thấy',
+    'saved.lede':
+      'Những khóa học bạn giữ lại để quay lại sau. Không ai khác xem được danh sách này, và ghi chú chỉ dành cho bạn: khóa học dành cho ai, hoặc bạn đang chờ điều gì.',
+    'saved.paused':
+      'Việc lưu khóa học mới hiện đang tắt trên nền tảng này. Những gì bạn đã lưu vẫn còn ở đây và bạn vẫn có thể gỡ bỏ. Không thể thay đổi ghi chú cho đến khi việc lưu được bật lại.',
+    'saved.empty': 'Chưa lưu gì cả.',
+    'saved.foot':
+      'Lưu một khóa học không giữ chỗ và không giữ giá. Giá và tình trạng mở có trên trang khóa học.',
+    'saved.remove': 'Gỡ bỏ',
+    'saved.on': 'Đã lưu ngày {date}',
+    'saved.noNote': 'Không có ghi chú.',
+    'saved.enrolledYou': 'Bạn đã ghi danh',
+    'saved.enrolledFor': 'Đã ghi danh cho {name}',
+    'saved.enrolledFamily': 'Một người trong gia đình bạn đã ghi danh',
+    'saved.retired': 'Không còn được cung cấp',
+    'saved.unpublished': 'Chưa được xuất bản',
+    'saved.available': 'Hiện có sẵn',
+    'saved.gone': 'Một khóa học không còn ở đây',
+    'saved.unsure': 'Không thể xác nhận điều đó. Hãy tải lại trang để xem danh sách của bạn có gì.',
+    'saved.notePaused': 'Không thể thay đổi ghi chú khi việc lưu đang tắt.',
+  },
+  th: {
+    'saved.crumb': 'ที่บันทึกไว้',
+    'saved.eyebrow': 'เฉพาะคุณเท่านั้น',
+    'saved.lede':
+      'หลักสูตรที่คุณเก็บไว้เพื่อกลับมาดูอีก ไม่มีใครอื่นเห็นรายการนี้ได้ และบันทึกย่อมีไว้สำหรับคุณเท่านั้น เช่น หลักสูตรนี้สำหรับใคร หรือคุณกำลังรออะไรอยู่',
+    'saved.paused':
+      'ขณะนี้แพลตฟอร์มปิดการบันทึกหลักสูตรใหม่อยู่ สิ่งที่คุณบันทึกไว้แล้วยังอยู่ที่นี่และคุณยังนำออกได้ บันทึกย่อจะแก้ไขไม่ได้จนกว่าจะเปิดการบันทึกอีกครั้ง',
+    'saved.empty': 'ยังไม่ได้บันทึกอะไรไว้',
+    'saved.foot':
+      'การบันทึกหลักสูตรไม่ได้จองที่นั่งและไม่ได้ตรึงราคา ราคาและสถานะการเปิดรับอยู่ในหน้าหลักสูตร',
+    'saved.remove': 'นำออก',
+    'saved.on': 'บันทึกเมื่อ {date}',
+    'saved.noNote': 'ไม่มีบันทึกย่อ',
+    'saved.enrolledYou': 'คุณลงทะเบียนแล้ว',
+    'saved.enrolledFor': 'ลงทะเบียนให้ {name} แล้ว',
+    'saved.enrolledFamily': 'มีคนในครอบครัวของคุณลงทะเบียนแล้ว',
+    'saved.retired': 'ไม่เปิดสอนแล้ว',
+    'saved.unpublished': 'ยังไม่ได้เผยแพร่',
+    'saved.available': 'เปิดรับอยู่ตอนนี้',
+    'saved.gone': 'หลักสูตรที่ไม่อยู่ที่นี่แล้ว',
+    'saved.unsure': 'ไม่สามารถยืนยันได้ โปรดโหลดหน้าใหม่เพื่อดูว่ารายการของคุณมีอะไรบ้าง',
+    'saved.notePaused': 'แก้ไขบันทึกย่อไม่ได้ขณะที่ปิดการบันทึกอยู่',
+  },
+  fil: {
+    'saved.crumb': 'Mga na-save',
+    'saved.eyebrow': 'Para sa iyo lang',
+    'saved.lede':
+      'Mga kursong itinabi mo para balikan. Walang ibang makakakita sa listahang ito, at para sa iyo lang ang tala: kung para kanino ang kurso, o kung ano ang hinihintay mo.',
+    'saved.paused':
+      'Nakapatay ngayon sa platapormang ito ang pag-save ng mga bagong kurso. Narito pa rin ang mga na-save mo na at maaari mo pa ring alisin. Hindi mababago ang tala hangga’t hindi muling binubuksan ang pag-save.',
+    'saved.empty': 'Wala pang na-save.',
+    'saved.foot':
+      'Ang pag-save ng kurso ay hindi nagrereserba ng puwesto at hindi nagpapanatili ng presyo. Nasa pahina ng kurso ang mga presyo at kung bukas ito.',
+    'saved.remove': 'Alisin',
+    'saved.on': 'Na-save noong {date}',
+    'saved.noNote': 'Walang tala.',
+    'saved.enrolledYou': 'Naka-enrol ka',
+    'saved.enrolledFor': 'Naka-enrol para kay {name}',
+    'saved.enrolledFamily': 'May naka-enrol sa pamilya mo',
+    'saved.retired': 'Hindi na iniaalok',
+    'saved.unpublished': 'Hindi pa nailalathala',
+    'saved.available': 'Bukas ngayon',
+    'saved.gone': 'Isang kursong wala na rito',
+    'saved.unsure': 'Hindi iyon makumpirma. I-reload ang pahina para makita kung ano ang nasa listahan mo.',
+    'saved.notePaused': 'Hindi mababago ang tala habang nakapatay ang pag-save.',
+  },
+  uz: {
+    'saved.crumb': 'Saqlanganlar',
+    'saved.eyebrow': 'Faqat siz uchun',
+    'saved.lede':
+      'Keyinroq qaytish uchun olib qoʻygan kurslaringiz. Bu roʻyxatni boshqa hech kim koʻra olmaydi va izoh faqat siz uchun: kurs kim uchun ekani yoki nimani kutayotganingiz.',
+    'saved.paused':
+      'Bu platformada yangi kurslarni saqlash hozir oʻchirilgan. Avval saqlaganlaringiz hali ham shu yerda va ularni olib tashlashingiz mumkin. Saqlash qayta yoqilmaguncha izohni oʻzgartirib boʻlmaydi.',
+    'saved.empty': 'Hali hech narsa saqlanmagan.',
+    'saved.foot':
+      'Kursni saqlash joy band qilmaydi va narxni ushlab turmaydi. Narxlar va mavjudlik kurs sahifasida.',
+    'saved.remove': 'Olib tashlash',
+    'saved.on': 'Saqlangan sana: {date}',
+    'saved.noNote': 'Izoh yoʻq.',
+    'saved.enrolledYou': 'Siz yozilgansiz',
+    'saved.enrolledFor': 'Yozilgan oʻquvchi: {name}',
+    'saved.enrolledFamily': 'Oilangizdan kimdir yozilgan',
+    'saved.retired': 'Endi taklif etilmaydi',
+    'saved.unpublished': 'Hali nashr etilmagan',
+    'saved.available': 'Hozir mavjud',
+    'saved.gone': 'Endi bu yerda yoʻq kurs',
+    'saved.unsure':
+      'Buni tasdiqlab boʻlmadi. Roʻyxatingizda nima borligini koʻrish uchun sahifani qayta yuklang.',
+    'saved.notePaused': 'Saqlash oʻchirilgan paytda izohni oʻzgartirib boʻlmaydi.',
+  },
+  kk: {
+    'saved.crumb': 'Сақталғандар',
+    'saved.eyebrow': 'Тек сізге арналған',
+    'saved.lede':
+      'Кейін оралу үшін алып қойған курстарыңыз. Бұл тізімді басқа ешкім көре алмайды, ал ескертпе тек сізге арналған: курс кімге арналғаны немесе нені күтіп жүргеніңіз.',
+    'saved.paused':
+      'Бұл платформада жаңа курстарды сақтау қазір өшірулі. Бұрын сақтағандарыңыз әлі осында және оларды алып тастай аласыз. Сақтау қайта қосылғанша ескертпені өзгерту мүмкін емес.',
+    'saved.empty': 'Әлі ештеңе сақталмаған.',
+    'saved.foot':
+      'Курсты сақтау орын брондамайды және бағаны ұстап тұрмайды. Бағалар мен қолжетімділік курс бетінде.',
+    'saved.remove': 'Алып тастау',
+    'saved.on': 'Сақталған күні: {date}',
+    'saved.noNote': 'Ескертпе жоқ.',
+    'saved.enrolledYou': 'Сіз жазылғансыз',
+    'saved.enrolledFor': 'Жазылған оқушы: {name}',
+    'saved.enrolledFamily': 'Отбасыңыздан біреу жазылған',
+    'saved.retired': 'Енді ұсынылмайды',
+    'saved.unpublished': 'Әлі жарияланбаған',
+    'saved.available': 'Қазір қолжетімді',
+    'saved.gone': 'Енді мұнда жоқ курс',
+    'saved.unsure': 'Мұны растау мүмкін болмады. Тізіміңізде не бар екенін көру үшін бетті қайта жүктеңіз.',
+    'saved.notePaused': 'Сақтау өшірулі кезде ескертпені өзгерту мүмкін емес.',
+  },
+  az: {
+    'saved.crumb': 'Saxlanılanlar',
+    'saved.eyebrow': 'Yalnız sizin üçün',
+    'saved.lede':
+      'Sonra qayıtmaq üçün saxladığınız kurslar. Bu siyahını başqa heç kim görə bilməz və qeyd yalnız sizin üçündür: kurs kimin üçündür və ya nəyi gözləyirdiniz.',
+    'saved.paused':
+      'Bu platformada yeni kursları saxlamaq hazırda söndürülüb. Əvvəl saxladıqlarınız hələ də buradadır və onları silə bilərsiniz. Saxlama yenidən yandırılana qədər qeydi dəyişmək olmur.',
+    'saved.empty': 'Hələ heç nə saxlanılmayıb.',
+    'saved.foot':
+      'Kursu saxlamaq yer ayırmır və qiyməti sabit saxlamır. Qiymətlər və əlçatanlıq kurs səhifəsindədir.',
+    'saved.remove': 'Sil',
+    'saved.on': 'Saxlanılıb: {date}',
+    'saved.noNote': 'Qeyd yoxdur.',
+    'saved.enrolledYou': 'Siz yazılmısınız',
+    'saved.enrolledFor': 'Yazılan öyrənən: {name}',
+    'saved.enrolledFamily': 'Ailənizdən kimsə yazılıb',
+    'saved.retired': 'Artıq təqdim olunmur',
+    'saved.unpublished': 'Hələ dərc olunmayıb',
+    'saved.available': 'İndi əlçatandır',
+    'saved.gone': 'Artıq burada olmayan kurs',
+    'saved.unsure':
+      'Bunu təsdiqləmək mümkün olmadı. Siyahınızda nə olduğunu görmək üçün səhifəni yenidən yükləyin.',
+    'saved.notePaused': 'Saxlama söndürülmüş ikən qeydi dəyişmək olmur.',
+  },
+  tg: {
+    'saved.crumb': 'Захирашудаҳо',
+    'saved.eyebrow': 'Танҳо барои шумо',
+    'saved.lede':
+      'Курсҳое, ки нигоҳ доштаед, то баъдтар ба онҳо баргардед. Ин рӯйхатро каси дигар дида наметавонад ва қайд танҳо барои шумост: курс барои кист ё шумо чиро интизор будед.',
+    'saved.paused':
+      'Захира кардани курсҳои нав ҳоло дар ин платформа хомӯш аст. Он чи пештар захира кардаед, ҳанӯз дар ин ҷост ва шумо метавонед онро хориҷ кунед. То дубора фаъол шудани захира қайдро тағйир додан мумкин нест.',
+    'saved.empty': 'Ҳанӯз чизе захира нашудааст.',
+    'saved.foot':
+      'Захира кардани курс ҷой банд намекунад ва нархро нигоҳ намедорад. Нархҳо ва дастрасӣ дар саҳифаи курс мебошанд.',
+    'saved.remove': 'Хориҷ кардан',
+    'saved.on': 'Захира шуд: {date}',
+    'saved.noNote': 'Қайд нест.',
+    'saved.enrolledYou': 'Шумо номнавис шудаед',
+    'saved.enrolledFor': 'Номнавис шудааст: {name}',
+    'saved.enrolledFamily': 'Касе аз оилаи шумо номнавис шудааст',
+    'saved.retired': 'Дигар пешниҳод намешавад',
+    'saved.unpublished': 'Ҳанӯз нашр нашудааст',
+    'saved.available': 'Ҳоло дастрас аст',
+    'saved.gone': 'Курсе, ки дигар дар ин ҷо нест',
+    'saved.unsure':
+      'Инро тасдиқ кардан муяссар нашуд. Барои дидани он чи дар рӯйхататон ҳаст, саҳифаро аз нав бор кунед.',
+    'saved.notePaused': 'То хомӯш будани захира қайдро тағйир додан мумкин нест.',
+  },
+  ky: {
+    'saved.crumb': 'Сакталгандар',
+    'saved.eyebrow': 'Сизге гана',
+    'saved.lede':
+      'Кийин кайтуу үчүн алып койгон курстарыңыз. Бул тизмени башка эч ким көрө албайт жана эскертме сизге гана арналган: курс ким үчүн экени же эмнени күтүп жатканыңыз.',
+    'saved.paused':
+      'Бул платформада жаңы курстарды сактоо азыр өчүрүлгөн. Мурда сактагандарыңыз дагы эле ушул жерде жана аларды алып салсаңыз болот. Сактоо кайра күйгүзүлмөйүнчө эскертмени өзгөртүүгө болбойт.',
+    'saved.empty': 'Азырынча эч нерсе сактала элек.',
+    'saved.foot':
+      'Курсту сактоо орун ээлеп койбойт жана бааны кармап турбайт. Баалар жана жеткиликтүүлүк курстун барагында.',
+    'saved.remove': 'Алып салуу',
+    'saved.on': 'Сакталган күнү: {date}',
+    'saved.noNote': 'Эскертме жок.',
+    'saved.enrolledYou': 'Сиз жазылгансыз',
+    'saved.enrolledFor': 'Жазылган окуучу: {name}',
+    'saved.enrolledFamily': 'Үй-бүлөңүздөн бирөө жазылган',
+    'saved.retired': 'Мындан ары сунушталбайт',
+    'saved.unpublished': 'Азырынча жарыялана элек',
+    'saved.available': 'Азыр жеткиликтүү',
+    'saved.gone': 'Эми бул жерде жок курс',
+    'saved.unsure':
+      'Муну ырастоо мүмкүн болгон жок. Тизмеңизде эмне бар экенин көрүү үчүн баракты кайра жүктөңүз.',
+    'saved.notePaused': 'Сактоо өчүрүлүп турганда эскертмени өзгөртүүгө болбойт.',
+  },
+  tk: {
+    'saved.crumb': 'Saklananlar',
+    'saved.eyebrow': 'Diňe siziň üçin',
+    'saved.lede':
+      'Soň dolanmak üçin alyp goýan kurslaryňyz. Bu sanawy başga hiç kim görüp bilmeýär we bellik diňe siziň üçindir: kurs kim üçin ýa-da nämä garaşýandygyňyz.',
+    'saved.paused':
+      'Bu platformada täze kurslary saklamak häzir öçürilen. Öň saklanlaryňyz henizem şu ýerde we olary aýryp bilersiňiz. Saklamak täzeden açylýança belligi üýtgedip bolmaýar.',
+    'saved.empty': 'Entek hiç zat saklanmady.',
+    'saved.foot':
+      'Kursy saklamak orun bronlamaýar we bahany saklap durmaýar. Bahalar we elýeterlilik kurs sahypasynda.',
+    'saved.remove': 'Aýyrmak',
+    'saved.on': 'Saklanan senesi: {date}',
+    'saved.noNote': 'Bellik ýok.',
+    'saved.enrolledYou': 'Siz ýazyldyňyz',
+    'saved.enrolledFor': 'Ýazylan öwreniji: {name}',
+    'saved.enrolledFamily': 'Maşgalaňyzdan biri ýazyldy',
+    'saved.retired': 'Indi hödürlenmeýär',
+    'saved.unpublished': 'Entek çap edilmedi',
+    'saved.available': 'Häzir elýeterli',
+    'saved.gone': 'Indi bu ýerde ýok kurs',
+    'saved.unsure': 'Muny tassyklap bolmady. Sanawyňyzda näme bardygyny görmek üçin sahypany täzeden ýükläň.',
+    'saved.notePaused': 'Saklamak öçürilen wagty belligi üýtgedip bolmaýar.',
+  },
+  ta: {
+    'saved.crumb': 'சேமித்தவை',
+    'saved.eyebrow': 'உங்களுக்கு மட்டும்',
+    'saved.lede':
+      'பிறகு திரும்பி வர நீங்கள் வைத்துக்கொண்ட பாடநெறிகள். இந்தப் பட்டியலை வேறு யாரும் பார்க்க முடியாது; குறிப்பு உங்களுக்கு மட்டுமே: பாடநெறி யாருக்கானது, அல்லது நீங்கள் எதற்காகக் காத்திருந்தீர்கள்.',
+    'saved.paused':
+      'இந்தத் தளத்தில் புதிய பாடநெறிகளைச் சேமிப்பது இப்போது நிறுத்தப்பட்டுள்ளது. நீங்கள் முன்பு சேமித்தவை இன்னும் இங்கே உள்ளன; அவற்றை நீக்கலாம். சேமிப்பு மீண்டும் இயக்கப்படும் வரை குறிப்பை மாற்ற முடியாது.',
+    'saved.empty': 'இதுவரை எதுவும் சேமிக்கப்படவில்லை.',
+    'saved.foot':
+      'பாடநெறியைச் சேமிப்பது இடத்தை முன்பதிவு செய்யாது; விலையையும் நிலைநிறுத்தாது. விலைகளும் கிடைக்கும் நிலையும் பாடநெறிப் பக்கத்தில் உள்ளன.',
+    'saved.remove': 'நீக்கு',
+    'saved.on': '{date} அன்று சேமிக்கப்பட்டது',
+    'saved.noNote': 'குறிப்பு இல்லை.',
+    'saved.enrolledYou': 'நீங்கள் சேர்ந்துள்ளீர்கள்',
+    'saved.enrolledFor': '{name} என்பவருக்காகச் சேர்க்கப்பட்டது',
+    'saved.enrolledFamily': 'உங்கள் குடும்பத்தில் ஒருவர் சேர்ந்துள்ளார்',
+    'saved.retired': 'இனி வழங்கப்படுவதில்லை',
+    'saved.unpublished': 'இன்னும் வெளியிடப்படவில்லை',
+    'saved.available': 'இப்போது கிடைக்கிறது',
+    'saved.gone': 'இனி இங்கே இல்லாத ஒரு பாடநெறி',
+    'saved.unsure':
+      'அதை உறுதிப்படுத்த முடியவில்லை. உங்கள் பட்டியலில் என்ன உள்ளது என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றவும்.',
+    'saved.notePaused': 'சேமிப்பு நிறுத்தப்பட்டிருக்கும்போது குறிப்பை மாற்ற முடியாது.',
+  },
+  ne: {
+    'saved.crumb': 'सुरक्षित गरिएका',
+    'saved.eyebrow': 'तपाईंका लागि मात्र',
+    'saved.lede':
+      'पछि फर्केर हेर्न तपाईंले राख्नुभएका पाठ्यक्रमहरू। यो सूची अरू कसैले देख्न सक्दैन, र टिप्पणी तपाईंका लागि मात्र हो: पाठ्यक्रम कसका लागि हो, वा तपाईं केको प्रतीक्षामा हुनुहुन्थ्यो।',
+    'saved.paused':
+      'यो प्लेटफर्ममा नयाँ पाठ्यक्रम सुरक्षित गर्ने काम अहिले बन्द छ। तपाईंले पहिले सुरक्षित गर्नुभएका कुरा अझै यहीँ छन् र तपाईं तिनलाई हटाउन सक्नुहुन्छ। सुरक्षित गर्ने काम फेरि नखुलेसम्म टिप्पणी बदल्न सकिँदैन।',
+    'saved.empty': 'अहिलेसम्म केही सुरक्षित गरिएको छैन।',
+    'saved.foot':
+      'पाठ्यक्रम सुरक्षित गर्दा सिट आरक्षित हुँदैन र मूल्य पनि कायम रहँदैन। मूल्य र उपलब्धता पाठ्यक्रमको पृष्ठमा छन्।',
+    'saved.remove': 'हटाउनुहोस्',
+    'saved.on': '{date} मा सुरक्षित गरिएको',
+    'saved.noNote': 'टिप्पणी छैन।',
+    'saved.enrolledYou': 'तपाईं भर्ना हुनुभएको छ',
+    'saved.enrolledFor': '{name} का लागि भर्ना गरिएको',
+    'saved.enrolledFamily': 'तपाईंको परिवारको कोही भर्ना भएको छ',
+    'saved.retired': 'अब उपलब्ध गराइँदैन',
+    'saved.unpublished': 'अझै प्रकाशित भएको छैन',
+    'saved.available': 'अहिले उपलब्ध छ',
+    'saved.gone': 'अब यहाँ नभएको पाठ्यक्रम',
+    'saved.unsure': 'त्यो पुष्टि गर्न सकिएन। तपाईंको सूचीमा के छ हेर्न पृष्ठ फेरि लोड गर्नुहोस्।',
+    'saved.notePaused': 'सुरक्षित गर्ने काम बन्द हुँदा टिप्पणी बदल्न सकिँदैन।',
+  },
+};
