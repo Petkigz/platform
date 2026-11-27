@@ -718,7 +718,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 2537);
+    assert.equal(coverageOf(code).total, 2539);
     assert.equal(coverageOf(code).percent, 8, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
