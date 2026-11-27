@@ -10763,3 +10763,27 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   set to `arena/4f30fd1d-platform`. Not known: the address, which variables
   are set, whether a page loads. Supabase's site address is still
   `http://localhost:3000`.
+
+### Deployed, 369 applied, 2026-11-27
+
+- *369.* Run `45955982524` succeeded at 07:07 UTC, approved by the owner.
+  Read back: 369 recorded, `provider_events` there and empty. **Spent.**
+  Hosted now has every migration in the tree.
+- *The site.* `https://platform-ten-rose.vercel.app`, Vercel project
+  `platform`, Production tracks `arena/4f30fd1d-platform`: every push to
+  the branch is now a production deploy. The home page and `/sign-in` were
+  fetched and load.
+- *Supabase sign-in.* Through the connector (the one write the owner
+  approved): Site URL `https://platform-ten-rose.vercel.app`; redirect
+  list `https://platform-ten-rose.vercel.app/auth/callback` and
+  `http://localhost:3000/auth/callback`. Nothing else was changed.
+- *Seen on the live home page, not fixed:* the hosted catalogue has two
+  subjects called Aqeedah (`aqidah`, `aqeedah`) and two called Islamic
+  history (`islamic-history`, `history`). Find which migration seeds each,
+  decide which code stays, and move courses in a migration; that needs a
+  hosted job and the owner's approval.
+- *Owner's part, in order:* `NEXT_PUBLIC_SITE_URL` and the three `R2_*`
+  variables in Vercel, then redeploy; the first owner account
+  (`docs/deploy/README.md` section 3); the CORS rule on both buckets with
+  the site's address; then `auth.google_sign_in` at `/admin`.
+- *Not done:* a sign-in of any kind on the live site; an upload; an email.

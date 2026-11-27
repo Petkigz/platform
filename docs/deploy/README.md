@@ -634,7 +634,13 @@ all off; the privacy notice in force is version 2 with version 3 a draft; the
 refunds policy in force is version 3. The job is spent: never run it again,
 and never push its trigger prefix again.
 
-**The 369th has a job, and nobody has asked for it yet.** The 369th is
+**The 369th was applied on 2026-11-27.** The owner asked for it; trigger
+commit `03b0f0d`, run `45955982524`, job `apply-369`, approved by the owner,
+success at 07:07 UTC. Read back through the connector afterwards, separately
+from the job: 369 entries, ending at `20261281162000`; `provider_events`
+exists, holds nothing, and `anon` cannot read it; still no Auth user. The
+job is spent: never run it again and never push its trigger words again.
+What it was: the 369th is
 `20261281162000_provider_events.sql`: somewhere to write down what a mail
 provider says happened to a message after it was handed over. One table
 (`provider_events`), a few columns on `outbound_messages`, and two functions,
@@ -646,10 +652,7 @@ trigger words (read them in `.github/workflows/supabase-test-369.yml`; they
 are not repeated here so that nobody pastes them by accident), behind the
 same environment and approval. It starts only from exactly the 368 with no
 Auth user and no learner, so **it has to run before anybody signs up**, which
-means before the deployed site is given to anyone. Without it the site still
-works: only the page that receives the mail provider's reports
-(`/api/email/webhook`) has nowhere to write, and that page does nothing
-until the provider is connected.
+meant before the deployed site was given to anyone; it did.
 
 **The 358th went first, so the order below can no longer be kept on the
 test project.** No application has been deployed there, so nothing is
@@ -1093,6 +1096,14 @@ Build locally first if you want to find a problem before Vercel does:
 npm ci && npm run build
 ```
 
+**Deployed on 2026-11-27**, by the owner's hand (the connector stayed
+read-only): Vercel project `platform`, Production tracking
+`arena/4f30fd1d-platform`, at `https://platform-ten-rose.vercel.app`. Fetched
+from outside the same morning: the home page lists the catalogue's subjects
+from the hosted database, and `/sign-in` shows email and password and no
+Google button (the flag is off). Not looked at: any signed-in page, and which
+variables beyond the public Supabase pair are set.
+
 ### 4.3 Supabase side of sign-in
 
 Authentication → **URL Configuration**:
@@ -1432,9 +1443,7 @@ connection, not a build. The owner's page `/admin/connections` shows which of
 these the deployment has been given (names of missing variables, never a
 value).
 
-1. **The database's last migration.** 359 to 368 are applied. The 369th has
-   its job (above): say the word, then approve the run. Do this before the
-   first account is made.
+1. **The database's last migration.** Done: all 369 are applied (above).
 2. **A deployment** (section 4): the environment in 4.1, starting with the
    three Supabase variables and `NEXT_PUBLIC_SITE_URL`. Until the domain is
    owned, the site's address is the one the host gives; change
