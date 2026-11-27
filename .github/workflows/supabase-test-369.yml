@@ -5,10 +5,11 @@
 # scripts/hosted-migration-369.mjs refuses unless the hosted history is
 # exactly the 368 and the local files are exactly the reviewed 369.
 #
-# NOBODY HAS ASKED FOR THIS STEP YET. It starts only on a commit whose
-# message begins with the words in the `if` below, which is pushed only on
-# the owner's word; the environment then still requires the owner's approval
-# before the job, and so before any secret, is released.
+# The owner asked for this step on 2026-11-26 ("give me the 369 link"). It
+# starts only on a commit whose message begins with the words in the `if`
+# below; the environment then still requires the owner's approval before the
+# job, and so before any secret, is released. One-time: once it has run,
+# never push those words again.
 #
 # The job checks out the commit this step was reviewed at (45422cb, which
 # holds exactly the 369) and runs that tree's script, test and migrations, so
