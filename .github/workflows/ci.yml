@@ -135,6 +135,9 @@ jobs:
       - name: Board member's page synthetic HTTP regression
         run: node scripts/panel-route-smoke.mjs
 
+      - name: Review queue, reviewer register and its route synthetic HTTP regression
+        run: node scripts/review-route-smoke.mjs
+
       - name: Export pages and export route synthetic HTTP regression
         run: node scripts/export-route-smoke.mjs
 

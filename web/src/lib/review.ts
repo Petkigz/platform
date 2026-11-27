@@ -130,13 +130,17 @@ export async function fetchMyAssignments(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<ReviewAssignment[]> {
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('reviewer_profiles')
     .select('id')
     .eq('user_id', userId)
     .is('deleted_at', null)
     .limit(1);
 
+  // A profile that could not be read is not "no profile" (2026-11-27): until
+  // then a failed read was an empty queue, and the page said nothing had been
+  // assigned.
+  if (profileError) throw new Error(profileError.message);
   const reviewerProfileId = (profile?.[0] as { id?: string } | undefined)?.id;
   if (!reviewerProfileId) return [];
 
@@ -205,7 +209,7 @@ export async function fetchAssignment(
 
 export type ReviewOutcome<T> =
   | { ok: true; value: T }
-  | { ok: false; code: 'rejected' | 'forbidden'; message: string };
+  | { ok: false; code: 'rejected' | 'forbidden'; message: string; state?: string | null };
 
 /**
  * Accept or decline an offered assignment.
@@ -1128,14 +1132,18 @@ export function validateAssessmentInput(input: {
  */
 export function mapReviewerError(error: { message: string; code?: string }): ReviewOutcome<never> {
   const message = error.message;
+  // The database's own state travels with the refusal (2026-11-27), so that a
+  // page can tell a refusal from an answer nobody could read: a gateway's page
+  // and a connection that went have none.
+  const state = typeof error.code === 'string' && error.code !== '' ? error.code : null;
   if (/only a governance admin|may only record qualifications|not registered as a reviewer|sign in/i
     .test(message)) {
-    return { ok: false, code: 'forbidden', message };
+    return { ok: false, code: 'forbidden', message, state };
   }
   if (/policy|permission denied/i.test(message)) {
-    return { ok: false, code: 'forbidden', message: 'That is not yours to decide.' };
+    return { ok: false, code: 'forbidden', message: 'That is not yours to decide.', state };
   }
-  return { ok: false, code: 'rejected', message };
+  return { ok: false, code: 'rejected', message, state };
 }
 
 type ReviewerAnswer = {

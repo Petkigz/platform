@@ -1,0 +1,2619 @@
+### ar
+قائمة المراجعات
+المراجعة
+التكليفات تأتي من فريق المنصة. لا يمكنك أن تكلّف نفسك، ولا أن توافق على دورة كتبتها أنت.
+إن كنت عضوًا في هيئة علمية، فالقضايا التي تنتظر صوتك موجودة في {link}.
+صفحة هيئتك
+لم تُكلَّف بشيء. إن كنت تتوقع مراجعة هنا، فعلى أحد مشرفي المنصة أن يكلّفك بها.
+بانتظارك
+مغلقة
+تقنية
+علمية
+معروضة
+مقبولة
+معتذَر عنها
+قيد التنفيذ
+مكتملة
+ملغاة
+تاريخ التكليف: {date}
+موعد التسليم: {date}
+قرارك: {decision}
+تمت الموافقة
+طُلبت تعديلات
+رُفضت
+اطّلع على العرض
+افتح المراجعة
+العودة إلى تعلّمي
+تعذّرت قراءة مراجعاتك الآن. حاول مرة أخرى بعد قليل.
+تقدّم لتكون مراجعًا
+غير مدرج في السجل
+لست مدرجًا في سجلّ المراجعين، فلا يمكن تكليفك بشيء. والتقدّم لا يجعلك مراجعًا: على أحد مشرفي الحوكمة أن يتحقق من هويتك قبل أن تُعرض عليك دورة، وهو وحده من يحدّد المواد التي يحق لك الحكم فيها.
+نبذة قصيرة عنك، تُعرض على من يتحقق من طلبك
+تقدّم للمراجعة
+جارٍ الإرسال…
+موضعك في السجل
+متقدّم
+بانتظار التحقق
+مراجع موثَّق
+موقوف
+لم يعد يراجع
+تاريخ التقدّم
+تم التحقق
+المتحقِّق
+ليس بعد. لا يمكن تكليفك بشيء حتى يتحقق منك أحد مشرفي الحوكمة.
+ما لم تكن مراجعًا موثَّقًا، لا يمكن تكليفك بأي دورة، ولا تسمح أي موافقة منك بنشر شيء.
+ما أنت مؤهَّل له
+لم يُسجَّل شيء بعد.
+شهادة
+درجة علمية
+إجازة
+خبرة
+انتساب إلى مؤسسة
+بلا عنوان
+غير مقبول
+منتهي الصلاحية
+المؤهل الذي تسجّله يبقى معلّقًا حتى يُتحقق منه، على يد مالك المنصة أو الهيئة العلمية ما دام المالك قد عقدها. ويجب أن يسمّي مادة، لأن المؤهل هو ما يخوّلك في تلك المادة. وتسجيله لا يخوّلك كذلك: منح المادة قرار مستقل يتخذه فريق الحوكمة.
+سجّل مؤهلًا
+نوع المؤهل
+المادة التي يشملها
+لا توجد مواد بعد
+عنوان المؤهل
+اسمه، مثلًا: إجازة في رواية حفص
+الجهة المانحة
+من منحه (اختياري)
+سجّله معلّقًا
+ما يجب أن تتنحّى عنه
+لا إفصاحات. أفصح فور أن يُطلب منك مراجعة عمل لا تستطيع الحياد فيه: دورة كتبتها، أو قريب لك، أو مدرسة تدفع لك أجرًا.
+أنا كتبته
+قد أربح منه
+قرابة
+درّستُه أو درّسني
+المؤسسة نفسها
+شخصي
+شيء آخر
+أُفصح عنه، بانتظار التقييم
+قيد التقييم
+سُمع، وليس مانعًا
+يمنع التكليف
+تم الحل
+قيّمه: {name}
+أفصح عن تعارض
+الإفصاح يمنع تكليفك فورًا، قبل أن يقرأه أحد، ويبقى مانعًا حتى ينظر فيه أحد مشرفي الحوكمة. وهذا هو المقصود: تعارض يُنظر فيه متأخرًا خير من مراجعة تُنشر مبكرًا.
+نوع التعارض
+صف التعارض
+ما التعارض، بكلماتك أنت
+أفصح عنه
+سجّل الدخول من جديد أولًا.
+هذا طويل جدًا. أقصى عدد من الأحرف: {max}
+أُغلق تسجيلك مراجعًا. اطلب من فريق المنصة أن يعيد فتحه.
+لست مدرجًا في سجلّ المراجعين، فلا يوجد ما يُسجَّل هذا عليه.
+ليس لك أن تسجّل هذا.
+اختر نوعه.
+أعطِ المؤهل عنوانًا.
+اختر المادة التي يندرج فيها. فبدونها لا يخوّل شيئًا أبدًا.
+هذه المادة لم تعد في القائمة. أعد تحميل الصفحة واختر غيرها.
+صف التعارض، حتى لا يضطر من يقيّمه إلى التخمين.
+لم يُسجَّل. أعد تحميل الصفحة لترى ما في السجل.
+لا أحد يستطيع أن يقول هل سُجّل ذلك. أعد تحميل الصفحة وانظر قبل أن ترسله من جديد.
+### ur
+جائزوں کی قطار
+جائزہ
+ذمہ داریاں پلیٹ فارم کا عملہ دیتا ہے۔ آپ خود کو ذمہ داری نہیں دے سکتے، اور اپنے لکھے ہوئے کورس کو منظور نہیں کر سکتے۔
+اگر آپ کسی علمی بورڈ کے رکن ہیں تو جو معاملات آپ کے ووٹ کے منتظر ہیں وہ {link} پر ہیں۔
+آپ کے بورڈ کا صفحہ
+آپ کو کچھ نہیں سونپا گیا۔ اگر آپ کو یہاں کسی جائزے کی توقع تھی تو پلیٹ فارم کے کسی منتظم کو وہ آپ کو سونپنا ہوگا۔
+آپ کے منتظر
+بند
+تکنیکی
+علمی
+پیشکش کی گئی
+قبول کیا گیا
+معذرت کی گئی
+جاری ہے
+مکمل
+منسوخ
+سونپنے کی تاریخ: {date}
+آخری تاریخ: {date}
+آپ کا فیصلہ: {decision}
+منظور ہو گیا
+ترامیم مانگی گئیں
+مسترد ہو گیا
+پیشکش دیکھیں
+جائزہ کھولیں
+میری تعلیم پر واپس
+آپ کے جائزے ابھی پڑھے نہیں جا سکے۔ تھوڑی دیر میں دوبارہ کوشش کریں۔
+خود کو جائزہ لینے والے کے طور پر پیش کریں
+رجسٹر میں نہیں
+آپ جائزہ لینے والوں کے رجسٹر میں نہیں ہیں، اس لیے آپ کو کچھ نہیں سونپا جا سکتا۔ درخواست دینے سے آپ جائزہ لینے والے نہیں بن جاتے: کسی کورس کے آپ کے سامنے رکھے جانے سے پہلے گورننس کے کسی منتظم کو جانچنا ہوگا کہ آپ کون ہیں، اور صرف وہی بتا سکتے ہیں کہ آپ کن مضامین پر فیصلہ دے سکتے ہیں۔
+مختصر تعارف، جو آپ کی درخواست جانچنے والے کو دکھایا جائے گا
+جائزے کے لیے درخواست دیں
+بھیجا جا رہا ہے…
+رجسٹر میں آپ کی جگہ
+درخواست گزار
+جانچ کا منتظر
+تصدیق شدہ جائزہ لینے والا
+معطل
+اب جائزہ نہیں لیتا
+درخواست کی تاریخ
+جانچ ہو گئی
+جانچنے والا
+ابھی نہیں۔ جب تک گورننس کا کوئی منتظم آپ کو جانچ نہ لے، آپ کو کچھ نہیں سونپا جا سکتا۔
+جب تک آپ تصدیق شدہ جائزہ لینے والے نہیں ہیں، آپ کو کوئی کورس نہیں سونپا جا سکتا، اور آپ کی دی ہوئی کسی منظوری سے کچھ شائع نہیں ہو سکتا۔
+آپ کس چیز کے اہل ہیں
+ابھی کچھ درج نہیں۔
+سرٹیفکیٹ
+ڈگری
+اجازہ
+تجربہ
+ادارے سے وابستگی
+بلا عنوان
+قبول نہیں ہوئی
+میعاد ختم
+جو اہلیت آپ درج کرتے ہیں وہ جانچ ہونے تک زیرِ التوا رہتی ہے، جانچ پلیٹ فارم کا مالک کرتا ہے یا علمی بورڈ، جب مالک نے اسے طلب کر رکھا ہو۔ اس میں مضمون کا نام ہونا لازم ہے، کیونکہ سند ہی آپ کو اس مضمون میں اختیار دیتی ہے۔ اسے درج کرنے سے بھی اختیار نہیں ملتا: مضمون دینا گورننس کے عملے کا الگ فیصلہ ہے۔
+اہلیت درج کریں
+اہلیت کی قسم
+یہ کس مضمون کی ہے
+ابھی کوئی مضمون موجود نہیں
+اہلیت کا عنوان
+اس کا نام، مثلاً: روایتِ حفص میں اجازہ
+جاری کرنے والا ادارہ
+کس نے دی (اختیاری)
+زیرِ التوا کے طور پر درج کریں
+آپ کو کس چیز سے الگ رہنا ہے
+کوئی اعلان نہیں۔ جیسے ہی آپ سے کسی ایسی چیز کا جائزہ مانگا جائے جس میں آپ غیر جانب دار نہیں رہ سکتے، اعلان کر دیں: آپ کا لکھا ہوا کورس، کوئی رشتہ دار، یا وہ مدرسہ جو آپ کو تنخواہ دیتا ہے۔
+میں نے اسے لکھا ہے
+مجھے اس سے نفع ہو سکتا ہے
+رشتہ داری
+میں نے انہیں پڑھایا، یا انہوں نے مجھے
+ایک ہی ادارہ
+ذاتی
+کچھ اور
+اعلان ہو چکا، جانچ کا منتظر
+جانچ جاری ہے
+سن لیا گیا، رکاوٹ نہیں
+ذمہ داری میں رکاوٹ ہے
+حل ہو گیا
+جانچنے والا: {name}
+تعارض کا اعلان کریں
+اعلان کرتے ہی، کسی کے پڑھنے سے بھی پہلے، آپ کو ذمہ داری نہیں دی جا سکتی، اور یہ رکاوٹ تب تک رہتی ہے جب تک گورننس کا کوئی منتظم اسے سن نہ لے۔ مقصد یہی ہے: دیر سے سنا گیا تعارض جلدی شائع ہونے والے جائزے سے زیادہ قیمتی ہے۔
+تعارض کی قسم
+تعارض بیان کریں
+تعارض کیا ہے، اپنے الفاظ میں
+اعلان کریں
+پہلے دوبارہ سائن ان کریں۔
+یہ بہت طویل ہے۔ زیادہ سے زیادہ حروف: {max}
+جائزہ لینے والے کے طور پر آپ کا اندراج بند کر دیا گیا تھا۔ پلیٹ فارم کے عملے سے کہیں کہ اسے دوبارہ کھولیں۔
+آپ جائزہ لینے والوں کے رجسٹر میں نہیں ہیں، اس لیے یہ کسی کے نام درج نہیں ہو سکتا۔
+یہ درج کرنا آپ کا کام نہیں۔
+اس کی قسم چنیں۔
+اہلیت کو عنوان دیں۔
+وہ مضمون چنیں جس کی یہ ہے۔ اس کے بغیر یہ کبھی کوئی اختیار نہیں دے سکتی۔
+یہ مضمون اب فہرست میں نہیں۔ صفحہ دوبارہ کھولیں اور کوئی اور چنیں۔
+تعارض بیان کریں، تاکہ جانچنے والے کو اندازہ نہ لگانا پڑے۔
+یہ درج نہیں ہوا۔ صفحہ دوبارہ کھولیں اور دیکھیں کہ رجسٹر میں کیا ہے۔
+کوئی نہیں بتا سکتا کہ یہ درج ہوا یا نہیں۔ صفحہ دوبارہ کھولیں اور دوبارہ بھیجنے سے پہلے دیکھ لیں۔
+### fa
+صف بازبینی
+بازبینی
+واگذاری‌ها از سوی کارکنان سکو انجام می‌شود. نمی‌توانید کاری را به خودتان واگذار کنید، و نمی‌توانید دوره‌ای را که خودتان نوشته‌اید تأیید کنید.
+اگر عضو هیئت علمی هستید، پرونده‌هایی که منتظر رأی شما هستند در {link} است.
+صفحهٔ هیئت شما
+چیزی به شما واگذار نشده است. اگر انتظار بازبینی‌ای را در اینجا داشتید، یکی از مدیران سکو باید آن را واگذار کند.
+در انتظار شما
+بسته
+فنی
+علمی
+پیشنهادشده
+پذیرفته‌شده
+نپذیرفته
+در حال انجام
+کامل‌شده
+لغوشده
+تاریخ واگذاری: {date}
+مهلت: {date}
+تصمیم شما: {decision}
+تأیید شد
+اصلاحات خواسته شد
+رد شد
+دیدن پیشنهاد
+بازکردن بازبینی
+بازگشت به یادگیری من
+بازبینی‌های شما اکنون خوانده نشد. کمی بعد دوباره تلاش کنید.
+خود را برای بازبینی پیشنهاد کنید
+در فهرست نیست
+شما در فهرست بازبینان نیستید، پس چیزی نمی‌تواند به شما واگذار شود. درخواست‌دادن شما را بازبین نمی‌کند: پیش از آنکه دوره‌ای پیش روی شما گذاشته شود، یکی از مدیران حاکمیت باید بررسی کند که شما کیستید، و فقط آنان می‌توانند بگویند دربارهٔ کدام موضوع‌ها می‌توانید داوری کنید.
+زندگی‌نامه‌ای کوتاه، که به بررسی‌کنندهٔ درخواست شما نشان داده می‌شود
+درخواست بازبینی
+در حال ارسال…
+جای شما در فهرست
+متقاضی
+در انتظار بررسی
+بازبین تأییدشده
+معلق
+دیگر بازبینی نمی‌کند
+تاریخ درخواست
+بررسی شد
+بررسی‌کننده
+هنوز نه. تا زمانی که یکی از مدیران حاکمیت شما را بررسی نکند، چیزی نمی‌تواند به شما واگذار شود.
+تا زمانی که بازبین تأییدشده نباشید، هیچ دوره‌ای نمی‌تواند به شما واگذار شود، و هیچ تأییدی از شما اجازهٔ انتشار چیزی را نمی‌دهد.
+صلاحیت‌های شما
+هنوز چیزی ثبت نشده است.
+گواهی
+مدرک دانشگاهی
+اجازه
+تجربه
+وابستگی به مؤسسه
+بی‌عنوان
+پذیرفته نشد
+منقضی‌شده
+صلاحیتی که ثبت می‌کنید تا زمان بررسی در انتظار می‌ماند؛ بررسی را مالک سکو انجام می‌دهد یا هیئت علمی، تا وقتی که مالک آن را تشکیل داده باشد. باید موضوعی را نام ببرد، زیرا مدرک است که به شما در آن موضوع اختیار می‌دهد. ثبت آن هم به شما اختیار نمی‌دهد: دادن موضوع تصمیم جداگانهٔ کارکنان حاکمیت است.
+ثبت صلاحیت
+نوع صلاحیت
+موضوعی که پوشش می‌دهد
+هنوز موضوعی وجود ندارد
+عنوان صلاحیت
+نام آن، برای نمونه: اجازه در روایت حفص
+مؤسسهٔ صادرکننده
+چه کسی آن را داده است (اختیاری)
+ثبت به‌صورت در انتظار
+از چه چیزی باید کنار بروید
+اعلامی نیست. همین که از شما خواسته شد چیزی را بازبینی کنید که در آن بی‌طرف نیستید، اعلام کنید: دوره‌ای که نوشته‌اید، یکی از خویشان، مدرسه‌ای که به شما مزد می‌دهد.
+من آن را نوشته‌ام
+ممکن است از آن سود ببرم
+خویشاوندی
+من به او درس داده‌ام، یا او به من
+همان مؤسسه
+شخصی
+چیز دیگری
+اعلام‌شده، در انتظار ارزیابی
+در حال ارزیابی
+شنیده شد، و مانع نیست
+مانع واگذاری است
+حل‌شده
+ارزیابی‌کننده: {name}
+اعلام تعارض
+اعلام تعارض بی‌درنگ، پیش از آنکه کسی آن را بخواند، مانع واگذاری به شما می‌شود و تا وقتی یکی از مدیران حاکمیت آن را بشنود مانع می‌ماند. هدف همین است: تعارضی که دیرتر شنیده شود از بازبینی‌ای که زودتر منتشر شود ارزشمندتر است.
+نوع تعارض
+تعارض را شرح دهید
+تعارض چیست، به زبان خودتان
+اعلام کنید
+نخست دوباره وارد شوید.
+این بیش از حد طولانی است. بیشترین تعداد نویسه: {max}
+ثبت‌نام شما به‌عنوان بازبین بسته شده است. از کارکنان سکو بخواهید آن را دوباره باز کنند.
+شما در فهرست بازبینان نیستید، پس چیزی نیست که این برایش ثبت شود.
+ثبت این بر عهدهٔ شما نیست.
+نوع آن را انتخاب کنید.
+به صلاحیت عنوانی بدهید.
+موضوع آن را انتخاب کنید. بدون موضوع هرگز به چیزی اختیار نمی‌دهد.
+این موضوع دیگر در فهرست نیست. صفحه را دوباره بار کنید و موضوع دیگری انتخاب کنید.
+تعارض را شرح دهید، تا ارزیاب ناچار به حدس‌زدن نباشد.
+ثبت نشد. صفحه را دوباره بار کنید تا ببینید در فهرست چه هست.
+هیچ‌کس نمی‌تواند بگوید ثبت شد یا نه. صفحه را دوباره بار کنید و پیش از ارسال دوباره نگاه کنید.
+### fa-af
+صف بازبینی
+بازبینی
+وظیفه‌ها از سوی کارمندان پلتفرم سپرده می‌شود. شما نمی‌توانید کاری را به خودتان بسپارید، و نمی‌توانید کورسی را که خودتان نوشته‌اید تأیید کنید.
+اگر عضو هیئت علمی هستید، دوسیه‌هایی که منتظر رای شما هستند در {link} است.
+صفحهٔ هیئت شما
+چیزی به شما سپرده نشده است. اگر انتظار بازبینی‌ای را در اینجا داشتید، یکی از مدیران پلتفرم باید آن را به شما بسپارد.
+در انتظار شما
+بسته
+تخنیکی
+علمی
+پیشنهادشده
+پذیرفته‌شده
+نپذیرفته
+در جریان
+تکمیل‌شده
+لغوشده
+تاریخ سپردن: {date}
+مهلت: {date}
+تصمیم شما: {decision}
+تأیید شد
+اصلاحات خواسته شد
+رد شد
+دیدن پیشنهاد
+بازکردن بازبینی
+برگشت به آموزش من
+بازبینی‌های شما فعلاً خوانده نشد. کمی بعد دوباره کوشش کنید.
+خود را برای بازبینی پیشنهاد کنید
+در فهرست نیست
+شما در فهرست بازبین‌ها نیستید، پس چیزی به شما سپرده شده نمی‌تواند. درخواست‌دادن شما را بازبین نمی‌سازد: پیش از آنکه کورسی پیش روی شما گذاشته شود، یکی از مدیران حکومتداری باید بررسی کند که شما کی هستید، و تنها آنان گفته می‌توانند که دربارهٔ کدام مضمون‌ها داوری کرده می‌توانید.
+زندگی‌نامهٔ کوتاه، که به بررسی‌کنندهٔ درخواست شما نشان داده می‌شود
+درخواست بازبینی
+در حال فرستادن…
+جای شما در فهرست
+درخواست‌کننده
+در انتظار بررسی
+بازبین تأییدشده
+تعلیق‌شده
+دیگر بازبینی نمی‌کند
+تاریخ درخواست
+بررسی شد
+بررسی‌کننده
+هنوز نه. تا وقتی که یکی از مدیران حکومتداری شما را بررسی نکند، چیزی به شما سپرده شده نمی‌تواند.
+تا وقتی که بازبین تأییدشده نباشید، هیچ کورسی به شما سپرده شده نمی‌تواند، و هیچ تأییدی از شما اجازهٔ نشر چیزی را نمی‌دهد.
+صلاحیت‌های شما
+هنوز چیزی ثبت نشده است.
+تصدیق‌نامه
+سند تحصیلی
+اجازه
+تجربه
+وابستگی به مؤسسه
+بی‌عنوان
+پذیرفته نشد
+تاریخ‌گذشته
+صلاحیتی که ثبت می‌کنید تا وقت بررسی در انتظار می‌ماند؛ بررسی را مالک پلتفرم می‌کند یا هیئت علمی، تا وقتی که مالک آن را دایر کرده باشد. باید مضمونی را نام ببرد، چون سند است که به شما در آن مضمون صلاحیت می‌دهد. ثبت آن هم به شما صلاحیت نمی‌دهد: دادن مضمون تصمیم جداگانهٔ کارمندان حکومتداری است.
+ثبت صلاحیت
+نوع صلاحیت
+مضمونی که در بر می‌گیرد
+هنوز مضمونی وجود ندارد
+عنوان صلاحیت
+نام آن، مثلاً: اجازه در روایت حفص
+مؤسسهٔ صادرکننده
+کی آن را داده است (اختیاری)
+ثبت به‌گونهٔ در انتظار
+از چه چیزی باید کنار بروید
+اعلامی نیست. همین که از شما خواسته شد چیزی را بازبینی کنید که در آن بی‌طرف نیستید، اعلام کنید: کورسی که نوشته‌اید، یکی از خویشاوندان، مکتبی که به شما معاش می‌دهد.
+من آن را نوشته‌ام
+شاید از آن فایده ببرم
+خویشاوندی
+من به او درس داده‌ام، یا او به من
+همان مؤسسه
+شخصی
+چیز دیگر
+اعلام‌شده، در انتظار ارزیابی
+در حال ارزیابی
+شنیده شد، و مانع نیست
+مانع سپردن است
+حل‌شده
+ارزیابی‌کننده: {name}
+اعلام تعارض
+اعلام تعارض فوراً، پیش از آنکه کسی آن را بخواند، مانع سپردن کار به شما می‌شود و تا وقتی یکی از مدیران حکومتداری آن را بشنود مانع می‌ماند. هدف همین است: تعارضی که دیرتر شنیده شود از بازبینی‌ای که زودتر نشر شود باارزش‌تر است.
+نوع تعارض
+تعارض را شرح دهید
+تعارض چیست، به زبان خودتان
+اعلام کنید
+اول دوباره داخل شوید.
+این بسیار دراز است. بیشترین شمار حروف: {max}
+ثبت‌نام شما به‌حیث بازبین بسته شده است. از کارمندان پلتفرم بخواهید آن را دوباره باز کنند.
+شما در فهرست بازبین‌ها نیستید، پس چیزی نیست که این برایش ثبت شود.
+ثبت این کار شما نیست.
+نوع آن را انتخاب کنید.
+به صلاحیت عنوانی بدهید.
+مضمون آن را انتخاب کنید. بدون مضمون هرگز به چیزی صلاحیت نمی‌دهد.
+این مضمون دیگر در فهرست نیست. صفحه را دوباره باز کنید و مضمون دیگری انتخاب کنید.
+تعارض را شرح دهید، تا ارزیاب مجبور به حدس‌زدن نباشد.
+ثبت نشد. صفحه را دوباره باز کنید تا ببینید در فهرست چه است.
+هیچ‌کس گفته نمی‌تواند که ثبت شد یا نه. صفحه را دوباره باز کنید و پیش از دوباره فرستادن نگاه کنید.
+### tr
+Değerlendirme sırası
+Değerlendirme
+Görevleri platform görevlileri verir. Kendinizi görevlendiremezsiniz ve kendi yazdığınız bir kursu onaylayamazsınız.
+Bir ilim kurulunda üyeyseniz, oyunuzu bekleyen dosyalar {link} üzerindedir.
+kurul sayfanız
+Size bir şey verilmedi. Burada bir değerlendirme bekliyorduysanız, bir platform yöneticisinin onu size vermesi gerekir.
+Sizi bekleyen
+Kapanan
+Teknik
+İlmî
+Teklif edildi
+Kabul edildi
+Geri çevrildi
+Devam ediyor
+Tamamlandı
+İptal edildi
+Görevlendirme: {date}
+Son teslim: {date}
+Kararınız: {decision}
+Onaylandı
+Düzeltme istendi
+Reddedildi
+Teklifi gör
+Değerlendirmeyi aç
+Öğrenimime dön
+Değerlendirmeleriniz şu anda okunamadı. Biraz sonra yeniden deneyin.
+Değerlendirici olmak için öne çıkın
+Kütükte değil
+Değerlendirici kütüğünde değilsiniz, bu yüzden size bir şey verilemez. Başvurmak sizi değerlendirici yapmaz: önünüze bir kurs konmadan önce bir yönetişim yöneticisinin kim olduğunuzu kontrol etmesi gerekir ve hangi konularda hüküm verebileceğinizi yalnızca onlar söyleyebilir.
+Başvurunuzu kontrol edecek kişiye gösterilecek kısa bir özgeçmiş
+Değerlendirici olmak için başvur
+Gönderiliyor…
+Kütükteki yeriniz
+Başvuran
+Kontrol bekliyor
+Doğrulanmış değerlendirici
+Askıya alındı
+Artık değerlendirmiyor
+Başvuru
+Kontrol edildi
+Kontrol eden
+Henüz değil. Bir yönetişim yöneticisi sizi kontrol edene kadar size bir şey verilemez.
+Doğrulanmış değerlendirici olana kadar size hiçbir kurs verilemez ve verdiğiniz hiçbir onay bir şeyin yayımlanmasını sağlamaz.
+Yeterlilikleriniz
+Henüz bir şey kaydedilmedi.
+Sertifika
+Diploma
+İcazet
+Deneyim
+Kurum bağlantısı
+Başlıksız
+Kabul edilmedi
+Süresi doldu
+Kaydettiğiniz bir yeterlilik kontrol edilene kadar bekler; kontrolü platformun sahibi ya da sahibi topladığı sürece ilim kurulu yapar. Bir konu belirtmesi gerekir, çünkü sizi o konuda yetkili kılan belgedir. Kaydetmek de sizi yetkili kılmaz: konuyu vermek, yönetişim görevlilerinin ayrı bir kararıdır.
+Yeterlilik kaydet
+Yeterliliğin türü
+Kapsadığı konu
+Henüz konu yok
+Yeterliliğin başlığı
+Adı, örneğin: Hafs rivayetinde icazet
+Veren kurum
+Kimin verdiği (isteğe bağlı)
+Bekleyen olarak kaydet
+Nelerden çekilmeniz gerekir
+Beyan yok. Değerlendirmeniz istenen bir şeyde tarafsız kalamayacaksanız hemen beyan edin: yazdığınız bir kurs, bir yakınınız, size ücret ödeyen bir okul.
+Ben yazdım
+Bundan kazanç sağlayabilirim
+Akrabalık
+Ben ona ders verdim ya da o bana
+Aynı kurum
+Kişisel
+Başka bir şey
+Beyan edildi, değerlendirilmeyi bekliyor
+Değerlendiriliyor
+Dinlendi, engel değil
+Görevlendirmeye engel
+Çözüldü
+Değerlendiren: {name}
+Çıkar çatışması beyan et
+Beyan, daha kimse okumadan sizi hemen görevlendirmenin dışında bırakır ve bir yönetişim yöneticisi onu dinleyene kadar engel olmayı sürdürür. Amaç da budur: sonradan dinlenen bir çatışma, erken yayımlanan bir değerlendirmeden daha değerlidir.
+Çatışmanın türü
+Çatışmayı anlatın
+Çatışma nedir, kendi sözlerinizle
+Beyan et
+Önce yeniden oturum açın.
+Bu çok uzun. İzin verilen en fazla karakter: {max}
+Değerlendirici kaydınız kapatıldı. Platform görevlilerinden yeniden açmalarını isteyin.
+Değerlendirici kütüğünde değilsiniz, bu yüzden bunun kaydedileceği bir yer yok.
+Bunu kaydetmek size düşmez.
+Türünü seçin.
+Yeterliliğe bir başlık verin.
+Hangi konuda olduğunu seçin. Konu olmadan hiçbir zaman yetki veremez.
+Bu konu artık listede yok. Sayfayı yeniden yükleyin ve başka bir konu seçin.
+Çatışmayı anlatın ki onu değerlendiren kişi tahmin etmek zorunda kalmasın.
+Kaydedilmedi. Kütükte ne olduğunu görmek için sayfayı yeniden yükleyin.
+Bunun kaydedilip kaydedilmediğini kimse söyleyemez. Sayfayı yeniden yükleyin ve yeniden göndermeden önce bakın.
+### id
+Antrean tinjauan
+Peninjauan
+Penugasan datang dari staf platform. Anda tidak dapat menugaskan diri sendiri, dan tidak dapat menyetujui kursus yang Anda tulis.
+Jika Anda duduk di dewan keilmuan, perkara yang menunggu suara Anda ada di {link}.
+halaman dewan Anda
+Belum ada yang ditugaskan kepada Anda. Jika Anda mengharapkan tinjauan di sini, admin platform perlu menugaskannya.
+Menunggu Anda
+Ditutup
+Teknis
+Keilmuan
+Ditawarkan
+Diterima
+Ditolak peninjau
+Sedang berjalan
+Selesai
+Dibatalkan
+Ditugaskan: {date}
+Tenggat: {date}
+Keputusan Anda: {decision}
+Disetujui
+Revisi diminta
+Ditolak
+Lihat tawaran
+Buka tinjauan
+Kembali ke pembelajaran saya
+Tinjauan Anda tidak dapat dibaca saat ini. Coba lagi sebentar lagi.
+Ajukan diri sebagai peninjau
+Tidak ada dalam daftar
+Anda tidak ada dalam daftar peninjau, jadi tidak ada yang dapat ditugaskan kepada Anda. Mendaftar tidak menjadikan Anda peninjau: admin tata kelola harus memeriksa siapa Anda sebelum sebuah kursus dapat diserahkan kepada Anda, dan hanya mereka yang boleh menentukan bidang apa yang dapat Anda nilai.
+Biografi singkat, ditunjukkan kepada orang yang memeriksa pendaftaran Anda
+Mendaftar sebagai peninjau
+Mengirim…
+Tempat Anda dalam daftar
+Pendaftar
+Menunggu diperiksa
+Peninjau terverifikasi
+Ditangguhkan
+Tidak lagi meninjau
+Mendaftar
+Diperiksa
+Diperiksa oleh
+Belum. Tidak ada yang dapat ditugaskan kepada Anda sampai admin tata kelola memeriksa Anda.
+Sebelum Anda menjadi peninjau terverifikasi, tidak ada kursus yang dapat ditugaskan kepada Anda, dan persetujuan apa pun dari Anda tidak akan membuat sesuatu diterbitkan.
+Kualifikasi Anda
+Belum ada yang dicatat.
+Sertifikat
+Gelar
+Ijazah sanad
+Pengalaman
+Afiliasi lembaga
+Tanpa judul
+Tidak diterima
+Kedaluwarsa
+Kualifikasi yang Anda catat berstatus menunggu sampai diperiksa, oleh pemilik platform atau oleh dewan keilmuan selama pemilik mengaktifkannya. Kualifikasi harus menyebut satu bidang, karena kredensial itulah yang memberi Anda wewenang dalam bidang tersebut. Mencatatnya pun tidak memberi Anda wewenang: pemberian bidang adalah keputusan terpisah oleh staf tata kelola.
+Catat kualifikasi
+Jenis kualifikasi
+Bidang yang dicakup
+Belum ada bidang
+Judul kualifikasi
+Namanya, misalnya: ijazah dalam riwayat Hafs
+Lembaga pemberi
+Siapa yang memberikannya (opsional)
+Catat sebagai menunggu
+Hal yang harus Anda tinggalkan
+Tidak ada pernyataan. Nyatakan segera ketika sesuatu yang diminta untuk Anda tinjau bukan pekerjaan yang dapat Anda nilai tanpa memihak: kursus yang Anda tulis, seorang kerabat, sekolah yang membayar Anda.
+Saya yang menulisnya
+Saya bisa mendapat untung darinya
+Keluarga
+Saya mengajar mereka, atau mereka mengajar saya
+Lembaga yang sama
+Pribadi
+Hal lain
+Dinyatakan, menunggu dinilai
+Sedang dinilai
+Didengar, dan bukan penghalang
+Menghalangi penugasan
+Terselesaikan
+Dinilai oleh: {name}
+Nyatakan benturan kepentingan
+Menyatakannya langsung menghalangi Anda dari penugasan, sebelum ada yang membacanya, dan tetap menghalangi sampai admin tata kelola mendengarnya. Memang itu tujuannya: benturan yang didengar belakangan lebih berharga daripada tinjauan yang terbit lebih cepat.
+Jenis benturan
+Jelaskan benturannya
+Apa benturannya, dengan kata-kata Anda sendiri
+Nyatakan
+Masuk lagi terlebih dahulu.
+Itu terlalu panjang. Jumlah karakter paling banyak: {max}
+Pendaftaran Anda sebagai peninjau telah ditutup. Minta staf platform membukanya kembali.
+Anda tidak ada dalam daftar peninjau, jadi tidak ada tempat untuk mencatat ini.
+Itu bukan hak Anda untuk dicatat.
+Pilih jenisnya.
+Beri kualifikasi itu judul.
+Pilih bidangnya. Tanpa bidang, kualifikasi itu tidak akan pernah memberi wewenang apa pun.
+Bidang itu tidak lagi ada dalam daftar. Muat ulang halaman dan pilih yang lain.
+Jelaskan benturannya, agar orang yang menilainya tidak perlu menebak.
+Tidak dicatat. Muat ulang halaman untuk melihat apa yang ada dalam daftar.
+Tidak ada yang dapat memastikan apakah itu tercatat. Muat ulang halaman dan lihat dahulu sebelum mengirimnya lagi.
+### ms
+Barisan semakan
+Semakan
+Tugasan datang daripada kakitangan platform. Anda tidak boleh menugaskan diri sendiri, dan tidak boleh meluluskan kursus yang anda tulis.
+Jika anda menganggotai lembaga keilmuan, kes yang menunggu undi anda ada di {link}.
+halaman lembaga anda
+Tiada apa-apa yang ditugaskan kepada anda. Jika anda menjangkakan semakan di sini, pentadbir platform perlu menugaskannya.
+Menunggu anda
+Ditutup
+Teknikal
+Keilmuan
+Ditawarkan
+Diterima
+Ditolak penyemak
+Sedang berjalan
+Selesai
+Dibatalkan
+Ditugaskan: {date}
+Tarikh akhir: {date}
+Keputusan anda: {decision}
+Diluluskan
+Pembetulan diminta
+Ditolak
+Lihat tawaran
+Buka semakan
+Kembali ke pembelajaran saya
+Semakan anda tidak dapat dibaca sekarang. Cuba lagi sebentar lagi.
+Tawarkan diri sebagai penyemak
+Tiada dalam daftar
+Anda tiada dalam daftar penyemak, jadi tiada apa-apa boleh ditugaskan kepada anda. Memohon tidak menjadikan anda penyemak: pentadbir tadbir urus mesti menyemak siapa anda sebelum sesuatu kursus boleh diserahkan kepada anda, dan hanya mereka yang boleh menentukan subjek yang boleh anda nilai.
+Biografi ringkas, ditunjukkan kepada sesiapa yang menyemak permohonan anda
+Mohon menjadi penyemak
+Menghantar…
+Tempat anda dalam daftar
+Pemohon
+Menunggu disemak
+Penyemak disahkan
+Digantung
+Tidak lagi menyemak
+Memohon
+Disemak
+Disemak oleh
+Belum. Tiada apa-apa boleh ditugaskan kepada anda sehingga pentadbir tadbir urus menyemak anda.
+Selagi anda belum menjadi penyemak disahkan, tiada kursus boleh ditugaskan kepada anda, dan apa-apa kelulusan daripada anda tidak akan membolehkan sesuatu diterbitkan.
+Kelayakan anda
+Belum ada yang direkodkan.
+Sijil
+Ijazah akademik
+Ijazah sanad
+Pengalaman
+Gabungan institusi
+Tanpa tajuk
+Tidak diterima
+Tamat tempoh
+Kelayakan yang anda rekodkan berstatus menunggu sehingga disemak, oleh pemilik platform atau oleh lembaga keilmuan selagi pemilik mengaktifkannya. Kelayakan mesti menyebut satu subjek, kerana kelayakan itulah yang memberi anda kuasa dalam subjek tersebut. Merekodkannya juga tidak memberi anda kuasa: pemberian subjek ialah keputusan berasingan oleh kakitangan tadbir urus.
+Rekodkan kelayakan
+Jenis kelayakan
+Subjek yang diliputi
+Belum ada subjek
+Tajuk kelayakan
+Namanya, contohnya: ijazah dalam riwayat Hafs
+Institusi yang mengeluarkan
+Siapa yang memberikannya (pilihan)
+Rekodkan sebagai menunggu
+Perkara yang mesti anda undur diri daripadanya
+Tiada pengisytiharan. Isytiharkan sebaik sahaja sesuatu yang diminta untuk anda semak bukan kerja yang boleh anda nilai tanpa berat sebelah: kursus yang anda tulis, seorang saudara, sekolah yang membayar anda.
+Saya yang menulisnya
+Saya boleh mendapat untung daripadanya
+Keluarga
+Saya mengajar mereka, atau mereka mengajar saya
+Institusi yang sama
+Peribadi
+Perkara lain
+Diisytiharkan, menunggu dinilai
+Sedang dinilai
+Didengar, dan bukan halangan
+Menghalang tugasan
+Diselesaikan
+Dinilai oleh: {name}
+Isytiharkan konflik
+Mengisytiharkannya terus menghalang anda daripada tugasan, sebelum sesiapa membacanya, dan kekal menghalang sehingga pentadbir tadbir urus mendengarnya. Memang itu tujuannya: konflik yang didengar kemudian lebih bernilai daripada semakan yang diterbitkan lebih awal.
+Jenis konflik
+Terangkan konflik itu
+Apakah konflik itu, dengan kata-kata anda sendiri
+Isytiharkan
+Log masuk semula dahulu.
+Itu terlalu panjang. Bilangan aksara paling banyak: {max}
+Pendaftaran anda sebagai penyemak telah ditutup. Minta kakitangan platform membukanya semula.
+Anda tiada dalam daftar penyemak, jadi tiada tempat untuk merekodkan ini.
+Itu bukan hak anda untuk direkodkan.
+Pilih jenisnya.
+Beri kelayakan itu tajuk.
+Pilih subjeknya. Tanpa subjek, kelayakan itu tidak akan memberi sebarang kuasa.
+Subjek itu tidak lagi ada dalam senarai. Muat semula halaman dan pilih yang lain.
+Terangkan konflik itu, supaya orang yang menilainya tidak perlu meneka.
+Tidak direkodkan. Muat semula halaman untuk melihat apa yang ada dalam daftar.
+Tiada sesiapa dapat memastikan sama ada itu direkodkan. Muat semula halaman dan lihat dahulu sebelum menghantarnya lagi.
+### bn
+পর্যালোচনার সারি
+পর্যালোচনা
+দায়িত্ব দেন প্ল্যাটফর্মের কর্মীরা। আপনি নিজেকে দায়িত্ব দিতে পারেন না, এবং নিজের লেখা কোর্স অনুমোদন করতে পারেন না।
+আপনি যদি কোনো আলেম বোর্ডের সদস্য হন, তবে আপনার ভোটের অপেক্ষায় থাকা বিষয়গুলো {link} আছে।
+আপনার বোর্ডের পাতায়
+আপনাকে কিছু দেওয়া হয়নি। এখানে কোনো পর্যালোচনা আশা করে থাকলে প্ল্যাটফর্মের একজন অ্যাডমিনকে তা আপনাকে দিতে হবে।
+আপনার অপেক্ষায়
+বন্ধ
+কারিগরি
+ইলমি
+প্রস্তাবিত
+গৃহীত
+ফিরিয়ে দেওয়া
+চলমান
+সম্পন্ন
+বাতিল
+দায়িত্ব দেওয়া হয়েছে: {date}
+শেষ সময়: {date}
+আপনার সিদ্ধান্ত: {decision}
+অনুমোদিত
+সংশোধন চাওয়া হয়েছে
+প্রত্যাখ্যাত
+প্রস্তাব দেখুন
+পর্যালোচনা খুলুন
+আমার শেখায় ফিরে যান
+আপনার পর্যালোচনাগুলো এখন পড়া যায়নি। একটু পরে আবার চেষ্টা করুন।
+পর্যালোচক হিসেবে নিজেকে প্রস্তাব করুন
+তালিকায় নেই
+আপনি পর্যালোচকদের তালিকায় নেই, তাই আপনাকে কিছু দেওয়া যায় না। আবেদন করলেই আপনি পর্যালোচক হন না: কোনো কোর্স আপনার সামনে রাখার আগে পরিচালনার একজন অ্যাডমিনকে যাচাই করতে হবে আপনি কে, এবং কোন কোন বিষয়ে আপনি রায় দিতে পারেন তা কেবল তাঁরাই বলতে পারেন।
+সংক্ষিপ্ত পরিচিতি, যিনি আপনার আবেদন যাচাই করবেন তাঁকে দেখানো হবে
+পর্যালোচক হতে আবেদন করুন
+পাঠানো হচ্ছে…
+তালিকায় আপনার অবস্থান
+আবেদনকারী
+যাচাইয়ের অপেক্ষায়
+যাচাইকৃত পর্যালোচক
+স্থগিত
+আর পর্যালোচনা করেন না
+আবেদনের তারিখ
+যাচাই হয়েছে
+যাচাই করেছেন
+এখনো নয়। পরিচালনার একজন অ্যাডমিন আপনাকে যাচাই না করা পর্যন্ত আপনাকে কিছু দেওয়া যাবে না।
+আপনি যাচাইকৃত পর্যালোচক না হওয়া পর্যন্ত আপনাকে কোনো কোর্স দেওয়া যাবে না, এবং আপনার দেওয়া কোনো অনুমোদনে কিছু প্রকাশিত হবে না।
+আপনার যোগ্যতা
+এখনো কিছু নথিভুক্ত হয়নি।
+সনদ
+ডিগ্রি
+ইজাজা
+অভিজ্ঞতা
+প্রতিষ্ঠানের সঙ্গে সম্পৃক্ততা
+শিরোনামহীন
+গৃহীত হয়নি
+মেয়াদোত্তীর্ণ
+আপনার নথিভুক্ত করা যোগ্যতা যাচাই না হওয়া পর্যন্ত অপেক্ষমাণ থাকে; যাচাই করেন প্ল্যাটফর্মের মালিক, অথবা আলেম বোর্ড, যতক্ষণ মালিক তা আহ্বান করে রেখেছেন। এতে একটি বিষয়ের নাম থাকতেই হবে, কারণ সনদই আপনাকে সেই বিষয়ে অধিকার দেয়। নথিভুক্ত করলেও অধিকার মেলে না: বিষয় দেওয়া পরিচালনা কর্মীদের আলাদা সিদ্ধান্ত।
+যোগ্যতা নথিভুক্ত করুন
+যোগ্যতার ধরন
+এটি যে বিষয়ের
+এখনো কোনো বিষয় নেই
+যোগ্যতার শিরোনাম
+এর নাম, যেমন: হাফসের রেওয়ায়েতে ইজাজা
+প্রদানকারী প্রতিষ্ঠান
+কে দিয়েছেন (ঐচ্ছিক)
+অপেক্ষমাণ হিসেবে নথিভুক্ত করুন
+যা থেকে আপনাকে সরে দাঁড়াতে হবে
+কোনো ঘোষণা নেই। যে কাজ পর্যালোচনা করতে বলা হয়েছে তাতে নিরপেক্ষ থাকা সম্ভব না হলে সঙ্গে সঙ্গে ঘোষণা করুন: আপনার লেখা কোর্স, কোনো আত্মীয়, যে মাদ্রাসা আপনাকে বেতন দেয়।
+আমি এটি লিখেছি
+এতে আমার লাভ হতে পারে
+আত্মীয়তা
+আমি তাঁকে পড়িয়েছি, অথবা তিনি আমাকে
+একই প্রতিষ্ঠান
+ব্যক্তিগত
+অন্য কিছু
+ঘোষিত, মূল্যায়নের অপেক্ষায়
+মূল্যায়ন চলছে
+শোনা হয়েছে, বাধা নয়
+দায়িত্ব দেওয়ায় বাধা
+সমাধান হয়েছে
+মূল্যায়ন করেছেন: {name}
+স্বার্থের সংঘাত ঘোষণা করুন
+ঘোষণা করামাত্র, কেউ পড়ার আগেই, আপনাকে দায়িত্ব দেওয়া বন্ধ হয়ে যায়, এবং পরিচালনার একজন অ্যাডমিন তা না শোনা পর্যন্ত বাধা থাকে। এটাই উদ্দেশ্য: পরে শোনা সংঘাত আগে প্রকাশিত পর্যালোচনার চেয়ে বেশি মূল্যবান।
+সংঘাতের ধরন
+সংঘাতটি বর্ণনা করুন
+সংঘাতটি কী, আপনার নিজের ভাষায়
+ঘোষণা করুন
+আগে আবার সাইন ইন করুন।
+এটি অনেক বড়। সর্বোচ্চ অক্ষর: {max}
+পর্যালোচক হিসেবে আপনার নিবন্ধন বন্ধ করা হয়েছিল। প্ল্যাটফর্মের কর্মীদের তা আবার খুলতে বলুন।
+আপনি পর্যালোচকদের তালিকায় নেই, তাই এটি নথিভুক্ত করার মতো কিছু নেই।
+এটি নথিভুক্ত করা আপনার কাজ নয়।
+এর ধরন বেছে নিন।
+যোগ্যতার একটি শিরোনাম দিন।
+এটি যে বিষয়ের তা বেছে নিন। বিষয় ছাড়া এটি কখনো কোনো অধিকার দিতে পারে না।
+এই বিষয়টি আর তালিকায় নেই। পাতাটি আবার লোড করুন এবং অন্যটি বেছে নিন।
+সংঘাতটি বর্ণনা করুন, যাতে মূল্যায়নকারীকে অনুমান করতে না হয়।
+এটি নথিভুক্ত হয়নি। তালিকায় কী আছে দেখতে পাতাটি আবার লোড করুন।
+এটি নথিভুক্ত হয়েছে কি না কেউ বলতে পারে না। পাতাটি আবার লোড করুন এবং আবার পাঠানোর আগে দেখে নিন।
+### hi
+समीक्षा की कतार
+समीक्षा
+ज़िम्मेदारियाँ प्लैटफ़ॉर्म के कर्मचारी देते हैं। आप ख़ुद को ज़िम्मेदारी नहीं दे सकते, और अपने लिखे कोर्स को मंज़ूर नहीं कर सकते।
+अगर आप किसी विद्वत् बोर्ड के सदस्य हैं, तो आपके वोट का इंतज़ार कर रहे मामले {link} पर हैं।
+आपके बोर्ड के पेज
+आपको कुछ नहीं सौंपा गया है। अगर आपको यहाँ किसी समीक्षा की उम्मीद थी, तो प्लैटफ़ॉर्म के किसी एडमिन को वह आपको सौंपनी होगी।
+आपके इंतज़ार में
+बंद
+तकनीकी
+इल्मी
+प्रस्तावित
+स्वीकार की गई
+लौटा दी गई
+जारी है
+पूरी हुई
+रद्द
+सौंपने की तारीख़: {date}
+आख़िरी तारीख़: {date}
+आपका फ़ैसला: {decision}
+मंज़ूर हुआ
+सुधार माँगे गए
+नामंज़ूर हुआ
+प्रस्ताव देखें
+समीक्षा खोलें
+मेरी पढ़ाई पर वापस
+आपकी समीक्षाएँ अभी पढ़ी नहीं जा सकीं। थोड़ी देर में फिर कोशिश करें।
+समीक्षक के रूप में ख़ुद को आगे रखें
+पंजी में नहीं
+आप समीक्षकों की पंजी में नहीं हैं, इसलिए आपको कुछ नहीं सौंपा जा सकता। आवेदन करने से आप समीक्षक नहीं बन जाते: कोई कोर्स आपके सामने रखे जाने से पहले गवर्नेंस के किसी एडमिन को जाँचना होगा कि आप कौन हैं, और सिर्फ़ वही बता सकते हैं कि आप किन विषयों पर फ़ैसला दे सकते हैं।
+छोटा परिचय, जो आपका आवेदन जाँचने वाले को दिखाया जाएगा
+समीक्षक बनने के लिए आवेदन करें
+भेजा जा रहा है…
+पंजी में आपकी जगह
+आवेदक
+जाँच का इंतज़ार
+सत्यापित समीक्षक
+निलंबित
+अब समीक्षा नहीं करते
+आवेदन की तारीख़
+जाँच हो गई
+जाँचने वाले
+अभी नहीं। जब तक गवर्नेंस का कोई एडमिन आपको जाँच न ले, आपको कुछ नहीं सौंपा जा सकता।
+जब तक आप सत्यापित समीक्षक नहीं हैं, आपको कोई कोर्स नहीं सौंपा जा सकता, और आपकी दी किसी मंज़ूरी से कुछ प्रकाशित नहीं हो सकता।
+आप किसके योग्य हैं
+अभी कुछ दर्ज नहीं है।
+प्रमाणपत्र
+डिग्री
+इजाज़ा
+अनुभव
+संस्था से जुड़ाव
+बिना शीर्षक
+स्वीकार नहीं हुई
+अवधि समाप्त
+आपकी दर्ज की हुई योग्यता जाँच होने तक लंबित रहती है; जाँच प्लैटफ़ॉर्म का मालिक करता है, या विद्वत् बोर्ड, जब तक मालिक ने उसे बुला रखा हो। उसमें विषय का नाम होना ज़रूरी है, क्योंकि प्रमाण ही आपको उस विषय में अधिकार देता है। दर्ज करने से भी अधिकार नहीं मिलता: विषय देना गवर्नेंस कर्मचारियों का अलग फ़ैसला है।
+योग्यता दर्ज करें
+योग्यता का प्रकार
+यह किस विषय की है
+अभी कोई विषय नहीं है
+योग्यता का शीर्षक
+उसका नाम, जैसे: हफ़्स की रिवायत में इजाज़ा
+जारी करने वाली संस्था
+किसने दी (वैकल्पिक)
+लंबित के रूप में दर्ज करें
+आपको किससे अलग रहना है
+कोई घोषणा नहीं। जैसे ही आपसे किसी ऐसी चीज़ की समीक्षा माँगी जाए जिसमें आप निष्पक्ष नहीं रह सकते, घोषणा कर दें: आपका लिखा कोर्स, कोई रिश्तेदार, वह मदरसा जो आपको वेतन देता है।
+मैंने इसे लिखा है
+मुझे इससे फ़ायदा हो सकता है
+रिश्तेदारी
+मैंने उन्हें पढ़ाया, या उन्होंने मुझे
+एक ही संस्था
+निजी
+कुछ और
+घोषित, आकलन का इंतज़ार
+आकलन जारी है
+सुन लिया गया, रुकावट नहीं
+ज़िम्मेदारी में रुकावट
+हल हो गया
+आकलन करने वाले: {name}
+हितों के टकराव की घोषणा करें
+घोषणा करते ही, किसी के पढ़ने से भी पहले, आपको ज़िम्मेदारी नहीं दी जा सकती, और यह रुकावट तब तक रहती है जब तक गवर्नेंस का कोई एडमिन उसे सुन न ले। मक़सद यही है: देर से सुना गया टकराव जल्दी प्रकाशित हुई समीक्षा से ज़्यादा क़ीमती है।
+टकराव का प्रकार
+टकराव बताएँ
+टकराव क्या है, अपने शब्दों में
+घोषणा करें
+पहले दोबारा साइन इन करें।
+यह बहुत लंबा है। ज़्यादा से ज़्यादा अक्षर: {max}
+समीक्षक के रूप में आपका पंजीकरण बंद कर दिया गया था। प्लैटफ़ॉर्म के कर्मचारियों से उसे फिर खोलने को कहें।
+आप समीक्षकों की पंजी में नहीं हैं, इसलिए इसे दर्ज करने की कोई जगह नहीं है।
+इसे दर्ज करना आपका काम नहीं है।
+इसका प्रकार चुनें।
+योग्यता को शीर्षक दें।
+वह विषय चुनें जिसकी यह है। उसके बिना यह कभी कोई अधिकार नहीं दे सकती।
+यह विषय अब सूची में नहीं है। पेज फिर से लोड करें और दूसरा चुनें।
+टकराव बताएँ, ताकि आकलन करने वाले को अंदाज़ा न लगाना पड़े।
+यह दर्ज नहीं हुआ। पंजी में क्या है यह देखने के लिए पेज फिर से लोड करें।
+कोई नहीं बता सकता कि यह दर्ज हुआ या नहीं। पेज फिर से लोड करें और दोबारा भेजने से पहले देख लें।
+### fr
+File de relecture
+Relecture
+Les attributions viennent de l’équipe de la plateforme. Vous ne pouvez pas vous attribuer une relecture, ni approuver un cours que vous avez écrit.
+Si vous siégez à un conseil savant, les dossiers qui attendent votre vote sont sur {link}.
+la page de votre conseil
+Rien ne vous a été attribué. Si vous attendiez une relecture ici, un administrateur de la plateforme doit vous l’attribuer.
+Vous attendent
+Closes
+Technique
+Savante
+Proposée
+Acceptée
+Déclinée
+En cours
+Terminée
+Annulée
+Attribuée le : {date}
+À rendre le : {date}
+Votre décision : {decision}
+Approuvé
+Révisions demandées
+Rejeté
+Voir la proposition
+Ouvrir la relecture
+Retour à mon apprentissage
+Vos relectures n’ont pas pu être lues pour l’instant. Réessayez dans un instant.
+Proposez-vous comme relecteur
+Absent du registre
+Vous n’êtes pas au registre des relecteurs, donc rien ne peut vous être attribué. Candidater ne fait pas de vous un relecteur : un administrateur de la gouvernance doit vérifier qui vous êtes avant qu’un cours puisse vous être soumis, et lui seul peut dire sur quelles matières vous pouvez vous prononcer.
+Une courte biographie, montrée à la personne qui vérifie votre candidature
+Candidater comme relecteur
+Envoi…
+Votre place au registre
+Candidat
+En attente de vérification
+Relecteur vérifié
+Suspendu
+Ne relit plus
+Candidature
+Vérifié
+Vérifié par
+Pas encore. Rien ne peut vous être attribué tant qu’un administrateur de la gouvernance ne vous a pas vérifié.
+Tant que vous n’êtes pas relecteur vérifié, aucun cours ne peut vous être attribué, et aucune approbation de votre part ne permettrait de publier quoi que ce soit.
+Vos qualifications
+Rien n’est encore consigné.
+Certificat
+Diplôme
+Ijaza
+Expérience
+Affiliation à une institution
+Sans titre
+Non acceptée
+Expirée
+Une qualification que vous consignez reste en attente jusqu’à sa vérification, par le propriétaire de la plateforme ou par le conseil savant tant que le propriétaire l’a convoqué. Elle doit nommer une matière, car c’est le titre qui vous habilite dans cette matière. La consigner ne vous habilite pas non plus : accorder la matière est une décision distincte de l’équipe de gouvernance.
+Consigner une qualification
+Type de qualification
+Matière couverte
+Aucune matière n’existe encore
+Intitulé de la qualification
+Son nom, par exemple : une ijaza dans la lecture de Hafs
+Institution émettrice
+Qui l’a accordée (facultatif)
+La consigner en attente
+Ce dont vous devez vous récuser
+Aucune déclaration. Déclarez-en une dès qu’on vous demande de relire un travail sur lequel vous ne pouvez pas être impartial : un cours que vous avez écrit, un proche, une école qui vous rémunère.
+Je l’ai écrit
+Je pourrais en tirer profit
+Famille
+Je lui ai enseigné, ou il m’a enseigné
+Même institution
+Personnel
+Autre chose
+Déclaré, en attente d’examen
+En cours d’examen
+Entendu, et sans obstacle
+Empêche l’attribution
+Résolu
+Examiné par : {name}
+Déclarer un conflit d’intérêts
+Une déclaration vous écarte aussitôt d’une attribution, avant que quiconque l’ait lue, et continue de vous écarter jusqu’à ce qu’un administrateur de la gouvernance l’entende. C’est le but : un conflit entendu plus tard vaut mieux qu’une relecture publiée plus tôt.
+Type de conflit
+Décrivez le conflit
+En quoi consiste le conflit, avec vos mots
+Le déclarer
+Reconnectez-vous d’abord.
+C’est trop long. Nombre maximal de caractères : {max}
+Votre inscription comme relecteur a été close. Demandez à l’équipe de la plateforme de la rouvrir.
+Vous n’êtes pas au registre des relecteurs, il n’y a donc rien à quoi rattacher ceci.
+Ce n’est pas à vous de consigner cela.
+Choisissez son type.
+Donnez un intitulé à la qualification.
+Choisissez la matière concernée. Sans matière, elle ne pourra jamais rien habiliter.
+Cette matière n’est plus dans la liste. Rechargez la page et choisissez-en une autre.
+Décrivez le conflit, pour que la personne qui l’examine n’ait pas à deviner.
+Rien n’a été consigné. Rechargez la page pour voir ce que contient le registre.
+Personne ne peut dire si cela a été consigné. Rechargez la page et regardez avant de l’envoyer à nouveau.
+### es
+Cola de revisión
+Revisión
+Las asignaciones las hace el personal de la plataforma. No puede asignarse una revisión a sí mismo, ni aprobar un curso que haya escrito.
+Si forma parte de un consejo de eruditos, los casos que esperan su voto están en {link}.
+la página de su consejo
+No se le ha asignado nada. Si esperaba una revisión aquí, un administrador de la plataforma tiene que asignársela.
+Le esperan
+Cerradas
+Técnica
+Erudita
+Ofrecida
+Aceptada
+Declinada
+En curso
+Completada
+Cancelada
+Asignada: {date}
+Fecha límite: {date}
+Su decisión: {decision}
+Aprobado
+Se pidieron cambios
+Rechazado
+Ver la oferta
+Abrir la revisión
+Volver a mi aprendizaje
+No se han podido leer sus revisiones ahora. Inténtelo de nuevo en un momento.
+Propóngase como revisor
+No figura en el registro
+Usted no figura en el registro de revisores, así que no se le puede asignar nada. Solicitarlo no le convierte en revisor: un administrador de gobernanza tiene que comprobar quién es usted antes de que se le pueda presentar un curso, y solo él puede decir sobre qué materias puede pronunciarse.
+Una biografía breve, que verá quien compruebe su solicitud
+Solicitar ser revisor
+Enviando…
+Su lugar en el registro
+Solicitante
+A la espera de comprobación
+Revisor verificado
+Suspendido
+Ya no revisa
+Solicitud
+Comprobado
+Comprobado por
+Todavía no. No se le puede asignar nada hasta que un administrador de gobernanza le compruebe.
+Mientras no sea revisor verificado, no se le puede asignar ningún curso, y ninguna aprobación suya permitiría publicar nada.
+Sus cualificaciones
+Todavía no hay nada registrado.
+Certificado
+Título universitario
+Ijaza
+Experiencia
+Afiliación institucional
+Sin título
+No aceptada
+Caducada
+Una cualificación que usted registra queda pendiente hasta que se comprueba, por el propietario de la plataforma o por el consejo de eruditos mientras el propietario lo tenga convocado. Debe nombrar una materia, porque la credencial es lo que le autoriza en esa materia. Registrarla tampoco le autoriza: conceder la materia es una decisión aparte del personal de gobernanza.
+Registrar una cualificación
+Tipo de cualificación
+Materia que cubre
+Todavía no existe ninguna materia
+Nombre de la cualificación
+Cómo se llama, por ejemplo: una ijaza en la lectura de Hafs
+Institución que la expide
+Quién la concedió (opcional)
+Registrarla como pendiente
+De qué debe abstenerse
+Sin declaraciones. Declare uno en cuanto se le pida revisar algo en lo que no pueda ser imparcial: un curso que escribió, un familiar, una escuela que le paga.
+Lo escribí yo
+Podría sacar provecho de ello
+Familia
+Le di clase, o me dio clase
+Misma institución
+Personal
+Otra cosa
+Declarado, a la espera de evaluación
+En evaluación
+Oído, y no es impedimento
+Impide la asignación
+Resuelto
+Evaluado por: {name}
+Declarar un conflicto de intereses
+Declararlo le aparta de una asignación de inmediato, antes de que nadie lo haya leído, y sigue apartándole hasta que un administrador de gobernanza lo oiga. De eso se trata: un conflicto oído más tarde vale más que una revisión publicada antes.
+Tipo de conflicto
+Describa el conflicto
+En qué consiste el conflicto, con sus propias palabras
+Declararlo
+Inicie sesión de nuevo primero.
+Es demasiado largo. Número máximo de caracteres: {max}
+Su inscripción como revisor se cerró. Pida al personal de la plataforma que la reabra.
+Usted no figura en el registro de revisores, así que no hay dónde registrar esto.
+No le corresponde a usted registrar eso.
+Elija de qué tipo es.
+Dé un nombre a la cualificación.
+Elija la materia a la que pertenece. Sin materia nunca podrá autorizar nada.
+Esa materia ya no está en la lista. Vuelva a cargar la página y elija otra.
+Describa el conflicto, para que quien lo evalúe no tenga que adivinar.
+No se registró. Vuelva a cargar la página para ver qué contiene el registro.
+Nadie puede decir si eso se registró. Vuelva a cargar la página y mire antes de enviarlo otra vez.
+### pt
+Fila de revisão
+Revisão
+As atribuições vêm da equipa da plataforma. Não pode atribuir uma revisão a si próprio, nem aprovar um curso que tenha escrito.
+Se tem assento num conselho de estudiosos, os casos que aguardam o seu voto estão em {link}.
+a página do seu conselho
+Nada lhe foi atribuído. Se esperava uma revisão aqui, um administrador da plataforma tem de a atribuir.
+À sua espera
+Fechadas
+Técnica
+Erudita
+Proposta
+Aceite
+Declinada
+Em curso
+Concluída
+Cancelada
+Atribuída: {date}
+Prazo: {date}
+A sua decisão: {decision}
+Aprovado
+Alterações pedidas
+Rejeitado
+Ver a proposta
+Abrir a revisão
+Voltar ao meu aprendizado
+Não foi possível ler as suas revisões agora. Tente novamente daqui a pouco.
+Proponha-se como revisor
+Não consta do registo
+Não consta do registo de revisores, por isso nada lhe pode ser atribuído. Candidatar-se não faz de si um revisor: um administrador de governação tem de verificar quem é antes de um curso lhe poder ser apresentado, e só ele pode dizer sobre que matérias se pode pronunciar.
+Uma biografia breve, mostrada a quem verificar a sua candidatura
+Candidatar-se a revisor
+A enviar…
+O seu lugar no registo
+Candidato
+A aguardar verificação
+Revisor verificado
+Suspenso
+Já não revê
+Candidatura
+Verificado
+Verificado por
+Ainda não. Nada lhe pode ser atribuído até que um administrador de governação o verifique.
+Enquanto não for revisor verificado, nenhum curso lhe pode ser atribuído, e nenhuma aprovação sua permitiria publicar o que quer que fosse.
+As suas qualificações
+Ainda não há nada registado.
+Certificado
+Grau académico
+Ijaza
+Experiência
+Afiliação institucional
+Sem título
+Não aceite
+Expirada
+Uma qualificação que regista fica pendente até ser verificada, pelo proprietário da plataforma ou pelo conselho de estudiosos enquanto o proprietário o tiver convocado. Tem de nomear uma matéria, porque é a credencial que o autoriza nessa matéria. Registá-la também não o autoriza: conceder a matéria é uma decisão separada da equipa de governação.
+Registar uma qualificação
+Tipo de qualificação
+Matéria abrangida
+Ainda não existe nenhuma matéria
+Título da qualificação
+Como se chama, por exemplo: uma ijaza na leitura de Hafs
+Instituição emissora
+Quem a concedeu (opcional)
+Registar como pendente
+Aquilo de que se deve afastar
+Sem declarações. Declare um assim que lhe pedirem para rever algo em que não possa ser imparcial: um curso que escreveu, um familiar, uma escola que lhe paga.
+Fui eu que o escrevi
+Poderia lucrar com isso
+Família
+Ensinei-o, ou ele ensinou-me
+Mesma instituição
+Pessoal
+Outra coisa
+Declarado, a aguardar avaliação
+Em avaliação
+Ouvido, e não é impedimento
+Impede a atribuição
+Resolvido
+Avaliado por: {name}
+Declarar um conflito de interesses
+Declará-lo afasta-o de imediato de uma atribuição, antes de alguém o ter lido, e continua a afastá-lo até que um administrador de governação o ouça. É esse o objetivo: um conflito ouvido mais tarde vale mais do que uma revisão publicada mais cedo.
+Tipo de conflito
+Descreva o conflito
+Em que consiste o conflito, por palavras suas
+Declarar
+Inicie sessão de novo primeiro.
+É demasiado longo. Número máximo de caracteres: {max}
+A sua inscrição como revisor foi fechada. Peça à equipa da plataforma que a reabra.
+Não consta do registo de revisores, por isso não há onde registar isto.
+Não lhe cabe a si registar isso.
+Escolha de que tipo é.
+Dê um título à qualificação.
+Escolha a matéria a que pertence. Sem matéria nunca poderá autorizar nada.
+Essa matéria já não está na lista. Volte a carregar a página e escolha outra.
+Descreva o conflito, para que quem o avaliar não tenha de adivinhar.
+Não foi registado. Volte a carregar a página para ver o que o registo contém.
+Ninguém pode dizer se isso foi registado. Volte a carregar a página e veja antes de enviar outra vez.
+### sw
+Foleni ya ukaguzi
+Ukaguzi
+Kazi hupangwa na wafanyakazi wa jukwaa. Huwezi kujipangia kazi mwenyewe, na huwezi kuidhinisha kozi uliyoiandika.
+Ikiwa umeketi kwenye bodi ya wanazuoni, mashauri yanayosubiri kura yako yapo kwenye {link}.
+ukurasa wa bodi yako
+Hujapangiwa chochote. Ikiwa ulitarajia ukaguzi hapa, msimamizi wa jukwaa anahitaji kukupangia.
+Zinakusubiri
+Zimefungwa
+Kiufundi
+Kielimu
+Imetolewa
+Imekubaliwa
+Imekataliwa na mkaguzi
+Inaendelea
+Imekamilika
+Imeghairiwa
+Ilipangwa: {date}
+Mwisho: {date}
+Uamuzi wako: {decision}
+Imekubaliwa
+Marekebisho yameombwa
+Imekataliwa
+Tazama ombi
+Fungua ukaguzi
+Rudi kwenye masomo yangu
+Kaguzi zako hazikuweza kusomwa sasa hivi. Jaribu tena baada ya muda mfupi.
+Jitokeze kuwa mkaguzi
+Humo kwenye rejista
+Humo kwenye rejista ya wakaguzi, kwa hiyo huwezi kupangiwa chochote. Kuomba hakukufanyi mkaguzi: msimamizi wa utawala lazima akague wewe ni nani kabla kozi haijawekwa mbele yako, na ni wao tu wanaoweza kusema ni masomo gani unaweza kuyahukumu.
+Wasifu mfupi, utakaoonyeshwa kwa anayekagua ombi lako
+Omba kuwa mkaguzi
+Inatuma…
+Nafasi yako kwenye rejista
+Mwombaji
+Inasubiri kukaguliwa
+Mkaguzi aliyethibitishwa
+Amesimamishwa
+Hakagui tena
+Aliomba
+Amekaguliwa
+Amekaguliwa na
+Bado. Huwezi kupangiwa chochote mpaka msimamizi wa utawala akukague.
+Mpaka uwe mkaguzi aliyethibitishwa, hakuna kozi inayoweza kupangwa kwako, na hakuna idhini yako itakayoruhusu chochote kuchapishwa.
+Sifa ulizo nazo
+Hakuna kilichoandikwa bado.
+Cheti
+Shahada
+Ijaza
+Uzoefu
+Uhusiano na taasisi
+Bila kichwa
+Haikukubaliwa
+Imeisha muda
+Sifa unayoiandika husubiri mpaka ikaguliwe, na mmiliki wa jukwaa au na bodi ya wanazuoni wakati mmiliki ameiitisha. Lazima itaje somo, kwa sababu sifa ndiyo inayokupa mamlaka katika somo hilo. Kuiandika pia hakukupi mamlaka: kutoa somo ni uamuzi tofauti wa wafanyakazi wa utawala.
+Andika sifa
+Aina ya sifa
+Somo linalohusika
+Hakuna masomo bado
+Jina la sifa
+Inaitwaje, kwa mfano: ijaza katika riwaya ya Hafs
+Taasisi iliyoitoa
+Nani aliitoa (si lazima)
+Iandike kama inayosubiri
+Unachopaswa kujiondoa
+Hakuna matamko. Tamka mara tu unapoombwa kukagua kitu ambacho huwezi kukihukumu bila upendeleo: kozi uliyoiandika, ndugu, shule inayokulipa.
+Niliiandika mimi
+Ningeweza kupata faida kutoka kwayo
+Undugu
+Nilimfundisha, au alinifundisha
+Taasisi ileile
+Binafsi
+Jambo jingine
+Limetamkwa, linasubiri kutathminiwa
+Linatathminiwa
+Limesikilizwa, si kizuizi
+Linazuia kupangiwa kazi
+Limetatuliwa
+Limetathminiwa na: {name}
+Tamka mgongano wa maslahi
+Kutamka kunakuzuia kupangiwa kazi papo hapo, kabla mtu yeyote hajalisoma, na kunaendelea kuzuia mpaka msimamizi wa utawala alisikilize. Hilo ndilo lengo: mgongano unaosikilizwa baadaye una thamani kuliko ukaguzi unaochapishwa mapema.
+Aina ya mgongano
+Eleza mgongano
+Mgongano ni upi, kwa maneno yako mwenyewe
+Tamka
+Ingia tena kwanza.
+Hiyo ni ndefu mno. Idadi kubwa zaidi ya herufi: {max}
+Usajili wako wa ukaguzi ulifungwa. Waombe wafanyakazi wa jukwaa waufungue tena.
+Humo kwenye rejista ya wakaguzi, kwa hiyo hakuna pa kuandika hili.
+Si wewe wa kuandika hilo.
+Chagua ni aina gani.
+Ipe sifa jina.
+Chagua somo lake. Bila somo haiwezi kamwe kutoa mamlaka yoyote.
+Somo hilo halimo tena kwenye orodha. Pakia ukurasa upya na uchague jingine.
+Eleza mgongano, ili anayeutathmini asilazimike kukisia.
+Halikuandikwa. Pakia ukurasa upya uone kilichomo kwenye rejista.
+Hakuna anayeweza kusema kama hilo liliandikwa. Pakia ukurasa upya na uangalie kabla ya kutuma tena.
+### af
+Beoordelingstou
+Beoordeling
+Opdragte kom van die platform se personeel. Jy kan nie self ’n opdrag neem nie, en jy kan nie ’n kursus goedkeur wat jy geskryf het nie.
+As jy op ’n raad van geleerdes sit, is die sake wat op jou stem wag op {link}.
+jou raad se bladsy
+Niks is aan jou toegewys nie. As jy ’n beoordeling hier verwag het, moet ’n platformadministrateur dit toewys.
+Wag op jou
+Gesluit
+Tegnies
+Geleerd
+Aangebied
+Aanvaar
+Van die hand gewys
+Aan die gang
+Voltooi
+Gekanselleer
+Toegewys: {date}
+Sperdatum: {date}
+Jou besluit: {decision}
+Goedgekeur
+Hersienings versoek
+Verwerp
+Bekyk aanbod
+Maak beoordeling oop
+Terug na my leerwerk
+Jou beoordelings kon nie nou gelees word nie. Probeer oor ’n oomblik weer.
+Stel jouself as beoordelaar voor
+Nie in die register nie
+Jy is nie in die beoordelaarsregister nie, dus kan niks aan jou toegewys word nie. Om aansoek te doen maak jou nie ’n beoordelaar nie: ’n bestuursadministrateur moet nagaan wie jy is voordat ’n kursus voor jou geplaas kan word, en net hulle mag sê oor watter vakke jy kan oordeel.
+’n Kort biografie, wat gewys word aan wie ook al jou aansoek nagaan
+Doen aansoek om te beoordeel
+Stuur tans…
+Jou plek in die register
+Aansoeker
+Wag om nagegaan te word
+Geverifieerde beoordelaar
+Opgeskort
+Beoordeel nie meer nie
+Aansoek gedoen
+Nagegaan
+Nagegaan deur
+Nog nie. Niks kan aan jou toegewys word totdat ’n bestuursadministrateur jou nagaan nie.
+Totdat jy ’n geverifieerde beoordelaar is, kan geen kursus aan jou toegewys word nie, en geen goedkeuring van jou sou enigiets laat publiseer nie.
+Waarvoor jy gekwalifiseer is
+Nog niks aangeteken nie.
+Sertifikaat
+Graad
+Idjaza
+Ervaring
+Verbintenis met ’n instelling
+Sonder titel
+Nie aanvaar nie
+Verval
+’n Kwalifikasie wat jy aanteken, is hangende totdat dit nagegaan is, deur die platform se eienaar of deur die raad van geleerdes terwyl die eienaar dit byeengeroep het. Dit moet ’n vak noem, want ’n kwalifikasie is wat jou in daardie vak magtig. Om een aan te teken magtig jou ook nie: om die vak toe te ken is ’n afsonderlike besluit van die bestuurspersoneel.
+Teken ’n kwalifikasie aan
+Soort kwalifikasie
+Vak wat dit dek
+Daar is nog geen vakke nie
+Titel van die kwalifikasie
+Wat dit genoem word, byvoorbeeld: ’n idjaza in die voordrag van Hafs
+Instelling wat dit uitgereik het
+Wie dit toegeken het (opsioneel)
+Teken dit as hangende aan
+Waarvan jy jou moet onttrek
+Geen verklarings nie. Verklaar een sodra jy gevra word om iets te beoordeel waaroor jy nie onpartydig kan wees nie: ’n kursus wat jy geskryf het, ’n familielid, ’n skool wat jou betaal.
+Ek het dit geskryf
+Ek kan daaruit voordeel trek
+Familie
+Ek het hulle onderrig, of hulle vir my
+Dieselfde instelling
+Persoonlik
+Iets anders
+Verklaar, wag om beoordeel te word
+Word beoordeel
+Aangehoor, en geen struikelblok nie
+Verhinder die opdrag
+Opgelos
+Beoordeel deur: {name}
+Verklaar ’n botsing van belange
+Om een te verklaar sluit jou dadelik van ’n opdrag uit, voordat enigiemand dit gelees het, en bly jou uitsluit totdat ’n bestuursadministrateur dit aanhoor. Dit is die punt: ’n botsing wat later aangehoor word, is meer werd as ’n beoordeling wat vroeër gepubliseer word.
+Soort botsing
+Beskryf die botsing
+Wat die botsing is, in jou eie woorde
+Verklaar dit
+Meld eers weer aan.
+Dit is te lank. Die meeste karakters wat toegelaat word: {max}
+Jou registrasie as beoordelaar is gesluit. Vra die platform se personeel om dit weer oop te maak.
+Jy is nie in die beoordelaarsregister nie, dus is daar niks waarteen dit aangeteken kan word nie.
+Dit is nie joune om aan te teken nie.
+Kies watter soort dit is.
+Gee die kwalifikasie ’n titel.
+Kies die vak waarin dit is. Sonder een kan dit nooit enigiets magtig nie.
+Daardie vak is nie meer in die lys nie. Laai die bladsy weer en kies ’n ander.
+Beskryf die botsing, sodat die persoon wat dit beoordeel nie hoef te raai nie.
+Dit is nie aangeteken nie. Laai die bladsy weer om te sien wat in die register staan.
+Niemand kan sê of dit aangeteken is nie. Laai die bladsy weer en kyk voordat jy dit weer stuur.
+### zh-hans
+审阅队列
+审阅
+任务由平台工作人员分派。你不能给自己分派任务，也不能通过自己编写的课程。
+如果你是学术委员会成员，等待你投票的案件在{link}。
+你的委员会页面
+还没有任务分派给你。如果你原以为这里会有审阅任务，需要由平台管理员分派。
+等待你处理
+已结束
+技术
+学术
+已发出邀请
+已接受
+已谢绝
+进行中
+已完成
+已取消
+分派日期：{date}
+截止时间：{date}
+你的决定：{decision}
+已通过
+已要求修改
+已否决
+查看邀请
+打开审阅
+返回我的学习
+暂时无法读取你的审阅任务。请稍后再试。
+申请成为审阅者
+不在名册上
+你不在审阅者名册上，所以无法给你分派任何任务。提出申请并不会让你成为审阅者：在把课程交给你之前，必须由治理管理员核实你的身份，而且只有他们能决定你可以评判哪些学科。
+简短的个人介绍，会给核实你申请的人看
+申请审阅
+正在发送…
+你在名册上的位置
+申请人
+等待核实
+已核实的审阅者
+已暂停
+不再审阅
+申请日期
+已核实
+核实人
+还没有。在治理管理员核实你之前，无法给你分派任何任务。
+在成为已核实的审阅者之前，无法给你分派任何课程，你给出的任何通过意见也不能让任何内容发布。
+你具备的资历
+尚无记录。
+证书
+学位
+伊扎泽（传授许可）
+经验
+机构隶属
+无标题
+未被接受
+已过期
+你记录的资历在核实之前处于待定状态，由平台所有者核实，或者在所有者召集学术委员会期间由委员会核实。它必须写明学科，因为正是资历让你在该学科获得授权。仅仅记录也不会让你获得授权：授予学科是治理人员另行作出的决定。
+记录一项资历
+资历类型
+所涵盖的学科
+还没有任何学科
+资历名称
+它叫什么，例如：哈夫斯传述的诵读伊扎泽
+颁发机构
+由谁授予（选填）
+记录为待定
+你必须回避的事项
+没有申报。一旦要你审阅的内容让你无法保持公正，请立即申报：你编写的课程、你的亲属、付你报酬的学校。
+是我写的
+我可能从中获利
+亲属
+我教过对方，或对方教过我
+同一机构
+个人原因
+其他情况
+已申报，等待评估
+正在评估
+已听取，不构成障碍
+禁止分派
+已解决
+评估人：{name}
+申报利益冲突
+一经申报，在任何人阅读之前，你就立即不能被分派任务，并且在治理管理员听取之前一直如此。这正是用意所在：晚一点被听取的冲突，比早一点发布的审阅更有价值。
+冲突类型
+描述冲突
+冲突是什么，用你自己的话说
+申报
+请先重新登录。
+内容太长。最多允许的字符数：{max}
+你的审阅者登记已被关闭。请让平台工作人员重新开启。
+你不在审阅者名册上，所以没有可以记录这一项的地方。
+这不是该由你来记录的。
+请选择它的类型。
+请给这项资历一个名称。
+请选择它所属的学科。没有学科，它永远不能授权任何事。
+该学科已不在列表中。请重新加载页面并另选一个。
+请描述冲突，免得评估的人去猜。
+没有记录。请重新加载页面，查看名册上的内容。
+无法确定是否已记录。请重新加载页面，先查看，再决定是否重新发送。
+### zh-hant
+審閱佇列
+審閱
+任務由平台工作人員分派。你不能給自己分派任務，也不能通過自己編寫的課程。
+如果你是學術委員會成員，等待你投票的案件在{link}。
+你的委員會頁面
+還沒有任務分派給你。如果你原以為這裡會有審閱任務，需要由平台管理員分派。
+等待你處理
+已結束
+技術
+學術
+已發出邀請
+已接受
+已婉拒
+進行中
+已完成
+已取消
+分派日期：{date}
+截止時間：{date}
+你的決定：{decision}
+已通過
+已要求修改
+已否決
+查看邀請
+開啟審閱
+返回我的學習
+暫時無法讀取你的審閱任務。請稍後再試。
+申請成為審閱者
+不在名冊上
+你不在審閱者名冊上，所以無法給你分派任何任務。提出申請並不會讓你成為審閱者：在把課程交給你之前，必須由治理管理員核實你的身分，而且只有他們能決定你可以評判哪些學科。
+簡短的個人介紹，會給核實你申請的人看
+申請審閱
+正在傳送…
+你在名冊上的位置
+申請人
+等待核實
+已核實的審閱者
+已暫停
+不再審閱
+申請日期
+已核實
+核實人
+還沒有。在治理管理員核實你之前，無法給你分派任何任務。
+在成為已核實的審閱者之前，無法給你分派任何課程，你給出的任何通過意見也不能讓任何內容發布。
+你具備的資歷
+尚無記錄。
+證書
+學位
+伊扎澤（傳授許可）
+經驗
+機構隸屬
+無標題
+未被接受
+已過期
+你記錄的資歷在核實之前處於待定狀態，由平台擁有者核實，或者在擁有者召集學術委員會期間由委員會核實。它必須寫明學科，因為正是資歷讓你在該學科獲得授權。僅僅記錄也不會讓你獲得授權：授予學科是治理人員另行作出的決定。
+記錄一項資歷
+資歷類型
+所涵蓋的學科
+還沒有任何學科
+資歷名稱
+它叫什麼，例如：哈夫斯傳述的誦讀伊扎澤
+頒發機構
+由誰授予（選填）
+記錄為待定
+你必須迴避的事項
+沒有申報。一旦要你審閱的內容讓你無法保持公正，請立即申報：你編寫的課程、你的親屬、付你報酬的學校。
+是我寫的
+我可能從中獲利
+親屬
+我教過對方，或對方教過我
+同一機構
+個人原因
+其他情況
+已申報，等待評估
+正在評估
+已聽取，不構成障礙
+禁止分派
+已解決
+評估人：{name}
+申報利益衝突
+一經申報，在任何人閱讀之前，你就立即不能被分派任務，並且在治理管理員聽取之前一直如此。這正是用意所在：晚一點被聽取的衝突，比早一點發布的審閱更有價值。
+衝突類型
+描述衝突
+衝突是什麼，用你自己的話說
+申報
+請先重新登入。
+內容太長。最多允許的字元數：{max}
+你的審閱者登記已被關閉。請讓平台工作人員重新開啟。
+你不在審閱者名冊上，所以沒有可以記錄這一項的地方。
+這不是該由你來記錄的。
+請選擇它的類型。
+請給這項資歷一個名稱。
+請選擇它所屬的學科。沒有學科，它永遠不能授權任何事。
+該學科已不在清單中。請重新載入頁面並另選一個。
+請描述衝突，免得評估的人去猜。
+沒有記錄。請重新載入頁面，查看名冊上的內容。
+無法確定是否已記錄。請重新載入頁面，先查看，再決定是否重新傳送。
+### vi
+Hàng chờ duyệt
+Duyệt bài
+Việc được giao bởi nhân viên của nền tảng. Bạn không thể tự giao việc cho mình, và không thể chấp thuận một khóa học do chính bạn viết.
+Nếu bạn ngồi trong một hội đồng học giả, các hồ sơ đang chờ phiếu của bạn nằm ở {link}.
+trang hội đồng của bạn
+Chưa có gì được giao cho bạn. Nếu bạn mong có một lượt duyệt ở đây, một quản trị viên của nền tảng cần giao nó.
+Đang chờ bạn
+Đã đóng
+Kỹ thuật
+Học thuật
+Đã mời
+Đã nhận
+Đã từ chối nhận
+Đang thực hiện
+Đã hoàn thành
+Đã hủy
+Ngày giao: {date}
+Hạn chót: {date}
+Quyết định của bạn: {decision}
+Đã được chấp thuận
+Đã yêu cầu chỉnh sửa
+Đã bị bác bỏ
+Xem lời mời
+Mở lượt duyệt
+Quay lại việc học của tôi
+Hiện chưa đọc được các lượt duyệt của bạn. Hãy thử lại sau giây lát.
+Tự đề cử làm người duyệt
+Không có trong sổ
+Bạn không có trong sổ đăng ký người duyệt, nên không thể giao gì cho bạn. Đăng ký không biến bạn thành người duyệt: một quản trị viên quản trị phải kiểm tra bạn là ai trước khi một khóa học được đặt trước mặt bạn, và chỉ họ mới được nói bạn có thể thẩm định những môn nào.
+Tiểu sử ngắn, được đưa cho người kiểm tra đơn của bạn xem
+Đăng ký làm người duyệt
+Đang gửi…
+Vị trí của bạn trong sổ
+Người nộp đơn
+Đang chờ kiểm tra
+Người duyệt đã xác minh
+Bị tạm ngưng
+Không còn duyệt nữa
+Ngày nộp đơn
+Đã kiểm tra
+Người kiểm tra
+Chưa. Không thể giao gì cho bạn cho đến khi một quản trị viên quản trị kiểm tra bạn.
+Cho đến khi bạn là người duyệt đã xác minh, không khóa học nào có thể được giao cho bạn, và không sự chấp thuận nào của bạn cho phép xuất bản điều gì.
+Trình độ của bạn
+Chưa ghi nhận gì.
+Chứng chỉ
+Bằng cấp
+Ijazah
+Kinh nghiệm
+Trực thuộc tổ chức
+Chưa có tên
+Không được chấp nhận
+Đã hết hạn
+Một trình độ bạn ghi nhận sẽ ở trạng thái chờ cho đến khi được kiểm tra, bởi chủ sở hữu nền tảng hoặc bởi hội đồng học giả trong lúc chủ sở hữu triệu tập hội đồng. Nó phải nêu một môn, vì chứng nhận chính là điều cho bạn thẩm quyền trong môn đó. Ghi nhận nó cũng không cho bạn thẩm quyền: việc cấp môn là một quyết định riêng của nhân viên quản trị.
+Ghi nhận một trình độ
+Loại trình độ
+Môn mà nó bao gồm
+Chưa có môn nào
+Tên của trình độ
+Nó được gọi là gì, ví dụ: ijazah về cách đọc của Hafs
+Tổ chức cấp
+Ai đã cấp (không bắt buộc)
+Ghi nhận ở trạng thái chờ
+Những việc bạn phải đứng ngoài
+Chưa có khai báo nào. Hãy khai báo ngay khi bạn được yêu cầu duyệt một việc mà bạn không thể vô tư: một khóa học bạn viết, một người thân, một trường trả lương cho bạn.
+Tôi đã viết nó
+Tôi có thể được lợi từ nó
+Gia đình
+Tôi đã dạy họ, hoặc họ đã dạy tôi
+Cùng một tổ chức
+Cá nhân
+Việc khác
+Đã khai báo, đang chờ thẩm định
+Đang được thẩm định
+Đã được nghe, và không phải là trở ngại
+Ngăn việc giao
+Đã giải quyết
+Người thẩm định: {name}
+Khai báo xung đột lợi ích
+Việc khai báo ngăn bạn nhận việc ngay lập tức, trước khi có ai đọc nó, và tiếp tục ngăn cho đến khi một quản trị viên quản trị nghe nó. Đó chính là mục đích: một xung đột được nghe muộn hơn đáng giá hơn một lượt duyệt được xuất bản sớm hơn.
+Loại xung đột
+Mô tả xung đột
+Xung đột là gì, bằng lời của bạn
+Khai báo
+Hãy đăng nhập lại trước.
+Như vậy là quá dài. Số ký tự tối đa: {max}
+Đăng ký làm người duyệt của bạn đã bị đóng. Hãy nhờ nhân viên của nền tảng mở lại.
+Bạn không có trong sổ đăng ký người duyệt, nên không có gì để ghi nhận điều này vào.
+Việc đó không phải của bạn để ghi nhận.
+Hãy chọn nó thuộc loại nào.
+Hãy đặt tên cho trình độ.
+Hãy chọn môn của nó. Không có môn thì nó không bao giờ cho thẩm quyền gì.
+Môn đó không còn trong danh sách. Hãy tải lại trang và chọn môn khác.
+Hãy mô tả xung đột, để người thẩm định không phải đoán.
+Chưa được ghi nhận. Hãy tải lại trang để xem trong sổ có gì.
+Không ai có thể nói điều đó đã được ghi hay chưa. Hãy tải lại trang và xem trước khi gửi lần nữa.
+### th
+คิวงานตรวจทาน
+การตรวจทาน
+งานมอบหมายมาจากเจ้าหน้าที่ของแพลตฟอร์ม คุณมอบหมายงานให้ตัวเองไม่ได้ และอนุมัติคอร์สที่คุณเขียนเองไม่ได้
+หากคุณเป็นกรรมการในคณะกรรมการผู้ทรงความรู้ เรื่องที่รอคะแนนเสียงของคุณอยู่ที่{link}
+หน้าคณะกรรมการของคุณ
+ยังไม่มีงานมอบหมายให้คุณ หากคุณคาดว่าจะมีงานตรวจทานที่นี่ ผู้ดูแลแพลตฟอร์มต้องเป็นผู้มอบหมาย
+รอคุณอยู่
+ปิดแล้ว
+ด้านเทคนิค
+ด้านวิชาการศาสนา
+เสนอให้แล้ว
+รับแล้ว
+ปฏิเสธรับงาน
+กำลังดำเนินการ
+เสร็จสิ้น
+ยกเลิกแล้ว
+วันที่มอบหมาย: {date}
+กำหนดส่ง: {date}
+คำตัดสินของคุณ: {decision}
+อนุมัติแล้ว
+ขอให้แก้ไข
+ไม่อนุมัติ
+ดูข้อเสนอ
+เปิดงานตรวจทาน
+กลับไปที่การเรียนของฉัน
+ยังอ่านงานตรวจทานของคุณไม่ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่
+เสนอตัวเป็นผู้ตรวจทาน
+ไม่อยู่ในทะเบียน
+คุณไม่อยู่ในทะเบียนผู้ตรวจทาน จึงมอบหมายอะไรให้คุณไม่ได้ การสมัครไม่ได้ทำให้คุณเป็นผู้ตรวจทาน ผู้ดูแลฝ่ายกำกับดูแลต้องตรวจสอบว่าคุณเป็นใครก่อนที่จะนำคอร์สมาให้คุณ และมีเพียงพวกเขาเท่านั้นที่บอกได้ว่าคุณตัดสินวิชาใดได้บ้าง
+ประวัติโดยย่อ ซึ่งจะแสดงให้ผู้ตรวจสอบใบสมัครของคุณเห็น
+สมัครเป็นผู้ตรวจทาน
+กำลังส่ง…
+ตำแหน่งของคุณในทะเบียน
+ผู้สมัคร
+รอการตรวจสอบ
+ผู้ตรวจทานที่ยืนยันแล้ว
+ถูกระงับ
+ไม่ได้ตรวจทานแล้ว
+วันที่สมัคร
+ตรวจสอบแล้ว
+ผู้ตรวจสอบ
+ยัง จะมอบหมายอะไรให้คุณไม่ได้จนกว่าผู้ดูแลฝ่ายกำกับดูแลจะตรวจสอบคุณ
+จนกว่าคุณจะเป็นผู้ตรวจทานที่ยืนยันแล้ว จะมอบหมายคอร์สใดให้คุณไม่ได้ และการอนุมัติใดของคุณก็ไม่ทำให้สิ่งใดได้เผยแพร่
+คุณวุฒิของคุณ
+ยังไม่มีการบันทึก
+ใบรับรอง
+ปริญญา
+อิญาซะฮ์
+ประสบการณ์
+สังกัดสถาบัน
+ไม่มีชื่อ
+ไม่ได้รับการยอมรับ
+หมดอายุ
+คุณวุฒิที่คุณบันทึกจะรออยู่จนกว่าจะได้รับการตรวจสอบ โดยเจ้าของแพลตฟอร์ม หรือโดยคณะกรรมการผู้ทรงความรู้ในขณะที่เจ้าของเรียกประชุมไว้ คุณวุฒิต้องระบุวิชา เพราะคุณวุฒิคือสิ่งที่ให้อำนาจคุณในวิชานั้น การบันทึกก็ไม่ได้ให้อำนาจคุณเช่นกัน การมอบวิชาเป็นการตัดสินใจแยกต่างหากของเจ้าหน้าที่ฝ่ายกำกับดูแล
+บันทึกคุณวุฒิ
+ประเภทของคุณวุฒิ
+วิชาที่ครอบคลุม
+ยังไม่มีวิชา
+ชื่อคุณวุฒิ
+เรียกว่าอะไร เช่น อิญาซะฮ์ในการอ่านตามสายรายงานของฮัฟศ์
+สถาบันที่ออกให้
+ใครเป็นผู้มอบให้ (ไม่บังคับ)
+บันทึกเป็นรอตรวจสอบ
+สิ่งที่คุณต้องถอนตัว
+ไม่มีการแจ้ง โปรดแจ้งทันทีที่คุณถูกขอให้ตรวจทานสิ่งที่คุณไม่อาจเป็นกลางได้ เช่น คอร์สที่คุณเขียน ญาติ หรือโรงเรียนที่จ่ายค่าตอบแทนให้คุณ
+ฉันเป็นผู้เขียน
+ฉันอาจได้ประโยชน์จากสิ่งนี้
+ญาติ
+ฉันเคยสอนเขา หรือเขาเคยสอนฉัน
+สถาบันเดียวกัน
+เรื่องส่วนตัว
+เรื่องอื่น
+แจ้งแล้ว รอการประเมิน
+กำลังประเมิน
+รับฟังแล้ว และไม่เป็นอุปสรรค
+ห้ามมอบหมาย
+แก้ไขแล้ว
+ผู้ประเมิน: {name}
+แจ้งผลประโยชน์ทับซ้อน
+เมื่อแจ้งแล้ว คุณจะรับงานมอบหมายไม่ได้ทันที ก่อนที่ใครจะได้อ่าน และจะเป็นเช่นนั้นจนกว่าผู้ดูแลฝ่ายกำกับดูแลจะรับฟัง นี่คือจุดประสงค์ ผลประโยชน์ทับซ้อนที่ได้รับฟังช้ากว่า มีค่ากว่าการตรวจทานที่เผยแพร่เร็วกว่า
+ประเภทของผลประโยชน์ทับซ้อน
+อธิบายผลประโยชน์ทับซ้อน
+ผลประโยชน์ทับซ้อนคืออะไร ด้วยคำของคุณเอง
+แจ้ง
+โปรดเข้าสู่ระบบอีกครั้งก่อน
+ยาวเกินไป จำนวนอักขระมากที่สุด: {max}
+การลงทะเบียนเป็นผู้ตรวจทานของคุณถูกปิดแล้ว โปรดขอให้เจ้าหน้าที่ของแพลตฟอร์มเปิดใหม่
+คุณไม่อยู่ในทะเบียนผู้ตรวจทาน จึงไม่มีที่ให้บันทึกสิ่งนี้
+สิ่งนี้ไม่ใช่ของคุณที่จะบันทึก
+โปรดเลือกประเภท
+โปรดตั้งชื่อคุณวุฒิ
+โปรดเลือกวิชาของคุณวุฒินี้ หากไม่มีวิชา คุณวุฒินี้จะให้อำนาจอะไรไม่ได้เลย
+วิชานั้นไม่อยู่ในรายการแล้ว โปรดโหลดหน้านี้ใหม่และเลือกวิชาอื่น
+โปรดอธิบายผลประโยชน์ทับซ้อน เพื่อให้ผู้ประเมินไม่ต้องเดา
+ไม่ได้บันทึก โปรดโหลดหน้านี้ใหม่เพื่อดูว่าในทะเบียนมีอะไร
+ไม่มีใครบอกได้ว่าสิ่งนั้นถูกบันทึกหรือไม่ โปรดโหลดหน้านี้ใหม่และดูก่อนส่งอีกครั้ง
+### fil
+Pila ng pagsusuri
+Pagsusuri
+Ang mga atas ay galing sa mga kawani ng platform. Hindi mo maaatasan ang iyong sarili, at hindi mo maaaprubahan ang kursong ikaw ang sumulat.
+Kung may puwesto ka sa isang lupon ng mga iskolar, ang mga kasong naghihintay ng boto mo ay nasa {link}.
+pahina ng iyong lupon
+Walang iniatas sa iyo. Kung may inaasahan kang pagsusuri rito, kailangan itong iatas ng isang admin ng platform.
+Naghihintay sa iyo
+Sarado na
+Teknikal
+Pang-iskolar
+Inialok
+Tinanggap
+Tinanggihan ng tagasuri
+Isinasagawa
+Tapos na
+Kinansela
+Iniatas: {date}
+Takdang petsa: {date}
+Ang pasya mo: {decision}
+Inaprubahan
+Humiling ng mga rebisyon
+Hindi inaprubahan
+Tingnan ang alok
+Buksan ang pagsusuri
+Bumalik sa aking pag-aaral
+Hindi mabasa ang iyong mga pagsusuri sa ngayon. Subukan muli maya-maya.
+Ialok ang sarili bilang tagasuri
+Wala sa talaan
+Wala ka sa talaan ng mga tagasuri, kaya walang maiaatas sa iyo. Hindi ka nagiging tagasuri dahil lang nag-apply ka: kailangang tiyakin ng isang admin ng pamamahala kung sino ka bago maiharap sa iyo ang isang kurso, at sila lang ang makapagsasabi kung aling mga paksa ang mahahatulan mo.
+Maikling talambuhay, ipapakita sa sinumang susuri ng iyong aplikasyon
+Mag-apply bilang tagasuri
+Ipinapadala…
+Ang lugar mo sa talaan
+Aplikante
+Naghihintay na masuri
+Beripikadong tagasuri
+Suspendido
+Hindi na nagsusuri
+Nag-apply
+Nasuri na
+Sinuri ni
+Hindi pa. Walang maiaatas sa iyo hangga’t hindi ka nasusuri ng isang admin ng pamamahala.
+Hangga’t hindi ka beripikadong tagasuri, walang kursong maiaatas sa iyo, at walang pag-apruba mo ang magpapalathala ng anuman.
+Kung saan ka kwalipikado
+Wala pang naitala.
+Sertipiko
+Digri
+Ijazah
+Karanasan
+Kaugnayan sa institusyon
+Walang pamagat
+Hindi tinanggap
+Paso na
+Ang kwalipikasyong itinala mo ay nakabinbin hanggang masuri, ng may-ari ng platform o ng lupon ng mga iskolar habang ipinatawag ito ng may-ari. Kailangan nitong pangalanan ang isang paksa, dahil ang kredensiyal ang nagbibigay sa iyo ng pahintulot sa paksang iyon. Hindi ka rin binibigyan ng pahintulot ng pagtatala lang: ang pagbibigay ng paksa ay hiwalay na pasya ng mga kawani ng pamamahala.
+Magtala ng kwalipikasyon
+Uri ng kwalipikasyon
+Paksang saklaw nito
+Wala pang paksa
+Pamagat ng kwalipikasyon
+Ano ang tawag dito, halimbawa: ijazah sa pagbasa ni Hafs
+Institusyong nagbigay
+Sino ang nagkaloob (opsiyonal)
+Itala bilang nakabinbin
+Ang dapat mong iwasan
+Walang deklarasyon. Magdeklara agad kapag ipinasuri sa iyo ang isang bagay na hindi mo mahahatulan nang walang kinikilingan: kursong isinulat mo, kamag-anak, paaralang nagbabayad sa iyo.
+Ako ang sumulat nito
+Maaari akong kumita rito
+Pamilya
+Tinuruan ko sila, o tinuruan nila ako
+Parehong institusyon
+Personal
+Iba pa
+Idineklara, naghihintay na matasa
+Tinatasa
+Napakinggan, at hindi hadlang
+Hadlang sa pag-aatas
+Nalutas na
+Tinasa ni: {name}
+Magdeklara ng salungatan ng interes
+Kapag nagdeklara ka, agad kang hindi maaatasan, bago pa ito mabasa ninuman, at mananatiling ganoon hanggang mapakinggan ito ng isang admin ng pamamahala. Iyon ang layunin: mas mahalaga ang salungatang napakinggan nang mas huli kaysa sa pagsusuring nailathala nang mas maaga.
+Uri ng salungatan
+Ilarawan ang salungatan
+Ano ang salungatan, sa sarili mong mga salita
+Ideklara
+Mag-sign in muna ulit.
+Masyado itong mahaba. Pinakamaraming karakter na pinapayagan: {max}
+Isinara ang iyong rehistro bilang tagasuri. Hilingin sa mga kawani ng platform na buksan itong muli.
+Wala ka sa talaan ng mga tagasuri, kaya walang mapagtatalaan nito.
+Hindi ikaw ang dapat magtala niyan.
+Piliin kung anong uri ito.
+Bigyan ng pamagat ang kwalipikasyon.
+Piliin ang paksa nito. Kung walang paksa, hindi ito kailanman makapagbibigay ng pahintulot.
+Wala na sa listahan ang paksang iyon. I-load muli ang pahina at pumili ng iba.
+Ilarawan ang salungatan, para hindi na manghula ang tatasa nito.
+Hindi ito naitala. I-load muli ang pahina para makita ang laman ng talaan.
+Walang makapagsasabi kung naitala iyon. I-load muli ang pahina at tingnan muna bago ipadala ulit.
+### uz
+Taqriz navbati
+Taqriz
+Topshiriqlarni platforma xodimlari beradi. Oʻzingizga topshiriq bera olmaysiz va oʻzingiz yozgan kursni maʼqullay olmaysiz.
+Agar ilmiy kengash aʼzosi boʻlsangiz, ovozingizni kutayotgan ishlar {link} turibdi.
+kengashingiz sahifasida
+Sizga hech narsa topshirilmagan. Agar bu yerda taqriz kutgan boʻlsangiz, uni platforma administratori topshirishi kerak.
+Sizni kutmoqda
+Yopilgan
+Texnik
+Ilmiy
+Taklif qilingan
+Qabul qilingan
+Rad etilgan
+Bajarilmoqda
+Tugallangan
+Bekor qilingan
+Topshirilgan sana: {date}
+Muddat: {date}
+Qaroringiz: {decision}
+Maʼqullandi
+Tuzatish soʻraldi
+Rad etildi
+Taklifni koʻrish
+Taqrizni ochish
+Oʻqishimga qaytish
+Taqrizlaringizni hozir oʻqib boʻlmadi. Birozdan soʻng qayta urinib koʻring.
+Oʻzingizni taqrizchi sifatida taklif qiling
+Roʻyxatda yoʻq
+Siz taqrizchilar roʻyxatida emassiz, shuning uchun sizga hech narsa topshirib boʻlmaydi. Ariza berish sizni taqrizchi qilmaydi: kurs oldingizga qoʻyilishidan avval boshqaruv administratori kimligingizni tekshirishi kerak va qaysi fanlar boʻyicha hukm chiqara olishingizni faqat ular aytadi.
+Qisqa tarjimai hol, arizangizni tekshiruvchiga koʻrsatiladi
+Taqrizchilikka ariza berish
+Yuborilmoqda…
+Roʻyxatdagi oʻrningiz
+Ariza beruvchi
+Tekshirilishi kutilmoqda
+Tasdiqlangan taqrizchi
+Toʻxtatib qoʻyilgan
+Endi taqriz qilmaydi
+Ariza sanasi
+Tekshirilgan
+Tekshirgan
+Hali yoʻq. Boshqaruv administratori sizni tekshirmaguncha sizga hech narsa topshirib boʻlmaydi.
+Tasdiqlangan taqrizchi boʻlmaguningizcha sizga hech qanday kurs topshirib boʻlmaydi va bergan hech bir maʼqullashingiz biror narsani nashr ettirmaydi.
+Malakalaringiz
+Hali hech narsa qayd etilmagan.
+Sertifikat
+Diplom
+Ijozat
+Tajriba
+Muassasaga mansublik
+Nomsiz
+Qabul qilinmadi
+Muddati oʻtgan
+Siz qayd etgan malaka tekshirilguncha kutib turadi; uni platforma egasi yoki, ega chaqirib turgan paytda, ilmiy kengash tekshiradi. U fanni koʻrsatishi shart, chunki aynan hujjat sizga oʻsha fanda vakolat beradi. Uni qayd etish ham vakolat bermaydi: fanni berish boshqaruv xodimlarining alohida qaroridir.
+Malaka qayd etish
+Malaka turi
+Qaysi fanga tegishli
+Hali fanlar yoʻq
+Malaka nomi
+U qanday ataladi, masalan: Hafs rivoyati boʻyicha ijozat
+Bergan muassasa
+Kim bergan (ixtiyoriy)
+Kutilayotgan sifatida qayd etish
+Nimadan chetda turishingiz kerak
+Bayonotlar yoʻq. Sizdan xolis baholay olmaydigan narsani taqriz qilish soʻralgan zahoti bayon qiling: oʻzingiz yozgan kurs, qarindosh, sizga haq toʻlaydigan maktab.
+Uni men yozganman
+Undan foyda koʻrishim mumkin
+Qarindoshlik
+Men unga dars berganman yoki u menga
+Bir xil muassasa
+Shaxsiy
+Boshqa narsa
+Bayon qilingan, baholanishi kutilmoqda
+Baholanmoqda
+Tinglandi, toʻsiq emas
+Topshiriqqa toʻsiq
+Hal qilingan
+Baholagan: {name}
+Manfaatlar toʻqnashuvini bayon qilish
+Bayon qilishingiz bilanoq, hali hech kim oʻqimasidan, sizga topshiriq berib boʻlmaydi va boshqaruv administratori uni tinglamaguncha shunday qoladi. Maqsad ham shu: kechroq tinglangan toʻqnashuv ertaroq nashr etilgan taqrizdan qimmatliroq.
+Toʻqnashuv turi
+Toʻqnashuvni tasvirlang
+Toʻqnashuv nimadan iborat, oʻz soʻzlaringiz bilan
+Bayon qilish
+Avval qayta kiring.
+Bu juda uzun. Ruxsat etilgan eng koʻp belgi: {max}
+Taqrizchi sifatidagi roʻyxatdan oʻtishingiz yopilgan. Platforma xodimlaridan uni qayta ochishni soʻrang.
+Siz taqrizchilar roʻyxatida emassiz, shuning uchun buni qayd etadigan joy yoʻq.
+Buni qayd etish sizning ishingiz emas.
+Turini tanlang.
+Malakaga nom bering.
+U qaysi fanga tegishli ekanini tanlang. Fansiz u hech qachon vakolat bera olmaydi.
+Bu fan endi roʻyxatda yoʻq. Sahifani qayta yuklang va boshqasini tanlang.
+Toʻqnashuvni tasvirlang, toki uni baholovchi taxmin qilishga majbur boʻlmasin.
+Qayd etilmadi. Roʻyxatda nima borligini koʻrish uchun sahifani qayta yuklang.
+Bu qayd etilgan-etilmaganini hech kim ayta olmaydi. Sahifani qayta yuklang va qayta yuborishdan oldin qarang.
+### kk
+Рецензия кезегі
+Рецензиялау
+Тапсырмаларды платформа қызметкерлері береді. Өзіңізге тапсырма бере алмайсыз және өзіңіз жазған курсты мақұлдай алмайсыз.
+Егер ғылыми кеңестің мүшесі болсаңыз, дауысыңызды күтіп тұрған істер {link} тұр.
+кеңесіңіздің бетінде
+Сізге ештеңе тапсырылмаған. Егер мұнда рецензия күткен болсаңыз, оны платформа әкімшісі тапсыруы керек.
+Сізді күтуде
+Жабылған
+Техникалық
+Ғылыми
+Ұсынылды
+Қабылданды
+Бас тартылды
+Орындалуда
+Аяқталды
+Тоқтатылды
+Тапсырылған күні: {date}
+Мерзімі: {date}
+Шешіміңіз: {decision}
+Мақұлданды
+Түзету сұралды
+Қабылданбады
+Ұсынысты көру
+Рецензияны ашу
+Оқуыма оралу
+Рецензияларыңызды қазір оқу мүмкін болмады. Сәлден соң қайталап көріңіз.
+Өзіңізді рецензент ретінде ұсыныңыз
+Тізілімде жоқ
+Сіз рецензенттер тізілімінде жоқсыз, сондықтан сізге ештеңе тапсыруға болмайды. Өтініш беру сізді рецензент етпейді: курс алдыңызға қойылмас бұрын басқару әкімшісі кім екеніңізді тексеруі керек және қай пәндер бойынша үкім айта алатыныңызды тек солар айтады.
+Қысқаша өмірбаян, өтінішіңізді тексеретін адамға көрсетіледі
+Рецензент болуға өтініш беру
+Жіберілуде…
+Тізілімдегі орныңыз
+Өтініш беруші
+Тексеруді күтуде
+Расталған рецензент
+Тоқтатылған
+Енді рецензияламайды
+Өтініш күні
+Тексерілді
+Тексерген
+Әлі жоқ. Басқару әкімшісі сізді тексермейінше сізге ештеңе тапсыруға болмайды.
+Расталған рецензент болмайынша сізге ешбір курс тапсырылмайды және сіз берген ешбір мақұлдау ештеңені жариялатпайды.
+Біліктіліктеріңіз
+Әлі ештеңе тіркелмеген.
+Сертификат
+Диплом
+Ижаза
+Тәжірибе
+Мекемеге тиесілілік
+Атаусыз
+Қабылданбады
+Мерзімі өткен
+Сіз тіркеген біліктілік тексерілгенге дейін күтіп тұрады; оны платформа иесі немесе, иесі шақырып тұрған кезде, ғылыми кеңес тексереді. Ол пәнді атауы тиіс, өйткені дәл осы құжат сізге сол пәнде өкілеттік береді. Оны тіркеу де өкілеттік бермейді: пәнді беру — басқару қызметкерлерінің бөлек шешімі.
+Біліктілік тіркеу
+Біліктілік түрі
+Қай пәнге қатысты
+Әлі пәндер жоқ
+Біліктілік атауы
+Ол қалай аталады, мысалы: Хафс риуаяты бойынша ижаза
+Берген мекеме
+Кім берген (міндетті емес)
+Күтудегі ретінде тіркеу
+Неден шеттеуіңіз керек
+Мәлімдемелер жоқ. Сізден бейтарап бағалай алмайтын нәрсені рецензиялау сұралған бойда мәлімдеңіз: өзіңіз жазған курс, туысыңыз, сізге ақы төлейтін мектеп.
+Оны мен жаздым
+Одан пайда көруім мүмкін
+Туыстық
+Мен оны оқыттым немесе ол мені оқытты
+Бір мекеме
+Жеке
+Басқа нәрсе
+Мәлімделді, бағалауды күтуде
+Бағалануда
+Тыңдалды, кедергі емес
+Тапсыруға кедергі
+Шешілді
+Бағалаған: {name}
+Мүдделер қақтығысын мәлімдеу
+Мәлімдеген бойда, оны әлі ешкім оқымай тұрып, сізге тапсырма беруге болмайды және басқару әкімшісі оны тыңдағанға дейін солай қалады. Мақсат та осы: кешірек тыңдалған қақтығыс ертерек жарияланған рецензиядан құндырақ.
+Қақтығыс түрі
+Қақтығысты сипаттаңыз
+Қақтығыс неде, өз сөзіңізбен
+Мәлімдеу
+Алдымен қайта кіріңіз.
+Бұл тым ұзын. Рұқсат етілген ең көп таңба: {max}
+Рецензент ретіндегі тіркелуіңіз жабылған. Платформа қызметкерлерінен оны қайта ашуды сұраңыз.
+Сіз рецензенттер тізілімінде жоқсыз, сондықтан мұны тіркейтін жер жоқ.
+Мұны тіркеу сіздің ісіңіз емес.
+Түрін таңдаңыз.
+Біліктілікке атау беріңіз.
+Оның қай пәнге қатысты екенін таңдаңыз. Пәнсіз ол ешқашан өкілеттік бере алмайды.
+Бұл пән енді тізімде жоқ. Бетті қайта жүктеп, басқасын таңдаңыз.
+Қақтығысты сипаттаңыз, оны бағалайтын адам болжауға мәжбүр болмасын.
+Тіркелмеді. Тізілімде не бар екенін көру үшін бетті қайта жүктеңіз.
+Мұның тіркелген-тіркелмегенін ешкім айта алмайды. Бетті қайта жүктеп, қайта жібермес бұрын қараңыз.
+### az
+Rəy növbəsi
+Rəy vermə
+Tapşırıqları platformanın əməkdaşları verir. Özünüzə tapşırıq verə bilməzsiniz və özünüz yazdığınız kursu təsdiqləyə bilməzsiniz.
+Əgər elmi şuranın üzvüsünüzsə, səsinizi gözləyən işlər {link} yerləşir.
+şuranızın səhifəsində
+Sizə heç nə tapşırılmayıb. Burada rəy gözləyirdinizsə, onu platforma administratoru tapşırmalıdır.
+Sizi gözləyir
+Bağlanıb
+Texniki
+Elmi
+Təklif olunub
+Qəbul edilib
+İmtina edilib
+Davam edir
+Tamamlanıb
+Ləğv edilib
+Tapşırılma tarixi: {date}
+Son tarix: {date}
+Qərarınız: {decision}
+Təsdiqləndi
+Düzəliş istənildi
+Rədd edildi
+Təklifə bax
+Rəyi aç
+Təhsilimə qayıt
+Rəyləriniz indi oxuna bilmədi. Bir azdan yenidən cəhd edin.
+Özünüzü rəyçi kimi irəli sürün
+Reyestrdə yoxdur
+Siz rəyçilər reyestrində deyilsiniz, ona görə sizə heç nə tapşırıla bilməz. Müraciət etmək sizi rəyçi etmir: kurs qarşınıza qoyulmazdan əvvəl idarəetmə administratoru kim olduğunuzu yoxlamalıdır və hansı fənlər üzrə hökm verə biləcəyinizi yalnız onlar deyə bilər.
+Qısa tərcümeyi-hal, müraciətinizi yoxlayan şəxsə göstərilir
+Rəyçi olmaq üçün müraciət et
+Göndərilir…
+Reyestrdəki yeriniz
+Müraciət edən
+Yoxlanılmağı gözləyir
+Təsdiqlənmiş rəyçi
+Dayandırılıb
+Artıq rəy vermir
+Müraciət tarixi
+Yoxlanılıb
+Yoxlayan
+Hələ yox. İdarəetmə administratoru sizi yoxlayana qədər sizə heç nə tapşırıla bilməz.
+Təsdiqlənmiş rəyçi olana qədər sizə heç bir kurs tapşırıla bilməz və verdiyiniz heç bir təsdiq nəyinsə dərc olunmasına imkan verməz.
+İxtisaslarınız
+Hələ heç nə qeyd olunmayıb.
+Sertifikat
+Diplom
+İcazə
+Təcrübə
+Qurumla bağlılıq
+Adsız
+Qəbul edilmədi
+Müddəti bitib
+Qeyd etdiyiniz ixtisas yoxlanılana qədər gözləyir; onu platformanın sahibi və ya, sahibi çağırdığı müddətdə, elmi şura yoxlayır. O, fənni göstərməlidir, çünki sizə həmin fəndə səlahiyyət verən məhz sənəddir. Onu qeyd etmək də səlahiyyət vermir: fənni vermək idarəetmə əməkdaşlarının ayrıca qərarıdır.
+İxtisas qeyd et
+İxtisasın növü
+Hansı fənni əhatə edir
+Hələ fənn yoxdur
+İxtisasın adı
+Necə adlanır, məsələn: Həfs rəvayəti üzrə icazə
+Verən qurum
+Kim verib (istəyə bağlı)
+Gözləyən kimi qeyd et
+Nədən kənarda durmalısınız
+Bəyanat yoxdur. Sizdən qərəzsiz qiymətləndirə bilməyəcəyiniz bir şeyə rəy vermək istənilən kimi bəyan edin: yazdığınız kurs, qohumunuz, sizə haqq ödəyən məktəb.
+Onu mən yazmışam
+Ondan qazanc əldə edə bilərəm
+Qohumluq
+Mən ona dərs demişəm və ya o mənə
+Eyni qurum
+Şəxsi
+Başqa bir şey
+Bəyan edilib, qiymətləndirilməyi gözləyir
+Qiymətləndirilir
+Dinlənildi, maneə deyil
+Tapşırığa mane olur
+Həll olunub
+Qiymətləndirən: {name}
+Maraqlar toqquşmasını bəyan et
+Bəyan edən kimi, hələ heç kim oxumamış, sizə tapşırıq verilə bilməz və idarəetmə administratoru onu dinləyənə qədər belə qalır. Məqsəd də budur: sonradan dinlənilən toqquşma tez dərc olunan rəydən daha dəyərlidir.
+Toqquşmanın növü
+Toqquşmanı təsvir edin
+Toqquşma nədir, öz sözlərinizlə
+Bəyan et
+Əvvəlcə yenidən daxil olun.
+Bu çox uzundur. İcazə verilən ən çox simvol: {max}
+Rəyçi qeydiyyatınız bağlanıb. Platformanın əməkdaşlarından onu yenidən açmağı xahiş edin.
+Siz rəyçilər reyestrində deyilsiniz, ona görə bunu qeyd etməyə yer yoxdur.
+Bunu qeyd etmək sizin işiniz deyil.
+Növünü seçin.
+İxtisasa ad verin.
+Hansı fənnə aid olduğunu seçin. Fənsiz o heç vaxt səlahiyyət verə bilməz.
+Bu fənn artıq siyahıda yoxdur. Səhifəni yenidən yükləyin və başqasını seçin.
+Toqquşmanı təsvir edin ki, onu qiymətləndirən təxmin etməyə məcbur olmasın.
+Qeyd olunmadı. Reyestrdə nə olduğunu görmək üçün səhifəni yenidən yükləyin.
+Bunun qeyd olunub-olunmadığını heç kim deyə bilməz. Səhifəni yenidən yükləyin və yenidən göndərməzdən əvvəl baxın.
+### tg
+Навбати бознигарӣ
+Бознигарӣ
+Супоришҳоро кормандони платформа медиҳанд. Шумо ба худатон супориш дода наметавонед ва курсеро, ки худатон навиштаед, тасдиқ карда наметавонед.
+Агар шумо узви шӯрои илмӣ бошед, парвандаҳое, ки овози шуморо интизоранд, {link} мебошанд.
+дар саҳифаи шӯрои шумо
+Ба шумо чизе супорида нашудааст. Агар дар ин ҷо бознигариро интизор будед, онро маъмури платформа бояд супорад.
+Шуморо интизор аст
+Пӯшида
+Техникӣ
+Илмӣ
+Пешниҳод шуд
+Қабул шуд
+Даст кашида шуд
+Идома дорад
+Анҷом ёфт
+Бекор шуд
+Санаи супориш: {date}
+Мӯҳлат: {date}
+Қарори шумо: {decision}
+Тасдиқ шуд
+Ислоҳ талаб шуд
+Рад шуд
+Дидани пешниҳод
+Кушодани бознигарӣ
+Бозгашт ба омӯзиши ман
+Бознигариҳои шуморо ҳозир хондан муяссар нашуд. Каме баъдтар боз кӯшиш кунед.
+Худро ҳамчун бознигар пешниҳод кунед
+Дар феҳрист нест
+Шумо дар феҳристи бознигарон нестед, бинобар ин ба шумо чизе супорида намешавад. Дархост додан шуморо бознигар намекунад: пеш аз он ки курс пеши шумо гузошта шавад, маъмури идоракунӣ бояд тафтиш кунад, ки шумо кистед, ва танҳо онҳо гуфта метавонанд, ки шумо дар кадом фанҳо ҳукм карда метавонед.
+Тарҷумаи ҳоли кӯтоҳ, ки ба тафтишкунандаи дархости шумо нишон дода мешавад
+Дархост барои бознигарӣ
+Фиристода мешавад…
+Ҷойи шумо дар феҳрист
+Дархосткунанда
+Интизори тафтиш
+Бознигари тасдиқшуда
+Боздошта шуд
+Дигар бознигарӣ намекунад
+Санаи дархост
+Тафтиш шуд
+Тафтишкунанда
+Ҳанӯз не. То маъмури идоракунӣ шуморо тафтиш накунад, ба шумо чизе супорида намешавад.
+То вақте ки бознигари тасдиқшуда нестед, ба шумо ягон курс супорида намешавад ва ягон тасдиқи шумо чизеро нашр намекунонад.
+Тахассусҳои шумо
+Ҳанӯз чизе сабт нашудааст.
+Шаҳодатнома
+Диплом
+Иҷоза
+Таҷриба
+Мансубият ба муассиса
+Беунвон
+Қабул нашуд
+Мӯҳлаташ гузашт
+Тахассусе, ки шумо сабт мекунед, то тафтиш шуданаш интизор мемонад; онро соҳиби платформа ё, то вақте ки соҳиб онро даъват карда бошад, шӯрои илмӣ тафтиш мекунад. Он бояд фанро номбар кунад, зеро маҳз ҳуҷҷат ба шумо дар ҳамон фан ваколат медиҳад. Сабт кардани он низ ваколат намедиҳад: додани фан қарори алоҳидаи кормандони идоракунӣ аст.
+Сабти тахассус
+Навъи тахассус
+Ба кадом фан дахл дорад
+Ҳанӯз фанҳо нестанд
+Унвони тахассус
+Он чӣ ном дорад, масалан: иҷоза дар ривояти Ҳафс
+Муассисаи додашуда
+Кӣ додааст (ихтиёрӣ)
+Ҳамчун интизорӣ сабт кардан
+Аз чӣ бояд канор равед
+Изҳорот нест. Ҳамин ки аз шумо бознигарии чизеро хоҳанд, ки дар он бетараф буда наметавонед, изҳор кунед: курсе, ки навиштаед, хешованд, мактабе, ки ба шумо музд медиҳад.
+Онро ман навиштаам
+Ман аз он фоида гирифта метавонам
+Хешовандӣ
+Ман ба ӯ дарс додаам ё ӯ ба ман
+Ҳамон муассиса
+Шахсӣ
+Чизи дигар
+Изҳор шуд, интизори арзёбӣ
+Арзёбӣ мешавад
+Шунида шуд, монеа нест
+Монеи супориш аст
+Ҳал шуд
+Арзёбикунанда: {name}
+Изҳори бархӯрди манфиатҳо
+Ҳамин ки изҳор кардед, ҳанӯз касе онро нахонда, ба шумо супориш додан мумкин нест ва то маъмури идоракунӣ онро нашунавад, ҳамин тавр мемонад. Мақсад ҳамин аст: бархӯрде, ки дертар шунида мешавад, аз бознигарие, ки зудтар нашр мешавад, арзишмандтар аст.
+Навъи бархӯрд
+Бархӯрдро тасвир кунед
+Бархӯрд чист, бо суханони худатон
+Изҳор кардан
+Аввал аз нав ворид шавед.
+Ин хеле дароз аст. Шумораи бештарини аломатҳо: {max}
+Сабти номи шумо ҳамчун бознигар пӯшида шудааст. Аз кормандони платформа хоҳиш кунед, ки онро аз нав кушоянд.
+Шумо дар феҳристи бознигарон нестед, бинобар ин ҷое барои сабти ин нест.
+Сабт кардани ин кори шумо нест.
+Навъи онро интихоб кунед.
+Ба тахассус унвон диҳед.
+Интихоб кунед, ки он ба кадом фан дахл дорад. Бе фан он ҳеҷ гоҳ ваколат дода наметавонад.
+Ин фан дигар дар рӯйхат нест. Саҳифаро аз нав бор кунед ва дигареро интихоб кунед.
+Бархӯрдро тасвир кунед, то арзёбикунанда маҷбур ба тахмин нашавад.
+Сабт нашуд. Саҳифаро аз нав бор кунед, то бинед, ки дар феҳрист чӣ ҳаст.
+Ҳеҷ кас гуфта наметавонад, ки ин сабт шуд ё не. Саҳифаро аз нав бор кунед ва пеш аз дубора фиристодан нигаред.
+### ky
+Рецензия кезеги
+Рецензиялоо
+Тапшырмаларды платформанын кызматкерлери берет. Өзүңүзгө тапшырма бере албайсыз жана өзүңүз жазган курсту жактыра албайсыз.
+Эгер илимий кеңештин мүчөсү болсоңуз, добушуңузду күтүп турган иштер {link} турат.
+кеңешиңиздин барагында
+Сизге эч нерсе тапшырылган эмес. Эгер бул жерден рецензия күткөн болсоңуз, аны платформанын администратору тапшырышы керек.
+Сизди күтүүдө
+Жабылган
+Техникалык
+Илимий
+Сунушталды
+Кабыл алынды
+Баш тартылды
+Аткарылууда
+Аяктады
+Жокко чыгарылды
+Тапшырылган күнү: {date}
+Мөөнөтү: {date}
+Чечимиңиз: {decision}
+Жактырылды
+Оңдоо суралды
+Четке кагылды
+Сунушту көрүү
+Рецензияны ачуу
+Окуума кайтуу
+Рецензияларыңызды азыр окуу мүмкүн болгон жок. Бир аздан кийин кайра аракет кылыңыз.
+Өзүңүздү рецензент катары сунуштаңыз
+Реестрде жок
+Сиз рецензенттер реестринде жоксуз, ошондуктан сизге эч нерсе тапшырууга болбойт. Арыз берүү сизди рецензент кылбайт: курс алдыңызга коюлардан мурда башкаруу администратору ким экениңизди текшериши керек жана кайсы предметтер боюнча өкүм чыгара аларыңызды бир гана алар айтат.
+Кыскача өмүр баян, арызыңызды текшерген адамга көрсөтүлөт
+Рецензент болууга арыз берүү
+Жөнөтүлүүдө…
+Реестрдеги ордуңуз
+Арыз берүүчү
+Текшерүүнү күтүүдө
+Ырасталган рецензент
+Токтотулган
+Мындан ары рецензиялабайт
+Арыз күнү
+Текшерилди
+Текшерген
+Азырынча жок. Башкаруу администратору сизди текшермейинче сизге эч нерсе тапшырууга болбойт.
+Ырасталган рецензент болмоюнча сизге эч бир курс тапшырылбайт жана сиз берген эч бир жактыруу эч нерсени жарыялатпайт.
+Квалификацияларыңыз
+Азырынча эч нерсе катталган жок.
+Сертификат
+Диплом
+Ижаза
+Тажрыйба
+Мекемеге таандыктык
+Аталышы жок
+Кабыл алынган жок
+Мөөнөтү өткөн
+Сиз каттаган квалификация текшерилгенге чейин күтүп турат; аны платформанын ээси же, ээси чакырып турган учурда, илимий кеңеш текшерет. Ал предметти аташы керек, анткени дал ушул документ сизге ошол предметте ыйгарым укук берет. Аны каттоо да ыйгарым укук бербейт: предметти берүү — башкаруу кызматкерлеринин өзүнчө чечими.
+Квалификация каттоо
+Квалификациянын түрү
+Кайсы предметке тиешелүү
+Азырынча предметтер жок
+Квалификациянын аталышы
+Ал кандай аталат, мисалы: Хафс риваяты боюнча ижаза
+Берген мекеме
+Ким берген (милдеттүү эмес)
+Күтүүдө катары каттоо
+Эмнеден четтешиңиз керек
+Билдирүүлөр жок. Сизден калыс баалай албаган нерсени рецензиялоо суралары менен билдириңиз: өзүңүз жазган курс, тууганыңыз, сизге акы төлөгөн мектеп.
+Аны мен жазгам
+Андан пайда көрүшүм мүмкүн
+Туугандык
+Мен аны окуткам же ал мени окуткан
+Бир эле мекеме
+Жеке
+Башка нерсе
+Билдирилди, баалоону күтүүдө
+Бааланууда
+Угулду, тоскоолдук эмес
+Тапшырууга тоскоол
+Чечилди
+Баалаган: {name}
+Кызыкчылыктардын кагылышын билдирүү
+Билдирериңиз менен, аны али эч ким окуй электе, сизге тапшырма берүүгө болбойт жана башкаруу администратору аны укканга чейин ошондой калат. Максат да ушул: кечирээк угулган кагылыш эртерээк жарыяланган рецензиядан баалуураак.
+Кагылыштын түрү
+Кагылышты сүрөттөңүз
+Кагылыш эмнеде, өз сөзүңүз менен
+Билдирүү
+Адегенде кайра кириңиз.
+Бул өтө узун. Уруксат берилген эң көп белги: {max}
+Рецензент катары катталууңуз жабылган. Платформанын кызматкерлеринен аны кайра ачууну сураңыз.
+Сиз рецензенттер реестринде жоксуз, ошондуктан муну каттай турган жер жок.
+Муну каттоо сиздин ишиңиз эмес.
+Түрүн тандаңыз.
+Квалификацияга аталыш бериңиз.
+Анын кайсы предметке тиешелүү экенин тандаңыз. Предметсиз ал эч качан ыйгарым укук бере албайт.
+Бул предмет мындан ары тизмеде жок. Баракты кайра жүктөп, башкасын тандаңыз.
+Кагылышты сүрөттөңүз, аны баалаган адам божомолдоого аргасыз болбосун.
+Катталган жок. Реестрде эмне бар экенин көрүү үчүн баракты кайра жүктөңүз.
+Мунун катталганын же катталбаганын эч ким айта албайт. Баракты кайра жүктөп, кайра жөнөтөрдөн мурда караңыз.
+### tk
+Syn nobaty
+Syn bermek
+Tabşyryklary platformanyň işgärleri berýär. Özüňize tabşyryk berip bilmersiňiz we özüňiz ýazan kursy tassyklap bilmersiňiz.
+Eger ylmy geňeşiň agzasy bolsaňyz, sesiňize garaşýan işler {link} durýar.
+geňeşiňiziň sahypasynda
+Size hiç zat tabşyrylmady. Eger bu ýerde syn garaşan bolsaňyz, ony platformanyň administratory tabşyrmaly.
+Size garaşýar
+Ýapylan
+Tehniki
+Ylmy
+Teklip edildi
+Kabul edildi
+Ret edildi
+Dowam edýär
+Tamamlandy
+Ýatyryldy
+Tabşyrylan senesi: {date}
+Möhleti: {date}
+Kararyňyz: {decision}
+Tassyklandy
+Düzediş soraldy
+Makullanmady
+Teklibi görmek
+Syny açmak
+Okuwyma dolanmak
+Synlaryňyzy häzir okap bolmady. Biraz wagtdan täzeden synanyşyň.
+Özüňizi synçy hökmünde hödürläň
+Sanawda ýok
+Siz synçylaryň sanawynda ýok, şonuň üçin size hiç zat tabşyryp bolmaýar. Ýüz tutmak sizi synçy etmeýär: kurs öňüňize goýulmazdan öň dolandyryş administratory kimdigiňizi barlamaly we haýsy dersler boýunça höküm çykaryp biljekdigiňizi diňe şolar aýdyp biler.
+Gysga terjimehal, ýüz tutmaňyzy barlaýan adama görkezilýär
+Synçy bolmak üçin ýüz tutmak
+Iberilýär…
+Sanawdaky ornuňyz
+Ýüz tutan
+Barlanmagyna garaşýar
+Tassyklanan synçy
+Togtadylan
+Indi syn bermeýär
+Ýüz tutan senesi
+Barlandy
+Barlan
+Entek ýok. Dolandyryş administratory sizi barlaýança size hiç zat tabşyryp bolmaýar.
+Tassyklanan synçy bolýançaňyz size hiç bir kurs tabşyrylmaýar we beren hiç bir tassyklamaňyz hiç zady çap etdirmeýär.
+Hünär derejeleriňiz
+Entek hiç zat ýazga geçirilmedi.
+Şahadatnama
+Diplom
+Yjaza
+Tejribe
+Edara degişlilik
+Atsyz
+Kabul edilmedi
+Möhleti geçen
+Siziň ýazga geçiren hünär derejäňiz barlanýança garaşýar; ony platformanyň eýesi ýa-da, eýesi çagyran wagtynda, ylmy geňeş barlaýar. Ol dersi görkezmeli, sebäbi size şol dersde ygtyýar berýän hut şol resminamadyr. Ony ýazga geçirmek hem ygtyýar bermeýär: dersi bermek dolandyryş işgärleriniň aýratyn kararydyr.
+Hünär derejesini ýazga geçirmek
+Hünär derejesiniň görnüşi
+Haýsy derse degişli
+Entek ders ýok
+Hünär derejesiniň ady
+Ol näme diýlip atlandyrylýar, mysal üçin: Hafs rowaýaty boýunça yjaza
+Beren edara
+Kim berdi (hökman däl)
+Garaşylýan hökmünde ýazga geçirmek
+Nämeden çetde durmaly
+Beýannama ýok. Sizden bitarap baha berip bilmejek zadyňyza syn bermek soralan badyna beýan ediň: özüňiz ýazan kurs, garyndaşyňyz, size hak töleýän mekdep.
+Ony men ýazdym
+Ondan peýda görüp bilerin
+Garyndaşlyk
+Men oňa sapak berdim ýa-da ol maňa
+Şol bir edara
+Şahsy
+Başga zat
+Beýan edildi, baha berilmegine garaşýar
+Baha berilýär
+Diňlenildi, päsgelçilik däl
+Tabşyryga päsgel berýär
+Çözüldi
+Baha beren: {name}
+Bähbitleriň çaknyşmagyny beýan etmek
+Beýan eden badyňyza, ony entek hiç kim okamanka, size tabşyryk berip bolmaýar we dolandyryş administratory ony diňleýänçä şeýle galýar. Maksat hem şudur: giç diňlenen çaknyşyk ir çap edilen syndan gymmatlydyr.
+Çaknyşygyň görnüşi
+Çaknyşygy beýan ediň
+Çaknyşyk nämeden ybarat, öz sözleriňiz bilen
+Beýan etmek
+Ilki täzeden giriň.
+Bu örän uzyn. Rugsat berlen iň köp nyşan: {max}
+Synçy hökmünde hasaba alnyşyňyz ýapyldy. Platformanyň işgärlerinden ony täzeden açmagy haýyş ediň.
+Siz synçylaryň sanawynda ýok, şonuň üçin muny ýazga geçirjek ýer ýok.
+Muny ýazga geçirmek siziň işiňiz däl.
+Görnüşini saýlaň.
+Hünär derejesine at beriň.
+Onuň haýsy derse degişlidigini saýlaň. Derssiz ol hiç haçan ygtyýar berip bilmez.
+Bu ders indi sanawda ýok. Sahypany täzeden ýükläň we başgasyny saýlaň.
+Çaknyşygy beýan ediň, oňa baha berýän adam çak etmeli bolmasyn.
+Ýazga geçirilmedi. Sanawda näme bardygyny görmek üçin sahypany täzeden ýükläň.
+Munuň ýazga geçirilendigini ýa-da geçirilmändigini hiç kim aýdyp bilmez. Sahypany täzeden ýükläň we täzeden ibermezden öň serediň.
+### ta
+மதிப்பாய்வு வரிசை
+மதிப்பாய்வு
+பணிகளைத் தளத்தின் பணியாளர்கள் ஒதுக்குகிறார்கள். உங்களுக்கு நீங்களே பணி ஒதுக்க முடியாது, நீங்கள் எழுதிய பாடநெறியை நீங்களே அங்கீகரிக்கவும் முடியாது.
+நீங்கள் ஓர் அறிஞர் குழுவில் இருந்தால், உங்கள் வாக்குக்காகக் காத்திருக்கும் வழக்குகள் {link} உள்ளன.
+உங்கள் குழுவின் பக்கத்தில்
+உங்களுக்கு எதுவும் ஒதுக்கப்படவில்லை. இங்கே ஒரு மதிப்பாய்வை எதிர்பார்த்திருந்தால், தளத்தின் நிர்வாகி ஒருவர் அதை ஒதுக்க வேண்டும்.
+உங்களுக்காகக் காத்திருப்பவை
+மூடப்பட்டவை
+தொழில்நுட்பம்
+மார்க்க அறிவு
+வழங்கப்பட்டது
+ஏற்கப்பட்டது
+மறுக்கப்பட்டது
+நடைபெறுகிறது
+முடிந்தது
+ரத்து செய்யப்பட்டது
+ஒதுக்கிய நாள்: {date}
+கடைசி நேரம்: {date}
+உங்கள் முடிவு: {decision}
+அங்கீகரிக்கப்பட்டது
+திருத்தங்கள் கேட்கப்பட்டன
+நிராகரிக்கப்பட்டது
+அழைப்பைப் பார்
+மதிப்பாய்வைத் திற
+என் கற்றலுக்குத் திரும்பு
+உங்கள் மதிப்பாய்வுகளை இப்போது படிக்க முடியவில்லை. சிறிது நேரத்தில் மீண்டும் முயலுங்கள்.
+மதிப்பாய்வாளராக உங்களை முன்வையுங்கள்
+பதிவேட்டில் இல்லை
+நீங்கள் மதிப்பாய்வாளர் பதிவேட்டில் இல்லை, எனவே உங்களுக்கு எதையும் ஒதுக்க முடியாது. விண்ணப்பிப்பது உங்களை மதிப்பாய்வாளராக்காது: ஒரு பாடநெறி உங்கள் முன் வைக்கப்படுவதற்கு முன் ஆளுகை நிர்வாகி ஒருவர் நீங்கள் யார் என்பதைச் சரிபார்க்க வேண்டும், எந்தப் பாடங்களில் நீங்கள் தீர்ப்புச் சொல்லலாம் என்பதை அவர்கள் மட்டுமே சொல்ல முடியும்.
+சுருக்கமான சுயவிவரம், உங்கள் விண்ணப்பத்தைச் சரிபார்ப்பவருக்குக் காட்டப்படும்
+மதிப்பாய்வாளராக விண்ணப்பி
+அனுப்பப்படுகிறது…
+பதிவேட்டில் உங்கள் இடம்
+விண்ணப்பதாரர்
+சரிபார்ப்புக்காகக் காத்திருக்கிறது
+சரிபார்க்கப்பட்ட மதிப்பாய்வாளர்
+இடைநிறுத்தப்பட்டது
+இனி மதிப்பாய்வு செய்வதில்லை
+விண்ணப்பித்த நாள்
+சரிபார்க்கப்பட்டது
+சரிபார்த்தவர்
+இன்னும் இல்லை. ஆளுகை நிர்வாகி ஒருவர் உங்களைச் சரிபார்க்கும் வரை உங்களுக்கு எதையும் ஒதுக்க முடியாது.
+நீங்கள் சரிபார்க்கப்பட்ட மதிப்பாய்வாளராகும் வரை எந்தப் பாடநெறியையும் உங்களுக்கு ஒதுக்க முடியாது, நீங்கள் தரும் எந்த அங்கீகாரமும் எதையும் வெளியிட வைக்காது.
+உங்கள் தகுதிகள்
+இன்னும் எதுவும் பதிவாகவில்லை.
+சான்றிதழ்
+பட்டம்
+இஜாஸா
+அனுபவம்
+நிறுவனத் தொடர்பு
+தலைப்பு இல்லை
+ஏற்கப்படவில்லை
+காலாவதியானது
+நீங்கள் பதிவு செய்யும் தகுதி சரிபார்க்கப்படும் வரை நிலுவையில் இருக்கும்; அதைத் தளத்தின் உரிமையாளர் அல்லது, உரிமையாளர் கூட்டியிருக்கும் காலத்தில், அறிஞர் குழு சரிபார்க்கும். அது ஒரு பாடத்தைக் குறிப்பிட வேண்டும், ஏனெனில் அந்தப் பாடத்தில் உங்களுக்கு அதிகாரம் தருவது சான்றுதான். அதைப் பதிவு செய்வதும் உங்களுக்கு அதிகாரம் தராது: பாடத்தை வழங்குவது ஆளுகைப் பணியாளர்களின் தனி முடிவு.
+தகுதியைப் பதிவு செய்
+தகுதியின் வகை
+இது உள்ளடக்கும் பாடம்
+இன்னும் பாடங்கள் இல்லை
+தகுதியின் தலைப்பு
+அதன் பெயர், எடுத்துக்காட்டாக: ஹஃப்ஸ் அறிவிப்பில் இஜாஸா
+வழங்கிய நிறுவனம்
+யார் வழங்கினார் (விருப்பத்தேர்வு)
+நிலுவையில் உள்ளதாகப் பதிவு செய்
+நீங்கள் விலகி நிற்க வேண்டியவை
+அறிவிப்புகள் இல்லை. நடுநிலையாக மதிப்பிட முடியாத ஒன்றை மதிப்பாய்வு செய்யக் கேட்கப்பட்ட உடனே அறிவியுங்கள்: நீங்கள் எழுதிய பாடநெறி, உறவினர், உங்களுக்கு ஊதியம் தரும் பள்ளி.
+நான்தான் எழுதினேன்
+இதனால் எனக்கு லாபம் கிடைக்கலாம்
+குடும்பம்
+நான் அவருக்குக் கற்பித்தேன், அல்லது அவர் எனக்குக் கற்பித்தார்
+அதே நிறுவனம்
+தனிப்பட்டது
+வேறு ஏதாவது
+அறிவிக்கப்பட்டது, மதிப்பீட்டுக்காகக் காத்திருக்கிறது
+மதிப்பிடப்படுகிறது
+கேட்கப்பட்டது, தடை இல்லை
+பணி ஒதுக்குவதைத் தடுக்கிறது
+தீர்க்கப்பட்டது
+மதிப்பிட்டவர்: {name}
+நலன் முரணை அறிவி
+அறிவித்த உடனே, யாரும் அதைப் படிப்பதற்கு முன்பே, உங்களுக்குப் பணி ஒதுக்க முடியாது; ஆளுகை நிர்வாகி ஒருவர் அதைக் கேட்கும் வரை அப்படியே இருக்கும். அதுதான் நோக்கம்: முன்னதாக வெளியிடப்படும் மதிப்பாய்வை விடப் பின்னர் கேட்கப்படும் முரண் அதிக மதிப்புடையது.
+முரணின் வகை
+முரணை விவரியுங்கள்
+முரண் என்ன, உங்கள் சொந்தச் சொற்களில்
+அறிவி
+முதலில் மீண்டும் உள்நுழையுங்கள்.
+இது மிக நீளமானது. அனுமதிக்கப்படும் அதிகபட்ச எழுத்துகள்: {max}
+மதிப்பாய்வாளராக உங்கள் பதிவு மூடப்பட்டது. அதை மீண்டும் திறக்கத் தளத்தின் பணியாளர்களிடம் கேளுங்கள்.
+நீங்கள் மதிப்பாய்வாளர் பதிவேட்டில் இல்லை, எனவே இதைப் பதிவு செய்ய இடம் இல்லை.
+இதைப் பதிவு செய்வது உங்கள் வேலை அல்ல.
+அதன் வகையைத் தேர்ந்தெடுங்கள்.
+தகுதிக்கு ஒரு தலைப்புக் கொடுங்கள்.
+அது எந்தப் பாடத்தில் என்பதைத் தேர்ந்தெடுங்கள். பாடம் இல்லாமல் அது ஒருபோதும் எந்த அதிகாரமும் தராது.
+அந்தப் பாடம் இனி பட்டியலில் இல்லை. பக்கத்தை மீண்டும் ஏற்றி வேறொன்றைத் தேர்ந்தெடுங்கள்.
+முரணை விவரியுங்கள், அதை மதிப்பிடுபவர் ஊகிக்க வேண்டியதில்லை.
+இது பதிவாகவில்லை. பதிவேட்டில் என்ன உள்ளது என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றுங்கள்.
+அது பதிவானதா என்று யாராலும் சொல்ல முடியாது. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் அனுப்பும் முன் பாருங்கள்.
+### ne
+समीक्षाको लाम
+समीक्षा
+जिम्मेवारीहरू प्लेटफर्मका कर्मचारीले दिन्छन्। तपाईं आफैँलाई जिम्मेवारी दिन सक्नुहुन्न, र आफैँले लेखेको कोर्स स्वीकृत गर्न सक्नुहुन्न।
+तपाईं कुनै विद्वत् बोर्डको सदस्य हुनुहुन्छ भने, तपाईंको मत पर्खिरहेका मुद्दाहरू {link} छन्।
+तपाईंको बोर्डको पृष्ठमा
+तपाईंलाई केही पनि दिइएको छैन। यहाँ कुनै समीक्षाको अपेक्षा थियो भने, प्लेटफर्मका एडमिनले त्यो दिनुपर्छ।
+तपाईंलाई पर्खिरहेका
+बन्द
+प्राविधिक
+इल्मी
+प्रस्ताव गरिएको
+स्वीकार गरिएको
+अस्वीकार गरिएको
+जारी छ
+पूरा भयो
+रद्द
+जिम्मा दिएको मिति: {date}
+अन्तिम मिति: {date}
+तपाईंको निर्णय: {decision}
+स्वीकृत भयो
+संशोधन मागियो
+अस्वीकृत भयो
+प्रस्ताव हेर्नुहोस्
+समीक्षा खोल्नुहोस्
+मेरो सिकाइमा फर्कनुहोस्
+तपाईंका समीक्षाहरू अहिले पढ्न सकिएन। एकैछिनमा फेरि प्रयास गर्नुहोस्।
+समीक्षकका रूपमा आफूलाई अघि सार्नुहोस्
+दर्तामा छैन
+तपाईं समीक्षकहरूको दर्तामा हुनुहुन्न, त्यसैले तपाईंलाई केही दिन सकिँदैन। आवेदन दिँदैमा तपाईं समीक्षक बन्नुहुन्न: कुनै कोर्स तपाईंको अगाडि राखिनुअघि सुशासनका एडमिनले तपाईं को हुनुहुन्छ भनेर जाँच्नुपर्छ, र तपाईं कुन विषयमा निर्णय दिन सक्नुहुन्छ भन्ने उहाँहरूले मात्र भन्न सक्नुहुन्छ।
+छोटो परिचय, तपाईंको आवेदन जाँच्ने व्यक्तिलाई देखाइन्छ
+समीक्षक बन्न आवेदन दिनुहोस्
+पठाइँदै छ…
+दर्तामा तपाईंको स्थान
+आवेदक
+जाँच पर्खिरहेको
+प्रमाणित समीक्षक
+निलम्बित
+अब समीक्षा गर्नुहुन्न
+आवेदन मिति
+जाँच भयो
+जाँच गर्ने
+अझै होइन। सुशासनका एडमिनले तपाईंलाई नजाँचेसम्म तपाईंलाई केही दिन सकिँदैन।
+तपाईं प्रमाणित समीक्षक नभएसम्म तपाईंलाई कुनै कोर्स दिन सकिँदैन, र तपाईंले दिएको कुनै स्वीकृतिले केही प्रकाशित हुन दिँदैन।
+तपाईंका योग्यताहरू
+अझै केही दर्ता भएको छैन।
+प्रमाणपत्र
+डिग्री
+इजाजा
+अनुभव
+संस्थासँगको आबद्धता
+शीर्षक छैन
+स्वीकार भएन
+म्याद सकिएको
+तपाईंले दर्ता गरेको योग्यता जाँच नभएसम्म विचाराधीन रहन्छ; जाँच प्लेटफर्मका मालिकले गर्छन्, वा मालिकले बोलाएको अवधिमा विद्वत् बोर्डले। यसले विषयको नाम लिनैपर्छ, किनभने प्रमाणले नै तपाईंलाई त्यो विषयमा अधिकार दिन्छ। दर्ता गर्दैमा पनि अधिकार पाइँदैन: विषय दिनु सुशासन कर्मचारीको छुट्टै निर्णय हो।
+योग्यता दर्ता गर्नुहोस्
+योग्यताको प्रकार
+यसले समेट्ने विषय
+अझै कुनै विषय छैन
+योग्यताको शीर्षक
+यसको नाम, जस्तै: हफ्सको रिवायतमा इजाजा
+जारी गर्ने संस्था
+कसले दिएको (ऐच्छिक)
+विचाराधीनका रूपमा दर्ता गर्नुहोस्
+तपाईं केबाट अलग रहनुपर्छ
+कुनै घोषणा छैन। तपाईंलाई निष्पक्ष रहन नसक्ने कुराको समीक्षा गर्न भनिनेबित्तिकै घोषणा गर्नुहोस्: तपाईंले लेखेको कोर्स, नातेदार, तपाईंलाई तलब दिने विद्यालय।
+मैले नै लेखेको हुँ
+मलाई यसबाट फाइदा हुन सक्छ
+नाता
+मैले उहाँलाई पढाएँ, वा उहाँले मलाई
+एउटै संस्था
+व्यक्तिगत
+अरू केही
+घोषणा गरिएको, मूल्याङ्कन पर्खिरहेको
+मूल्याङ्कन हुँदै छ
+सुनियो, बाधा होइन
+जिम्मेवारी दिन रोक्छ
+समाधान भयो
+मूल्याङ्कन गर्ने: {name}
+स्वार्थको द्वन्द्व घोषणा गर्नुहोस्
+घोषणा गर्नेबित्तिकै, कसैले पढ्नुअघि नै, तपाईंलाई जिम्मेवारी दिन सकिँदैन, र सुशासनका एडमिनले त्यो नसुनेसम्म त्यस्तै रहन्छ। उद्देश्य नै यही हो: पछि सुनिएको द्वन्द्व चाँडो प्रकाशित समीक्षाभन्दा बढी मूल्यवान् हुन्छ।
+द्वन्द्वको प्रकार
+द्वन्द्व वर्णन गर्नुहोस्
+द्वन्द्व के हो, आफ्नै शब्दमा
+घोषणा गर्नुहोस्
+पहिले फेरि साइन इन गर्नुहोस्।
+यो धेरै लामो भयो। बढीमा अक्षर: {max}
+समीक्षकका रूपमा तपाईंको दर्ता बन्द गरिएको थियो। प्लेटफर्मका कर्मचारीलाई त्यो फेरि खोल्न भन्नुहोस्।
+तपाईं समीक्षकहरूको दर्तामा हुनुहुन्न, त्यसैले यो दर्ता गर्ने ठाउँ छैन।
+यो दर्ता गर्नु तपाईंको काम होइन।
+यसको प्रकार छान्नुहोस्।
+योग्यतालाई शीर्षक दिनुहोस्।
+यो कुन विषयको हो छान्नुहोस्। विषयबिना यसले कहिल्यै कुनै अधिकार दिन सक्दैन।
+त्यो विषय अब सूचीमा छैन। पृष्ठ फेरि लोड गर्नुहोस् र अर्को छान्नुहोस्।
+द्वन्द्व वर्णन गर्नुहोस्, ताकि मूल्याङ्कन गर्नेले अनुमान गर्नु नपरोस्।
+यो दर्ता भएन। दर्तामा के छ हेर्न पृष्ठ फेरि लोड गर्नुहोस्।
+यो दर्ता भयो कि भएन कसैले भन्न सक्दैन। पृष्ठ फेरि लोड गर्नुहोस् र फेरि पठाउनुअघि हेर्नुहोस्।

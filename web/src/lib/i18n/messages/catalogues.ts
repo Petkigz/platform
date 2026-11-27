@@ -85,6 +85,7 @@ import { ASIA_VI } from './asia-vi.ts';
 import { ASIA_FIL } from './asia-fil.ts';
 import { ASIA_MY } from './asia-my.ts';
 import { PANEL } from './panel.ts';
+import { REVIEW } from './review.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -942,6 +943,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   TPUB,
   // A board member's own page (`/panel`), on the same rule.
   PANEL,
+  // The review queue and a reviewer's place on the register (`/review`), on the same rule.
+  REVIEW,
 );
 
 /**

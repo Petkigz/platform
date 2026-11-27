@@ -2740,3 +2740,48 @@ p.support-small { margin: 0; }
 .panel-vote > label { margin: 0; }
 .panel-vote textarea { width: 100%; font-family: inherit; }
 .panel-list.stack { gap: 0.75rem; }
+
+/* --------------------------------------------------------------------------
+   The review queue and a reviewer's place on the register (`/review`),
+   2026-11-27. These were inline styles while the page was English only.
+   Everything is written with logical properties, so the same rules serve a
+   page read from the right.
+   -------------------------------------------------------------------------- */
+
+.review-page .review-register { margin-block-start: 1.5rem; }
+.review-page .review-queue { margin-block-start: 1.5rem; }
+.review-page .review-queue .card h3 { margin-block-start: 0.6rem; overflow-wrap: anywhere; }
+.review-page .review-queue .card .btn { margin-block-start: 0.9rem; }
+.review-page .review-foot { margin-block-start: 2rem; }
+.review-page .badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* A heading and its badge. In a long language the badge goes under the
+   heading instead of squeezing it to one word a line. */
+/* `.stack` is a grid whose one column is as wide as its widest word, so a
+   badge that may not wrap ("Waiting to be checked", at the largest text)
+   pushed the whole register off a 320px screen. The column is given a
+   minimum of nothing, and a badge here may take a second line. */
+.register.stack, .register-form.stack { grid-template-columns: minmax(0, 1fr); }
+.register.stack { gap: 1rem; }
+.register-form.stack { gap: 0.5rem; }
+.register-head { margin-block-start: 0; flex-wrap: wrap; }
+.register-head h3 { min-width: 0; overflow-wrap: anywhere; }
+.register-head .badge, .review-page .badges .badge { flex: 0 1 auto; white-space: normal; }
+.register .card > .meta, [data-register='apply'] > .meta { margin-block: 0.75rem; }
+[data-register='apply'] textarea, .register-form textarea { width: 100%; font-family: inherit; }
+.register-send { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+[data-register='apply'] .register-send { margin-block-start: 0.75rem; }
+.register-send .register-notice { flex: 1 1 14rem; min-width: 0; }
+.register-notice { margin: 0; }
+
+/* A row of the register: what it is, each part on its own line, and its
+   state at the end. `.lessons li` is a flex row; the facts take the room and
+   the state keeps its own width, so a long title cannot crush the badge. */
+.register-list li { align-items: flex-start; }
+.register-facts { flex: 1; min-width: 0; display: grid; gap: 0.15rem; font-size: 0.95rem; overflow-wrap: anywhere; }
+.register-facts > :first-child { color: var(--muted); font-size: 0.82rem; }
+.register-list .badge { flex: none; max-width: 45%; white-space: normal; text-align: center; }
+.register-summary { cursor: pointer; color: var(--green-700); }
+.register-form { margin-block-start: 0.75rem; }
+.register-pair { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
+.register-pair select { min-width: 0; }

@@ -42,7 +42,7 @@ def comp(s):
 edit('src/lib/companion-i18n.test.ts', comp)
 # held-translations test
 def ht(s):
-    s = last_import(s, r"^import \{ [A-Z_]+ \} from '\./i18n/messages/(?:about|saved|paths|downloads|ask|panel|support|course-parts|teacher-page)\.ts';$", f"import {{ {const} }} from './i18n/messages/{stem}.ts';")
+    s = last_import(s, r"^import \{ [A-Z_]+ \} from '\./i18n/messages/(?:about|saved|paths|downloads|ask|panel|review|support|course-parts|teacher-page)\.ts';$", f"import {{ {const} }} from './i18n/messages/{stem}.ts';")
     m = re.search(r"assert\.deepEqual\(\[\.\.\.UNWRITTEN_WHILE_HELD\], \[[^\]]*'\]\);", s); assert m
     block = m.group(0); s = s.replace(block, block[:-3] + f", '{section}']);")
     m = re.search(r"  assert\.equal\(unwrittenKeys\.length, (\d+)\);\n", s); assert m

@@ -281,6 +281,12 @@ for (const [file, key] of [
   ['panel.ts', 'panel.cannotUndo'],
   ['panel.ts', 'panel.unsure'],
   ['panel.ts', 'panel.already'],
+  // The reviewer register runs in the browser and is handed its words by
+  // `/review`; no sentence of it belongs in a script.
+  ['review.ts', 'review.applyWhy'],
+  ['review.ts', 'review.qualRule'],
+  ['review.ts', 'review.declareWhy'],
+  ['review.ts', 'review.eUnsure'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

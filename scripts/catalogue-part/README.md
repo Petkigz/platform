@@ -19,3 +19,15 @@ already in `src/lib/i18n/messages/en.ts`:
 `data/` holds the lines a part was made from: `### <code>`, then one line
 for each key in the order `en.ts` has them. Nobody who speaks these
 languages has read them.
+
+Two more, for choosing words before any of that (run from `web/` with
+`node --experimental-strip-types`):
+
+- `same.mts <prefix.>`: which keys of the new unit say, in English,
+  exactly what an older key says, and in how many languages that older
+  key is written. A place to look, not a sentence to copy unread.
+- `voc.mts <key> [<key>…] [--only <code>,<code>]`: what older keys say
+  in each language, so that one thing keeps one name.
+
+`headers/` holds the comment at the top of a part (the `<header.txt>`
+that `gen.py` is given).

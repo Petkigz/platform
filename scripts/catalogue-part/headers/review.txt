@@ -1,0 +1,28 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The review queue and a reviewer's own place on the register (`/review`):
+ * what has been assigned, the application to review, the qualifications a
+ * person records and the conflicts they declare.
+ *
+ * Written on 2026-11-27, in the same twenty-seven languages as the
+ * dashboard. **Written by the people who built the site and read by no
+ * speaker.** A declaration made here bars an assignment at once, and a
+ * qualification recorded here is what a scholar is later authorised on, so
+ * a speaker's reading matters here more than on most pages.
+ *
+ * The board and the register are named with the words `/panel` uses in
+ * each language, and `review.back` is `panel.back`, so that one thing has
+ * one name. The register runs in the browser and is handed its words by
+ * the page; none is in a script. A date and a count follow a colon and are
+ * already in the reader's digits, so that no word has to agree with them.
+ * French puts a no-break space before `:`. Where a language marks gender
+ * on a state ("declined", "expired"), the form that agrees with the word
+ * for a review or a qualification in that language was chosen, and nobody
+ * checked it.
+ *
+ * `{link}` in `review.panelNote` is where `review.panelLink` goes. In the
+ * languages that put a case ending on a place (Bengali, Kazakh, Tamil and
+ * others) the ending is inside the link's own words.
+ */

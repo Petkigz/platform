@@ -674,9 +674,10 @@ written: not a held draft, nothing.
   page is marked as English now. **Still English with no
   mark, on pages of their own:** saved courses, downloads, learning paths, asking a
   teacher, support, `/about` and the scholars' panel. *(All seven were
-  written in the twenty-seven languages by 2026-11-27, unreviewed; the
-  reviewers' pages under `/review` and every staff page are still
-  English.)* The teacher's class
+  written in the twenty-seven languages by 2026-11-27, unreviewed, and
+  so was `/review`, the queue and a reviewer's place on the register
+  (`review.`, 96 sentences, unreviewed); the page of one assignment,
+  `/review/[assignmentId]`, and every staff page are still English.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

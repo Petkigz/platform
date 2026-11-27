@@ -11084,4 +11084,72 @@ started: recitation correction, native apps, push notifications.
   repository did not survive a new workspace, and the earlier units'
   lines went with them (their output is committed).
   **Still English:** `/review` (the reviewers' pages), and the staff
-  areas (`/admin`, `/teach`, `/institution`).
+  areas (`/admin`, `/teach`, `/institution`). (`/review` itself followed
+  the same day; next entry. `/review/[assignmentId]` did not.)
+- **The review queue and a reviewer's place on the register, in the
+  reader's language (2026-11-27).** `/review` (`messages/review.ts`, 96
+  sentences) in the twenty-seven languages with nothing held: the
+  queue, the application to review, the qualifications a person records
+  and the conflicts they declare. The board and the register are named
+  as `/panel` names them.
+  *Refusals.* The register runs in the browser and posts to
+  `/api/review/profile`, which sent back the database's English sentence
+  (or a validator's) and the page printed it. The route now names a
+  refusal (`code`, with `max` when a length is the reason) and the page
+  says it in the reader's language; the names and the checks are in
+  `lib/review-register.ts`. `lib/review.ts` keeps its English tables,
+  validators and `mapReviewerError()` for `/admin/reviewers`; the one
+  change there is that a refusal now carries the database's state.
+  **Four things that were wrong, each fixed:**
+  (1) an answer nobody could read (a gateway's page, a lost connection)
+  was shown as "Could not record that", which nobody knows, and a
+  declaration bars an assignment from the moment it exists; it is a 502
+  named `unsure` and the page says nobody can tell whether it was
+  recorded. (2) `fetchMyAssignments()` ignored a failed read of the
+  reviewer's own profile, so a failed read was an empty queue under
+  "Nothing has been assigned to you"; it throws, and the page catches
+  every failed read and says the reviews could not be read, where the
+  other two threw to the page that says the site broke. (3) A refused
+  qualification or declaration emptied its boxes; what was typed is
+  kept unless it was recorded. (4) A request that never came back left
+  every button disabled; it does not now.
+  *Also:* the refusal is shown under the form it answers, not at the
+  foot of the register a screen away; a day is the day as stored
+  (`formatDay`) and a deadline carries its zone (`formatDateTime` in
+  UTC), where both were the server's own `toLocaleDateString()`; counts
+  are in the reader's digits; a course that could not be read says
+  "Untitled" in the reader's language where the library's English
+  "Untitled course" was printed; a state the page has no word for is
+  shown without one; the link to `/panel` is the app's own link.
+  **A layout fault found by the browser check and fixed:** the register
+  is a `.stack`, a grid whose one column is as wide as its widest word,
+  and a badge may not wrap, so "Waiting to be checked" at the largest
+  text pushed the register off a 320px screen. The column has a minimum
+  of nothing and a badge here may take a second line.
+  *Checked by:* `review-page.test.ts` (7 tests) and
+  `scripts/review-route-smoke.mjs` against a synthetic Auth and REST
+  (in `ci.yml`, and with a browser in the responsive workflow: English,
+  Arabic, French and Tamil at 320, 390 and 1440px and at 320px with the
+  largest text and the dyslexia font, with both forms open and a
+  refusal shown; the register worked in Arabic through refusals, two
+  answers nobody could read, and a declaration, a qualification and an
+  application that were recorded).
+  **Not done:** nothing here was tried against the hosted database, and
+  nobody has seen it live; no speaker has read the 96 sentences, which
+  matters, because a declaration bars an assignment and a qualification
+  is what a scholar is later authorised on. Where a language marks
+  gender on a state ("declined", "expired") the form was chosen to
+  agree with that language's word for a review or a qualification and
+  nobody checked it. "Ijazah" is written as each language was guessed
+  to write it (Indonesian and Malay say "ijazah sanad", because
+  "ijazah" alone is a school certificate there; Chinese adds a gloss).
+  `/review/[assignmentId]` (the offer, accepting or declining, the
+  lessons and the decision) is still English, and so is the sentence
+  `/api/review/profile` sends beside the name (kept for whoever reads
+  the reply by hand).
+  *Tools:* `scripts/catalogue-part/` gained `same.mts` (which older keys
+  say the same English), `voc.mts` (what older keys say in each
+  language), `headers/` (the comment at the top of a part) and
+  `data/review.txt`.
+  **Still English:** `/review/[assignmentId]`, and the staff areas
+  (`/admin`, `/teach`, `/institution`).
