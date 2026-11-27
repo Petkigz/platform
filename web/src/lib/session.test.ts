@@ -10,6 +10,7 @@ import {
   frontDoorDestination,
   mastheadActions,
   parseSession,
+  staffNavLink,
 } from './session.ts';
 
 test('anything that is not a session is nobody', () => {
@@ -24,12 +25,13 @@ test('a signed-in session keeps a trimmed first name and nothing more', () => {
   assert.deepEqual(parseSession({ signedIn: true, name: '  Amina Yusuf ' }), {
     signedIn: true,
     name: 'Amina',
+    staff: false,
   });
 });
 
 test('a name that is only whitespace is no name, but the session still counts', () => {
-  assert.deepEqual(parseSession({ signedIn: true, name: '   ' }), { signedIn: true, name: null });
-  assert.deepEqual(parseSession({ signedIn: true }), { signedIn: true, name: null });
+  assert.deepEqual(parseSession({ signedIn: true, name: '   ' }), { signedIn: true, name: null, staff: false });
+  assert.deepEqual(parseSession({ signedIn: true }), { signedIn: true, name: null, staff: false });
 });
 
 test('firstName splits on any run of whitespace and refuses the empty case', () => {
@@ -114,4 +116,36 @@ test('the closing sentence is not the visitor sentence with a word changed', () 
   assert.match(visitor, /Create an account/);
   assert.doesNotMatch(member, /Create an account/);
   assert.notEqual(visitor, member);
+});
+
+test('staff are told so only by an exact true, and only when signed in', () => {
+  assert.equal(parseSession({ signedIn: true, staff: true }).staff, true);
+  for (const junk of ['true', 1, null, undefined, {}, false]) {
+    assert.equal(parseSession({ signedIn: true, staff: junk }).staff, false, JSON.stringify(junk));
+  }
+  // Signed out is nobody, whatever else the answer claims.
+  assert.equal(parseSession({ signedIn: false, staff: true }).staff, false);
+});
+
+test('staff have a way back to the console from every page, and nobody else is shown one', () => {
+  // The owner, 2026-11-27: after opening another tab of the header there was
+  // "no button or element" that led back to the console.
+  assert.deepEqual(staffNavLink({ signedIn: true, name: null, staff: true }), { label: 'Admin', href: '/admin' });
+  assert.equal(staffNavLink({ signedIn: true, name: 'Amina', staff: false }), null);
+  assert.equal(staffNavLink({ signedIn: true, name: 'Amina' }), null);
+  assert.equal(staffNavLink({ signedIn: false, name: null, staff: true }), null);
+
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+  // The answer comes from the question `/admin` itself is guarded by, so the
+  // link is never shown to somebody the page would turn away.
+  const route = read('../app/api/session/route.ts');
+  assert.match(route, /rpc\('is_privileged', \{ p_user_id: user\.id \}\)/u);
+  assert.match(route, /staff: privileged === true/u);
+  // It is in the main navigation, drawn by the layout on every page, and it
+  // shares the masthead's one request.
+  assert.match(read('../app/layout.tsx'), /<nav className="nav"[^>]*>\s*<StaffNavLink \/>/u);
+  const link = read('../app/_shared/staff-nav-link.tsx');
+  assert.match(link, /sessionOnce\(\)/u);
+  assert.doesNotMatch(link, /fetch\(/u);
+  assert.match(link, /lang="en"/u);
 });

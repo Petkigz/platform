@@ -15,6 +15,11 @@ import { createClient } from '@/lib/supabase/server';
  * offer a visitor a "Your area" button that redirects to sign-in, and a cached
  * "signed out" answer would do the reverse. The answer is also deliberately
  * small — a boolean and a first name, never an id, an email or a role list.
+ *
+ * `staff` is one more boolean: whether `/admin` opens for this person, from
+ * the same question that page is guarded by. The header uses it to show staff
+ * the way back to the console and for nothing else. A question that fails is
+ * "no" here, which costs a link and never grants anything.
  */
 const noStore = { 'cache-control': 'no-store' } as const;
 
@@ -36,8 +41,14 @@ export async function GET() {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
+
   return NextResponse.json(
-    { signedIn: true, name: (data?.display_name as string | null) ?? null },
+    {
+      signedIn: true,
+      name: (data?.display_name as string | null) ?? null,
+      staff: privileged === true,
+    },
     { headers: noStore },
   );
 }

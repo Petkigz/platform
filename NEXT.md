@@ -10816,10 +10816,15 @@ Admin dashboard · payments UI · mobile · the investor proposal.
   `platform_admin`, unrevoked, with an active profile; and acting as that
   account under an OAuth session, `has_role`, `is_privileged` and
   `staff_attention()` all answer as for the owner.
-- **Open: the owner reported arriving "as a user account, not admin".**
-  Not reproduced and not explained. `/auth/callback` sends to
-  `/dashboard`, which sends an owner to `/admin`. The one path that sends
-  an owner to `/learn` was a role question that *failed* being read as
-  "no"; that is fixed (`askRole()` in `web/src/lib/auth.ts`: asked twice,
-  then the error page). Ask the owner which address they landed on and
-  whether `/admin` opens; do not call this closed until they say.
+- *The "user account, not admin" report, closed by the owner the same
+  day:* the console opens by every sign-in method. What was missing was a
+  way back to it: the main navigation named every area except the
+  console, and "Your area" (which does lead there) does not say so. Staff
+  now have "Admin" as the first link of the navigation on every page
+  (`StaffNavLink`, from one more boolean on `/api/session`, the question
+  `/admin` is guarded by). Seen in Chromium with the session answer
+  stubbed, at 1280 and 360 wide: drawn for staff, absent for a learner and
+  a stranger. Not seen from here: the link under a real signed-in session
+  on the live site, or its "current page" mark inside `/admin`.
+  `askRole()` (a failed role question is asked again, never read as "no")
+  was written while looking for the cause and stays; it was not the cause.

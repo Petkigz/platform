@@ -14,6 +14,7 @@ import { organisationJsonLd, websiteJsonLd } from '@/lib/structured-data';
 import { JsonLdScript } from './_shared/json-ld';
 import { BrandMark } from './_shared/brand-mark';
 import { MastheadActions } from './_shared/masthead-actions';
+import { StaffNavLink } from './_shared/staff-nav-link';
 import { PolicyNotice } from './_shared/policy-notice';
 import { SignupAgreement } from './_shared/signup-agreement';
 import { NavLink } from './_shared/nav-link';
@@ -154,6 +155,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             />
 
             <nav className="nav" aria-label={t('nav.main')} tabIndex={0}>
+              <StaffNavLink />
               <NavLink href="/catalogue">{t('nav.catalogue')}</NavLink>
               <NavLink href="/learn">{t('nav.learn')}</NavLink>
               <NavLink href="/family">{t('nav.family')}</NavLink>

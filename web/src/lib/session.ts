@@ -12,7 +12,13 @@
  * response is allowed to mean, and which two actions each state offers.
  */
 
-export type SessionSummary = { signedIn: boolean; name: string | null };
+/**
+ * `staff` is one yes or no: whether `/admin` opens for this person. It is
+ * there so the header can show them the way back to the console; it is not a
+ * list of roles, and nothing is decided by it (the page asks the database
+ * again).
+ */
+export type SessionSummary = { signedIn: boolean; name: string | null; staff?: boolean };
 
 export type MastheadAction = {
   label: string;
@@ -22,7 +28,7 @@ export type MastheadAction = {
   method: 'get' | 'post';
 };
 
-export const NOBODY: SessionSummary = { signedIn: false, name: null };
+export const NOBODY: SessionSummary = { signedIn: false, name: null, staff: false };
 
 /**
  * Read the session endpoint's answer defensively.
@@ -36,7 +42,7 @@ export function parseSession(value: unknown): SessionSummary {
   const record = value as Record<string, unknown>;
   if (record.signedIn !== true) return NOBODY;
 
-  return { signedIn: true, name: firstName(record.name) };
+  return { signedIn: true, name: firstName(record.name), staff: record.staff === true };
 }
 
 /**
@@ -110,6 +116,23 @@ export function accountLabel(session: SessionSummary, area = 'Your area'): strin
 }
 
 export type CallToAction = { label: string; href: string };
+
+/**
+ * The way back to the console, for the people it opens for.
+ *
+ * The main navigation named every area but this one: the catalogue, learning,
+ * family, teaching, reviewing. The owner opened one of them from the console
+ * and found "no button or element" to return by (2026-11-27). There was one,
+ * "Your area", which goes to `/dashboard` and from there to `/admin`; it does
+ * not say so, and a way back that has to be guessed is not one.
+ *
+ * So staff get a link that names the place, on every page, and nobody else is
+ * shown it. The word is English because the console is.
+ */
+export function staffNavLink(session: SessionSummary): CallToAction | null {
+  if (!session.signedIn || session.staff !== true) return null;
+  return { label: 'Admin', href: '/admin' };
+}
 
 /**
  * The second button on the front door.
