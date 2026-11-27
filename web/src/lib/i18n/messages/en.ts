@@ -3377,6 +3377,69 @@ export const en = {
   'cparts.prevContent': 'Preview content',
   'cparts.prevEmpty':
     'This lesson is marked as a preview, but no sample content has been added to it yet.',
+
+  // The about page (`about.ts`), in the same twenty-seven languages as the
+  // dashboard since 2026-11-27. It reads no database and no switch, so every
+  // sentence is a rule that holds for everybody or is written in the
+  // conditional. `{ayah}` and `{spring}` are the two halves of the name, in
+  // Latin letters. The counts are counted by the page, never spelled here.
+  'about.title': 'Why AyahSpring',
+  'about.description':
+    'What AyahSpring teaches, how a course reaches a learner, why a child is a learner and not an account, and who is allowed to teach here.',
+  'about.lede':
+    '{ayah} is a verse of the Qur’an and, in the older sense of the word, a sign. {spring} is renewal: the growth that follows water. The name is the thing this is trying to be: the verse, and the person learning to carry it.',
+  'about.bar':
+    'Everything below describes something the platform does, not something it intends to. This page is written to stay true as features are switched on and off, so it tells you the rule rather than today’s setting, and it would rather say less than say something that is only true this week.',
+  'about.catTitle': 'One catalogue, two kinds of learner',
+  'about.catAudience':
+    'Children and adults are different readers, so a course declares who it is for: children, adults, or both. The catalogue can be narrowed to one audience, the front page offers a door for each of the two, and a course only appears under an audience it claimed.',
+  'about.catAges':
+    'A course can also say which ages it was written for, inside the young learners’ audience, so a six-year-old and a fifteen-year-old do not arrive at the same shelf. A course that states no ages is open to every age: silence is not a restriction, and it is never read as one.',
+  'about.howTitle': 'How a course gets here',
+  'about.how1Lead': 'A teacher writes it.',
+  'about.how1':
+    'A draft version, with sections, lessons, sources and, if the course is examined, a quiz. Sources are cited for each lesson, because a lesson about the religion should be able to say where it came from.',
+  'about.how2Lead': 'Someone authorised checks it.',
+  'about.how2':
+    'A reviewer can only be given a course in a subject they hold a current authorisation for, and the database refuses the assignment otherwise. A declared conflict of interest blocks it too. The author cannot give their own course the scholarly approval that lets it be published, even if they hold that authorisation.',
+  'about.how3Lead': 'It is published, and then it is fixed.',
+  'about.how3':
+    'The platform owner publishes. From that moment the version is frozen: lessons, quizzes and files cannot change. A correction is a new version, and a learner already enrolled stays on the version they started, so a certificate is never for a course that quietly changed underneath it.',
+  'about.childTitle': 'Children are learners, not accounts',
+  'about.childNotice':
+    'A child does not sign up here. A parent or guardian holds the account, adds the child as a learner with a name and an age band, and sees their progress. A child under twelve never has an email address, a password or a sign-in of their own.',
+  'about.childLogin':
+    'Where the platform allows it, a verified guardian may give a child of twelve or older a sign-in of their own. The guardian chooses the first password, and can reset it or take the sign-in away. That is the guardian’s act: a child never makes an account alone.',
+  'about.childBand':
+    'There is no date of birth anywhere in the system. An age band (five to seven, eight to ten, and so on) is enough to know what a child should be shown, and is far less to lose if something goes wrong.',
+  'about.childConsent':
+    'Where the law requires verifiable parental consent before a child uses an online service, the gate is a guardian relationship, a verification step and a record of who consented. The platform can hold all three. Turning that requirement on for a country is the owner’s decision, taken with legal advice. Until it is on, a child is added by the adult who holds the account, never by themselves.',
+  'about.langTitle': 'The interface, and who has read it',
+  'about.langOffered': 'Languages the interface is offered in: {count}',
+  'about.langWritten':
+    'Every one of them but English was written by the people who built this platform, and not one has been read by somebody who speaks it. The language page says so beside each language rather than in a footnote, because “translated” and “read by a person who speaks it” are two different claims, and only the first one is true.',
+  'about.langHeld':
+    'Where we could not write a language well enough to trust what we had written, we show English instead until a speaker has read it.',
+  'about.langWhole': 'Written but not offered at all: {languages}',
+  'about.langPartly':
+    'Languages whose prayer-times, Hijri-date and counter screens are shown in English: {count}. The language page lists each of them with the share a reader is actually shown.',
+  'about.langFix':
+    'If a word looks wrong to you in your own language, the correction sheet is where to say so. It asks for no account, it shows you the English sentence and the current translation side by side, and you change only the lines that are wrong. Your name is printed beside the language if what you sent is accepted. Your email address is never published and never becomes a sign-in.',
+  'about.langSheet': 'Open the correction sheet',
+  'about.teachTitle': 'Who teaches here',
+  'about.teachAppoint':
+    'Teaching is by appointment. Nobody becomes a teacher by signing up: the owner or the governance staff grant it, with a written reason, and the same is true of removing it. Every course still passes review, whoever wrote it.',
+  'about.teachAsk':
+    'You may ask. Applying to teach sends your qualifications and a link to a lesson you have taught, and the owner reads both. Applying grants nothing: it is a request for an appointment, and the answer is a written decision you can read.',
+  'about.teachPage':
+    'A teacher may publish a page about themselves. When they have, the course page names them and links to it. When they have not, the course page says the course was written by an appointed teacher and approved by a reviewer, and leaves the name out. A missing name is a privacy choice, not a lesser course.',
+  'about.keptTitle': 'What is kept, and what is never rewritten',
+  'about.keptProgress':
+    'Your progress belongs to you, and a course you have paid for stays in your account. A certificate carries a number that anyone can look up, with no account needed, and it can still be checked even if the course is later retired.',
+  'about.keptPayment':
+    'A payment record is never rewritten: a correction is a new entry beside the old one, not an edit to it. A learner’s review of a course is either published as they wrote it or withdrawn with a reason they can see. Staff cannot rewrite it into something else.',
+  'about.cost':
+    'Looking costs nothing. A course is bought for one named learner: one purchase covers one learner, never a household.',
 } as const;
 
 export type MessageKey = keyof typeof en;

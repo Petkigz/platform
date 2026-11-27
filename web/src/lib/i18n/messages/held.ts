@@ -128,6 +128,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'live',
   'hifz',
   'cparts',
+  'about',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

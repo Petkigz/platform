@@ -1,11 +1,30 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 
-export const metadata: Metadata = {
-  title: 'About',
-  description:
-    'What AyahSpring teaches, how a course reaches a learner, why a child is a learner and not an account, and who is allowed to teach here.',
-};
+import { Say } from '@/components/say';
+import {
+  LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translatedLocales, translator, withheldLocales,
+} from '@/lib/i18n';
+import { languageName } from '@/lib/i18n/language-name';
+import { HELD_FOR_REVIEW, WHOLE_LANGUAGE } from '@/lib/i18n/messages/held';
+
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'about') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  const t = translator(shown.code);
+  return { title: t('footer.about'), description: t('about.description') };
+}
 
 /**
  * About the platform — screen 2.
@@ -20,183 +39,128 @@ export const metadata: Metadata = {
  * site. But a page that cannot see a switch must not describe one: an earlier
  * version of this page said the young learners' and adults' doors "are separate
  * pages rather than a filter on one list", which was true only while
- * `learning.audience_sections` was on. With the flag off those doors redirect to
- * `?audience=`, so the sentence a parent read was the opposite of what the
- * product did.
+ * `learning.audience_sections` was on.
  *
  * The rule that replaced it: **every sentence here is either enforced for
  * everybody, or written in the conditional** — "when a teacher publishes a page",
- * "when a course is reviewed". Nothing on this page asserts the current state of
- * an optional surface, because nothing here can know it. If a claim cannot be
- * written that way, it does not go on the page.
+ * "where the platform allows it". Nothing on this page asserts the current state
+ * of an optional surface, because nothing here can know it. If a claim cannot be
+ * written that way, it does not go on the page. (It said until 2026-11-27 that a
+ * child never has a login of their own. A guardian has been able to give one to
+ * a child of twelve or older since 2026-11-24, behind a switch, so that sentence
+ * is now two: what holds for every child, and what a guardian may do where the
+ * platform allows it.)
  *
- * Each claim is a description of an enforcement rather than a marketing
- * position, and the ones worth checking are one click from the claim: the
- * catalogue, an account, and `/verify`, where a certificate number can be looked
- * up by anyone without signing in.
+ * **In the reader's language** since 2026-11-27 (`messages/about.ts`): the
+ * sentences are in the catalogue and none is written here. The numbers of
+ * languages are counted from the register each time the page is drawn; they
+ * were spelled out in the text, and a test had to catch them going stale.
+ * There is no link inside a sentence, because where a link's words sit, and in
+ * what case, is not the same in every language: a link follows its paragraph.
  */
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const num = (value: number) => formatNumber(shown.code, value);
+
+  // Counted, not written: the languages on offer, the ones written and not
+  // offered, and the ones with their companion screens held back.
+  const offered = translatedLocales().length;
+  const whole = withheldLocales().map((held) => languageName(shown.code, held.code) ?? held.englishName);
+  const partly = Object.values(HELD_FOR_REVIEW).filter((parts) => parts && !parts.includes(WHOLE_LANGUAGE)).length;
+  let wholeList = whole.join(', ');
+  try {
+    wholeList = new Intl.ListFormat(shown.code, { style: 'long', type: 'conjunction' }).format(whole);
+  } catch {
+    // A runtime with no list rules for this language: the names with commas.
+  }
+
+  const HEAD = { marginTop: '2.5rem' } as const;
+  // The two halves of the name are the name: Latin letters in every language.
+  const half = (word: string) => (
+    <strong>
+      <bdi lang="en" dir="ltr">{word}</bdi>
+    </strong>
+  );
+
   return (
-    <div className="page">
-      <p className="eyebrow">About</p>
-      <h1>Why AyahSpring</h1>
+    <div className="page" {...frame}>
+      <p className="eyebrow">{t('footer.about')}</p>
+      <h1>{t('about.title')}</h1>
       <p className="lede">
-        <strong>Ayah</strong> is a verse of the Qur&rsquo;an and, in the older
-        sense of the word, a sign. <strong>Spring</strong> is renewal — the growth
-        that follows water. The name is the thing this is trying to be: the verse,
-        and the person learning to carry it.
+        <Say text={t('about.lede')} parts={{ ayah: half('Ayah'), spring: half('Spring') }} />
       </p>
 
-      <p className="muted" style={{ marginTop: '1rem' }}>
-        Everything below describes something the platform does, not something it
-        intends to. That is a higher bar than it sounds: this page is written to
-        stay true as features are switched on and off, so it tells you the rule
-        rather than today&rsquo;s setting &mdash; and it would rather say less than
-        say something that is only true this week.
-      </p>
+      <p className="muted" style={{ marginTop: '1rem' }}>{t('about.bar')}</p>
 
-      <h2 style={{ marginTop: '2.5rem' }}>One catalogue, two kinds of learner</h2>
-      <p className="muted">
-        Children and adults are different readers, so a course declares who it is
-        for — children, adults, or both. That is a column on the course, not a
-        setting chosen for it elsewhere: the catalogue can be narrowed to one
-        audience, the front page offers a door for each of the two, and a course
-        only appears under an audience it claimed.
-      </p>
-      <p className="muted">
-        A course can also say <em>which ages</em> it was written for, inside the
-        young learners&rsquo; audience, so a six-year-old and a fifteen-year-old do
-        not arrive at the same shelf. A course that states no ages is open to
-        every age — silence is not a restriction, and it is never read as one.
-      </p>
+      <h2 style={HEAD}>{t('about.catTitle')}</h2>
+      <p className="muted">{t('about.catAudience')}</p>
+      <p className="muted">{t('about.catAges')}</p>
 
-      <h2 style={{ marginTop: '2.5rem' }}>How a course gets here</h2>
+      <h2 style={HEAD}>{t('about.howTitle')}</h2>
       <ol className="stack" style={{ marginTop: '0.75rem' }}>
         <li className="card">
-          <strong>A teacher writes it.</strong>{' '}
-          <span className="muted">
-            A draft version, with sections, lessons, sources and — if the course
-            is examined — a quiz. Sources are cited per lesson, because a lesson
-            about the deen should be able to say where it came from.
-          </span>
+          <strong>{t('about.how1Lead')}</strong> <span className="muted">{t('about.how1')}</span>
         </li>
         <li className="card">
-          <strong>Someone authorised checks it.</strong>{' '}
-          <span className="muted">
-            A reviewer can only be given a course in a subject they hold a live
-            authorisation for, and the database refuses the assignment otherwise.
-            A declared conflict of interest blocks it too. The author cannot give
-            their own course the scholarly approval that lets it be published,
-            even if they hold that authorisation — the limited technical checks
-            they may run on their own work are not an approval.
-          </span>
+          <strong>{t('about.how2Lead')}</strong> <span className="muted">{t('about.how2')}</span>
         </li>
         <li className="card">
-          <strong>It is published, and then it is fixed.</strong>{' '}
-          <span className="muted">
-            The platform owner publishes. From that moment the version is frozen:
-            lessons, quizzes and files cannot change. A correction is a new
-            version, and a learner already enrolled stays on the version they
-            started — so a certificate is never for a course that quietly changed
-            underneath it.
-          </span>
+          <strong>{t('about.how3Lead')}</strong> <span className="muted">{t('about.how3')}</span>
         </li>
       </ol>
 
-      <h2 style={{ marginTop: '2.5rem' }}>Children are learners, not accounts</h2>
-      <div className="notice">
-        A child does not sign up here. A parent or guardian holds the account,
-        adds the child as a learner with a name and an age band, and sees their
-        progress. The child never gets an email address, a password or a login of
-        their own — there is nothing for a child to sign into.
-      </div>
-      <p className="muted" style={{ marginTop: '0.75rem' }}>
-        There is no date of birth anywhere in the system. An age band — five to
-        seven, eight to ten, and so on — is enough to know what a child should be
-        shown, and is far less to lose if something goes wrong.
-      </p>
-      <p className="muted">
-        Where the law requires verifiable parental consent before a child uses an
-        online service, the gate is a guardian relationship, a verification step
-        and a record of who consented. The platform can hold all three. Turning
-        that requirement on for a country is the owner&rsquo;s decision, taken with
-        legal advice — and until it is on, a child is added by the adult who holds
-        the account, never by themselves.
-      </p>
+      <h2 style={HEAD}>{t('about.childTitle')}</h2>
+      <div className="notice">{t('about.childNotice')}</div>
+      <p className="muted" style={{ marginTop: '0.75rem' }}>{t('about.childLogin')}</p>
+      <p className="muted">{t('about.childBand')}</p>
+      <p className="muted">{t('about.childConsent')}</p>
 
-      <h2 style={{ marginTop: '2.5rem' }}>The interface, and who has read it</h2>
+      <h2 style={HEAD}>{t('about.langTitle')}</h2>
       <p>
-        The interface is offered in forty-seven languages. Every one of them but English
-        was written by the people who built this platform, and <strong>not one has been
-        read by somebody who speaks it</strong>. The language page says so on each catalogue
-        rather than in a footnote, because &ldquo;translated&rdquo; and &ldquo;read by a
-        person who speaks it&rdquo; are two different claims and only the first one is true.
+        <strong>
+          <Say text={t('about.langOffered')} parts={{ count: <bdi>{num(offered)}</bdi> }} />
+        </strong>
       </p>
+      <p>{t('about.langWritten')}</p>
+      <p>{t('about.langHeld')}</p>
+      <ul className="stack">
+        <li>
+          <Say text={t('about.langWhole')} parts={{ languages: <bdi>{wholeList}</bdi> }} />
+        </li>
+        <li>
+          <Say text={t('about.langPartly')} parts={{ count: <bdi>{num(partly)}</bdi> }} />
+        </li>
+      </ul>
+      <p>{t('about.langFix')}</p>
       <p>
-        Where we could not write a language well enough to trust what we had written, we
-        show English instead until a speaker has read it. That is true of four whole
-        languages &mdash; Wolof, Fulfulde, Bambara and Dhivehi, which are written but not
-        offered &mdash; and of the prayer-times, Hijri-date and counter screens in nineteen
-        more. The language page lists each of them with the share a reader is actually shown.
+        <Link href="/contribute">{t('about.langSheet')}</Link>
       </p>
+
+      <h2 style={HEAD}>{t('about.teachTitle')}</h2>
+      <p className="muted">{t('about.teachAppoint')}</p>
+      <p className="muted">{t('about.teachAsk')}</p>
       <p>
-        If a word looks wrong to you in your own language,{' '}
-        <Link href="/contribute">the correction sheet</Link> is where to say so. It asks for
-        no account, it shows you the English sentence and the current translation side by
-        side, and you change only the lines that are wrong. Your name is printed beside the
-        language if what you sent is accepted; your email address is never published and
-        never becomes a login.
+        <Link href="/teach/apply">{t('account.teachLink')}</Link>
       </p>
+      <p className="muted">{t('about.teachPage')}</p>
 
-      <h2 style={{ marginTop: '2.5rem' }}>Who teaches here</h2>
-      <p className="muted">
-        Teaching is by appointment. Nobody becomes a teacher by signing up: the
-        owner or the governance staff grant it, with a written reason, and the
-        same is true of removing it. Every course still passes review, whoever
-        wrote it.
-      </p>
-      <p className="muted">
-        You may ask. <Link href="/teach/apply">Applying to teach</Link> sends your
-        qualifications and a link to a lesson you have taught, and the owner reads
-        both. Applying grants nothing — it is a request for an appointment, and
-        the answer is a written decision you can read.
-      </p>
-      <p className="muted">
-        A teacher may publish a page about themselves. When they have, the course
-        page names them and links to it; when they have not, the course page says
-        the course was written by an appointed teacher and approved by a
-        reviewer, and leaves the name out. A missing name is a privacy choice, not
-        a lesser course — and it is never a blank line where a name should be.
-      </p>
+      <h2 style={HEAD}>{t('about.keptTitle')}</h2>
+      <p className="muted">{t('about.keptProgress')}</p>
+      <p className="muted">{t('about.keptPayment')}</p>
 
-      <h2 style={{ marginTop: '2.5rem' }}>What is kept, and what is never rewritten</h2>
-      <p className="muted">
-        Your progress belongs to you, and a course you have paid for stays in your
-        account. A certificate carries a number that anyone can look up —{' '}
-        <Link href="/verify">check one here</Link>, no account needed — and it stays
-        verifiable even if the course is later retired.
-      </p>
-      <p className="muted">
-        A payment record is never rewritten: a correction is a new entry beside
-        the old one, not an edit to it. A learner&rsquo;s review of a course is
-        either published as they wrote it or withdrawn with a reason they can see;
-        staff cannot rewrite it into something else.
-      </p>
-
-      <p className="muted" style={{ marginTop: '1.75rem' }}>
-        Looking costs nothing. You pay when you enrol, for one named learner —
-        one purchase covers one learner, never a household.
-      </p>
+      <p className="muted" style={{ marginTop: '1.75rem' }}>{t('about.cost')}</p>
 
       <p style={{ marginTop: '1.5rem' }}>
         <Link className="btn" href="/catalogue">
-          Browse the catalogue
+          {t('home.browse')}
         </Link>{' '}
         <Link className="btn secondary" href="/verify">
-          Check a certificate
+          {t('footer.verify')}
         </Link>{' '}
         <Link className="btn secondary" href="/sign-up">
-          Create a free account
+          {t('home.createAccount')}
         </Link>
       </p>
     </div>
