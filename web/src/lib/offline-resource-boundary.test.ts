@@ -24,6 +24,13 @@ test('vault keys require current entitlement beyond row visibility', () => {
 test('the current network requirement for opening saved lessons is visible', () => {
   const downloads = readFileSync(new URL('../app/downloads/page.tsx', import.meta.url), 'utf8');
   const offline = readFileSync(new URL('./offline.ts', import.meta.url), 'utf8');
-  assert.match(downloads, /connection is currently required/);
-  assert.match(offline, /Connect to the internet to open this saved lesson/);
+  // Both sentences are the catalogue's since 2026-11-27: the page says the
+  // first, and the list says the second when the key cannot be asked for.
+  const catalogue = readFileSync(new URL('./i18n/messages/en.ts', import.meta.url), 'utf8');
+  const list = readFileSync(new URL('../app/downloads/downloads-list.tsx', import.meta.url), 'utf8');
+  assert.match(catalogue, /'downloads\.lede':\s+'[^']*a connection is needed to open this page and to check access before each playback/);
+  assert.match(catalogue, /'downloads\.needConnection': 'Connect to the internet to open this saved lesson and check access\.'/);
+  assert.match(downloads, /t\('downloads\.lede'\)/);
+  assert.match(offline, /'needConnection'\);/);
+  assert.match(list, /reason \? words\[reason\] : words\.openFailed/);
 });

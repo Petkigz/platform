@@ -3496,6 +3496,69 @@ export const en = {
   'paths.actContinue': 'Continue the course',
   'paths.actStart': 'Start the course',
   'paths.actView': 'See the course',
+  // The lessons kept on this device (`downloads.ts`), in the same
+  // twenty-seven languages as the dashboard since 2026-11-27. Most of these
+  // are said by the browser, from words the page hands it. `{count}` and
+  // `{days}` are numbers already in the reader's digits and each follows a
+  // colon; `{size}` is a number with KB, MB or GB after it; `{day}` is a date.
+  'downloads.title': 'On this device',
+  'downloads.lede':
+    'Lessons you saved to use offline. They are kept inside this app, not in your device’s file manager. For now a connection is needed to open this page and to check access before each playback; the recording itself is stored here.',
+  'downloads.paused':
+    'New saves are not open right now. A lesson already saved can still be opened while its course, the Plus plan and the date on the saved copy all still hold.',
+  'downloads.plusNote':
+    'Saving needs a Plus plan. A saved lesson is not a copy you own: it lasts as long as the plan, and then asks to be refreshed.',
+  'downloads.back': 'Back to my learning',
+  'downloads.storageRefused': 'This browser would not open its app storage.',
+  'downloads.looking': 'Looking at what is on this device…',
+  'downloads.empty':
+    'Nothing is saved on this device. A lesson you save appears here and nowhere else: it is not in your phone’s downloads folder.',
+  'downloads.count': 'Lessons on this device: {count}',
+  'downloads.space': 'Space used: {size}',
+  'downloads.closePlayer': 'Close the player',
+  'downloads.badgeLapsed': 'Needs a refresh',
+  'downloads.badgeSaved': 'Saved on this device',
+  'downloads.lapsed': 'This saved copy has lapsed. Open the lesson while online to save it again.',
+  'downloads.daysLeft': 'Days left: {days}',
+  'downloads.play': 'Play',
+  'downloads.opening': 'Opening…',
+  'downloads.remove': 'Remove',
+  'downloads.removing': 'Removing…',
+  'downloads.removeLocal': 'Remove only the copy on this device',
+  'downloads.gone': 'That lesson is no longer on this device.',
+  'downloads.openFailed': 'That saved lesson could not be opened.',
+  'downloads.needConnection': 'Connect to the internet to open this saved lesson and check access.',
+  'downloads.notAllowed': 'This saved lesson is no longer available to this account or plan.',
+  'downloads.removedCopy': 'This saved copy was removed and can no longer be opened.',
+  'downloads.signIn': 'Sign in to open a saved lesson.',
+  'downloads.removeUnconfirmed':
+    'The removal could not be confirmed with the server. Reconnect and try again; the copy on this device is still here.',
+  'downloads.removeLocalFailed':
+    'The server recorded the removal, but this browser could not remove its own copy. Try again, or remove only the copy on this device.',
+  'downloads.confirmLocal':
+    'Remove only the copy on this device? The server’s record stays, and no device place is freed.',
+  'downloads.localRemoved':
+    'The copy on this device was removed. The server’s record and the device place may remain.',
+  'downloads.localFailed': 'This browser could not remove the copy on this device.',
+  'downloads.devTitle': 'Devices that hold saved lessons',
+  'downloads.devLede':
+    'Remove a device to free its place and end its saves on the server. This cannot delete, from here, copies or keys already kept on that device.',
+  'downloads.devLoading': 'Loading the devices…',
+  'downloads.devUnread': 'The list of devices could not be loaded. Do not take it to be empty.',
+  'downloads.devRefresh': 'Refresh',
+  'downloads.devNone': 'No devices are listed now.',
+  'downloads.devUnnamed': 'A device with no name',
+  'downloads.devSaved': 'Saved lessons: {count}',
+  'downloads.devSeen': 'Last seen: {day}',
+  'downloads.devRemove': 'Remove the device',
+  'downloads.devConfirm':
+    'Remove this device? Its saved lessons will stop opening through the app. This cannot erase copies on the device or take back keys it already holds.',
+  'downloads.devUnconfirmed':
+    'The removal of the device could not be confirmed. Refresh the list and try again; a reply that was lost may still have removed it.',
+  'downloads.devRemoved':
+    'The server recorded the removal of the device. Copies and keys kept on that device were not erased from here.',
+  'downloads.devRemovedUnrefreshed':
+    'The server recorded the removal, but the list of devices could not be refreshed.',
 } as const;
 
 export type MessageKey = keyof typeof en;

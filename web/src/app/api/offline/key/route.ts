@@ -8,7 +8,14 @@ import { toBase64Url } from '@/lib/offline-vault';
 export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const fail = (message: string, status: number) => NextResponse.json({ ok: false, message }, { status });
+/**
+ * A refusal. `code` is its name, for a screen that says it in the reader's
+ * language (2026-11-27: the list of saved lessons); `message` is the English
+ * sentence, kept for a log and for a caller that knows no names. A refusal
+ * with no name is one the screen can only call "could not be opened".
+ */
+const fail = (message: string, status: number, code?: 'signed_out' | 'removed' | 'lapsed' | 'not_allowed') =>
+  NextResponse.json(code ? { ok: false, code, message } : { ok: false, message }, { status });
 
 /**
  * The key that opens one saved lesson.
@@ -61,7 +68,7 @@ export async function POST(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return fail('Sign in to open a saved lesson.', 401);
+  if (!user) return fail('Sign in to open a saved lesson.', 401, 'signed_out');
 
   const { data, error } = await supabase
     .from('offline_downloads')
@@ -70,14 +77,16 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (error) return fail('The saved copies could not be read.', 502);
-  if (!data) return fail('There is no saved copy with that id.', 404);
+  if (!data) return fail('There is no saved copy with that id.', 404, 'removed');
 
   const decision = decideKey(data as { id: string; expires_at: string | null; removed_at: string | null });
-  if (!decision.ok) return fail(decision.message, 410);
+  if (!decision.ok) {
+    return fail(decision.message, 410, decision.reason === 'lapsed' ? 'lapsed' : decision.reason === 'unreadable' ? undefined : 'removed');
+  }
 
   const { data: allowed, error: accessError } = await supabase.rpc('offline_save_key_allowed', { p_download_id: decision.saveId });
   if (accessError) return fail('Access to this saved lesson could not be checked.', 503);
-  if (allowed !== true) return fail('This saved lesson is no longer available to this account or plan.', 403);
+  if (allowed !== true) return fail('This saved lesson is no longer available to this account or plan.', 403, 'not_allowed');
 
   const key = await deriveSaveKey(secret, decision.saveId);
 

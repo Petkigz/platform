@@ -441,10 +441,11 @@ export default async function LessonPage({
   }
 
   const namedCourse = one(enrolment.courses)?.title ?? null;
-  // A player keeps this name with a lesson saved on the device, where the
-  // list of saved lessons is English: an English name for a course whose
-  // title could not be read, as before.
-  const courseTitle = namedCourse ?? 'the course';
+  // A player keeps this name with a lesson saved on the device. The list of
+  // saved lessons is in the reader's language since 2026-11-27, so a course
+  // whose title could not be read is kept under the page's own word for one,
+  // in the language the lesson was saved in.
+  const courseTitle = namedCourse ?? t('course.fallbackTitle');
   const duration = durationLabel(shown.code, lesson.durationSeconds);
 
   return (

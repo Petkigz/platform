@@ -95,11 +95,11 @@ export type SaveRow = {
 
 export type KeyDecision =
   | { ok: true; saveId: string; expiresAt: string | null }
-  | { ok: false; message: string };
+  | { ok: false; message: string; reason: 'missing' | 'removed' | 'unreadable' | 'lapsed' };
 
 export function decideKey(row: SaveRow | null | undefined, now: Date = new Date()): KeyDecision {
   if (!row || typeof row.id !== 'string' || row.id === '') {
-    return { ok: false, message: 'There is no saved copy with that id.' };
+    return { ok: false, reason: 'missing', message: 'There is no saved copy with that id.' };
   }
 
   // `removed_at` rather than a status column: a save has three states and the
@@ -107,17 +107,18 @@ export function decideKey(row: SaveRow | null | undefined, now: Date = new Date(
   // set), or live until `expires_at`. A status string would be a fourth copy of
   // the same three facts.
   if (row.removed_at) {
-    return { ok: false, message: 'That saved copy was removed from the device that held it.' };
+    return { ok: false, reason: 'removed', message: 'That saved copy was removed from the device that held it.' };
   }
 
   if (row.expires_at) {
     const expires = new Date(row.expires_at);
     if (Number.isNaN(expires.getTime())) {
-      return { ok: false, message: 'That saved copy has no readable expiry.' };
+      return { ok: false, reason: 'unreadable', message: 'That saved copy has no readable expiry.' };
     }
     if (expires.getTime() <= now.getTime()) {
       return {
         ok: false,
+        reason: 'lapsed',
         message: 'That saved copy has lapsed. Save the lesson again to refresh it.',
       };
     }

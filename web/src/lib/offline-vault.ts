@@ -33,13 +33,22 @@ const MAGIC_BYTES = new TextEncoder().encode(VAULT_MAGIC);
 const IV_BYTES = 12;
 const HEADER_BYTES = MAGIC_BYTES.length + IV_BYTES;
 
+/** The reasons a saved lesson does not open that the list of saved lessons can say. */
+export type OpenRefusal = 'needConnection' | 'lapsed' | 'notAllowed' | 'removedCopy' | 'signIn';
+
 export class OfflineVaultError extends Error {
   readonly code: 'format' | 'tampered' | 'key';
+  /**
+   * Why a key was not had, by name, when it is one of the reasons a screen has
+   * a sentence for. `message` stays English: it is for a log.
+   */
+  readonly reason: OpenRefusal | null;
 
-  constructor(code: 'format' | 'tampered' | 'key', message: string) {
+  constructor(code: 'format' | 'tampered' | 'key', message: string, reason: OpenRefusal | null = null) {
     super(message);
     this.name = 'OfflineVaultError';
     this.code = code;
+    this.reason = reason;
   }
 }
 

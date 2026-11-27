@@ -144,8 +144,13 @@ const BRAND_SET = new Set(BRANDS.map((word) => word.toLowerCase()));
  * Apple's Numbers and Google's Sheets, on the export page. They are matched
  * with their capital only: `numbers` or `sheets` left in the middle of a
  * Bengali sentence is still a finding, which is what the check is for.
+ *
+ * `Plus` is the name of a plan (2026-11-27). Every language that says what
+ * saving a lesson needs has to name it, and it is written as the plan is
+ * named, like a brand: twenty-eight findings that were each correct were a
+ * reason to stop reading the list. `plus` in small letters is still found.
  */
-const PRODUCT_NAMES: ReadonlySet<string> = new Set(['Numbers', 'Sheets']);
+const PRODUCT_NAMES: ReadonlySet<string> = new Set(['Numbers', 'Sheets', 'Plus']);
 
 /** Characters that join or format rather than say something: never findings. */
 const INVISIBLE = /[\u0640\u200c\u200d\u00ad\ufeff]/gu;

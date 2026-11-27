@@ -244,6 +244,12 @@ for (const [file, key] of [
   ['course-parts.ts', 'cparts.classesBody'],
   ['course-parts.ts', 'cparts.revBody'],
   ['course-parts.ts', 'cparts.saveUnconfirmed'],
+  // The saved list and the lessons kept on a device are scripts handed their
+  // words (2026-11-27): what a removal leaves behind must be in no script.
+  ['saved.ts', 'saved.unsure'],
+  ['downloads.ts', 'downloads.devConfirm'],
+  ['downloads.ts', 'downloads.removeUnconfirmed'],
+  ['downloads.ts', 'downloads.needConnection'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

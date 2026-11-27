@@ -30,6 +30,7 @@
 
 import {
   OfflineVaultError,
+  type OpenRefusal,
   fromBase64Url,
   importSaveKey,
   openBytes,
@@ -58,6 +59,26 @@ export type SavedLesson = {
   /** Filled by the reader, not stored: whether the clock has passed. */
   lapsed: boolean;
 };
+
+/**
+ * The name of why the key route refused, or null for a reply that names
+ * nothing the list of saved lessons has a sentence for. Only a four hundred
+ * is a refusal: a five hundred is the server not knowing, and that is said as
+ * "could not be opened", never as "no longer yours".
+ */
+export function openRefusalOf(status: number, code: unknown): OpenRefusal | null {
+  if (status < 400 || status > 499) return null;
+  if (code === 'signed_out') return 'signIn';
+  if (code === 'lapsed') return 'lapsed';
+  if (code === 'removed') return 'removedCopy';
+  if (code === 'not_allowed') return 'notAllowed';
+  return null;
+}
+
+/** Whole days until a saved copy lapses, rounded up; zero or less once it has. */
+export function daysRemaining(expiresAt: string, now: Date = new Date()): number {
+  return Math.ceil((new Date(expiresAt).getTime() - now.getTime()) / 86_400_000);
+}
 
 /** How long is left, said the way a person would say it. */
 export function describeRemaining(expiresAt: string, now: Date = new Date()): string {
@@ -160,17 +181,19 @@ export async function fetchSaveKey(downloadId: string): Promise<Uint8Array> {
       cache: 'no-store',
     });
   } catch {
-    throw new OfflineVaultError('key', 'Connect to the internet to open this saved lesson and check access.');
+    // The sentence is for a log; the screen says `needConnection` in its own words.
+    throw new OfflineVaultError('key', 'No connection: the key to this saved lesson could not be asked for.', 'needConnection');
   }
 
   const body = (await response.json().catch(() => null)) as
-    | { ok?: boolean; key?: string; message?: string }
+    | { ok?: boolean; key?: string; message?: string; code?: unknown }
     | null;
 
   if (!response.ok || body?.ok !== true || typeof body.key !== 'string') {
     throw new OfflineVaultError(
       'key',
       body?.message ?? 'This saved lesson cannot be opened on this device.',
+      openRefusalOf(response.status, body?.code),
     );
   }
 
@@ -243,6 +266,7 @@ export async function openSavedLesson(
     throw new OfflineVaultError(
       'key',
       'This saved lesson has lapsed. Save it again while you are online to keep it.',
+      'lapsed',
     );
   }
 

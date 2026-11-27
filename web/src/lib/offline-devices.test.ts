@@ -14,7 +14,14 @@ test('device rows fail closed rather than becoming an empty list', () => {
 test('device management warns about remote copies and uncertain replies', () => {
   const page=readFileSync(new URL('../app/downloads/offline-devices.tsx', import.meta.url),'utf8');
   assert.match(page,/remove_offline_device/);
-  assert.match(page,/cannot remotely delete copies or keys/i);
-  assert.match(page,/could not be confirmed/);
-  assert.match(page,/Do not assume it is empty/);
+  // The words are the catalogue's since 2026-11-27; the page hands them over
+  // and the part says each one where it used to type it.
+  const catalogue=readFileSync(new URL('./i18n/messages/en.ts', import.meta.url),'utf8');
+  assert.match(catalogue,/'downloads\.devLede':\s+'[^']*cannot delete, from here, copies or keys already kept on that device\.'/);
+  assert.match(catalogue,/'downloads\.devUnconfirmed':\s+'[^']*could not be confirmed\. [^']*a reply that was lost may still have removed it\.'/);
+  assert.match(catalogue,/'downloads\.devUnread': '[^']*Do not take it to be empty\.'/);
+  assert.match(catalogue,/'downloads\.devRemoved':\s+'[^']*were not erased from here\.'/);
+  for (const said of ['words.lede','words.unconfirmed','words.unread','words.removed','words.removedUnrefreshed','words.confirm']) assert.ok(page.includes(said),said);
+  // A list that was not read is its own branch, before "no devices".
+  assert.match(page,/devices === null \? <p className="notice warn">\{words\.unread\}/);
 });

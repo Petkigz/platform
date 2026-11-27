@@ -3,14 +3,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { removeSavedWithConfirmation } from '@/lib/offline-removal';
-import {
-  describeBytes,
-  describeRemaining,
-  listSaved,
-  openSavedLesson,
-  removeStored,
-  type SavedLesson,
-} from '@/lib/offline';
+import { daysRemaining, listSaved, openSavedLesson, removeStored, type SavedLesson } from '@/lib/offline';
+import { OfflineVaultError } from '@/lib/offline-vault';
+import { fill, formatBytes, formatNumber } from '@/lib/i18n/format';
+import type { LocaleCode } from '@/lib/i18n/locales';
+
+/** Every sentence the list says, handed over by the page in the reader's language. */
+export type DownloadsWords = {
+  storageRefused: string;
+  looking: string;
+  empty: string;
+  /** Has `{count}`. */
+  count: string;
+  /** Has `{size}`. */
+  space: string;
+  closePlayer: string;
+  badgeLapsed: string;
+  badgeSaved: string;
+  lapsed: string;
+  /** Has `{days}`. */
+  daysLeft: string;
+  play: string;
+  opening: string;
+  remove: string;
+  removing: string;
+  removeLocal: string;
+  gone: string;
+  openFailed: string;
+  needConnection: string;
+  notAllowed: string;
+  removedCopy: string;
+  signIn: string;
+  removeUnconfirmed: string;
+  removeLocalFailed: string;
+  confirmLocal: string;
+  localRemoved: string;
+  localFailed: string;
+};
 
 /**
  * What is on this device, and the only place it can be played.
@@ -28,8 +57,18 @@ import {
  * The player is inside the page, not a new tab and not a download: the decrypted
  * blob exists in memory for as long as the player is open and is revoked when it
  * closes.
+ *
+ * It has no sentence of its own (2026-11-27): the page hands it `words` and
+ * the language to count in. A lesson that does not open is said by the name
+ * of why (`OfflineVaultError.reason`); a refusal with no name, and anything
+ * else that goes wrong, is "could not be opened". The server's English
+ * sentence is never printed. Titles are shown as they were written.
+ *
+ * The page sends a signed-out reader to sign in before this is drawn, so
+ * there is no signed-out branch: a session that ended since is a removal the
+ * server did not confirm, and is said as that.
  */
-export function DownloadsList({ signedIn }: { signedIn: boolean }) {
+export function DownloadsList({ locale, words }: { locale: LocaleCode; words: DownloadsWords }) {
   const [saved, setSaved] = useState<SavedLesson[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -40,8 +79,8 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
   const objectUrl = useRef<string | null>(null);
 
   useEffect(() => {
-    listSaved().then(setSaved).catch(() => setError('This browser would not open its app storage.'));
-  }, []);
+    listSaved().then(setSaved).catch(() => setError(words.storageRefused));
+  }, [words.storageRefused]);
 
   // A decrypted lesson must not outlive the player. Every unmount path revokes.
   useEffect(
@@ -63,16 +102,15 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
     try {
       const opened = await openSavedLesson(lesson.lessonId);
       if (!opened) {
-        setPlayError('That lesson is no longer on this device.');
+        setPlayError(words.gone);
         return;
       }
       stopPlaying();
       objectUrl.current = opened.url;
       setPlaying({ lessonId: lesson.lessonId, url: opened.url, type: opened.type, title: lesson.title });
     } catch (cause) {
-      setPlayError(
-        cause instanceof Error ? cause.message : 'That saved lesson could not be opened.',
-      );
+      const reason = cause instanceof OfflineVaultError ? cause.reason : null;
+      setPlayError(reason ? words[reason] : words.openFailed);
     } finally {
       setBusy(null);
     }
@@ -82,17 +120,13 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
     setBusy(lesson.lessonId);
     setPlayError(null);
     try {
-      if (!signedIn) {
-        setPlayError('Sign in and reconnect to remove the server record, or remove only the local copy.');
-        return;
-      }
       const supabase = createClient();
       const result = await removeSavedWithConfirmation(
         lesson.downloadId,
         () => supabase.rpc('forget_offline_lesson', { p_download_id: lesson.downloadId }),
         () => removeStored(lesson.lessonId),
       );
-      if (!result.ok) { setPlayError(result.message); return; }
+      if (!result.ok) { setPlayError(result.reason === 'local' ? words.removeLocalFailed : words.removeUnconfirmed); return; }
       if (playing?.lessonId === lesson.lessonId) stopPlaying();
       setSaved((current) => (current ?? []).filter((l) => l.lessonId !== lesson.lessonId));
     } finally {
@@ -101,47 +135,41 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
   }
 
   async function removeLocalOnly(lesson: SavedLesson) {
-    if (!window.confirm('Remove only the copy on this device? This does not remove the server record or free a device slot.')) return;
+    if (!window.confirm(words.confirmLocal)) return;
     setBusy(lesson.lessonId);
     setPlayError(null);
     try {
       await removeStored(lesson.lessonId);
       if (playing?.lessonId === lesson.lessonId) stopPlaying();
       setSaved((current) => (current ?? []).filter((l) => l.lessonId !== lesson.lessonId));
-      setPlayError('The local copy was removed. The server record and device slot may still remain.');
+      setPlayError(words.localRemoved);
     } catch {
-      setPlayError('This browser could not remove the local copy.');
+      setPlayError(words.localFailed);
     } finally {
       setBusy(null);
     }
   }
 
   if (error) return <p className="notice warn">{error}</p>;
-  if (saved === null) return <p className="muted">Looking at what is on this device…</p>;
-  if (saved.length === 0) {
-    return (
-      <p className="empty">
-        Nothing is saved on this device. A lesson you save appears here and nowhere
-        else — it is not in your phone&apos;s downloads folder.
-      </p>
-    );
-  }
+  if (saved === null) return <p className="muted">{words.looking}</p>;
+  if (saved.length === 0) return <p className="empty">{words.empty}</p>;
 
   const total = saved.reduce((sum, lesson) => sum + lesson.bytes, 0);
 
   return (
     <>
       <p className="muted">
-        {saved.length} lesson{saved.length === 1 ? '' : 's'} · {describeBytes(total)} on this
-        device
+        {fill(words.count, { count: formatNumber(locale, saved.length) })}
+        {' · '}
+        {fill(words.space, { size: formatBytes(locale, total) })}
       </p>
 
       {playing && (
         <div className="card" style={{ padding: '1rem', marginBottom: '1rem' }}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <strong>{playing.title}</strong>
+            <strong dir="auto">{playing.title}</strong>
             <button type="button" className="btn ghost tiny" onClick={stopPlaying}>
-              Close player
+              {words.closePlayer}
             </button>
           </div>
           {playing.type.startsWith('audio/') ? (
@@ -164,34 +192,42 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
         {saved.map((lesson) => (
           <li key={lesson.lessonId}>
             <span className="t">
-              {lesson.title}
+              <bdi>{lesson.title}</bdi>
               <span className="muted">
                 {' · '}
-                {lesson.courseTitle}
+                <bdi>{lesson.courseTitle}</bdi>
+                {/* A lapsed copy has no days left to count; it says what to do
+                    instead, in words on the row, where a finger can read them
+                    (they used to be a tooltip on a button that was off). */}
+                {!lesson.lapsed && (
+                  <>
+                    {' · '}
+                    {fill(words.daysLeft, { days: formatNumber(locale, Math.max(1, daysRemaining(lesson.expiresAt))) })}
+                  </>
+                )}
                 {' · '}
-                {describeRemaining(lesson.expiresAt)}
-                {' · '}
-                {describeBytes(lesson.bytes)}
+                {formatBytes(locale, lesson.bytes)}
+                {lesson.lapsed && (
+                  <>
+                    {' · '}
+                    {words.lapsed}
+                  </>
+                )}
               </span>
             </span>
             <span>
               {lesson.lapsed ? (
-                <span className="badge neutral">Needs a refresh</span>
+                <span className="badge neutral">{words.badgeLapsed}</span>
               ) : (
-                <span className="badge">Saved on device</span>
+                <span className="badge">{words.badgeSaved}</span>
               )}{' '}
               <button
                 type="button"
                 className="btn ghost tiny"
                 disabled={busy === lesson.lessonId || lesson.lapsed}
                 onClick={() => void play(lesson)}
-                title={
-                  lesson.lapsed
-                    ? 'This copy has lapsed. Open the lesson while online to save it again.'
-                    : undefined
-                }
               >
-                {busy === lesson.lessonId ? 'Opening…' : 'Play'}
+                {busy === lesson.lessonId ? words.opening : words.play}
               </button>{' '}
               <button
                 type="button"
@@ -199,10 +235,10 @@ export function DownloadsList({ signedIn }: { signedIn: boolean }) {
                 disabled={busy === lesson.lessonId}
                 onClick={() => void forget(lesson)}
               >
-                {busy === lesson.lessonId ? 'Removing…' : 'Remove'}
+                {busy === lesson.lessonId ? words.removing : words.remove}
               </button>{' '}
               <button type="button" className="btn ghost tiny" disabled={busy === lesson.lessonId} onClick={() => void removeLocalOnly(lesson)}>
-                Remove local copy only
+                {words.removeLocal}
               </button>
             </span>
           </li>

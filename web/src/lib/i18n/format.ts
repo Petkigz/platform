@@ -196,6 +196,23 @@ export function formatNumber(code: LocaleCode, value: number, options?: { minimu
 }
 
 /**
+ * A size on a device: "900 KB", "5.0 MB", "٢٫٥٠ GB".
+ *
+ * The number is the language's own; the unit is the three Latin letters every
+ * phone's storage screen prints, because that is what the reader will compare
+ * it with. (Asking the runtime for the unit gave a different word in Node and
+ * in a browser for several languages, and no word at all in others.) The
+ * rounding is `describeBytes`'s in `offline.ts`: never "0 KB" for a file that
+ * exists, one decimal for megabytes, two for gigabytes.
+ */
+export function formatBytes(code: LocaleCode, bytes: number): string {
+  const MB = 1024 * 1024;
+  if (bytes < MB) return `${formatNumber(code, Math.max(1, Math.round(bytes / 1024)))} KB`;
+  if (bytes < MB * 1024) return `${formatNumber(code, bytes / MB, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} MB`;
+  return `${formatNumber(code, bytes / (MB * 1024), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} GB`;
+}
+
+/**
  * A percentage as this language writes it: "70%", "٪٧٠", "%70".
  *
  * Where the sign goes, and which sign it is, is part of the language. The
