@@ -84,6 +84,7 @@ import { ASIA_ZH_HANT } from './asia-zh-hant.ts';
 import { ASIA_VI } from './asia-vi.ts';
 import { ASIA_FIL } from './asia-fil.ts';
 import { ASIA_MY } from './asia-my.ts';
+import { PANEL } from './panel.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -939,6 +940,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   ASK,
   // A teacher's public page, on the same rule.
   TPUB,
+  // A board member's own page (`/panel`), on the same rule.
+  PANEL,
 );
 
 /**

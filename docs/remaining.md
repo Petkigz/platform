@@ -673,7 +673,10 @@ written: not a held draft, nothing.
   sentences, unreviewed), each behind a switch that is off; nothing on the
   page is marked as English now. **Still English with no
   mark, on pages of their own:** saved courses, downloads, learning paths, asking a
-  teacher, support, `/about` and the scholars' panel. The teacher's class
+  teacher, support, `/about` and the scholars' panel. *(All seven were
+  written in the twenty-seven languages by 2026-11-27, unreviewed; the
+  reviewers' pages under `/review` and every staff page are still
+  English.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

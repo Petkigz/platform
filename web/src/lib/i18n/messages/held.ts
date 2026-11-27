@@ -136,6 +136,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'support',
   'ask',
   'tpub',
+  'panel',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

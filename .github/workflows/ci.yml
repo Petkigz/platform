@@ -132,6 +132,9 @@ jobs:
       - name: Ask page, its route and a teacher's public page synthetic HTTP regression
         run: node scripts/ask-teacher-route-smoke.mjs
 
+      - name: Board member's page synthetic HTTP regression
+        run: node scripts/panel-route-smoke.mjs
+
       - name: Export pages and export route synthetic HTTP regression
         run: node scripts/export-route-smoke.mjs
 

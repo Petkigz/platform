@@ -274,6 +274,13 @@ for (const [file, key] of [
   ['ask.ts', 'ask.teacherCase'],
   ['ask.ts', 'ask.unsure'],
   ['teacher-page.ts', 'tpub.unread'],
+  // A board member's own page (2026-11-27): the vote is a script handed its
+  // words. That a vote cannot be undone, and what is said when nobody can
+  // tell whether one was recorded, must be in nothing a browser downloads.
+  ['panel.ts', 'panel.lede'],
+  ['panel.ts', 'panel.cannotUndo'],
+  ['panel.ts', 'panel.unsure'],
+  ['panel.ts', 'panel.already'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -1,25 +1,39 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import {
-  panelMemberRole,
-  panelStatusLabel,
-  quorumSentence,
-  tallySentence,
-  voteLabel,
+  panelOutcomeKey,
+  panelSeatKey,
+  panelStatusKey,
+  panelVoteKey,
+  quorumMet,
   type MyPanelWork,
+  type PanelVoteWords,
 } from '@/lib/panels';
 import { PanelVote } from './panel-vote';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Scholarly panel',
-  description: 'The cases waiting for a decision from the panel you sit on, and your vote.',
-};
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'panel') };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('panel.title') };
+}
 
 /**
  * The board's own screen.
@@ -30,6 +44,16 @@ export const metadata: Metadata = {
  * the caller's own reviewer profile — and a person who does not sit on a panel
  * gets an explanation rather than an empty page, because "you are not on a
  * panel" is information, and an empty list is not.
+ *
+ * **In the reader's language** since 2026-11-27 (`messages/panel.ts`): a
+ * scholar asked to vote is not always a reader of English. The vote runs in
+ * the browser and is handed its words. A panel's name, a course's title and
+ * what a panel decided are somebody's own words and are shown as written,
+ * each in its own direction. Counts follow a colon, so that no word has to
+ * agree with a number.
+ *
+ * Work that could not be read is said to be unread. Until then a failed read
+ * threw, and a member was shown the page that says the site broke.
  */
 export default async function PanelPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -37,97 +61,122 @@ export default async function PanelPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/sign-in?next=/panel');
 
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const n = (value: number) => formatNumber(shown.code, value);
+
   const { data, error } = await supabase.rpc('my_panel_work');
-  if (error) throw new Error(error.message);
+  if (error) console.error(`panel: the member's work could not be read: ${error.message}`);
   const work = (data ?? null) as MyPanelWork | null;
 
-  if (!work?.panelMember) {
+  const head = (
+    <>
+      <p className="eyebrow"><Link href="/learn">{t('panel.crumb')}</Link></p>
+      <h1>{t('panel.title')}</h1>
+    </>
+  );
+  const foot = (
+    <>
+      <Link href="/review">{work?.panelMember ? t('panel.reviews') : t('panel.register')}</Link>
+      {' · '}
+      <Link href="/learn">{t('panel.back')}</Link>
+    </>
+  );
+
+  if (error) {
     return (
-      <div className="container section">
-        <p className="eyebrow"><Link href="/learn">My learning</Link></p>
-        <h1>Scholarly panel</h1>
-        <div className="notice" style={{ maxWidth: '46rem' }}>
-          <strong>You do not sit on a scholarly panel.</strong> Panels decide questions about a
-          course that a single reviewer should not settle alone — how a ruling is presented, what
-          a course claims, whether something is taught at all.
-        </div>
-        <p className="muted" style={{ maxWidth: '46rem' }}>
-          Two things have to be true before a seat means anything: the owner appoints you to the
-          board, and a governance admin checks your qualifications. Applying to review is the way
-          in — the register is where scholars are checked.
-        </p>
-        <p>
-          <Link href="/review">The reviewer register</Link>
-          {' · '}
-          <Link href="/learn">Back to my learning</Link>
-        </p>
+      <div className="container section panel-page" {...frame}>
+        {head}
+        <div className="notice error" role="alert" data-panel-state="unread">{t('panel.unread')}</div>
+        <p><Link href="/learn">{t('panel.back')}</Link></p>
       </div>
     );
   }
 
-  return (
-    <div className="container section">
-      <p className="eyebrow"><Link href="/learn">My learning</Link></p>
-      <h1>Scholarly panel</h1>
-      <p className="lede" style={{ maxWidth: '46rem' }}>
-        The cases waiting for a decision from a panel you sit on. One vote each, and a vote is
-        not edited afterwards; the direction of other members&rsquo; votes appears once you have
-        voted, so nobody is anchored by the first name in the list.
-      </p>
+  if (!work?.panelMember) {
+    return (
+      <div className="container section panel-page" {...frame}>
+        {head}
+        <div className="notice" data-panel-state="not-member">
+          <strong>{t('panel.notMemberHead')}</strong> {t('panel.notMember')}
+        </div>
+        <p className="muted">{t('panel.howIn')}</p>
+        <p>{foot}</p>
+      </div>
+    );
+  }
 
-      <section style={{ maxWidth: '46rem', marginTop: '1.5rem' }}>
-        <h2>Your panels</h2>
-        <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>
+  const quorumLine = (cast: number, quorum: number) =>
+    t(quorumMet(cast, quorum) ? 'panel.quorumMet' : 'panel.quorumWaiting', { cast: n(cast), quorum: n(quorum) });
+
+  const words: PanelVoteWords = {
+    cannotUndo: t('panel.cannotUndo'),
+    yourVote: t('panel.yourVote'),
+    choices: { approve: t('panel.approve'), reject: t('panel.reject'), abstain: t('panel.abstain') },
+    why: t('panel.why'),
+    cast: t('panel.cast'),
+    recording: t('panel.recording'),
+    refusals: {
+      already: t('panel.already'),
+      alreadyDecided: t('panel.alreadyDecided'),
+      notSitting: t('panel.notSitting'),
+      notMember: t('panel.notMemberVote'),
+      signedOut: t('panel.signedOut'),
+      refused: t('panel.refused'),
+      unsure: t('panel.unsure'),
+    },
+  };
+
+  return (
+    <div className="container section panel-page" {...frame}>
+      {head}
+      <p className="lede">{t('panel.lede')}</p>
+
+      <section>
+        <h2>{t('panel.yours')}</h2>
+        <ul className="stack panel-list">
           {work.panels.map((panel) => (
-            <li key={panel.id} className="card">
-              <strong>{panel.name}</strong>
-              <span className="muted">
-                {' · '}{panelMemberRole(panel.memberRole)}
-                {' · '}{panelStatusLabel(panel.status)}
-                {' · '}quorum {panel.quorum}
+            <li key={panel.id} className="card" data-panel={panel.status}>
+              <strong dir="auto">{panel.name}</strong>
+              <span className="muted panel-facts">
+                <span>{t(panelSeatKey(panel.memberRole))}</span>
+                <span>{t(panelStatusKey(panel.status))}</span>
+                <span>{t('panel.quorum', { count: n(panel.quorum) })}</span>
               </span>
-              {panel.status !== 'active' && (
-                <p className="muted" style={{ margin: '0.4rem 0 0' }}>
-                  This panel is not convened, so nothing can be decided here until the owner
-                  convenes it. That is the rule, not a fault.
-                </p>
-              )}
+              {panel.status !== 'active' && <p className="muted">{t('panel.notSitting')}</p>}
             </li>
           ))}
         </ul>
       </section>
 
-      <section style={{ maxWidth: '46rem', marginTop: '2rem' }}>
-        <h2>Waiting for you</h2>
+      <section>
+        <h2>{t('panel.waiting')}</h2>
         {work.cases.length === 0 ? (
-          <p className="muted">
-            Nothing is waiting. You will see a case here when a panel you sit on opens one.
-          </p>
+          <p className="muted">{t('panel.nothing')}</p>
         ) : (
-          <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>
+          <ul className="stack panel-list">
             {work.cases.map((row) => (
-              <li key={row.id} className="card">
-                <h3 style={{ margin: '0 0 0.25rem' }}>
-                  {row.courseTitle} — version {row.versionNumber}
-                </h3>
-                <p className="muted" style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
-                  {row.panelName}
-                  {' · '}{quorumSentence(row.cast, row.quorum)}
+              <li key={row.id} className="card" data-panel-case={row.myVote ? 'voted' : 'open'}>
+                <h3 dir="auto">{row.courseTitle}</h3>
+                <p className="muted panel-facts">
+                  <span>{t('panel.version', { number: n(row.versionNumber) })}</span>
+                  <bdi>{row.panelName}</bdi>
                 </p>
+                <p className="muted">{quorumLine(row.cast, row.quorum)}</p>
 
                 {row.myVote ? (
                   <>
-                    <p className="muted" style={{ margin: '0 0 0.25rem' }}>
-                      You voted <strong>{voteLabel(row.myVote)}</strong>. The tally so far:{' '}
-                      {tallySentence(row.tally)}
-                    </p>
-                    <p className="muted" style={{ margin: 0, fontSize: '0.9rem' }}>
-                      The chair, governance or the owner records the decision once the panel has
-                      finished.
-                    </p>
+                    <p><strong>{t('panel.youVoted', { vote: t(panelVoteKey(row.myVote)) })}</strong></p>
+                    {row.tally && row.tally.cast > 0 ? (
+                      <p className="muted">
+                        {t('panel.tally', { approve: n(row.tally.approve), reject: n(row.tally.reject), abstain: n(row.tally.abstain) })}
+                      </p>
+                    ) : null}
+                    <p className="muted">{t('panel.recorded')}</p>
                   </>
                 ) : (
-                  <PanelVote caseId={row.id} quorum={row.quorum} cast={row.cast} />
+                  <PanelVote caseId={row.id} words={words} />
                 )}
               </li>
             ))}
@@ -136,28 +185,27 @@ export default async function PanelPage() {
       </section>
 
       {work.decided.length > 0 && (
-        <section style={{ maxWidth: '46rem', marginTop: '2rem' }}>
-          <h2>Decided, and how you voted</h2>
-          <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>
-            {work.decided.map((row) => (
-              <li key={row.id} className="card">
-                <strong>{row.courseTitle}</strong>
-                <span className="muted">
-                  {' · '}{row.outcome}
-                  {' · '}you voted {voteLabel(row.myVote).toLowerCase()}
-                </span>
-                <p className="muted" style={{ margin: '0.4rem 0 0' }}>{row.outcomeSummary}</p>
-              </li>
-            ))}
+        <section>
+          <h2>{t('panel.decided')}</h2>
+          <ul className="stack panel-list">
+            {work.decided.map((row) => {
+              const outcome = panelOutcomeKey(row.outcome);
+              return (
+                <li key={row.id} className="card" data-panel-decided={row.outcome}>
+                  <strong dir="auto">{row.courseTitle}</strong>
+                  <span className="muted panel-facts">
+                    {outcome ? <span>{t(outcome)}</span> : null}
+                    <span>{t('panel.youVoted', { vote: t(panelVoteKey(row.myVote)) })}</span>
+                  </span>
+                  {row.outcomeSummary ? <p className="muted" dir="auto">{row.outcomeSummary}</p> : null}
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}
 
-      <p style={{ marginTop: '2rem' }}>
-        <Link href="/review">Reviews assigned to you</Link>
-        {' · '}
-        <Link href="/learn">Back to my learning</Link>
-      </p>
+      <p>{foot}</p>
     </div>
   );
 }

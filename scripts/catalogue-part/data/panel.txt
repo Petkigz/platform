@@ -1,0 +1,1242 @@
+### ar
+الهيئة العلمية
+تعلّمي
+لستَ عضوًا في هيئة علمية.
+تفصل الهيئات في مسائل تخصّ الدورة ولا ينبغي أن يحسمها مراجِع واحد: كيف يُعرض حكم، وما تدّعيه الدورة، وهل يُدرَّس شيء أصلًا.
+لا معنى للمقعد إلا بأمرين: أن يعيّنك المالك في الهيئة، وأن تتحقق المنصة من مؤهلاتك. والتقدّم للمراجعة هو المدخل.
+سجلّ المراجعين
+العودة إلى تعلّمي
+القضايا التي تنتظر قرارًا من هيئة أنت عضو فيها. لكل عضو صوت واحد، ولا يُغيَّر الصوت بعد ذلك. وتظهر أصوات الأعضاء الآخرين بعد أن تصوّت، حتى لا يتأثر أحد بأول اسم في القائمة.
+هيئاتك
+رئيس
+عضو
+منعقدة
+غير منعقدة
+منحلّة
+النصاب: {count}
+هذه الهيئة غير منعقدة، فلا يُقرَّر هنا شيء حتى يعقدها المالك. هذه هي القاعدة وليست خللًا.
+بانتظارك
+لا شيء ينتظر. تظهر القضية هنا حين تفتحها هيئة أنت عضو فيها.
+الإصدار {number}
+اكتمل النصاب. الأصوات المدلى بها: {cast}. المطلوب: {quorum}
+بانتظار اكتمال النصاب. الأصوات المدلى بها: {cast}. المطلوب: {quorum}
+صوتك: {vote}
+الأصوات حتى الآن. موافقة: {approve}. رفض: {reject}. امتناع: {abstain}
+يسجّل القرارَ رئيسُ الهيئة أو فريق الحوكمة أو المالك بعد أن تنتهي الهيئة.
+ما تقرّر، وكيف صوّتَّ
+موافقة
+رفض
+امتناع
+لم تصوّت
+تمت الموافقة
+رُفضت
+سُحبت
+المراجعات المسندة إليك
+لا يمكن التراجع عن الصوت.
+صوتك
+السبب في جملة (اختياري، ويُحفظ مع القضية)
+أدلِ بصوتي
+جارٍ التسجيل…
+سبق أن صوّتَّ في هذه القضية. لكل عضو صوت واحد، ولا يُغيَّر الصوت بعد ذلك.
+هذه القضية حُسمت من قبل.
+لا يصوّت في القضية إلا عضو في الهيئة التي تنظر فيها.
+سجّل الدخول من جديد لتصوّت.
+لم يُسجَّل الصوت. أعد تحميل الصفحة لترى أين وصلت القضية.
+لا أحد يستطيع أن يقول هل سُجّل الصوت. أعد تحميل الصفحة وانظر إلى القضية قبل أن تصوّت من جديد.
+تعذّرت قراءة هيئاتك الآن. حاول مرة أخرى بعد قليل.
+### ur
+علمی بورڈ
+میری تعلیم
+آپ کسی علمی بورڈ کے رکن نہیں ہیں۔
+بورڈ کورس کے بارے میں وہ سوال طے کرتے ہیں جنہیں اکیلے ایک جائزہ لینے والے کو طے نہیں کرنا چاہیے: کوئی حکم کیسے پیش کیا جائے، کورس کیا دعویٰ کرتا ہے، اور کوئی چیز پڑھائی بھی جائے یا نہیں۔
+نشست کے معنی تبھی ہیں جب دو باتیں پوری ہوں: مالک آپ کو بورڈ میں مقرر کرے، اور پلیٹ فارم آپ کی اہلیت جانچ لے۔ جائزے کے لیے درخواست دینا ہی راستہ ہے۔
+جائزہ لینے والوں کا رجسٹر
+میری تعلیم پر واپس
+وہ معاملات جو اس بورڈ کے فیصلے کے منتظر ہیں جس کے آپ رکن ہیں۔ ہر رکن کا ایک ووٹ ہے، اور ووٹ بعد میں بدلا نہیں جاتا۔ دوسرے ارکان کے ووٹ آپ کے ووٹ دینے کے بعد دکھائے جاتے ہیں، تاکہ کوئی فہرست کے پہلے نام سے متاثر نہ ہو۔
+آپ کے بورڈ
+صدر
+رکن
+اجلاس جاری
+اجلاس نہیں بلایا گیا
+تحلیل شدہ
+کورم: {count}
+اس بورڈ کا اجلاس نہیں بلایا گیا، اس لیے جب تک مالک اسے نہ بلائے یہاں کچھ طے نہیں ہو سکتا۔ یہ قاعدہ ہے، خرابی نہیں۔
+آپ کے منتظر
+کچھ منتظر نہیں۔ جب کوئی بورڈ جس کے آپ رکن ہیں معاملہ کھولے گا تو وہ یہاں نظر آئے گا۔
+ورژن {number}
+کورم پورا ہے۔ ڈالے گئے ووٹ: {cast}۔ درکار: {quorum}
+کورم کا انتظار ہے۔ ڈالے گئے ووٹ: {cast}۔ درکار: {quorum}
+آپ کا ووٹ: {vote}
+اب تک کے ووٹ۔ منظور: {approve}۔ نامنظور: {reject}۔ غیر جانبدار: {abstain}
+بورڈ کے فارغ ہونے کے بعد صدر، گورننس ٹیم یا مالک فیصلہ درج کرتا ہے۔
+طے شدہ، اور آپ نے کیسے ووٹ دیا
+منظور
+نامنظور
+غیر جانبدار
+ووٹ نہیں دیا
+منظور ہو گیا
+مسترد ہو گیا
+واپس لے لیا گیا
+آپ کو سونپے گئے جائزے
+ووٹ واپس نہیں لیا جا سکتا۔
+آپ کا ووٹ
+وجہ، ایک جملے میں (اختیاری، معاملے کے ساتھ محفوظ رہتی ہے)
+میرا ووٹ ڈالیں
+درج ہو رہا ہے…
+آپ اس معاملے پر پہلے ہی ووٹ دے چکے ہیں۔ ہر رکن کا ایک ووٹ ہے، اور ووٹ بعد میں بدلا نہیں جاتا۔
+اس معاملے کا فیصلہ پہلے ہی ہو چکا ہے۔
+معاملے پر صرف وہی رکن ووٹ دے سکتا ہے جو اسے سننے والے بورڈ میں بیٹھا ہو۔
+ووٹ دینے کے لیے دوبارہ سائن اِن کریں۔
+ووٹ درج نہیں ہوا۔ صفحہ دوبارہ کھولیں اور دیکھیں کہ معاملہ کہاں ہے۔
+کوئی نہیں بتا سکتا کہ ووٹ درج ہوا یا نہیں۔ صفحہ دوبارہ کھولیں اور دوبارہ ووٹ دینے سے پہلے معاملہ دیکھ لیں۔
+آپ کے بورڈ ابھی پڑھے نہیں جا سکے۔ تھوڑی دیر میں دوبارہ کوشش کریں۔
+### fa
+هیئت علمی
+یادگیری من
+شما عضو هیچ هیئت علمی نیستید.
+هیئت‌ها درباره پرسش‌هایی از یک دوره تصمیم می‌گیرند که یک بازبین نباید به‌تنهایی آن را فیصله دهد: یک حکم چگونه عرضه شود، دوره چه ادعایی دارد، و اینکه چیزی اصلاً تدریس شود یا نه.
+کرسی وقتی معنا دارد که دو چیز برقرار باشد: مالک شما را به هیئت منصوب کند، و سکو صلاحیت‌های شما را بررسی کند. درخواست بازبینی راه ورود است.
+فهرست بازبینان
+بازگشت به یادگیری من
+پرونده‌هایی که منتظر تصمیم هیئتی هستند که شما عضو آنید. هر عضو یک رأی دارد و رأی پس از آن تغییر نمی‌کند. رأی اعضای دیگر پس از رأی‌دادن شما نشان داده می‌شود، تا کسی از نخستین نام فهرست اثر نپذیرد.
+هیئت‌های شما
+رئیس
+عضو
+تشکیل‌شده
+تشکیل‌نشده
+منحل‌شده
+حد نصاب: {count}
+این هیئت تشکیل نشده است، پس تا مالک آن را تشکیل ندهد اینجا چیزی تصمیم‌گیری نمی‌شود. این قاعده است، نه خطا.
+در انتظار شما
+چیزی در انتظار نیست. وقتی هیئتی که عضو آنید پرونده‌ای باز کند، اینجا دیده می‌شود.
+نسخهٔ {number}
+حد نصاب رسیده است. رأی‌های داده‌شده: {cast}. لازم: {quorum}
+در انتظار حد نصاب. رأی‌های داده‌شده: {cast}. لازم: {quorum}
+رأی شما: {vote}
+رأی‌ها تا اینجا. موافق: {approve}. مخالف: {reject}. ممتنع: {abstain}
+پس از پایان کار هیئت، رئیس، تیم حاکمیت یا مالک تصمیم را ثبت می‌کند.
+تصمیم‌گرفته‌شده، و رأی شما
+موافق
+مخالف
+ممتنع
+رأی نداده
+تأیید شد
+رد شد
+پس گرفته شد
+بازبینی‌های سپرده‌شده به شما
+رأی را نمی‌توان پس گرفت.
+رأی شما
+چرا، در یک جمله (اختیاری؛ همراه پرونده نگه داشته می‌شود)
+ثبت رأی من
+در حال ثبت…
+شما پیش‌تر به این پرونده رأی داده‌اید. هر عضو یک رأی دارد و رأی پس از آن تغییر نمی‌کند.
+درباره این پرونده پیش‌تر تصمیم گرفته شده است.
+تنها عضو هیئتی که پرونده را بررسی می‌کند می‌تواند به آن رأی دهد.
+برای رأی‌دادن دوباره وارد شوید.
+رأی ثبت نشد. صفحه را دوباره بار کنید تا ببینید پرونده در چه وضعی است.
+هیچ‌کس نمی‌تواند بگوید رأی ثبت شد یا نه. صفحه را دوباره بار کنید و پیش از رأی‌دادن دوباره، پرونده را ببینید.
+هیئت‌های شما اکنون خوانده نشد. کمی بعد دوباره تلاش کنید.
+### fa-af
+هیئت علمی
+آموزش من
+شما عضو هیچ هیئت علمی نیستید.
+هیئت‌ها درباره سوال‌هایی از یک کورس تصمیم می‌گیرند که یک بازبین نباید به‌تنهایی آن را فیصله کند: یک حکم چگونه پیشکش شود، کورس چه ادعا دارد، و اینکه چیزی اصلاً تدریس شود یا نه.
+چوکی وقتی معنا دارد که دو چیز برقرار باشد: مالک شما را در هیئت مقرر کند، و پلتفرم صلاحیت‌های شما را بررسی کند. درخواست بازبینی راه داخل‌شدن است.
+فهرست بازبین‌ها
+برگشت به آموزش من
+دوسیه‌هایی که منتظر تصمیم هیئتی هستند که شما عضو آن هستید. هر عضو یک رای دارد و رای پس از آن تغییر نمی‌کند. رای اعضای دیگر پس از رای‌دادن شما نشان داده می‌شود، تا کسی از اولین نام فهرست متأثر نشود.
+هیئت‌های شما
+رئیس
+عضو
+دایر شده
+دایر نشده
+منحل شده
+نصاب: {count}
+این هیئت دایر نشده است، پس تا مالک آن را دایر نکند اینجا هیچ تصمیمی گرفته نمی‌شود. این قاعده است، نه خرابی.
+در انتظار شما
+چیزی در انتظار نیست. وقتی هیئتی که عضو آن هستید دوسیه‌ای را باز کند، اینجا دیده می‌شود.
+نسخهٔ {number}
+نصاب پوره شده است. رای‌های داده‌شده: {cast}. لازم: {quorum}
+در انتظار نصاب. رای‌های داده‌شده: {cast}. لازم: {quorum}
+رای شما: {vote}
+رای‌ها تا حال. موافق: {approve}. مخالف: {reject}. ممتنع: {abstain}
+پس از ختم کار هیئت، رئیس، تیم حکومتداری یا مالک تصمیم را ثبت می‌کند.
+فیصله‌شده، و رای شما
+موافق
+مخالف
+ممتنع
+رای نداده
+تأیید شد
+رد شد
+پس گرفته شد
+بازبینی‌های سپرده‌شده به شما
+رای را پس گرفته نمی‌توانید.
+رای شما
+چرا، در یک جمله (اختیاری؛ همراه دوسیه نگه داشته می‌شود)
+ثبت رای من
+در حال ثبت…
+شما قبلاً به این دوسیه رای داده‌اید. هر عضو یک رای دارد و رای پس از آن تغییر نمی‌کند.
+درباره این دوسیه قبلاً تصمیم گرفته شده است.
+تنها عضو هیئتی که دوسیه را بررسی می‌کند به آن رای داده می‌تواند.
+برای رای‌دادن دوباره داخل شوید.
+رای ثبت نشد. صفحه را دوباره باز کنید تا ببینید دوسیه در چه حال است.
+هیچ‌کس گفته نمی‌تواند که رای ثبت شد یا نه. صفحه را دوباره باز کنید و پیش از دوباره رای‌دادن، دوسیه را ببینید.
+هیئت‌های شما فعلاً خوانده نشد. کمی بعد دوباره کوشش کنید.
+### tr
+İlim kurulu
+Öğrenimim
+Bir ilim kurulunda üye değilsiniz.
+Kurullar, bir kursla ilgili olup tek bir değerlendiricinin kendi başına karara bağlamaması gereken soruları karara bağlar: bir hükmün nasıl sunulduğu, kursun ne iddia ettiği, bir konunun hiç öğretilip öğretilmeyeceği.
+Bir üyeliğin anlam taşıması için iki şey gerekir: platformun sahibinin sizi kurula ataması ve platformun yeterliliklerinizi kontrol etmesi. Bunun yolu değerlendirici olmak için başvurmaktır.
+Değerlendirici kütüğü
+Öğrenimime dön
+Üyesi olduğunuz bir kuruldan karar bekleyen dosyalar. Herkesin bir oyu vardır ve oy sonradan değiştirilmez. Diğer üyelerin nasıl oy verdiği, siz oy verdikten sonra gösterilir; böylece kimse listedeki ilk isme uymaz.
+Kurullarınız
+Başkan
+Üye
+Toplandı
+Toplanmadı
+Dağıtıldı
+Yeter sayı: {count}
+Bu kurul toplanmış değil; platformun sahibi onu toplayana kadar burada hiçbir şeye karar verilemez. Bu bir arıza değil, kuraldır.
+Sizi bekleyenler
+Bekleyen bir şey yok. Üyesi olduğunuz bir kurul dosya açtığında burada görünür.
+Sürüm {number}
+Yeter sayı sağlandı. Verilen oy: {cast}. Gereken: {quorum}
+Yeter sayı bekleniyor. Verilen oy: {cast}. Gereken: {quorum}
+Oyunuz: {vote}
+Şimdiye kadarki oylar. Onay: {approve}. Ret: {reject}. Çekimser: {abstain}
+Kurul işini bitirince kararı başkan, yönetişim ekibi veya platformun sahibi kaydeder.
+Karara bağlananlar ve oyunuz
+Onay
+Ret
+Çekimser
+Oy verilmedi
+Onaylandı
+Reddedildi
+Geri çekildi
+Size verilen değerlendirmeler
+Oy geri alınamaz.
+Oyunuz
+Neden, bir cümleyle (isteğe bağlı, dosyayla birlikte saklanır)
+Oyumu ver
+Kaydediliyor…
+Bu dosyada zaten oy verdiniz. Herkesin bir oyu vardır ve oy sonradan değiştirilmez.
+Bu dosya zaten karara bağlandı.
+Bir dosyada yalnızca ona bakan kurulun üyesi oy verebilir.
+Oy vermek için yeniden giriş yapın.
+Oy kaydedilmedi. Dosyanın ne durumda olduğunu görmek için sayfayı yeniden yükleyin.
+Oyun kaydedilip kaydedilmediğini kimse söyleyemez. Sayfayı yeniden yükleyin ve yeniden oy vermeden önce dosyaya bakın.
+Kurullarınız şu anda okunamadı. Biraz sonra yeniden deneyin.
+### id
+Dewan keilmuan
+Pembelajaran saya
+Anda tidak duduk di dewan keilmuan mana pun.
+Dewan memutuskan pertanyaan tentang suatu kursus yang tidak sepatutnya diputuskan seorang peninjau sendirian: bagaimana suatu hukum disajikan, apa yang diklaim kursus, apakah sesuatu diajarkan sama sekali.
+Dua hal harus terpenuhi agar sebuah kursi berarti: pemilik menunjuk Anda ke dewan, dan platform memeriksa kualifikasi Anda. Jalan masuknya adalah mendaftar sebagai peninjau.
+Daftar peninjau
+Kembali ke pembelajaran saya
+Perkara yang menunggu keputusan dari dewan tempat Anda duduk. Satu suara untuk tiap anggota, dan suara tidak diubah sesudahnya. Suara anggota lain ditampilkan setelah Anda memberikan suara, agar tidak ada yang terbawa oleh nama pertama dalam daftar.
+Dewan Anda
+Ketua
+Anggota
+Bersidang
+Tidak bersidang
+Dibubarkan
+Kuorum: {count}
+Dewan ini tidak bersidang, jadi tidak ada yang dapat diputuskan di sini sampai pemilik menyidangkannya. Itu aturannya, bukan kerusakan.
+Menunggu Anda
+Tidak ada yang menunggu. Perkara muncul di sini ketika dewan tempat Anda duduk membukanya.
+Versi {number}
+Kuorum terpenuhi. Suara masuk: {cast}. Diperlukan: {quorum}
+Menunggu kuorum. Suara masuk: {cast}. Diperlukan: {quorum}
+Suara Anda: {vote}
+Suara sejauh ini. Setuju: {approve}. Menolak: {reject}. Abstain: {abstain}
+Ketua, tim tata kelola, atau pemilik mencatat keputusan setelah dewan selesai.
+Sudah diputuskan, dan suara Anda
+Setuju
+Menolak
+Memilih abstain
+Belum memberi suara
+Disetujui
+Ditolak
+Ditarik
+Tinjauan yang ditugaskan kepada Anda
+Suara tidak dapat dibatalkan.
+Suara Anda
+Alasannya, dalam satu kalimat (opsional, disimpan bersama perkara)
+Berikan suara saya
+Mencatat…
+Anda sudah memberikan suara untuk perkara ini. Satu suara untuk tiap anggota, dan suara tidak diubah sesudahnya.
+Perkara itu sudah diputuskan.
+Hanya anggota dewan yang menyidangkan perkara itu yang boleh memberikan suara.
+Masuk lagi untuk memberikan suara.
+Suara tidak tercatat. Muat ulang halaman untuk melihat keadaan perkara itu.
+Tidak ada yang dapat memastikan apakah suara tercatat. Muat ulang halaman dan lihat perkaranya sebelum memberikan suara lagi.
+Dewan Anda tidak dapat dibaca saat ini. Coba lagi sebentar lagi.
+### ms
+Lembaga keilmuan
+Pembelajaran saya
+Anda tidak menganggotai mana-mana lembaga keilmuan.
+Lembaga memutuskan persoalan tentang sesuatu kursus yang tidak wajar diputuskan oleh seorang penyemak sahaja: cara sesuatu hukum dibentangkan, apa yang didakwa oleh kursus, sama ada sesuatu itu diajar sama sekali.
+Dua perkara mesti benar sebelum sesuatu kerusi bermakna: pemilik melantik anda ke lembaga, dan platform menyemak kelayakan anda. Memohon untuk menjadi penyemak ialah jalan masuknya.
+Daftar penyemak
+Kembali ke pembelajaran saya
+Kes yang menunggu keputusan daripada lembaga yang anda anggotai. Satu undi bagi setiap ahli, dan undi tidak diubah selepas itu. Undi ahli lain ditunjukkan setelah anda mengundi, supaya tiada sesiapa terikut dengan nama pertama dalam senarai.
+Lembaga anda
+Pengerusi
+Ahli
+Bersidang
+Tidak bersidang
+Dibubarkan
+Kuorum: {count}
+Lembaga ini tidak bersidang, jadi tiada apa-apa boleh diputuskan di sini sehingga pemilik memanggilnya bersidang. Itu peraturannya, bukan kerosakan.
+Menunggu anda
+Tiada apa-apa yang menunggu. Kes muncul di sini apabila lembaga yang anda anggotai membukanya.
+Versi {number}
+Kuorum dipenuhi. Undi dibuang: {cast}. Diperlukan: {quorum}
+Menunggu kuorum. Undi dibuang: {cast}. Diperlukan: {quorum}
+Undi anda: {vote}
+Undi setakat ini. Setuju: {approve}. Tolak: {reject}. Berkecuali: {abstain}
+Pengerusi, pasukan tadbir urus atau pemilik merekodkan keputusan setelah lembaga selesai.
+Telah diputuskan, dan undi anda
+Setuju
+Tolak
+Berkecuali
+Belum mengundi
+Diluluskan
+Ditolak
+Ditarik balik
+Semakan yang ditugaskan kepada anda
+Undi tidak boleh dibatalkan.
+Undi anda
+Sebabnya, dalam satu ayat (pilihan, disimpan bersama kes)
+Buang undi saya
+Sedang merekodkan…
+Anda telah mengundi untuk kes ini. Satu undi bagi setiap ahli, dan undi tidak diubah selepas itu.
+Kes itu telah diputuskan.
+Hanya ahli lembaga yang mendengar kes itu boleh mengundi.
+Log masuk semula untuk mengundi.
+Undi tidak direkodkan. Muat semula halaman untuk melihat kedudukan kes itu.
+Tiada sesiapa dapat memastikan sama ada undi direkodkan. Muat semula halaman dan lihat kes itu sebelum mengundi lagi.
+Lembaga anda tidak dapat dibaca sekarang. Cuba lagi sebentar lagi.
+### bn
+আলেম বোর্ড
+আমার শেখা
+আপনি কোনো আলেম বোর্ডের সদস্য নন।
+বোর্ড কোর্স সম্পর্কে এমন প্রশ্নের সিদ্ধান্ত নেয় যা একজন পর্যালোচকের একা মীমাংসা করা উচিত নয়: কোনো বিধান কীভাবে উপস্থাপিত হবে, কোর্স কী দাবি করে, কোনো কিছু আদৌ শেখানো হবে কি না।
+আসন অর্থবহ হতে হলে দুটি বিষয় সত্য হতে হবে: মালিক আপনাকে বোর্ডে নিয়োগ দেন, এবং প্ল্যাটফর্ম আপনার যোগ্যতা যাচাই করে। পর্যালোচক হওয়ার আবেদনই প্রবেশের পথ।
+পর্যালোচকদের তালিকা
+আমার শেখায় ফিরে যান
+আপনি যে বোর্ডের সদস্য, তার সিদ্ধান্তের অপেক্ষায় থাকা বিষয়গুলো। প্রত্যেকের একটি ভোট, এবং ভোট পরে বদলানো হয় না। আপনি ভোট দেওয়ার পর অন্য সদস্যদের ভোট দেখানো হয়, যাতে তালিকার প্রথম নাম দেখে কেউ প্রভাবিত না হন।
+আপনার বোর্ড
+সভাপতি
+সদস্য
+সভা ডাকা হয়েছে
+সভা ডাকা হয়নি
+বিলুপ্ত
+কোরাম: {count}
+এই বোর্ডের সভা ডাকা হয়নি, তাই মালিক সভা না ডাকা পর্যন্ত এখানে কোনো সিদ্ধান্ত হতে পারে না। এটাই নিয়ম, ত্রুটি নয়।
+আপনার অপেক্ষায়
+কিছুই অপেক্ষায় নেই। আপনি যে বোর্ডের সদস্য সেটি কোনো বিষয় খুললে এখানে দেখা যাবে।
+সংস্করণ {number}
+কোরাম পূর্ণ হয়েছে। প্রদত্ত ভোট: {cast}। প্রয়োজন: {quorum}
+কোরামের অপেক্ষায়। প্রদত্ত ভোট: {cast}। প্রয়োজন: {quorum}
+আপনার ভোট: {vote}
+এ পর্যন্ত ভোট। অনুমোদন: {approve}। প্রত্যাখ্যান: {reject}। বিরত: {abstain}
+বোর্ডের কাজ শেষ হলে সভাপতি, পরিচালনা দল বা মালিক সিদ্ধান্ত নথিভুক্ত করেন।
+সিদ্ধান্ত হয়েছে, এবং আপনি যেভাবে ভোট দিয়েছেন
+অনুমোদন
+প্রত্যাখ্যান
+বিরত
+ভোট দেননি
+অনুমোদিত
+প্রত্যাখ্যাত
+প্রত্যাহার করা হয়েছে
+আপনাকে দেওয়া পর্যালোচনা
+ভোট ফিরিয়ে নেওয়া যায় না।
+আপনার ভোট
+কেন, এক বাক্যে (ঐচ্ছিক, বিষয়ের সঙ্গে রাখা হয়)
+আমার ভোট দিন
+নথিভুক্ত হচ্ছে…
+আপনি এই বিষয়ে আগেই ভোট দিয়েছেন। প্রত্যেকের একটি ভোট, এবং ভোট পরে বদলানো হয় না।
+ওই বিষয়ের সিদ্ধান্ত আগেই হয়ে গেছে।
+যে বোর্ড বিষয়টি শুনছে, কেবল তার সদস্যই এতে ভোট দিতে পারেন।
+ভোট দিতে আবার সাইন ইন করুন।
+ভোট নথিভুক্ত হয়নি। বিষয়টি কোথায় আছে দেখতে পাতাটি আবার লোড করুন।
+ভোট নথিভুক্ত হয়েছে কি না কেউ বলতে পারে না। পাতাটি আবার লোড করুন এবং আবার ভোট দেওয়ার আগে বিষয়টি দেখে নিন।
+আপনার বোর্ডগুলো এখন পড়া যায়নি। একটু পরে আবার চেষ্টা করুন।
+### hi
+विद्वत् बोर्ड
+मेरी पढ़ाई
+आप किसी विद्वत् बोर्ड के सदस्य नहीं हैं।
+बोर्ड कोर्स से जुड़े ऐसे सवाल तय करते हैं जिन्हें किसी एक समीक्षक को अकेले तय नहीं करना चाहिए: कोई हुक्म कैसे पेश किया जाए, कोर्स क्या दावा करता है, कोई बात पढ़ाई भी जाए या नहीं।
+किसी सीट का मतलब तभी है जब दो बातें सच हों: मालिक आपको बोर्ड में नियुक्त करे, और प्लैटफ़ॉर्म आपकी योग्यता जाँचे। समीक्षक बनने के लिए आवेदन करना ही रास्ता है।
+समीक्षकों की पंजी
+मेरी पढ़ाई पर वापस
+वे मामले जो उस बोर्ड के फ़ैसले का इंतज़ार कर रहे हैं जिसके आप सदस्य हैं। हर सदस्य का एक वोट, और वोट बाद में बदला नहीं जाता। दूसरे सदस्यों के वोट आपके वोट देने के बाद दिखाए जाते हैं, ताकि कोई सूची के पहले नाम के पीछे न चले।
+आपके बोर्ड
+अध्यक्ष
+सदस्य
+बैठक बुलाई गई
+बैठक नहीं बुलाई गई
+भंग
+कोरम: {count}
+इस बोर्ड की बैठक नहीं बुलाई गई है, इसलिए जब तक मालिक इसे न बुलाए यहाँ कुछ तय नहीं हो सकता। यह नियम है, ख़राबी नहीं।
+आपके इंतज़ार में
+कुछ भी इंतज़ार में नहीं है। जब कोई बोर्ड जिसके आप सदस्य हैं मामला खोलता है, वह यहाँ दिखता है।
+संस्करण {number}
+कोरम पूरा है। डाले गए वोट: {cast}। ज़रूरी: {quorum}
+कोरम का इंतज़ार है। डाले गए वोट: {cast}। ज़रूरी: {quorum}
+आपका वोट: {vote}
+अब तक के वोट। मंज़ूर: {approve}। नामंज़ूर: {reject}। तटस्थ: {abstain}
+बोर्ड का काम पूरा होने पर अध्यक्ष, गवर्नेंस टीम या मालिक फ़ैसला दर्ज करता है।
+तय हो चुके मामले, और आपका वोट
+मंज़ूर
+नामंज़ूर
+तटस्थ
+वोट नहीं दिया
+मंज़ूर हुआ
+नामंज़ूर हुआ
+वापस लिया गया
+आपको सौंपी गई समीक्षाएँ
+वोट वापस नहीं लिया जा सकता।
+आपका वोट
+क्यों, एक वाक्य में (वैकल्पिक, मामले के साथ रखा जाता है)
+मेरा वोट डालें
+दर्ज हो रहा है…
+आप इस मामले पर पहले ही वोट दे चुके हैं। हर सदस्य का एक वोट, और वोट बाद में बदला नहीं जाता।
+उस मामले का फ़ैसला पहले ही हो चुका है।
+मामले पर केवल वही सदस्य वोट दे सकता है जो उसे सुनने वाले बोर्ड में बैठा हो।
+वोट देने के लिए फिर से साइन इन करें।
+वोट दर्ज नहीं हुआ। मामला कहाँ है यह देखने के लिए पेज फिर से लोड करें।
+कोई नहीं बता सकता कि वोट दर्ज हुआ या नहीं। पेज फिर से लोड करें और दोबारा वोट देने से पहले मामला देख लें।
+आपके बोर्ड अभी पढ़े नहीं जा सके। थोड़ी देर में फिर कोशिश करें।
+### fr
+Conseil savant
+Mon apprentissage
+Vous ne siégez dans aucun conseil savant.
+Les conseils tranchent les questions sur un cours qu’un relecteur ne devrait pas régler seul : la façon de présenter un avis juridique, ce qu’un cours affirme, le fait même d’enseigner un point.
+Deux conditions doivent être réunies pour qu’un siège ait un sens : le propriétaire vous nomme au conseil, et la plateforme vérifie vos qualifications. La voie d’entrée est de candidater comme relecteur.
+Le registre des relecteurs
+Retour à mon apprentissage
+Les dossiers qui attendent la décision d’un conseil où vous siégez. Une voix par membre, et un vote ne se modifie pas ensuite. Le vote des autres membres s’affiche une fois que vous avez voté, pour que personne ne suive le premier nom de la liste.
+Vos conseils
+Présidence
+Membre
+Réuni
+Non réuni
+Dissous
+Quorum : {count}
+Ce conseil n’est pas réuni : rien ne peut être décidé ici tant que le propriétaire ne l’a pas réuni. C’est la règle, pas une panne.
+En attente de votre vote
+Rien n’est en attente. Un dossier apparaît ici quand un conseil où vous siégez en ouvre un.
+Version n° {number}
+Quorum atteint. Votes exprimés : {cast}. Requis : {quorum}
+En attente du quorum. Votes exprimés : {cast}. Requis : {quorum}
+Votre vote : {vote}
+Les votes à ce stade. Pour : {approve}. Contre : {reject}. Abstention : {abstain}
+La présidence, l’équipe de gouvernance ou le propriétaire consigne la décision une fois que le conseil a terminé.
+Dossiers tranchés, et votre vote
+Pour
+Contre
+Abstention
+Pas de vote
+Approuvé
+Rejeté
+Retiré
+Les relectures qui vous sont confiées
+Un vote ne peut pas être annulé.
+Votre vote
+Pourquoi, en une phrase (facultatif, conservé avec le dossier)
+Enregistrer mon vote
+Enregistrement…
+Vous avez déjà voté sur ce dossier. Une voix par membre, et un vote ne se modifie pas ensuite.
+Ce dossier a déjà été tranché.
+Seul un membre du conseil saisi du dossier peut voter.
+Reconnectez-vous pour voter.
+Le vote n’a pas été enregistré. Rechargez la page pour voir où en est le dossier.
+Personne ne peut dire si le vote a été enregistré. Rechargez la page et regardez le dossier avant de voter à nouveau.
+Vos conseils n’ont pas pu être lus pour l’instant. Réessayez dans un instant.
+### es
+Consejo de eruditos
+Mi aprendizaje
+Usted no forma parte de ningún consejo de eruditos.
+Los consejos deciden cuestiones sobre un curso que un solo revisor no debería resolver: cómo se presenta un dictamen, qué afirma un curso, si algo se enseña siquiera.
+Dos cosas deben cumplirse para que un puesto signifique algo: que el propietario le nombre para el consejo y que la plataforma compruebe sus cualificaciones. La vía de entrada es solicitar ser revisor.
+El registro de revisores
+Volver a mi aprendizaje
+Los casos que esperan la decisión de un consejo del que usted forma parte. Un voto por miembro, y un voto no se cambia después. El voto de los demás miembros se muestra cuando usted ha votado, para que nadie se deje llevar por el primer nombre de la lista.
+Sus consejos
+Presidencia
+Miembro
+Convocado
+Sin convocar
+Disuelto
+Cuórum: {count}
+Este consejo no está convocado, así que aquí no se puede decidir nada hasta que el propietario lo convoque. Es la norma, no un fallo.
+Esperan su voto
+No hay nada en espera. Un caso aparece aquí cuando lo abre un consejo del que usted forma parte.
+Versión {number}
+Hay cuórum. Votos emitidos: {cast}. Necesarios: {quorum}
+A la espera de cuórum. Votos emitidos: {cast}. Necesarios: {quorum}
+Su voto: {vote}
+Los votos hasta ahora. A favor: {approve}. En contra: {reject}. Abstención: {abstain}
+La presidencia, el equipo de gobernanza o el propietario registra la decisión cuando el consejo ha terminado.
+Decididos, y cómo votó usted
+A favor
+En contra
+Abstención
+Sin voto
+Aprobado
+Rechazado
+Retirado
+Revisiones que tiene asignadas
+Un voto no se puede deshacer.
+Su voto
+Por qué, en una frase (opcional, se guarda con el caso)
+Emitir mi voto
+Registrando…
+Usted ya ha votado en este caso. Un voto por miembro, y un voto no se cambia después.
+Ese caso ya se ha decidido.
+Solo puede votar en un caso un miembro del consejo que lo examina.
+Inicie sesión de nuevo para votar.
+El voto no se registró. Vuelva a cargar la página para ver en qué punto está el caso.
+Nadie puede decir si el voto se registró. Vuelva a cargar la página y mire el caso antes de votar otra vez.
+No se han podido leer sus consejos ahora. Inténtelo de nuevo en un momento.
+### pt
+Conselho de estudiosos
+A minha aprendizagem
+Não faz parte de nenhum conselho de estudiosos.
+Os conselhos decidem questões sobre um curso que um revisor não deve resolver sozinho: como se apresenta um parecer, o que um curso afirma, se algo chega sequer a ser ensinado.
+Duas coisas têm de ser verdade para que um lugar signifique alguma coisa: o proprietário nomeia-o para o conselho, e a plataforma verifica as suas qualificações. O caminho de entrada é candidatar-se a revisor.
+O registo de revisores
+Voltar ao meu aprendizado
+Os casos que aguardam a decisão de um conselho de que faz parte. Um voto por membro, e um voto não se altera depois. O voto dos outros membros é mostrado depois de ter votado, para que ninguém se deixe levar pelo primeiro nome da lista.
+Os seus conselhos
+Presidência
+Membro
+Convocado
+Não convocado
+Dissolvido
+Quórum: {count}
+Este conselho não está convocado, por isso nada pode ser decidido aqui até o proprietário o convocar. É a regra, não uma falha.
+À sua espera
+Nada está à espera. Um caso aparece aqui quando um conselho de que faz parte o abre.
+Versão {number}
+Há quórum. Votos expressos: {cast}. Necessários: {quorum}
+À espera de quórum. Votos expressos: {cast}. Necessários: {quorum}
+O seu voto: {vote}
+Os votos até agora. A favor: {approve}. Contra: {reject}. Abstenção: {abstain}
+A presidência, a equipa de governação ou o proprietário regista a decisão quando o conselho termina.
+Decididos, e como votou
+A favor
+Contra
+Abstenção
+Sem voto
+Aprovado
+Rejeitado
+Retirado
+Revisões que lhe foram atribuídas
+Um voto não pode ser desfeito.
+O seu voto
+Porquê, numa frase (opcional, guardado com o caso)
+Registar o meu voto
+A registar…
+Já votou neste caso. Um voto por membro, e um voto não se altera depois.
+Esse caso já foi decidido.
+Só um membro do conselho que aprecia o caso pode votar nele.
+Inicie sessão novamente para votar.
+O voto não foi registado. Volte a carregar a página para ver em que ponto está o caso.
+Ninguém pode dizer se o voto foi registado. Volte a carregar a página e veja o caso antes de votar outra vez.
+Não foi possível ler os seus conselhos agora. Tente novamente daqui a pouco.
+### sw
+Bodi ya wanazuoni
+Masomo yangu
+Wewe si mjumbe wa bodi yoyote ya wanazuoni.
+Bodi huamua maswali kuhusu kozi ambayo mkaguzi mmoja hapaswi kuyaamua peke yake: jinsi hukumu inavyowasilishwa, kozi inadai nini, na kama jambo lifundishwe hata kidogo.
+Mambo mawili lazima yawe kweli ili kiti kiwe na maana: mmiliki akuteue kwenye bodi, na jukwaa likague sifa zako. Njia ya kuingia ni kuomba kuwa mkaguzi.
+Rejista ya wakaguzi
+Rudi kwenye masomo yangu
+Mashauri yanayosubiri uamuzi wa bodi ambayo wewe ni mjumbe wake. Kila mjumbe ana kura moja, na kura haibadilishwi baadaye. Kura za wajumbe wengine huonyeshwa baada ya wewe kupiga kura, ili mtu yeyote asifuate jina la kwanza kwenye orodha.
+Bodi zako
+Mwenyekiti
+Mjumbe
+Imeitishwa
+Haijaitishwa
+Imevunjwa
+Akidi: {count}
+Bodi hii haijaitishwa, kwa hiyo hakuna kinachoweza kuamuliwa hapa hadi mmiliki aiitishe. Hiyo ndiyo kanuni, si hitilafu.
+Yanayokusubiri
+Hakuna kinachosubiri. Shauri huonekana hapa bodi ambayo wewe ni mjumbe wake inapolifungua.
+Toleo la {number}
+Akidi imetimia. Kura zilizopigwa: {cast}. Zinazohitajika: {quorum}
+Inasubiri akidi. Kura zilizopigwa: {cast}. Zinazohitajika: {quorum}
+Kura yako: {vote}
+Kura hadi sasa. Kukubali: {approve}. Kukataa: {reject}. Kujizuia: {abstain}
+Mwenyekiti, timu ya utawala au mmiliki huandika uamuzi baada ya bodi kumaliza.
+Yaliyoamuliwa, na ulivyopiga kura
+Kukubali
+Kukataa
+Kujizuia
+Hukupiga kura
+Imekubaliwa
+Imekataliwa
+Imeondolewa
+Ukaguzi uliokabidhiwa
+Kura haiwezi kutenduliwa.
+Kura yako
+Kwa nini, kwa sentensi moja (si lazima, huhifadhiwa pamoja na shauri)
+Piga kura yangu
+Inaandikwa…
+Tayari umepiga kura kuhusu shauri hili. Kila mjumbe ana kura moja, na kura haibadilishwi baadaye.
+Shauri hilo tayari limeamuliwa.
+Ni mjumbe wa bodi inayosikiliza shauri pekee anayeweza kulipigia kura.
+Ingia tena ili kupiga kura.
+Kura haikuandikwa. Pakia ukurasa upya ili kuona shauri limefikia wapi.
+Hakuna anayeweza kusema kama kura iliandikwa. Pakia ukurasa upya na uangalie shauri kabla ya kupiga kura tena.
+Bodi zako hazikuweza kusomwa sasa hivi. Jaribu tena baada ya muda mfupi.
+### af
+Raad van geleerdes
+My leer
+Jy dien nie op ’n raad van geleerdes nie.
+Rade besluit oor vrae oor ’n kursus wat een beoordelaar nie alleen behoort te beslis nie: hoe ’n beslissing aangebied word, wat ’n kursus beweer, of iets hoegenaamd geleer word.
+Twee dinge moet waar wees voordat ’n setel iets beteken: die eienaar stel jou op die raad aan, en die platform gaan jou kwalifikasies na. Om aansoek te doen om te beoordeel is die pad in.
+Die beoordelaarsregister
+Terug na my leerwerk
+Die sake wat wag op ’n besluit van ’n raad waarop jy dien. Een stem elk, en ’n stem word nie daarna verander nie. Hoe die ander lede gestem het, word gewys sodra jy gestem het, sodat niemand deur die eerste naam op die lys gelei word nie.
+Jou rade
+Voorsitter
+Lid
+Byeengeroep
+Nie byeengeroep nie
+Ontbind
+Kworum: {count}
+Hierdie raad is nie byeengeroep nie, dus kan niks hier besluit word totdat die eienaar dit byeenroep nie. Dit is die reël, nie ’n fout nie.
+Wag vir jou
+Niks wag nie. ’n Saak verskyn hier wanneer ’n raad waarop jy dien een open.
+Weergawe {number}
+Kworum bereik. Stemme uitgebring: {cast}. Nodig: {quorum}
+Wag op kworum. Stemme uitgebring: {cast}. Nodig: {quorum}
+Jou stem: {vote}
+Die stemme tot dusver. Keur goed: {approve}. Keur af: {reject}. Buite stemming: {abstain}
+Die voorsitter, die bestuurspan of die eienaar teken die besluit aan sodra die raad klaar is.
+Besluit, en hoe jy gestem het
+Keur goed
+Keur af
+Buite stemming
+Nie gestem nie
+Goedgekeur
+Afgekeur
+Teruggetrek
+Beoordelings aan jou toegewys
+’n Stem kan nie ongedaan gemaak word nie.
+Jou stem
+Hoekom, in een sin (opsioneel, word by die saak gehou)
+Bring my stem uit
+Teken aan…
+Jy het reeds oor hierdie saak gestem. Een stem elk, en ’n stem word nie daarna verander nie.
+Daardie saak is reeds besluit.
+Slegs ’n lid van die raad wat die saak aanhoor, mag daaroor stem.
+Meld weer aan om te stem.
+Die stem is nie aangeteken nie. Laai die bladsy weer om te sien waar die saak staan.
+Niemand kan sê of die stem aangeteken is nie. Laai die bladsy weer en kyk na die saak voordat jy weer stem.
+Jou rade kon nie nou gelees word nie. Probeer oor ’n oomblik weer.
+### zh-hans
+学术委员会
+我的学习
+你不是任何学术委员会的成员。
+委员会决定有关课程、不应由一位审阅者独自裁定的问题：一项教法裁定如何呈现，课程主张了什么，某项内容是否应当讲授。
+席位要有意义，须满足两点：所有者任命你进入委员会，并且平台核实你的资历。申请成为审阅者是加入的途径。
+审阅者名册
+返回我的学习
+等待你所在委员会作出决定的案件。每人一票，投票后不能更改。其他成员的投票在你投票后才显示，以免有人跟随名单上的第一个名字。
+你的委员会
+主席
+成员
+已召集
+未召集
+已解散
+法定人数：{count}
+本委员会尚未召集，因此在所有者召集之前，这里无法作出任何决定。这是规则，不是故障。
+等待你投票
+没有待处理的案件。你所在的委员会开启案件后，会显示在这里。
+第 {number} 版
+已达法定人数。已投票数：{cast}。所需：{quorum}
+等待达到法定人数。已投票数：{cast}。所需：{quorum}
+你的投票：{vote}
+目前的投票。赞成：{approve}。反对：{reject}。弃权：{abstain}
+委员会完成后，由主席、治理团队或所有者记录决定。
+已决定的案件，以及你的投票
+赞成
+反对
+弃权
+未投票
+已通过
+已否决
+已撤回
+分配给你的审阅
+投票无法撤销。
+你的投票
+理由，用一句话说明（可选，随案件保存）
+投出我的一票
+正在记录…
+你已对本案件投过票。每人一票，投票后不能更改。
+该案件已有决定。
+只有审理该案件的委员会成员才能投票。
+请重新登录后投票。
+投票未被记录。请重新加载页面，查看案件的进展。
+无法确定投票是否已记录。请重新加载页面，先查看案件，再决定是否重新投票。
+暂时无法读取你的委员会。请稍后再试。
+### zh-hant
+學術委員會
+我的學習
+你不是任何學術委員會的成員。
+委員會決定有關課程、不應由一位審閱者獨自裁定的問題：一項教法裁定如何呈現，課程主張了什麼，某項內容是否應當講授。
+席位要有意義，須滿足兩點：擁有者任命你進入委員會，並且平台核實你的資歷。申請成為審閱者是加入的途徑。
+審閱者名冊
+返回我的學習
+等待你所在委員會作出決定的案件。每人一票，投票後不能更改。其他成員的投票在你投票後才顯示，以免有人跟隨名單上的第一個名字。
+你的委員會
+主席
+成員
+已召集
+未召集
+已解散
+法定人數：{count}
+本委員會尚未召集，因此在擁有者召集之前，這裡無法作出任何決定。這是規則，不是故障。
+等待你投票
+沒有待處理的案件。你所在的委員會開啟案件後，會顯示在這裡。
+第 {number} 版
+已達法定人數。已投票數：{cast}。所需：{quorum}
+等待達到法定人數。已投票數：{cast}。所需：{quorum}
+你的投票：{vote}
+目前的投票。贊成：{approve}。反對：{reject}。棄權：{abstain}
+委員會完成後，由主席、治理團隊或擁有者記錄決定。
+已決定的案件，以及你的投票
+贊成
+反對
+棄權
+未投票
+已通過
+已否決
+已撤回
+分配給你的審閱
+投票無法撤銷。
+你的投票
+理由，用一句話說明（可選，隨案件保存）
+投出我的一票
+正在記錄…
+你已對本案件投過票。每人一票，投票後不能更改。
+該案件已有決定。
+只有審理該案件的委員會成員才能投票。
+請重新登入後投票。
+投票未被記錄。請重新載入頁面，查看案件的進展。
+無法確定投票是否已記錄。請重新載入頁面，先查看案件，再決定是否重新投票。
+暫時無法讀取你的委員會。請稍後再試。
+### vi
+Hội đồng học giả
+Việc học của tôi
+Bạn không thuộc hội đồng học giả nào.
+Hội đồng quyết định những câu hỏi về một khóa học mà một người duyệt không nên tự mình phân xử: một phán quyết giáo luật được trình bày thế nào, khóa học khẳng định điều gì, một nội dung có được dạy hay không.
+Hai điều phải đúng thì một ghế mới có ý nghĩa: chủ sở hữu bổ nhiệm bạn vào hội đồng, và nền tảng kiểm tra trình độ của bạn. Đăng ký làm người duyệt là lối vào.
+Sổ đăng ký người duyệt
+Quay lại việc học của tôi
+Các hồ sơ đang chờ quyết định từ hội đồng mà bạn là thành viên. Mỗi người một phiếu, và phiếu không được thay đổi về sau. Phiếu của các thành viên khác được hiển thị sau khi bạn đã bỏ phiếu, để không ai bị dẫn dắt bởi cái tên đầu tiên trong danh sách.
+Các hội đồng của bạn
+Chủ tịch
+Thành viên
+Đã triệu tập
+Chưa triệu tập
+Đã giải thể
+Số phiếu tối thiểu: {count}
+Hội đồng này chưa được triệu tập, nên không thể quyết định gì ở đây cho đến khi chủ sở hữu triệu tập. Đó là quy định, không phải lỗi.
+Đang chờ bạn
+Không có gì đang chờ. Hồ sơ xuất hiện ở đây khi một hội đồng mà bạn là thành viên mở hồ sơ.
+Phiên bản {number}
+Đã đủ số phiếu tối thiểu. Số phiếu đã bỏ: {cast}. Cần: {quorum}
+Đang chờ đủ số phiếu tối thiểu. Số phiếu đã bỏ: {cast}. Cần: {quorum}
+Phiếu của bạn: {vote}
+Số phiếu đến lúc này. Tán thành: {approve}. Bác bỏ: {reject}. Phiếu trắng: {abstain}
+Chủ tịch, nhóm quản trị hoặc chủ sở hữu ghi lại quyết định khi hội đồng đã xong.
+Đã quyết định, và phiếu của bạn
+Tán thành
+Bác bỏ
+Phiếu trắng
+Chưa bỏ phiếu
+Đã được chấp thuận
+Đã bị bác bỏ
+Đã rút lại
+Các lượt duyệt được giao cho bạn
+Phiếu đã bỏ không thể rút lại.
+Phiếu của bạn
+Lý do, trong một câu (không bắt buộc, được lưu cùng hồ sơ)
+Bỏ phiếu của tôi
+Đang ghi…
+Bạn đã bỏ phiếu cho hồ sơ này rồi. Mỗi người một phiếu, và phiếu không được thay đổi về sau.
+Hồ sơ đó đã được quyết định rồi.
+Chỉ thành viên của hội đồng đang xét hồ sơ mới được bỏ phiếu.
+Hãy đăng nhập lại để bỏ phiếu.
+Phiếu chưa được ghi. Hãy tải lại trang để xem hồ sơ đang ở đâu.
+Không ai có thể nói phiếu đã được ghi hay chưa. Hãy tải lại trang và xem hồ sơ trước khi bỏ phiếu lần nữa.
+Hiện chưa đọc được các hội đồng của bạn. Hãy thử lại sau giây lát.
+### th
+คณะกรรมการผู้ทรงความรู้
+การเรียนของฉัน
+คุณไม่ได้เป็นสมาชิกของคณะกรรมการผู้ทรงความรู้ใด
+คณะกรรมการตัดสินคำถามเกี่ยวกับคอร์สที่ผู้ตรวจทานคนเดียวไม่ควรชี้ขาดเอง ได้แก่ ข้อวินิจฉัยทางศาสนาถูกนำเสนออย่างไร คอร์สกล่าวอ้างอะไร และควรสอนเรื่องนั้นหรือไม่
+ที่นั่งจะมีความหมายเมื่อมีสองสิ่งนี้ คือ เจ้าของแต่งตั้งคุณเข้าคณะกรรมการ และแพลตฟอร์มตรวจสอบคุณวุฒิของคุณ การสมัครเป็นผู้ตรวจทานคือทางเข้า
+ทะเบียนผู้ตรวจทาน
+กลับไปที่การเรียนของฉัน
+เรื่องที่รอการตัดสินจากคณะกรรมการที่คุณเป็นสมาชิก คนละหนึ่งเสียง และเสียงที่ลงแล้วเปลี่ยนไม่ได้ เสียงของสมาชิกคนอื่นจะแสดงหลังจากคุณลงคะแนนแล้ว เพื่อไม่ให้ใครคล้อยตามชื่อแรกในรายชื่อ
+คณะกรรมการของคุณ
+ประธาน
+สมาชิก
+เรียกประชุมแล้ว
+ยังไม่เรียกประชุม
+ยุบแล้ว
+องค์ประชุม: {count}
+คณะกรรมการนี้ยังไม่ได้เรียกประชุม จึงยังตัดสินอะไรที่นี่ไม่ได้จนกว่าเจ้าของจะเรียกประชุม นี่คือกฎ ไม่ใช่ข้อขัดข้อง
+รอคุณอยู่
+ไม่มีเรื่องที่รออยู่ เรื่องจะปรากฏที่นี่เมื่อคณะกรรมการที่คุณเป็นสมาชิกเปิดเรื่อง
+ฉบับที่ {number}
+ครบองค์ประชุมแล้ว เสียงที่ลงแล้ว: {cast} ต้องการ: {quorum}
+รอให้ครบองค์ประชุม เสียงที่ลงแล้ว: {cast} ต้องการ: {quorum}
+เสียงของคุณ: {vote}
+คะแนนเสียงจนถึงตอนนี้ เห็นชอบ: {approve} ไม่เห็นชอบ: {reject} งดออกเสียง: {abstain}
+เมื่อคณะกรรมการเสร็จสิ้น ประธาน ทีมกำกับดูแล หรือเจ้าของจะเป็นผู้บันทึกคำตัดสิน
+ตัดสินแล้ว และเสียงที่คุณลง
+เห็นชอบ
+ไม่เห็นชอบ
+งดออกเสียง
+ไม่ได้ลงคะแนน
+อนุมัติแล้ว
+ไม่อนุมัติ
+ถอนแล้ว
+งานตรวจทานที่มอบหมายให้คุณ
+เสียงที่ลงแล้วยกเลิกไม่ได้
+เสียงของคุณ
+เหตุผลในหนึ่งประโยค (ไม่บังคับ เก็บไว้กับเรื่องนี้)
+ลงคะแนนของฉัน
+กำลังบันทึก…
+คุณลงคะแนนในเรื่องนี้ไปแล้ว คนละหนึ่งเสียง และเสียงที่ลงแล้วเปลี่ยนไม่ได้
+เรื่องนั้นตัดสินไปแล้ว
+เฉพาะสมาชิกของคณะกรรมการที่พิจารณาเรื่องนั้นเท่านั้นที่ลงคะแนนได้
+โปรดเข้าสู่ระบบอีกครั้งเพื่อลงคะแนน
+ไม่ได้บันทึกคะแนนเสียง โปรดโหลดหน้านี้ใหม่เพื่อดูว่าเรื่องอยู่ที่ขั้นใด
+ไม่มีใครบอกได้ว่าคะแนนเสียงถูกบันทึกหรือไม่ โปรดโหลดหน้านี้ใหม่และดูเรื่องนั้นก่อนลงคะแนนอีกครั้ง
+ยังอ่านคณะกรรมการของคุณไม่ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่
+### fil
+Lupon ng mga iskolar
+Aking pag-aaral
+Hindi ka kasapi ng alinmang lupon ng mga iskolar.
+Ang mga lupon ang nagpapasya sa mga tanong tungkol sa isang kurso na hindi dapat pagpasyahan ng iisang tagasuri lamang: kung paano inilalahad ang isang hatol, kung ano ang sinasabi ng kurso, kung ituturo ba ang isang bagay.
+Dalawang bagay ang dapat totoo bago magkaroon ng saysay ang isang puwesto: itinalaga ka ng may-ari sa lupon, at sinuri ng platform ang iyong mga kwalipikasyon. Ang pag-apply bilang tagasuri ang daan papasok.
+Ang talaan ng mga tagasuri
+Bumalik sa aking pag-aaral
+Ang mga kasong naghihintay ng pasya mula sa lupong kinabibilangan mo. Tig-iisang boto, at hindi na binabago ang boto pagkatapos. Ipinapakita ang boto ng ibang kasapi kapag nakaboto ka na, upang walang sumunod lamang sa unang pangalan sa listahan.
+Ang iyong mga lupon
+Tagapangulo
+Kasapi
+Ipinatawag
+Hindi ipinatawag
+Binuwag
+Korum: {count}
+Hindi ipinatawag ang lupong ito, kaya walang mapagpapasyahan dito hangga’t hindi ito ipinapatawag ng may-ari. Iyan ang patakaran, hindi sira.
+Naghihintay sa iyo
+Walang naghihintay. Lumalabas dito ang isang kaso kapag binuksan ito ng lupong kinabibilangan mo.
+Bersyon {number}
+May korum na. Mga botong naibigay: {cast}. Kailangan: {quorum}
+Hinihintay ang korum. Mga botong naibigay: {cast}. Kailangan: {quorum}
+Ang boto mo: {vote}
+Ang mga boto sa ngayon. Sang-ayon: {approve}. Tutol: {reject}. Nag-abstain: {abstain}
+Itinatala ng tagapangulo, ng pangkat ng pamamahala o ng may-ari ang pasya kapag tapos na ang lupon.
+Napagpasyahan na, at kung paano ka bumoto
+Sang-ayon
+Tutol
+Mag-abstain
+Hindi bumoto
+Inaprubahan
+Tinanggihan
+Binawi
+Mga pagsusuring itinalaga sa iyo
+Hindi na mababawi ang boto.
+Ang boto mo
+Bakit, sa isang pangungusap (opsyonal, itinatago kasama ng kaso)
+Ibigay ang boto ko
+Itinatala…
+Nakaboto ka na sa kasong ito. Tig-iisang boto, at hindi na binabago ang boto pagkatapos.
+Napagpasyahan na ang kasong iyon.
+Tanging kasapi ng lupong dumidinig sa kaso ang maaaring bumoto rito.
+Mag-sign in muli para bumoto.
+Hindi naitala ang boto. I-load muli ang pahina para makita kung nasaan na ang kaso.
+Walang makapagsasabi kung naitala ang boto. I-load muli ang pahina at tingnan ang kaso bago bumoto ulit.
+Hindi mabasa ang iyong mga lupon sa ngayon. Subukan muli maya-maya.
+### uz
+Ilmiy kengash
+Taʼlimim
+Siz hech bir ilmiy kengash aʼzosi emassiz.
+Kengashlar kurs haqidagi shunday savollarni hal qiladiki, ularni bitta taqrizchi yolgʻiz hal qilmasligi kerak: hukm qanday bayon etiladi, kurs nimani daʼvo qiladi, biror narsa umuman oʻqitiladimi.
+Oʻrin maʼno kasb etishi uchun ikki narsa boʻlishi kerak: platforma egasi sizni kengashga tayinlaydi va platforma malakangizni tekshiradi. Kirish yoʻli taqrizchilikka ariza berishdir.
+Taqrizchilar roʻyxati
+Oʻqishimga qaytish
+Siz aʼzo boʻlgan kengash qarorini kutayotgan ishlar. Har kimda bitta ovoz, va ovoz keyin oʻzgartirilmaydi. Boshqa aʼzolarning ovozi siz ovoz berganingizdan keyin koʻrsatiladi, toki hech kim roʻyxatdagi birinchi ismga ergashmasin.
+Kengashlaringiz
+Rais
+Aʼzo
+Chaqirilgan
+Chaqirilmagan
+Tarqatilgan
+Kvorum: {count}
+Bu kengash chaqirilmagan, shuning uchun platforma egasi uni chaqirmaguncha bu yerda hech narsa hal qilinmaydi. Bu nosozlik emas, qoida.
+Sizni kutmoqda
+Hech narsa kutmayapti. Siz aʼzo boʻlgan kengash ish ochganda, u shu yerda paydo boʻladi.
+{number}-versiya
+Kvorum bor. Berilgan ovozlar: {cast}. Kerak: {quorum}
+Kvorum kutilmoqda. Berilgan ovozlar: {cast}. Kerak: {quorum}
+Ovozingiz: {vote}
+Hozirgacha berilgan ovozlar. Yoqlab: {approve}. Qarshi: {reject}. Betaraf: {abstain}
+Kengash ishini tugatgach, qarorni rais, boshqaruv jamoasi yoki platforma egasi qayd etadi.
+Hal qilinganlar va sizning ovozingiz
+Yoqlab
+Qarshi
+Betaraf
+Ovoz berilmagan
+Maʼqullandi
+Rad etildi
+Qaytarib olindi
+Sizga topshirilgan taqrizlar
+Ovozni qaytarib boʻlmaydi.
+Ovozingiz
+Nima uchun, bir gapda (ixtiyoriy, ish bilan birga saqlanadi)
+Ovozimni berish
+Qayd etilmoqda…
+Siz bu ish boʻyicha allaqachon ovoz bergansiz. Har kimda bitta ovoz, va ovoz keyin oʻzgartirilmaydi.
+Bu ish allaqachon hal qilingan.
+Ish boʻyicha faqat uni koʻrayotgan kengash aʼzosi ovoz bera oladi.
+Ovoz berish uchun qayta kiring.
+Ovoz qayd etilmadi. Ish qay holatda ekanini koʻrish uchun sahifani qayta yuklang.
+Ovoz qayd etilgan-etilmaganini hech kim ayta olmaydi. Sahifani qayta yuklang va qayta ovoz berishdan oldin ishga qarang.
+Kengashlaringizni hozir oʻqib boʻlmadi. Birozdan soʻng qayta urinib koʻring.
+### kk
+Ғылыми кеңес
+Оқуым
+Сіз ешбір ғылыми кеңестің мүшесі емессіз.
+Кеңестер курс туралы бір рецензент жалғыз шешпеуі тиіс сұрақтарды шешеді: үкім қалай баяндалады, курс нені мәлімдейді, бір нәрсе мүлде оқытыла ма.
+Орынның мәні болуы үшін екі нәрсе орындалуы керек: платформа иесі сізді кеңеске тағайындайды және платформа біліктілігіңізді тексереді. Кіру жолы — рецензент болуға өтініш беру.
+Рецензенттер тізілімі
+Оқуыма оралу
+Сіз мүше болып отырған кеңестің шешімін күтіп тұрған істер. Әркімде бір дауыс, және дауыс кейін өзгертілмейді. Басқа мүшелердің дауысы сіз дауыс бергеннен кейін көрсетіледі, сонда ешкім тізімдегі бірінші есімге ермейді.
+Кеңестеріңіз
+Төраға
+Мүше
+Шақырылған
+Шақырылмаған
+Таратылған
+Кворум: {count}
+Бұл кеңес шақырылмаған, сондықтан платформа иесі оны шақырғанша мұнда ештеңе шешілмейді. Бұл ақау емес, ереже.
+Сізді күтіп тұр
+Ештеңе күтіп тұрған жоқ. Сіз мүше болып отырған кеңес іс ашқанда, ол осында пайда болады.
+{number}-нұсқа
+Кворум бар. Берілген дауыс: {cast}. Қажет: {quorum}
+Кворум күтілуде. Берілген дауыс: {cast}. Қажет: {quorum}
+Дауысыңыз: {vote}
+Әзірге берілген дауыстар. Қолдау: {approve}. Қарсы: {reject}. Қалыс: {abstain}
+Кеңес жұмысын аяқтаған соң шешімді төраға, басқару тобы немесе платформа иесі тіркейді.
+Шешілген істер және сіздің дауысыңыз
+Қолдау
+Қарсы
+Қалыс
+Дауыс берілмеген
+Мақұлданды
+Қабылданбады
+Кері қайтарылды
+Сізге тапсырылған рецензиялар
+Дауысты кері қайтаруға болмайды.
+Дауысыңыз
+Неліктен, бір сөйлеммен (міндетті емес, іспен бірге сақталады)
+Дауысымды беру
+Тіркелуде…
+Сіз бұл іс бойынша дауыс беріп қойғансыз. Әркімде бір дауыс, және дауыс кейін өзгертілмейді.
+Ол іс бойынша шешім шығып қойған.
+Іс бойынша тек оны қарап жатқан кеңестің мүшесі ғана дауыс бере алады.
+Дауыс беру үшін қайта кіріңіз.
+Дауыс тіркелмеді. Істің қай кезеңде екенін көру үшін бетті қайта жүктеңіз.
+Дауыстың тіркелген-тіркелмегенін ешкім айта алмайды. Бетті қайта жүктеп, қайта дауыс бермес бұрын іске қараңыз.
+Кеңестеріңізді қазір оқу мүмкін болмады. Сәлден соң қайталап көріңіз.
+### az
+Elmi şura
+Təhsilim
+Siz heç bir elmi şuranın üzvü deyilsiniz.
+Şuralar kursla bağlı elə suallara qərar verir ki, onları bir rəyçi təkbaşına həll etməməlidir: hökm necə təqdim olunur, kurs nə iddia edir, bir şey ümumiyyətlə tədris olunurmu.
+Yerin məna daşıması üçün iki şey doğru olmalıdır: platformanın sahibi sizi şuraya təyin edir və platforma ixtisasınızı yoxlayır. Daxil olmağın yolu rəyçi olmaq üçün müraciət etməkdir.
+Rəyçilər reyestri
+Təhsilimə qayıt
+Üzvü olduğunuz şuranın qərarını gözləyən işlər. Hər kəsin bir səsi var və səs sonradan dəyişdirilmir. Digər üzvlərin necə səs verdiyi siz səs verdikdən sonra göstərilir ki, heç kim siyahıdakı ilk ada uymasın.
+Şuralarınız
+Sədr
+Üzv
+Çağırılıb
+Çağırılmayıb
+Buraxılıb
+Yetərsay: {count}
+Bu şura çağırılmayıb, ona görə də platformanın sahibi onu çağırana qədər burada heç nəyə qərar verilə bilməz. Bu nasazlıq deyil, qaydadır.
+Sizi gözləyir
+Gözləyən heç nə yoxdur. Üzvü olduğunuz şura iş açanda o burada görünür.
+Versiya {number}
+Yetərsay var. Verilən səslər: {cast}. Lazımdır: {quorum}
+Yetərsay gözlənilir. Verilən səslər: {cast}. Lazımdır: {quorum}
+Səsiniz: {vote}
+İndiyədək verilən səslər. Lehinə: {approve}. Əleyhinə: {reject}. Bitərəf: {abstain}
+Şura işini bitirdikdən sonra qərarı sədr, idarəetmə komandası və ya platformanın sahibi qeyd edir.
+Qərar verilənlər və sizin səsiniz
+Lehinə
+Əleyhinə
+Bitərəf
+Səs verilməyib
+Təsdiqləndi
+Rədd edildi
+Geri götürüldü
+Sizə həvalə olunan rəylər
+Səsi geri götürmək olmaz.
+Səsiniz
+Niyə, bir cümlə ilə (istəyə bağlıdır, işlə birlikdə saxlanılır)
+Səsimi ver
+Qeyd olunur…
+Siz bu iş üzrə artıq səs vermisiniz. Hər kəsin bir səsi var və səs sonradan dəyişdirilmir.
+Həmin iş üzrə artıq qərar verilib.
+İş üzrə yalnız ona baxan şuranın üzvü səs verə bilər.
+Səs vermək üçün yenidən daxil olun.
+Səs qeyd olunmadı. İşin hansı mərhələdə olduğunu görmək üçün səhifəni yenidən yükləyin.
+Səsin qeyd olunub-olunmadığını heç kim deyə bilməz. Səhifəni yenidən yükləyin və yenidən səs verməzdən əvvəl işə baxın.
+Şuralarınızı indi oxumaq mümkün olmadı. Bir azdan yenidən cəhd edin.
+### tg
+Шӯрои илмӣ
+Таълими ман
+Шумо узви ягон шӯрои илмӣ нестед.
+Шӯроҳо дар бораи курс саволҳоеро ҳал мекунанд, ки як бознигар набояд танҳо ҳал кунад: ҳукм чӣ гуна баён мешавад, курс чӣ даъво дорад, оё чизе умуман таълим дода мешавад.
+Барои он ки курсӣ маъно дошта бошад, ду чиз бояд дуруст бошад: соҳиби платформа шуморо ба шӯро таъин мекунад ва платформа тахассуси шуморо месанҷад. Роҳи даромад — дархост додан барои бознигарӣ.
+Феҳристи бознигарон
+Бозгашт ба омӯзиши ман
+Парвандаҳое, ки мунтазири қарори шӯрое мебошанд, ки шумо узви онед. Ҳар кас як овоз дорад ва овоз баъдан тағйир дода намешавад. Овози аъзои дигар пас аз овоз додани шумо нишон дода мешавад, то касе аз паси номи аввали рӯйхат наравад.
+Шӯроҳои шумо
+Раис
+Узв
+Даъват шудааст
+Даъват нашудааст
+Пароканда шудааст
+Кворум: {count}
+Ин шӯро даъват нашудааст, бинобар ин то соҳиби платформа онро даъват накунад, дар ин ҷо ҳеҷ чиз ҳал намешавад. Ин қоида аст, на носозӣ.
+Мунтазири шумо
+Ҳеҷ чиз мунтазир нест. Вақте шӯрое, ки шумо узви онед, парванда мекушояд, он дар ин ҷо пайдо мешавад.
+Нусхаи {number}
+Кворум ҳаст. Овозҳои додашуда: {cast}. Лозим: {quorum}
+Мунтазири кворум. Овозҳои додашуда: {cast}. Лозим: {quorum}
+Овози шумо: {vote}
+Овозҳо то ҳол. Тарафдор: {approve}. Зид: {reject}. Бетараф: {abstain}
+Пас аз анҷоми кори шӯро қарорро раис, гурӯҳи идоракунӣ ё соҳиби платформа сабт мекунад.
+Ҳалшудаҳо ва овози шумо
+Тарафдор
+Зид
+Бетараф
+Овоз дода нашудааст
+Тасдиқ шуд
+Рад шуд
+Бозпас гирифта шуд
+Бознигариҳое, ки ба шумо супурда шудаанд
+Овозро бозпас гирифтан мумкин нест.
+Овози шумо
+Чаро, дар як ҷумла (ихтиёрӣ, ҳамроҳи парванда нигоҳ дошта мешавад)
+Овози маро сабт кунед
+Сабт шуда истодааст…
+Шумо аллакай оид ба ин парванда овоз додаед. Ҳар кас як овоз дорад ва овоз баъдан тағйир дода намешавад.
+Оид ба он парванда аллакай қарор қабул шудааст.
+Оид ба парванда танҳо узви шӯрое, ки онро баррасӣ мекунад, овоз дода метавонад.
+Барои овоз додан аз нав ворид шавед.
+Овоз сабт нашуд. Саҳифаро аз нав бор кунед, то бубинед, ки парванда дар кадом ҳолат аст.
+Ҳеҷ кас гуфта наметавонад, ки овоз сабт шуд ё не. Саҳифаро аз нав бор кунед ва пеш аз дубора овоз додан ба парванда нигаред.
+Шӯроҳои шуморо ҳозир хондан муяссар нашуд. Каме баъдтар боз кӯшиш кунед.
+### ky
+Илимий кеңеш
+Менин окуум
+Сиз эч бир илимий кеңештин мүчөсү эмессиз.
+Кеңештер курс боюнча бир рецензент жалгыз чечпеши керек болгон суроолорду чечет: өкүм кантип берилет, курс эмнени ырастайт, бир нерсе дегеле окутулабы.
+Орундун мааниси болушу үчүн эки нерсе аткарылышы керек: платформанын ээси сизди кеңешке дайындайт жана платформа квалификацияңызды текшерет. Кирүү жолу — рецензент болууга арыз берүү.
+Рецензенттер реестри
+Окуума кайтуу
+Сиз мүчө болгон кеңештин чечимин күтүп турган иштер. Ар кимде бир добуш, жана добуш кийин өзгөртүлбөйт. Башка мүчөлөрдүн добушу сиз добуш бергенден кийин көрсөтүлөт, ошондо эч ким тизмедеги биринчи ысымды ээрчибейт.
+Кеңештериңиз
+Төрага
+Мүчө
+Чакырылган
+Чакырылган эмес
+Таратылган
+Кворум: {count}
+Бул кеңеш чакырылган эмес, ошондуктан платформанын ээси аны чакырмайынча бул жерде эч нерсе чечилбейт. Бул бузулуу эмес, эреже.
+Сизди күтүп турат
+Эч нерсе күтүп турган жок. Сиз мүчө болгон кеңеш иш ачканда, ал ушул жерде пайда болот.
+{number}-версия
+Кворум бар. Берилген добуштар: {cast}. Керек: {quorum}
+Кворум күтүлүүдө. Берилген добуштар: {cast}. Керек: {quorum}
+Добушуңуз: {vote}
+Азырынча берилген добуштар. Макул: {approve}. Каршы: {reject}. Калыс: {abstain}
+Кеңеш ишин бүтүргөндөн кийин чечимди төрага, башкаруу тобу же платформанын ээси каттайт.
+Чечилгендер жана сиздин добушуңуз
+Макул
+Каршы
+Калыс
+Добуш берилген эмес
+Жактырылды
+Четке кагылды
+Кайра алынды
+Сизге тапшырылган рецензиялар
+Добушту кайра алууга болбойт.
+Добушуңуз
+Эмне үчүн, бир сүйлөм менен (милдеттүү эмес, иш менен кошо сакталат)
+Добушумду берүү
+Катталууда…
+Сиз бул иш боюнча добуш берип койгонсуз. Ар кимде бир добуш, жана добуш кийин өзгөртүлбөйт.
+Ал иш боюнча чечим чыгып калган.
+Иш боюнча аны карап жаткан кеңештин мүчөсү гана добуш бере алат.
+Добуш берүү үчүн кайра кириңиз.
+Добуш катталган жок. Иш кайсы абалда экенин көрүү үчүн баракты кайра жүктөңүз.
+Добуш катталганын же катталбаганын эч ким айта албайт. Баракты кайра жүктөп, кайра добуш берерден мурда ишти караңыз.
+Кеңештериңизди азыр окуу мүмкүн болгон жок. Бир аздан кийин кайра аракет кылыңыз.
+### tk
+Ylmy geňeş
+Meniň okuwym
+Siz hiç bir ylmy geňeşiň agzasy däl.
+Geňeşler kurs barada bir synçynyň ýeke özi çözmeli däl soraglaryny çözýär: höküm nähili beýan edilýär, kurs nämäni öňe sürýär, bir zat asla okadylýarmy.
+Ornuň manysy bolmagy üçin iki zat dogry bolmaly: platformanyň eýesi sizi geňeşe belleýär we platforma hünär derejäňizi barlaýar. Girmegiň ýoly synçy bolmak üçin ýüz tutmakdyr.
+Synçylaryň sanawy
+Okuwyma dolanmak
+Siziň agza bolan geňeşiňiziň kararyna garaşýan işler. Her kimde bir ses bar we ses soň üýtgedilmeýär. Beýleki agzalaryň sesi siz ses bereniňizden soň görkezilýär, şeýdip hiç kim sanawdaky ilkinji ada eýermez.
+Geňeşleriňiz
+Başlyk
+Agza
+Çagyryldy
+Çagyrylmady
+Dargadyldy
+Kworum: {count}
+Bu geňeş çagyrylmady, şonuň üçin platformanyň eýesi ony çagyrýança bu ýerde hiç zat çözülip bilinmez. Bu näsazlyk däl, düzgün.
+Size garaşýar
+Garaşýan zat ýok. Siziň agza bolan geňeşiňiz iş açanda, ol şu ýerde peýda bolýar.
+Wersiýa {number}
+Kworum bar. Berlen sesler: {cast}. Gerek: {quorum}
+Kworuma garaşylýar. Berlen sesler: {cast}. Gerek: {quorum}
+Sesiňiz: {vote}
+Häzire çenli berlen sesler. Goldaýan: {approve}. Garşy: {reject}. Saklanýan: {abstain}
+Geňeş işini gutarandan soň karary başlyk, dolandyryş topary ýa-da platformanyň eýesi ýazga geçirýär.
+Çözülenler we siziň sesiňiz
+Goldaýan
+Garşy
+Saklanýan
+Ses berilmedi
+Tassyklandy
+Ret edildi
+Yzyna alyndy
+Size tabşyrylan synlar
+Sesi yzyna alyp bolmaýar.
+Sesiňiz
+Näme üçin, bir sözlemde (hökman däl, iş bilen bile saklanýar)
+Sesimi bermek
+Ýazga geçirilýär…
+Siz bu iş boýunça eýýäm ses berdiňiz. Her kimde bir ses bar we ses soň üýtgedilmeýär.
+Ol iş boýunça eýýäm karar çykaryldy.
+Iş boýunça diňe oňa seredýän geňeşiň agzasy ses berip biler.
+Ses bermek üçin täzeden giriň.
+Ses ýazga geçirilmedi. Işiň haýsy ýagdaýdadygyny görmek üçin sahypany täzeden ýükläň.
+Sesiň ýazga geçirilendigini ýa-da geçirilmändigini hiç kim aýdyp bilmez. Sahypany täzeden ýükläň we täzeden ses bermezden öň işe serediň.
+Geňeşleriňizi häzir okap bolmady. Biraz wagtdan täzeden synanyşyň.
+### ta
+அறிஞர் குழு
+என் கற்றல்
+நீங்கள் எந்த அறிஞர் குழுவிலும் உறுப்பினர் அல்ல.
+ஒரு மதிப்பாய்வாளர் தனியாக முடிவு செய்யக்கூடாத பாடநெறி பற்றிய கேள்விகளைக் குழுக்கள் முடிவு செய்கின்றன: ஒரு தீர்ப்பு எப்படி முன்வைக்கப்படுகிறது, பாடநெறி என்ன கூறுகிறது, ஒரு விஷயம் கற்பிக்கப்பட வேண்டுமா என்பது.
+ஓர் இருக்கைக்குப் பொருள் இருக்க இரண்டு விஷயங்கள் உண்மையாக இருக்க வேண்டும்: உரிமையாளர் உங்களைக் குழுவில் நியமிக்கிறார், தளம் உங்கள் தகுதிகளைச் சரிபார்க்கிறது. மதிப்பாய்வாளராக விண்ணப்பிப்பதே உள்ளே வரும் வழி.
+மதிப்பாய்வாளர் பதிவேடு
+என் கற்றலுக்குத் திரும்பு
+நீங்கள் உறுப்பினராக உள்ள குழுவின் முடிவுக்காகக் காத்திருக்கும் வழக்குகள். ஒவ்வொருவருக்கும் ஒரு வாக்கு, வாக்கு பின்னர் மாற்றப்படாது. நீங்கள் வாக்களித்த பிறகே மற்ற உறுப்பினர்களின் வாக்குகள் காட்டப்படும்; பட்டியலில் உள்ள முதல் பெயரை யாரும் பின்பற்றாமல் இருக்கவே இது.
+உங்கள் குழுக்கள்
+தலைவர்
+உறுப்பினர்
+கூட்டப்பட்டது
+கூட்டப்படவில்லை
+கலைக்கப்பட்டது
+குறைந்தபட்ச வருகை: {count}
+இந்தக் குழு கூட்டப்படவில்லை; எனவே உரிமையாளர் அதைக் கூட்டும் வரை இங்கே எதையும் முடிவு செய்ய முடியாது. இது விதி, கோளாறு அல்ல.
+உங்களுக்காகக் காத்திருப்பவை
+எதுவும் காத்திருக்கவில்லை. நீங்கள் உறுப்பினராக உள்ள குழு ஒரு வழக்கைத் திறக்கும்போது அது இங்கே தோன்றும்.
+பதிப்பு {number}
+குறைந்தபட்ச வருகை நிறைவடைந்தது. அளிக்கப்பட்ட வாக்குகள்: {cast}. தேவை: {quorum}
+குறைந்தபட்ச வருகைக்காகக் காத்திருக்கிறது. அளிக்கப்பட்ட வாக்குகள்: {cast}. தேவை: {quorum}
+உங்கள் வாக்கு: {vote}
+இதுவரையான வாக்குகள். ஆதரவு: {approve}. எதிர்ப்பு: {reject}. விலகல்: {abstain}
+குழு முடித்த பிறகு தலைவர், ஆளுகைக் குழு அல்லது உரிமையாளர் முடிவைப் பதிவு செய்கிறார்.
+முடிவு செய்யப்பட்டவை, நீங்கள் வாக்களித்த விதம்
+ஆதரவு
+எதிர்ப்பு
+விலகல்
+வாக்களிக்கவில்லை
+அங்கீகரிக்கப்பட்டது
+நிராகரிக்கப்பட்டது
+திரும்பப் பெறப்பட்டது
+உங்களுக்கு ஒதுக்கப்பட்ட மதிப்பாய்வுகள்
+வாக்கைத் திரும்பப் பெற முடியாது.
+உங்கள் வாக்கு
+ஏன், ஒரு வாக்கியத்தில் (விருப்பத்தேர்வு, வழக்குடன் வைக்கப்படும்)
+என் வாக்கை அளி
+பதிவாகிறது…
+இந்த வழக்கில் நீங்கள் ஏற்கனவே வாக்களித்துவிட்டீர்கள். ஒவ்வொருவருக்கும் ஒரு வாக்கு, வாக்கு பின்னர் மாற்றப்படாது.
+அந்த வழக்கு ஏற்கனவே முடிவு செய்யப்பட்டுவிட்டது.
+வழக்கை விசாரிக்கும் குழுவின் உறுப்பினர் மட்டுமே அதில் வாக்களிக்க முடியும்.
+வாக்களிக்க மீண்டும் உள்நுழையுங்கள்.
+வாக்கு பதிவாகவில்லை. வழக்கு எந்த நிலையில் உள்ளது என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றுங்கள்.
+வாக்கு பதிவானதா என்று யாராலும் சொல்ல முடியாது. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் வாக்களிக்கும் முன் வழக்கைப் பாருங்கள்.
+உங்கள் குழுக்களை இப்போது படிக்க முடியவில்லை. சிறிது நேரத்தில் மீண்டும் முயலுங்கள்.
+### ne
+विद्वत् बोर्ड
+मेरो सिकाइ
+तपाईं कुनै पनि विद्वत् बोर्डको सदस्य हुनुहुन्न।
+बोर्डहरूले कोर्सबारे त्यस्ता प्रश्नको निर्णय गर्छन् जुन एक जना समीक्षकले एक्लै टुङ्ग्याउनु हुँदैन: कुनै हुकुम कसरी प्रस्तुत गरिन्छ, कोर्सले के दाबी गर्छ, कुनै कुरा पढाइन्छ कि पढाइँदैन।
+सिटको अर्थ हुन दुई कुरा साँचो हुनुपर्छ: मालिकले तपाईंलाई बोर्डमा नियुक्त गर्छन्, र प्लेटफर्मले तपाईंको योग्यता जाँच्छ। समीक्षक बन्न आवेदन दिनु नै भित्र आउने बाटो हो।
+समीक्षकहरूको दर्ता
+मेरो सिकाइमा फर्कनुहोस्
+तपाईं सदस्य रहेको बोर्डको निर्णय पर्खिरहेका मुद्दाहरू। प्रत्येकको एक मत, र मत पछि बदलिँदैन। अरू सदस्यको मत तपाईंले मत दिएपछि मात्र देखाइन्छ, ताकि कोही सूचीको पहिलो नामको पछि नलागोस्।
+तपाईंका बोर्डहरू
+अध्यक्ष
+सदस्य
+बैठक बोलाइएको
+बैठक नबोलाइएको
+विघटन गरिएको
+गणपूरक सङ्ख्या: {count}
+यो बोर्डको बैठक बोलाइएको छैन, त्यसैले मालिकले नबोलाएसम्म यहाँ केही निर्णय हुन सक्दैन। यो नियम हो, खराबी होइन।
+तपाईंलाई पर्खिरहेका
+केही पर्खिरहेको छैन। तपाईं सदस्य रहेको बोर्डले मुद्दा खोलेपछि त्यो यहाँ देखिन्छ।
+संस्करण {number}
+गणपूरक सङ्ख्या पुग्यो। खसेका मत: {cast}। चाहिने: {quorum}
+गणपूरक सङ्ख्या पर्खिँदै। खसेका मत: {cast}। चाहिने: {quorum}
+तपाईंको मत: {vote}
+अहिलेसम्मका मत। पक्षमा: {approve}। विपक्षमा: {reject}। तटस्थ: {abstain}
+बोर्डको काम सकिएपछि अध्यक्ष, सुशासन टोली वा मालिकले निर्णय दर्ता गर्छन्।
+निर्णय भइसकेका, र तपाईंको मत
+पक्षमा
+विपक्षमा
+तटस्थ
+मत नदिएको
+स्वीकृत भयो
+अस्वीकृत भयो
+फिर्ता लिइयो
+तपाईंलाई तोकिएका समीक्षाहरू
+मत फिर्ता लिन सकिँदैन।
+तपाईंको मत
+किन, एक वाक्यमा (ऐच्छिक, मुद्दासँगै राखिन्छ)
+मेरो मत दिनुहोस्
+दर्ता हुँदै छ…
+तपाईंले यो मुद्दामा पहिले नै मत दिइसक्नुभएको छ। प्रत्येकको एक मत, र मत पछि बदलिँदैन।
+त्यो मुद्दाको निर्णय भइसकेको छ।
+मुद्दामा त्यसलाई सुन्ने बोर्डको सदस्यले मात्र मत दिन सक्छ।
+मत दिन फेरि साइन इन गर्नुहोस्।
+मत दर्ता भएन। मुद्दा कहाँ पुगेको छ हेर्न पृष्ठ फेरि लोड गर्नुहोस्।
+मत दर्ता भयो कि भएन कसैले भन्न सक्दैन। पृष्ठ फेरि लोड गर्नुहोस् र फेरि मत दिनुअघि मुद्दा हेर्नुहोस्।
+तपाईंका बोर्डहरू अहिले पढ्न सकिएन। एकैछिनमा फेरि प्रयास गर्नुहोस्।

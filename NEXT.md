@@ -3574,7 +3574,8 @@ memory of it, starts from the repository and not from a conversation.
     link anywhere to `/discuss`; no page for `board_kept_post()`; no
     `board_reported` sentence in the notifications catalogue; no agreement
     box on `/sign-in`; learner pages still in English only (`saved`,
-    `downloads`, `paths`, `learn/ask`, `support`, `about`, `panel`) and
+    `downloads`, `paths`, `learn/ask`, `support`, `about`, `panel`; all
+    of these were written by 2026-11-27, `/review` was not) and
     all staff pages; fr `star5` and fil `revCountOne` equal to English;
     `notify.lead` untrue for the owner once email is on; institution
     single sign-on (SAML and OIDC unbuilt); accessibility (the second half
@@ -11034,5 +11035,53 @@ started: recitation correction, native apps, push notifications.
   teacher's page was looked at; no speaker has read the 36 sentences.
   The example in the box names the Arabic letter ح as each language was
   guessed to name it.
-  **Still English:** `/panel` and `/review` (scholars' pages), and the
-  staff areas (`/admin`, `/teach`, `/institution`).
+  **Still English:** `/review` (the reviewers' pages), and the staff
+  areas (`/admin`, `/teach`, `/institution`). (`/panel` followed the same
+  day; next entry.)
+- **A board member's own page, in the reader's language (2026-11-27).**
+  `/panel` (`messages/panel.ts`, 45 sentences) in the twenty-seven
+  languages with nothing held. The board is named with the words
+  `close.board` already used in each language.
+  *The vote.* It is cast from the browser straight to
+  `cast_panel_vote()`, and the form printed whatever English
+  `describePanelError()` made of the answer. It is handed its words by
+  the page now and says a refusal by its name: already voted, already
+  decided, the board not convened, not a member, signed out; any other
+  refusal says the vote was not recorded and to load the page again.
+  **One thing that was wrong:** an answer with no state (a gateway's
+  page, a connection that went) was printed as it came, the browser's
+  own error text included, and an empty one said "Something went wrong.
+  Nothing was changed", which nobody knows; a vote is cast once, so the
+  form says nobody can tell whether it was recorded and to look at the
+  case before voting again. `describePanelError()` itself is unchanged, because the
+  staff console uses it.
+  *The page.* A failed read of `my_panel_work()` threw, which showed a
+  member the page that says the site broke; it says the boards could not
+  be read, and does not say "you do not sit on a board". What a board
+  decided was printed as the database's own word (`approved`); it is
+  said in the reader's language, and an outcome the page has no word
+  for is shown without one. Counts follow a colon and are in the
+  reader's digits. A board's name, a course's title and what a board
+  decided are shown as written, each in its own direction.
+  **A layout fault found by eye and fixed:** every `input` is given its
+  row's whole width, a radio button included, which left each vote's
+  word a sliver and broke it between letters ("App/rove"). The smoke now
+  fails if a vote's word is on two lines.
+  *Checked by:* `panel-page.test.ts` and `scripts/panel-route-smoke.mjs`
+  against a synthetic Auth and REST (in `ci.yml`, and with a browser in
+  the responsive workflow: English, Arabic, French and Tamil at 320, 390
+  and 1440px and at 320px with the largest text and the dyslexia font,
+  the vote worked in Arabic through every refusal and one recorded
+  vote).
+  **Not done:** `teaching.panel` is off and no board sits on the hosted
+  database, so no vote has been cast from this page against it and
+  nobody has seen it live; no speaker has read the 45 sentences, which
+  matters more here than on most pages, because a scholar reads them
+  before a vote that cannot be changed; `/admin/panels` is English.
+  *Tools:* `scripts/catalogue-part/` now holds the three scripts that
+  turn translated lines into a catalogue part and register it, and this
+  unit's lines (`data/panel.txt`); the copies kept outside the
+  repository did not survive a new workspace, and the earlier units'
+  lines went with them (their output is committed).
+  **Still English:** `/review` (the reviewers' pages), and the staff
+  areas (`/admin`, `/teach`, `/institution`).

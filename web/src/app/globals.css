@@ -2719,3 +2719,24 @@ p.support-small { margin: 0; }
    that it sets its own direction, and a long word in it breaks. */
 .ask-lessons .t { min-width: 0; overflow-wrap: anywhere; }
 .ask-lessons .ask-line { display: block; }
+/* A panel member's page (2026-11-27): the measure the page had inline, a
+   list with no bullets, and facts that wrap as whole pieces with a dot
+   between them whichever way the page reads. */
+.panel-page > .lede, .panel-page > .notice, .panel-page > p, .panel-page > section { max-width: 46rem; }
+.panel-page > section { margin-top: 2rem; }
+.panel-list { list-style: none; padding: 0; margin: 0; }
+.panel-list > li { min-width: 0; overflow-wrap: anywhere; }
+.panel-list h3 { margin: 0 0 0.25rem; }
+.panel-list p { margin: 0.4rem 0 0; }
+.panel-facts { display: flex; flex-wrap: wrap; column-gap: 0.4rem; font-size: 0.9rem; }
+.panel-facts > * + *::before { content: '·'; margin-inline-end: 0.4rem; }
+.panel-vote { display: grid; gap: 0.5rem; margin-top: 0.6rem; min-width: 0; }
+.panel-vote fieldset { border: 0; padding: 0; margin: 0; display: flex; gap: 0.4rem 1rem; flex-wrap: wrap; min-width: 0; }
+.panel-vote legend { font-weight: 600; padding: 0; }
+.panel-vote fieldset label { display: flex; gap: 0.35rem; align-items: baseline; min-width: 0; margin: 0; }
+/* Every input is given the row's whole width above; a radio button given it
+   left its word a sliver, and the word broke between letters. */
+.panel-vote input[type='radio'] { width: auto; padding: 0; flex: none; }
+.panel-vote > label { margin: 0; }
+.panel-vote textarea { width: 100%; font-family: inherit; }
+.panel-list.stack { gap: 0.75rem; }

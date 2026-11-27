@@ -170,6 +170,62 @@ export function versionLabel(status: string | null | undefined): string {
 }
 
 /**
+ * What a member's own page says when a vote is not recorded, by name
+ * (2026-11-27). The page says each in the reader's language; the English
+ * sentences of `describePanelError()` below are the staff screens'.
+ *
+ * `unsure` is not a refusal: an answer with no state (a gateway's page, a
+ * connection that went) leaves nobody able to say whether the vote was
+ * recorded, and a vote is cast once. `notSitting` is the same sentence the
+ * page already shows under a panel that is not convened.
+ */
+export type PanelVoteRefusal = 'already' | 'alreadyDecided' | 'notSitting' | 'notMember' | 'signedOut' | 'refused' | 'unsure';
+
+export function panelVoteRefusalOf(error: { message?: string | null; code?: string | null } | null | undefined): PanelVoteRefusal {
+  const text = String(error?.message ?? '');
+  if (text.includes('panel:already_voted')) return 'already';
+  if (text.includes('panel:already_decided')) return 'alreadyDecided';
+  if (text.includes('panel:not_convened') || text.includes('panel:dissolved')) return 'notSitting';
+  if (text.includes('panel:not_a_member')) return 'notMember';
+  if (text.includes('panel:not_signed_in')) return 'signedOut';
+  const state = String(error?.code ?? '');
+  if (state === '' || state.startsWith('08')) return 'unsure';
+  return 'refused';
+}
+
+export type PanelVoteChoice = 'approve' | 'reject' | 'abstain';
+
+/** Every sentence the vote says, handed over by the page. */
+export type PanelVoteWords = {
+  cannotUndo: string;
+  yourVote: string;
+  choices: Record<PanelVoteChoice, string>;
+  why: string;
+  cast: string;
+  recording: string;
+  refusals: Record<PanelVoteRefusal, string>;
+};
+
+/** The key of a panel's state, a seat, a vote and an outcome; anything unknown reads as the cautious one. */
+export const PANEL_STATUS_KEY = { active: 'panel.convened', inactive: 'panel.notConvened', dissolved: 'panel.dissolved' } as const;
+export function panelStatusKey(status: string | null | undefined): (typeof PANEL_STATUS_KEY)[keyof typeof PANEL_STATUS_KEY] {
+  const known = PANEL_STATUS_KEY[String(status ?? '') as keyof typeof PANEL_STATUS_KEY];
+  return known ?? 'panel.notConvened';
+}
+export function panelSeatKey(role: string | null | undefined): 'panel.chair' | 'panel.member' {
+  return String(role ?? '') === 'chair' ? 'panel.chair' : 'panel.member';
+}
+export function panelVoteKey(vote: string | null | undefined): 'panel.approve' | 'panel.reject' | 'panel.abstain' | 'panel.notVoted' {
+  const value = String(vote ?? '');
+  return value === 'approve' ? 'panel.approve' : value === 'reject' ? 'panel.reject' : value === 'abstain' ? 'panel.abstain' : 'panel.notVoted';
+}
+/** `null` for an outcome this page has no word for; the page then shows none rather than a database's word. */
+export function panelOutcomeKey(outcome: string | null | undefined): 'panel.outcomeApproved' | 'panel.outcomeRejected' | 'panel.outcomeWithdrawn' | null {
+  const value = String(outcome ?? '');
+  return value === 'approved' ? 'panel.outcomeApproved' : value === 'rejected' ? 'panel.outcomeRejected' : value === 'withdrawn' ? 'panel.outcomeWithdrawn' : null;
+}
+
+/**
  * A refusal from the database, in a sentence somebody can act on.
  *
  * The quorum sentence is written here rather than read from the database's hint

@@ -141,6 +141,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Ask and teacher responsive test::${s}`)' "$RUNNER_TEMP/ask-responsive.log"
             exit 1
           fi
+      - name: Check a board member's page and its vote with synthetic data
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/panel-route-smoke.mjs > "$RUNNER_TEMP/panel-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/panel-responsive.log"
+          else
+            cat "$RUNNER_TEMP/panel-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Panel responsive test::${s}`)' "$RUNNER_TEMP/panel-responsive.log"
+            exit 1
+          fi
       - name: Check the export pages, their buttons and the print stylesheet with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
