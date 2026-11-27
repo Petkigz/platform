@@ -61,6 +61,7 @@ import { run as boardWordsKept } from './board_words_kept.test.mjs';
 import { run as ownerAlertEmail } from './owner_alert_email.test.mjs';
 import { run as privacyNoticeBoardsDraft } from './privacy_notice_boards_draft.test.mjs';
 import { run as providerEvents } from './provider_events.test.mjs';
+import { run as duplicateSubjects } from './duplicate_subjects.test.mjs';
 import { run as translateButton } from './translate_button.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -392,6 +393,7 @@ for (const [name, fn] of [
   ['owner_alert_email', ownerAlertEmail],
   ['privacy_notice_boards_draft', privacyNoticeBoardsDraft],
   ['provider_events', providerEvents],
+  ['duplicate_subjects', duplicateSubjects],
   ['translate_button', translateButton],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],

@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-369 files in `supabase/migrations/`, applied in filename order — the 14-digit
+370 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -432,10 +432,18 @@ from that tree. The 359th to the 368th
 
 The 369th, `20261281162000_provider_events.sql` (what the email provider says
 about a message after accepting it, section 7.7), was added on 2026-11-26
-after that job was written. It is **not** in that job and has no hosted job
-yet. The hosted database is therefore one migration behind the tree; an application built from this tree and deployed against it would
-find `/api/email/webhook` unable to record and `/admin/messages` unable to
-read the two new columns. Give the 369th a job of its own before deploying.
+after that job was written, had a job of its own, and **was applied on
+2026-11-27** (see "The 369th was applied" below).
+
+The 370th, `20261281163000_duplicate_subjects_retired.sql`, was written on
+2026-11-27 after the deployed home page listed Aqeedah twice and Islamic
+history twice: two seed migrations had spelled two codes differently. It
+retires the first seed's `aqidah` and `islamic-history` (what the Retire
+button on `/admin/subjects` does; they can be reactivated there) and keeps
+`aqeedah` and `history`, which have subdivisions. It moves and deletes
+nothing, and leaves a duplicate alone if anything points at it. **The hosted
+database is one migration behind the tree until its job has run**; nothing
+in the application depends on it, the page only lists two subjects twice.
 
 Read back afterwards through the read-only connector, separately from the job:
 
@@ -1630,8 +1638,8 @@ loses the passphrase loses every copy made with it.**
 ### 12.3 What has been tried, and what has not
 
 - **The drill** (workflow "Backup drill on a scratch database", no secret, no
-  approval): a scratch database built from this repository's 369 migrations
-  and two invented accounts was copied with the same CLI commands, thrown
+  approval): a scratch database built from this repository's migrations (369
+  at the time) and two invented accounts was copied with the same CLI commands, thrown
   away, started again empty and filled from the copy. Run `45835315132` on
   2026-11-26: PostgreSQL 17.11, 194 tables, 812 functions, 282 policies, 205
   triggers and 480 rows came back the same, with the same 1,477 privileges of
