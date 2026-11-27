@@ -513,10 +513,10 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // (Eighteen more on 2026-11-27: the saved-courses list.)
   // (Twenty-five more on 2026-11-27: the two learning-path pages.)
   // (Forty-five more on 2026-11-27: the lessons kept on this device.)
-  // (Thirteen more on 2026-11-27: the letters and reading a lesson aloud;
+  // (Fourteen more on 2026-11-27: the letters and reading a lesson aloud;
   // four fewer, the sentences that said neither was built.)
-  assert.equal(unwrittenKeys.length, 2399);
-  assert.equal(unwrittenKeys.filter((key) => key.startsWith('ease.')).length, 13);
+  assert.equal(unwrittenKeys.length, 2400);
+  assert.equal(unwrittenKeys.filter((key) => key.startsWith('ease.')).length, 14);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('downloads.')).length, 45);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('paths.')).length, 25);
   assert.equal(unwrittenKeys.filter((key) => key.startsWith('saved.')).length, 18);
@@ -688,7 +688,7 @@ test('the learner dashboard is written for the languages with nothing held, and 
     }
   }
   // What that costs the nineteen that are still in the picker, said out loud:
-  // 192 of 2671 sentences, which is 7%. Nothing holds a floor under
+  // 192 of 2672 sentences, which is 7%. Nothing holds a floor under
   // it any more: the owner chose on 2026-11-17 to keep these languages in the
   // picker and show the number. The count is pinned here so that it moves only
   // when somebody means it to, and is seen when it does. It moved from 55% to
@@ -750,11 +750,11 @@ test('the learner dashboard is written for the languages with nothing held, and 
   // twenty-five for the two learning-path pages (7.34%, still 7%), then
   // forty-five for the lessons kept on this device (7.21%, still 7%), then
   // thirteen for the letters and reading a lesson aloud, less the four
-  // sentences that said neither was built (2671 in all: 7.19%, still 7%).
+  // sentences that said neither was built (2672 in all with the sentence for a page the font has no letters for: 7.19%, still 7%).
   // What they are shown did not get smaller; what is counted got bigger.
   for (const [code] of partly) {
     assert.equal(coverageOf(code).translated, 192, code);
-    assert.equal(coverageOf(code).total, 2671);
+    assert.equal(coverageOf(code).total, 2672);
     assert.equal(coverageOf(code).percent, 7, code);
   }
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');

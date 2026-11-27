@@ -6,7 +6,7 @@ import { SaidList } from '@/app/family/said-list';
 import { Say } from '@/components/say';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { A11Y_COOKIE, parsePreferences } from '@/lib/a11y';
+import { A11Y_COOKIE, lettersReach, parsePreferences } from '@/lib/a11y';
 import { LOCALE_COOKIE, chooseLocale, languageShownFor, translator } from '@/lib/i18n';
 import { formatNumber } from '@/lib/i18n/format';
 import { DEFAULT_LOCALE, LOCALES, isOfferedLocale } from '@/lib/i18n/locales';
@@ -117,7 +117,14 @@ export default async function AccessibilityPage() {
       legend: t('ease.lettersLegend'),
       choices: {
         normal: { label: t('ease.lettersNormal'), note: t('ease.lettersNormalNote') },
-        dyslexic: { label: t('ease.lettersDyslexic'), note: t('ease.lettersDyslexicNote') },
+        dyslexic: {
+          label: t('ease.lettersDyslexic'),
+          note: t('ease.lettersDyslexicNote'),
+          // A page in Arabic, Urdu, Bengali, Chinese and the like is left as
+          // it was (`LETTERS_NOT_FOR`); a reader who chooses the font there
+          // is told why almost nothing changed.
+          ...(lettersReach(shown.code) ? {} : { more: t('ease.lettersElsewhere') }),
+        },
       },
     },
   };

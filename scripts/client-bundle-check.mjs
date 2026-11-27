@@ -88,6 +88,7 @@ for (const [file, key] of [
   // change, and what a reader is told when the device has no voice for the
   // lesson's language, must be in the page and in no script.)
   ['ease.ts', 'ease.lettersDyslexicNote'],
+  ['ease.ts', 'ease.lettersElsewhere'],
   ['ease.ts', 'ease.untestedNote'],
   ['ease.ts', 'ease.noVoice'],
   ['ease.ts', 'ease.readNote'],

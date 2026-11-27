@@ -79,7 +79,7 @@ try {
   const footer = (html) => html.slice(html.indexOf('<footer'), html.indexOf('</footer>')).replaceAll('<!-- -->', '');
   const wrapper = (html) => inner(html).match(/<div class="page narrow"([^>]*)>/)?.[1];
   const page = async (headers) => { const response = await request(PATH, headers); assert.equal(response.status, 200, `${PATH}\n${logs.slice(-2000)}`); return response.text(); };
-  const ENGLISH_ONLY = ['How this reads', 'Four settings', 'Text size', 'Stronger outlines', 'Follow my device', 'Always reduce', 'Back to the defaults', 'already true', 'The keyboard works', 'not here yet', 'Not tested with a screen reader', 'A font made for dyslexia', 'can be read aloud', 'Languages offered', 'These are the settings', 'Reading preferences'];
+  const ENGLISH_ONLY = ['How this reads', 'Four settings', 'Text size', 'Stronger outlines', 'Follow my device', 'Always reduce', 'Back to the defaults', 'already true', 'The keyboard works', 'not here yet', 'Not tested with a screen reader', 'A font made for dyslexia', 'can be read aloud', 'The font has no letters', 'Languages offered', 'These are the settings', 'Reading preferences'];
 
   // ------------------------------------------------- not signed in, English
   // The page used to send this reader to sign in: somebody who needed larger
@@ -98,6 +98,8 @@ try {
     'A lesson can be read aloud.', 'The words are sent nowhere.', 'a verse is not for a machine’s voice',
     'What is not here yet', 'Not tested with a screen reader.', 'nobody who relies on one has tested it yet',
   ]) assert.ok(inner(anonymous).includes(sentence), `English reading page lost "${sentence}"`);
+  // Said only on a page whose language the font has no letters for.
+  assert.equal(inner(anonymous).includes('The font has no letters for the language of this page.'), false, 'an English page says the font has no letters for English');
   assert.equal(wrapper(anonymous), '', 'an English page marks its own reading page as a different language');
   assert.equal(inner(anonymous).includes('{'), false, 'a gap in an English sentence was left unfilled');
   // What used to be on it and was never measured, or was false.
@@ -160,7 +162,7 @@ try {
   const arabic = await page({ 'accept-language': 'ar' });
   assert.match(htmlRoot(arabic), /lang="ar"/); assert.match(htmlRoot(arabic), /dir="rtl"/);
   assert.equal(wrapper(arabic), '', 'an Arabic reader’s page is marked as another language');
-  for (const sentence of ['طريقة العرض', 'هذه هي الإعدادات في هذا المتصفّح.', 'حجم النص', 'الأكبر', 'حدود أوضح', 'قلّل الحركة دائمًا', 'العودة إلى الإعدادات الافتراضية', 'عدد اللغات المعروضة غير الإنجليزية: 46.', 'أربعة إعدادات', 'خط مصمَّم لعسر القراءة', 'يغيّر الحروف اللاتينية والسيريلية فقط', 'يمكن قراءة الدرس بصوت مسموع.', 'فالآية لا تُقرأ بصوت آلة.', 'لم تُختبر بقارئ شاشة.']) {
+  for (const sentence of ['طريقة العرض', 'هذه هي الإعدادات في هذا المتصفّح.', 'حجم النص', 'الأكبر', 'حدود أوضح', 'قلّل الحركة دائمًا', 'العودة إلى الإعدادات الافتراضية', 'عدد اللغات المعروضة غير الإنجليزية: 46.', 'أربعة إعدادات', 'خط مصمَّم لعسر القراءة', 'يغيّر الحروف اللاتينية والسيريلية فقط', 'يمكن قراءة الدرس بصوت مسموع.', 'فالآية لا تُقرأ بصوت آلة.', 'لم تُختبر بقارئ شاشة.', 'ليس في هذا الخط حروف للغة هذه الصفحة.']) {
     assert.ok(inner(arabic).includes(sentence), `Arabic reading page lost "${sentence}"`);
   }
   for (const word of ENGLISH_ONLY) assert.equal(inner(arabic).includes(word), false, `Arabic reading page still says "${word}"`);
@@ -184,6 +186,7 @@ try {
     assert.ok(inner(french).includes(sentence), `French reading page lost "${sentence}"`);
   }
   for (const word of ENGLISH_ONLY) assert.equal(inner(french).includes(word), false, `French reading page still says "${word}"`);
+  assert.equal(inner(french).includes('La police n’a pas de lettres pour la langue de cette page.'), false, 'a French page says the font has no letters for French');
   assert.deepEqual(checked(french), ['text=normal', 'contrast=normal', 'motion=system', 'letters=normal']);
 
   // ------------------------------------- a language held for review: English
@@ -386,6 +389,52 @@ try {
       assert.deepEqual(errors, []);
       await context.close();
       console.log('A browser that keeps no cookie, in Arabic: the text still grows, one alert says the setting will be gone on the next page, and "saved" is not said.');
+    }
+
+    // --------------------------------- the dyslexia font, and whose page it is
+    // (2026-11-27) A font is asked for one character at a time, and the space
+    // between words is a character it has. So a page in a language of
+    // another script is left exactly as it was, with no font fetched, and is
+    // told so; a Pashto reader's page, which is English and marked as
+    // English, is set in the font inside a frame that is not; and on an
+    // English page a language's own name in Arabic letters keeps the
+    // device's.
+    {
+      const first = (tab, selector) => tab.evaluate((s) => { const el = document.querySelector(s); return el ? getComputedStyle(el).fontFamily.split(',')[0].replaceAll('"', '').trim() : null; }, selector);
+      const letters = [{ name: 'ayahspring_a11y', value: 'v1.normal.normal.system.dyslexic' }];
+      const fetched = (context) => { const got = []; context.on('request', (r) => { if (r.url().includes('/fonts/opendyslexic/')) got.push(r.url()); }); return got; };
+      for (const code of ['ar', 'zh-hans']) {
+        const plain = await open(PATH, code, 1280);
+        const heightBefore = await plain.tab.evaluate(() => getComputedStyle(document.body).lineHeight);
+        await plain.context.close();
+        const { context, tab, errors } = await open(PATH, code, 1280, { cookies: letters });
+        const got = fetched(context);
+        await tab.reload({ waitUntil: 'networkidle' });
+        assert.equal(await tab.evaluate(() => document.documentElement.getAttribute('data-letters')), 'dyslexic');
+        for (const selector of ['body', 'main p', 'main h1', '.masthead-inner a']) assert.notEqual(await first(tab, selector), 'OpenDyslexic', `${code}: ${selector} is set in a font with no letters for it`);
+        assert.equal(await tab.evaluate(() => getComputedStyle(document.body).lineHeight), heightBefore, `${code}: the lines moved`);
+        assert.deepEqual(got, [], `${code}: the font was fetched for a page it has no letters for`);
+        assert.equal(await tab.locator('main').getByRole('radio', { checked: true }).count(), 4);
+        assert.equal(await tab.locator('main').getByText(code === 'ar' ? 'ليس في هذا الخط حروف للغة هذه الصفحة.' : '这种字体没有本页语言的文字。', { exact: false }).count(), 1, `${code}: not told why nothing changed`);
+        assert.deepEqual(errors, []);
+        await context.close();
+      }
+      {
+        const { context, tab, errors } = await open(PATH, 'ps', 1280, { cookies: letters });
+        assert.equal(await first(tab, 'main p'), 'OpenDyslexic', 'the English page a Pashto reader is shown is not set in the font');
+        assert.notEqual(await first(tab, '.masthead-inner a'), 'OpenDyslexic', 'the Pashto frame is set in a font with no letters for it');
+        assert.deepEqual(errors, []);
+        await context.close();
+      }
+      {
+        const { context, tab, errors } = await open(PATH, 'en', 1280, { cookies: letters });
+        assert.equal(await first(tab, 'main p'), 'OpenDyslexic');
+        assert.notEqual(await first(tab, 'main bdi[lang="ar"]'), 'OpenDyslexic', 'an Arabic name on an English page lost the device’s letters');
+        assert.equal(await tab.locator('main').getByText('The font has no letters for the language of this page.').count(), 0);
+        assert.deepEqual(errors, []);
+        await context.close();
+      }
+      console.log('The dyslexia font and the page’s language: an Arabic and a Chinese page are left as they were (same face, same lines, no font fetched) and say why; the English page a Pashto reader gets is set in it inside a Pashto frame that is not; an Arabic name on an English page keeps the device’s letters.');
     }
 
     // ------------------------------- the dyslexia font, where it is tightest

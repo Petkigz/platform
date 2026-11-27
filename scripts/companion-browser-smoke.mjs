@@ -497,7 +497,7 @@ try {
     // still 8% (7.59%), with the switched parts of the course page, and
     // 192 of 2531 with the line about board posts on the export page; of 2537
     // with the box that asks for agreement before writing on a board.)
-    // (Later on 2026-11-27: 192 of 2671, 7.19%, still 7%, with the letters
+    // (Later on 2026-11-27: 192 of 2672, 7.19%, still 7%, with the letters
     // and reading a lesson aloud.)
     // (2026-11-27: 192 of 2662, which is 7% (7.21%): the about page, the
     // saved list, the learning paths and the lessons kept on a device were

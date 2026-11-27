@@ -11,7 +11,8 @@
  * The boot script in the root layout applies these before the first paint, so a
  * person who needs larger text does not see a flash of the small one.
  *
- * **The letters.** `dyslexic` sets Latin and Cyrillic text in OpenDyslexic,
+ * **The letters.** `dyslexic` sets text in a Latin or Cyrillic language in
+ * OpenDyslexic,
  * the author's own files under the SIL Open Font License
  * (`public/fonts/opendyslexic`, with the licence beside them). The font has
  * no Arabic, Bengali, Devanagari, Tamil, Thai or Chinese letters, so those
@@ -53,6 +54,30 @@ export const TEXT_SIZES: readonly TextSize[] = ['normal', 'large', 'larger'];
 export const CONTRASTS: readonly Contrast[] = ['normal', 'high'];
 export const MOTIONS: readonly Motion[] = ['system', 'reduce'];
 export const LETTERS: readonly Letters[] = ['normal', 'dyslexic'];
+
+/**
+ * The languages the font is not for: each is written in a script it has no
+ * letters for. A page in one of them is left as it was, and so is a passage
+ * marked with one (`globals.css`, "Where it applies"). The reason is the
+ * space between words: a font is asked for one character at a time, the
+ * space is a character it has, and its space is three times as wide, so an
+ * Arabic page would have kept its letters and lost its spacing.
+ *
+ * A code here covers its regional forms, as `:lang()` does: `fa` is also
+ * `fa-af`, and `zh` is both scripts of Chinese. Every language in the
+ * register is here or is written in Latin or Cyrillic letters; a test reads
+ * each one's own name to check. The rest are languages a course may be in.
+ */
+export const LETTERS_NOT_FOR: readonly string[] = [
+  'ar', 'ur', 'fa', 'ps', 'dv', 'sd', 'ug', 'ckb', 'he', 'yi', 'am', 'ti',
+  'bn', 'hi', 'ne', 'mr', 'ta', 'si', 'th', 'my', 'zh', 'ja', 'ko',
+];
+
+/** Whether text in this language is set in the font when a reader asks for it. */
+export function lettersReach(language: string): boolean {
+  const code = language.toLowerCase();
+  return !LETTERS_NOT_FOR.some((other) => code === other || code.startsWith(`${other}-`));
+}
 
 function textSize(value: unknown): TextSize {
   return value === 'large' || value === 'larger' ? value : 'normal';

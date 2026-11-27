@@ -251,8 +251,9 @@ grid, which follow `direction` themselves and therefore mirror with the shell.
 This paragraph is about **content**, which is a different problem from the
 interface translation built on 2026-10-29: a course title stays in the language
 its author wrote. What this still does **not** do, and
-`/account/accessibility` says in those words: no dyslexia font (none is licensed)
-and no text-to-speech (no provider).
+`/account/accessibility` says in those words: it has been tested by nobody who
+relies on a screen reader. *(Until 2026-11-27 this said "no dyslexia font" and
+"no text-to-speech"; both are now built, see `FLAGS.md`.)*
 
 **A teacher's outline comes in from a spreadsheet.** `platform.data_export` had
 an import half it never had, refused on the honest ground that a stranger's file

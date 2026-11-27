@@ -19,7 +19,8 @@ import {
   type TextSize,
 } from '@/lib/a11y';
 
-type Choice = { label: string; note: string };
+/** `more` is a second sentence under the note, said only where the page gives one. */
+type Choice = { label: string; note: string; more?: string };
 
 /** The words the three controls say, in the language of the page that draws them. */
 export type ReadingWords = {
@@ -184,6 +185,12 @@ export function ReadingPreferences({ initial, words }: { initial: A11yPreference
               <strong>{words.letters.choices[value].label}</strong>
               <br />
               <span className="muted">{words.letters.choices[value].note}</span>
+              {words.letters.choices[value].more && (
+                <>
+                  <br />
+                  <span className="muted">{words.letters.choices[value].more}</span>
+                </>
+              )}
             </span>
           </label>
         ))}

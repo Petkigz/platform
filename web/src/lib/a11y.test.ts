@@ -9,11 +9,13 @@ import {
   CONTRASTS,
   DEFAULTS,
   LETTERS,
+  LETTERS_NOT_FOR,
   MOTIONS,
   TEXT_SIZES,
   encodePreferences,
   htmlAttributes,
   isDefault,
+  lettersReach,
   parsePreferences,
   preferenceCookie,
   preferencesInCookie,
@@ -58,7 +60,8 @@ describe('reading preferences', () => {
     // Only under the attribute: the plain page names the font nowhere else.
     const uses = css.split('\n').filter((line) => line.includes("'OpenDyslexic'") && !line.includes('font-family:'));
     assert.equal(uses.length, 1);
-    assert.match(css, /html\[data-letters='dyslexic'\] \{\n {2}--font: 'OpenDyslexic',/);
+    assert.match(css, /--font-letters: 'OpenDyslexic', var\(--font-device\);/);
+    assert.match(css, /html\[data-letters='dyslexic'\]:not\([^{]*\) \{\n {2}--font: var\(--font-letters\);/);
     // A font is sent without asking who is signed in.
     const middleware = readFileSync(new URL('../middleware.ts', import.meta.url), 'utf8');
     assert.match(middleware, /\(\?!_next\/static\|_next\/image\|fonts\/\|/);
@@ -91,6 +94,40 @@ describe('reading preferences', () => {
       'data-contrast': 'high',
       'data-motion': 'reduce',
     });
+  });
+
+  it('leaves a language of another script as it was', async () => {
+    const { LOCALES } = await import('./i18n/locales.ts');
+    const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
+    // The stylesheet and this file name the same languages, in the same order.
+    const list = LETTERS_NOT_FOR.map((code) => `:lang(${code})`).join(', ');
+    const not = `:not(${list})`;
+    const is = `:is(${list})`;
+    for (const rule of [
+      `html[data-letters='dyslexic']${not} {`,
+      `html[data-letters='dyslexic']${not} body {`,
+      `html[data-letters='dyslexic']${not} .card {`,
+      `html[data-letters='dyslexic'] [lang]${is}:not(.arabic) { font-family: var(--font-device); }`,
+      `html[data-letters='dyslexic']${is} [lang]${not}:not(.arabic) {`,
+    ]) assert.ok(css.includes(rule), rule);
+    // Nothing turns the font on for every language: each rule that does names the list.
+    for (const line of css.split('\n')) {
+      if (!line.trimStart().startsWith("html[data-letters='dyslexic']")) continue;
+      assert.ok(line.includes(':lang(ar)'), line);
+    }
+    // Every language in the register is on the list, or is written in letters
+    // the font has. Its own name says which.
+    for (const locale of LOCALES) {
+      const own = /^[\p{Script=Latin}\p{Script=Cyrillic}\p{M}\s'’ʻʼ().-]+$/u.test(locale.nativeName);
+      assert.equal(lettersReach(locale.code), own, `${locale.code} (${locale.nativeName})`);
+    }
+    assert.equal(lettersReach('fa-af'), false);
+    assert.equal(lettersReach('zh-hant'), false);
+    assert.equal(lettersReach('en'), true);
+    assert.equal(lettersReach('kk'), true);
+    // A code that only begins the same way is another language.
+    assert.equal(lettersReach('tiv'), true);
+    assert.equal(lettersReach('AR'), false);
   });
 
   it('has no sentences of its own', () => {

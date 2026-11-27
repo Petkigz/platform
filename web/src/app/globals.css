@@ -42,8 +42,11 @@
   --warn-border: #e8d9b0;
 
   /* Type. */
-  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-          'Helvetica Neue', Arial, sans-serif;
+  --font-device: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+                 'Helvetica Neue', Arial, sans-serif;
+  --font: var(--font-device);
+  /* The letters a reader may ask for instead (see "The letters", below). */
+  --font-letters: 'OpenDyslexic', var(--font-device);
 
   /* Elevation — subtle, because a white surface on white needs a hairline. */
   --shadow-sm: 0 1px 2px rgba(6, 61, 34, 0.06);
@@ -543,6 +546,11 @@ input:focus, select:focus, textarea:focus {
 .radio:hover { border-color: var(--green-100); background: var(--green-50); }
 .radio:has(input:checked) { border-color: var(--green-600); background: var(--green-50); }
 .radio input { width: auto; flex: none; margin-top: 0.18rem; }
+/* The words beside the dot may be narrower than their longest word
+   (2026-11-27). A flex item refuses to by default, and with the dyslexia
+   font at the largest text on a 320px phone one word was wider than the
+   column, which pushed the choice out of its card. */
+.radio > span { min-width: 0; overflow-wrap: anywhere; }
 
 /* --------------------------------------------------------------------------
    Tabs (the sign-in mode switch)
@@ -812,6 +820,16 @@ input:focus, select:focus, textarea:focus {
 .locale-choice[aria-current='true'] { background: var(--green-700); border-color: var(--green-700); color: #fff; }
 .locale-choice-name { font-weight: 600; }
 .locale-choice-en { font-size: 0.8rem; opacity: 0.85; }
+/* A language's button is never wider than the card (2026-11-27). With the
+   dyslexia font, whose letters are about half as wide again, "Kinyarwanda"
+   beside its English name was wider than a 320px phone, and a grid lets one
+   wide item widen its whole column: the page scrolled sideways. The column
+   may now be narrower than its widest button, the two names go one under
+   the other when they do not fit side by side, and a name longer than the
+   card is broken. */
+.locale-blocks, .locale-block { grid-template-columns: minmax(0, 1fr); }
+.locale-choice { max-width: 100%; flex-wrap: wrap; text-align: start; }
+.locale-choice > span { min-width: 0; overflow-wrap: anywhere; }
 
 .lesson-list { list-style: none; margin: 0; padding: 0; }
 .lesson-list li {
@@ -1826,7 +1844,7 @@ html[data-text='larger'] { font-size: 125%; }
    Tamil, Thai and Chinese in the device's own fonts instead of whatever a
    missing glyph falls back to.
 
-   It replaces `--font`, so everything that inherits the platform's face
+   Where it applies it replaces `--font`, so everything that inherits the platform's face
    changes with it, and the display serif of headings is given up too: a
    reader who asked for these letters asked for them in the headings. Two
    things keep their own face on purpose: `.arabic`, whose Naskh stack is the
@@ -1849,16 +1867,59 @@ html[data-text='larger'] { font-size: 125%; }
   font-display: swap;
   unicode-range: U+0000-024F, U+0259, U+02B0-036F, U+0370-03FF, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF;
 }
-html[data-letters='dyslexic'] {
-  --font: 'OpenDyslexic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-          'Helvetica Neue', Arial, sans-serif;
+/* Where it applies: only where the language is written in letters the font
+   has. Seen in a browser on 2026-11-27: a font is asked for one character
+   at a time, and the space between words, the digits and the full stop are
+   characters it has. On an Arabic page every Arabic word would have kept
+   its own letters and been set three times as far from the next one. So
+   the page's own language decides, and so does the language a passage is
+   marked with:
+
+   - a page in a language of another script is left exactly as it was, and
+     inside it a passage marked as English, Turkish, Kazakh and the like (a
+     course's own text carries its language) is set in the font;
+   - a page in a Latin or Cyrillic language is set in the font, and inside
+     it a passage marked as Arabic, Urdu, Bengali and the like keeps the
+     device's letters and its own spacing.
+
+   What this cannot see is a passage nobody marked. An Arabic sentence with
+   no `lang` on an English page keeps its letters and gets the wide spaces;
+   an English word on an Arabic page is not changed. The list is the same
+   one as LETTERS_NOT_FOR in lib/a11y.ts, and a test holds the two together
+   and checks it against every language in the register. */
+html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) {
+  --font: var(--font-letters);
   /* The letters are wide and tall; a little more room between lines. */
   line-height: 1.7;
+  /* They stand about half as far apart again as the device's (an "n" takes
+     0.8em), so everything written in them needs more room, and a phone has
+     none to give. At 320px a heading with the platform's name in it was
+     wider than the screen. With these letters a word longer than its line
+     is broken wherever it must be. */
+  overflow-wrap: anywhere;
 }
-html[data-letters='dyslexic'] body { line-height: 1.7; }
-html[data-letters='dyslexic'] :is(h1, h2, h3, h4, .display, blockquote, .quote):not(.arabic):not(.certificate-sheet *) {
+html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) body { line-height: 1.7; }
+/* A card sets its own rule for long words, so it is told again. */
+html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) .card { overflow-wrap: anywhere; }
+html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) :is(h1, h2, h3, h4, .display, blockquote, .quote):not(.arabic):not(.certificate-sheet *) {
   font-family: var(--font);
   letter-spacing: 0;
+  line-height: 1.3;
+}
+/* On a narrow screen the page's main heading is no larger than fits ten
+   such letters. */
+@media (max-width: 480px) {
+  html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) :is(h1, .display):not(.arabic):not(.certificate-sheet *) { font-size: 1.4rem; }
+  html[data-letters='dyslexic']:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) h2:not(.arabic):not(.certificate-sheet *) { font-size: 1.15rem; }
+}
+/* A passage marked as a language of another script, inside such a page. */
+html[data-letters='dyslexic'] [lang]:is(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)):not(.arabic) { font-family: var(--font-device); }
+/* A passage marked as a Latin or Cyrillic language, inside a page that is
+   not. Its headings keep their own face: only the passage is known to be
+   in letters the font has, not what a heading inside it says. */
+html[data-letters='dyslexic']:is(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)) [lang]:not(:lang(ar), :lang(ur), :lang(fa), :lang(ps), :lang(dv), :lang(sd), :lang(ug), :lang(ckb), :lang(he), :lang(yi), :lang(am), :lang(ti), :lang(bn), :lang(hi), :lang(ne), :lang(mr), :lang(ta), :lang(si), :lang(th), :lang(my), :lang(zh), :lang(ja), :lang(ko)):not(.arabic) {
+  font-family: var(--font-letters);
+  overflow-wrap: anywhere;
 }
 
 /* The button that reads a lesson's words in the device's own voice

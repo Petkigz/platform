@@ -9,7 +9,7 @@ import type { Messages } from './en.ts';
  * dashboard. **Written by the people who built the site and read by no
  * speaker.**
  *
- * The first nine sentences are said on the reading page
+ * The first ten sentences are said on the reading page
  * (`/account/accessibility`), the last four by the button on a lesson; all
  * are handed to the browser by a page, and none is in a script.
  * "OpenDyslexic" is the font's name and stays as it is written. A "verse"
@@ -24,6 +24,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'خط مصمَّم لعسر القراءة',
     'ease.lettersDyslexicNote':
       'خط OpenDyslexic: كل حرف فيه أثقل من أسفله، فيصعب الخلط بينه وبين غيره. يغيّر الحروف اللاتينية والسيريلية فقط؛ أما العربية وسائر الكتابات فتبقى كما هي. يجده بعض القراء أسهل، ولم تثبت الدراسات أنه يفيد الجميع.',
+    'ease.lettersElsewhere':
+      'ليس في هذا الخط حروف للغة هذه الصفحة. هنا لا يغيّر إلا النص المكتوب بلغة تُكتب بالحروف اللاتينية أو السيريلية، مثل دورة تُدرَّس بالإنجليزية.',
     'ease.speech': 'يمكن قراءة الدرس بصوت مسموع.',
     'ease.speechNote':
       'لوصف الدرس ولنصّه المكتوب زرّ يقرؤهما بصوت جهازك نفسه، إن كان في الجهاز صوت للغة الدرس. لا تُرسَل الكلمات إلى أي مكان. الجملة التي فيها آية مكتوبة بالتشكيل تُترك: فالآية لا تُقرأ بصوت آلة.',
@@ -42,6 +44,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'ڈسلیکسیا کے لیے بنایا گیا فونٹ',
     'ease.lettersDyslexicNote':
       'فونٹ OpenDyslexic: اس کا ہر حرف نیچے سے بھاری ہے، اس لیے اسے کسی دوسرے حرف سے ملانا مشکل ہے۔ یہ صرف لاطینی اور سیریلک حروف بدلتا ہے؛ عربی اور باقی تمام رسم الخط ویسے ہی رہتے ہیں۔ کچھ پڑھنے والوں کو یہ آسان لگتا ہے؛ تحقیق سے یہ ثابت نہیں ہوا کہ یہ سب کے لیے مفید ہے۔',
+    'ease.lettersElsewhere':
+      'اس فونٹ میں اس صفحے کی زبان کے حروف نہیں ہیں۔ یہاں یہ صرف اُس متن کو بدلتا ہے جو لاطینی یا سیریلک حروف میں لکھی جانے والی زبان میں ہو، جیسے انگریزی میں پڑھایا جانے والا کورس۔',
     'ease.speech': 'سبق بلند آواز میں پڑھا جا سکتا ہے۔',
     'ease.speechNote':
       'سبق کے تعارف اور اس کے تحریری متن، دونوں کے ساتھ ایک بٹن ہے جو انہیں آپ کے ڈیوائس کی اپنی آواز میں پڑھتا ہے، اگر ڈیوائس میں سبق کی زبان کی آواز موجود ہو۔ الفاظ کہیں نہیں بھیجے جاتے۔ جس جملے میں اعراب کے ساتھ لکھی ہوئی آیت ہو وہ چھوڑ دیا جاتا ہے: آیت مشین کی آواز کے لیے نہیں۔',
@@ -61,6 +65,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'قلمی که برای خوانش‌پریشی ساخته شده',
     'ease.lettersDyslexicNote':
       'قلم OpenDyslexic: هر حرف آن در پایین سنگین‌تر است، پس سخت‌تر با حرف دیگری اشتباه می‌شود. فقط حروف لاتین و سیریلیک را تغییر می‌دهد؛ عربی و هر خط دیگری همان‌گونه می‌ماند. برخی خوانندگان آن را آسان‌تر می‌یابند؛ پژوهش‌ها نشان نداده‌اند که به همه کمک می‌کند.',
+    'ease.lettersElsewhere':
+      'این قلم برای زبان این صفحه حرفی ندارد. در اینجا فقط متنی را تغییر می‌دهد که به زبانی با حروف لاتین یا سیریلیک نوشته شده باشد، مانند دوره‌ای که به انگلیسی تدریس می‌شود.',
     'ease.speech': 'درس را می‌توان با صدای بلند خواند.',
     'ease.speechNote':
       'توضیح درس و متن نوشتاری آن هر کدام دکمه‌ای دارند که آن را با صدای خود دستگاه شما می‌خواند، اگر دستگاه برای زبان درس صدایی داشته باشد. واژه‌ها به هیچ جا فرستاده نمی‌شوند. جمله‌ای که آیه‌ای با حرکت‌گذاری در آن نوشته شده کنار گذاشته می‌شود: آیه برای صدای ماشین نیست.',
@@ -80,6 +86,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'قلمی که برای خوانش‌پریشی ساخته شده',
     'ease.lettersDyslexicNote':
       'قلم OpenDyslexic: هر حرف آن در قسمت پایین سنگین‌تر است، بنابراین سخت‌تر با حرف دیگری اشتباه می‌شود. تنها حروف لاتین و سیریلیک را تغییر می‌دهد؛ عربی و هر خط دیگر همان‌طور می‌ماند. بعضی خوانندگان آن را آسان‌تر می‌یابند؛ تحقیقات نشان نداده است که به همه کمک می‌کند.',
+    'ease.lettersElsewhere':
+      'این قلم برای زبان این صفحه حرفی ندارد. در اینجا تنها متنی را تغییر می‌دهد که به زبانی با حروف لاتین یا سیریلیک نوشته شده باشد، مانند دوره‌ای که به انگلیسی تدریس می‌شود.',
     'ease.speech': 'درس را می‌توان با صدای بلند خواند.',
     'ease.speechNote':
       'توضیح درس و متن نوشتاری آن هر کدام دکمه‌ای دارند که آن را با صدای خود دستگاه شما می‌خواند، اگر دستگاه برای زبان درس صدایی داشته باشد. کلمات به هیچ جا فرستاده نمی‌شوند. جمله‌ای که آیتی با حرکت‌گذاری در آن نوشته شده کنار گذاشته می‌شود: آیت برای صدای ماشین نیست.',
@@ -99,6 +107,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Disleksi için yapılmış bir yazı tipi',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: her harfin alt kısmı daha kalındır, böylece bir başkasıyla karıştırılması zorlaşır. Yalnızca Latin ve Kiril harflerini değiştirir; Arapça ve diğer bütün yazılar olduğu gibi kalır. Bazı okurlar onu daha kolay bulur; araştırmalar herkese yardımcı olduğunu göstermemiştir.',
+    'ease.lettersElsewhere':
+      'Yazı tipinde bu sayfanın dili için harf yok. Burada yalnızca Latin veya Kiril harfleriyle yazılan bir dildeki metni değiştirir; örneğin İngilizce verilen bir kursu.',
     'ease.speech': 'Bir ders sesli okunabilir.',
     'ease.speechNote':
       'Bir dersin açıklamasında ve yazılı metninde, onları cihazınızın kendi sesiyle okuyan birer düğme vardır; cihazda dersin dili için bir ses varsa. Sözcükler hiçbir yere gönderilmez. Harekeleriyle yazılmış bir ayet içeren cümle atlanır: ayet bir makinenin sesi için değildir.',
@@ -118,6 +128,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Fon yang dibuat untuk disleksia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: setiap huruf lebih tebal di bagian bawah, sehingga lebih sulit tertukar dengan huruf lain. Fon ini hanya mengubah huruf Latin dan Kiril; huruf Arab dan semua aksara lain tetap seperti semula. Sebagian pembaca merasa lebih mudah; penelitian belum menunjukkan bahwa fon ini membantu semua orang.',
+    'ease.lettersElsewhere':
+      'Fon ini tidak memiliki huruf untuk bahasa halaman ini. Di sini fon hanya mengubah teks dalam bahasa yang ditulis dengan huruf Latin atau Kiril, misalnya kursus yang diajarkan dalam bahasa Inggris.',
     'ease.speech': 'Pelajaran dapat dibacakan.',
     'ease.speechNote':
       'Deskripsi pelajaran dan transkripnya masing-masing memiliki tombol yang membacakannya dengan suara perangkat Anda sendiri, jika perangkat memiliki suara untuk bahasa pelajaran itu. Kata-katanya tidak dikirim ke mana pun. Kalimat yang memuat ayat yang ditulis dengan harakat dilewati: ayat bukan untuk suara mesin.',
@@ -137,6 +149,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Fon yang dibuat untuk disleksia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: setiap huruf lebih tebal di bahagian bawah, maka lebih sukar dikelirukan dengan huruf lain. Fon ini hanya mengubah huruf Latin dan Cyril; huruf Arab dan semua tulisan lain kekal seperti sedia ada. Sesetengah pembaca mendapatinya lebih mudah; kajian belum menunjukkan bahawa fon ini membantu semua orang.',
+    'ease.lettersElsewhere':
+      'Fon ini tiada huruf untuk bahasa halaman ini. Di sini fon hanya mengubah teks dalam bahasa yang ditulis dengan huruf Latin atau Cyril, contohnya kursus yang diajar dalam bahasa Inggeris.',
     'ease.speech': 'Pelajaran boleh dibacakan.',
     'ease.speechNote':
       'Huraian pelajaran dan transkripnya masing-masing mempunyai butang yang membacakannya dengan suara peranti anda sendiri, jika peranti mempunyai suara untuk bahasa pelajaran itu. Perkataannya tidak dihantar ke mana-mana. Ayat yang mengandungi ayat al-Quran yang ditulis berbaris dilangkau: ayat al-Quran bukan untuk suara mesin.',
@@ -156,6 +170,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'ডিসলেক্সিয়ার জন্য তৈরি ফন্ট',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: প্রতিটি অক্ষরের নিচের দিক ভারী, তাই একটিকে আরেকটি বলে ভুল করা কঠিন। এটি কেবল লাতিন ও সিরিলিক অক্ষর বদলায়; আরবি ও অন্য সব লিপি যেমন আছে তেমনই থাকে। কিছু পাঠকের কাছে এটি সহজ লাগে; গবেষণায় দেখা যায়নি যে এটি সবার উপকারে আসে।',
+    'ease.lettersElsewhere':
+      'এই ফন্টে এই পাতার ভাষার অক্ষর নেই। এখানে এটি কেবল সেই লেখা বদলায় যা লাতিন বা সিরিলিক অক্ষরে লেখা হয় এমন ভাষায় আছে, যেমন ইংরেজিতে পড়ানো কোর্স।',
     'ease.speech': 'পাঠ জোরে পড়ে শোনানো যায়।',
     'ease.speechNote':
       'পাঠের বিবরণ ও তার লিখিত প্রতিলিপি, প্রতিটির সঙ্গে একটি বোতাম আছে যা আপনার ডিভাইসের নিজস্ব কণ্ঠে তা পড়ে শোনায়, যদি ডিভাইসে পাঠের ভাষার কণ্ঠ থাকে। শব্দগুলো কোথাও পাঠানো হয় না। যে বাক্যে হরকতসহ লেখা আয়াত আছে তা বাদ দেওয়া হয়: আয়াত যন্ত্রের কণ্ঠের জন্য নয়।',
@@ -175,6 +191,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'डिस्लेक्सिया के लिए बनाया गया फ़ॉन्ट',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: हर अक्षर नीचे से भारी है, इसलिए उसे किसी दूसरे अक्षर से मिला देना कठिन है। यह केवल लैटिन और सिरिलिक अक्षर बदलता है; अरबी और बाक़ी सभी लिपियाँ जैसी हैं वैसी रहती हैं। कुछ पाठकों को यह आसान लगता है; अध्ययनों से यह सिद्ध नहीं हुआ कि यह सबकी मदद करता है।',
+    'ease.lettersElsewhere':
+      'इस फ़ॉन्ट में इस पन्ने की भाषा के अक्षर नहीं हैं। यहाँ यह केवल उस पाठ को बदलता है जो लैटिन या सिरिलिक अक्षरों में लिखी जाने वाली भाषा में हो, जैसे अंग्रेज़ी में पढ़ाया जाने वाला कोर्स।',
     'ease.speech': 'पाठ ज़ोर से पढ़कर सुनाया जा सकता है।',
     'ease.speechNote':
       'पाठ के विवरण और उसके लिखित पाठ, दोनों के साथ एक बटन है जो उन्हें आपके डिवाइस की अपनी आवाज़ में पढ़ता है, यदि डिवाइस में पाठ की भाषा की आवाज़ हो। शब्द कहीं नहीं भेजे जाते। जिस वाक्य में एराब के साथ लिखी आयत हो, वह छोड़ दिया जाता है: आयत मशीन की आवाज़ के लिए नहीं है।',
@@ -194,6 +212,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Une police conçue pour la dyslexie',
     'ease.lettersDyslexicNote':
       'OpenDyslexic : chaque lettre est plus épaisse en bas, ce qui la rend plus difficile à confondre avec une autre. Elle ne change que les lettres latines et cyrilliques ; l’arabe et toutes les autres écritures restent tels quels. Certains lecteurs la trouvent plus facile ; les études n’ont pas montré qu’elle aide tout le monde.',
+    'ease.lettersElsewhere':
+      'La police n’a pas de lettres pour la langue de cette page. Ici, elle ne change que le texte dans une langue écrite en lettres latines ou cyrilliques, par exemple un cours donné en anglais.',
     'ease.speech': 'Une leçon peut être lue à voix haute.',
     'ease.speechNote':
       'La description d’une leçon et sa transcription ont chacune un bouton qui les lit avec la voix de votre appareil, si l’appareil a une voix pour la langue de la leçon. Les mots ne sont envoyés nulle part. Une phrase qui contient un verset écrit avec ses voyelles est laissée de côté : un verset n’est pas fait pour la voix d’une machine.',
@@ -213,6 +233,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Una tipografía hecha para la dislexia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: cada letra es más gruesa por abajo, de modo que es más difícil confundirla con otra. Solo cambia las letras latinas y cirílicas; el árabe y todas las demás escrituras quedan como están. A algunos lectores les resulta más fácil; los estudios no han demostrado que ayude a todos.',
+    'ease.lettersElsewhere':
+      'La tipografía no tiene letras para el idioma de esta página. Aquí solo cambia el texto en un idioma que se escribe con letras latinas o cirílicas, por ejemplo un curso impartido en inglés.',
     'ease.speech': 'Una lección puede leerse en voz alta.',
     'ease.speechNote':
       'La descripción de una lección y su transcripción tienen cada una un botón que las lee con la voz de tu propio dispositivo, si el dispositivo tiene una voz para el idioma de la lección. Las palabras no se envían a ninguna parte. Una frase que contiene una aleya escrita con sus vocales se omite: una aleya no es para la voz de una máquina.',
@@ -232,6 +254,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Um tipo de letra feito para a dislexia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: cada letra é mais grossa em baixo, pelo que é mais difícil confundi-la com outra. Só altera as letras latinas e cirílicas; o árabe e todas as outras escritas ficam como estão. Alguns leitores acham-no mais fácil; os estudos não mostraram que ajude toda a gente.',
+    'ease.lettersElsewhere':
+      'O tipo de letra não tem letras para a língua desta página. Aqui só altera o texto numa língua escrita com letras latinas ou cirílicas, por exemplo um curso dado em inglês.',
     'ease.speech': 'Uma lição pode ser lida em voz alta.',
     'ease.speechNote':
       'A descrição de uma lição e a sua transcrição têm cada uma um botão que as lê com a voz do seu próprio dispositivo, se o dispositivo tiver uma voz para a língua da lição. As palavras não são enviadas para lado nenhum. Uma frase que contenha um versículo escrito com as suas vogais é deixada de fora: um versículo não é para a voz de uma máquina.',
@@ -251,6 +275,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Fonti iliyotengenezwa kwa ajili ya disleksia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: kila herufi ni nzito zaidi chini, kwa hiyo ni vigumu kuichanganya na nyingine. Inabadilisha herufi za Kilatini na Kisirili pekee; Kiarabu na maandishi mengine yote hubaki kama yalivyo. Baadhi ya wasomaji huiona rahisi zaidi; tafiti hazijaonyesha kwamba inamsaidia kila mtu.',
+    'ease.lettersElsewhere':
+      'Fonti hii haina herufi za lugha ya ukurasa huu. Hapa inabadilisha tu maandishi yaliyo katika lugha inayoandikwa kwa herufi za Kilatini au Kisirili, kwa mfano kozi inayofundishwa kwa Kiingereza.',
     'ease.speech': 'Somo linaweza kusomwa kwa sauti.',
     'ease.speechNote':
       'Maelezo ya somo na nakala yake ya maandishi kila moja ina kitufe kinachoyasoma kwa sauti ya kifaa chako chenyewe, iwapo kifaa kina sauti ya lugha ya somo. Maneno hayatumwi popote. Sentensi yenye aya iliyoandikwa kwa irabu zake huachwa: aya si ya sauti ya mashine.',
@@ -270,6 +296,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': '’n Lettertipe wat vir disleksie gemaak is',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: elke letter is swaarder aan die onderkant, sodat dit moeiliker met ’n ander verwar word. Dit verander slegs Latynse en Cyrilliese letters; Arabies en elke ander skrif bly soos dit is. Party lesers vind dit makliker; studies het nie getoon dat dit almal help nie.',
+    'ease.lettersElsewhere':
+      'Die lettertipe het geen letters vir hierdie bladsy se taal nie. Hier verander dit net teks in ’n taal wat met Latynse of Cyrilliese letters geskryf word, byvoorbeeld ’n kursus wat in Engels aangebied word.',
     'ease.speech': '’n Les kan hardop gelees word.',
     'ease.speechNote':
       '’n Les se beskrywing en sy transkripsie het elk ’n knoppie wat dit in jou toestel se eie stem lees, waar die toestel ’n stem vir die les se taal het. Die woorde word nêrens heen gestuur nie. ’n Sin wat ’n vers bevat wat met sy vokaaltekens geskryf is, word uitgelaat: ’n vers is nie vir ’n masjien se stem nie.',
@@ -289,6 +317,7 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': '为阅读障碍设计的字体',
     'ease.lettersDyslexicNote':
       'OpenDyslexic：每个字母的底部更粗，因此不容易与别的字母混淆。它只改变拉丁字母和西里尔字母；阿拉伯文和其他所有文字保持原样。有些读者觉得它更容易读；研究并未表明它对所有人都有帮助。',
+    'ease.lettersElsewhere': '这种字体没有本页语言的文字。在这里，它只改变用拉丁字母或西里尔字母书写的语言的文本，例如用英语讲授的课程。',
     'ease.speech': '课程可以朗读。',
     'ease.speechNote':
       '课程的简介和文字稿各有一个按钮，用你设备自带的语音朗读，前提是设备有该课程语言的语音。文字不会发送到任何地方。含有带读音符号的经文的句子会被略过：经文不应由机器的声音来读。',
@@ -306,6 +335,7 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': '為閱讀障礙設計的字型',
     'ease.lettersDyslexicNote':
       'OpenDyslexic：每個字母的底部較粗，因此不容易與別的字母混淆。它只改變拉丁字母和西里爾字母；阿拉伯文和其他所有文字維持原樣。有些讀者覺得它比較容易讀；研究並未顯示它對所有人都有幫助。',
+    'ease.lettersElsewhere': '這種字型沒有本頁語言的文字。在這裡，它只改變以拉丁字母或西里爾字母書寫的語言的文字，例如以英語講授的課程。',
     'ease.speech': '課程可以朗讀。',
     'ease.speechNote':
       '課程的簡介和文字稿各有一個按鈕，用你裝置內建的語音朗讀，前提是裝置有該課程語言的語音。文字不會傳送到任何地方。含有帶讀音符號的經文的句子會被略過：經文不應由機器的聲音來讀。',
@@ -323,6 +353,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Phông chữ làm cho người mắc chứng khó đọc',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: mỗi chữ cái đậm hơn ở phần dưới, nên khó nhầm với chữ khác hơn. Phông này chỉ thay đổi chữ Latinh và chữ Kirin; chữ Ả Rập và mọi hệ chữ khác vẫn giữ nguyên. Một số người đọc thấy dễ hơn; các nghiên cứu chưa cho thấy nó giúp được tất cả mọi người.',
+    'ease.lettersElsewhere':
+      'Phông chữ này không có chữ cho ngôn ngữ của trang này. Ở đây nó chỉ thay đổi văn bản bằng ngôn ngữ viết bằng chữ Latinh hoặc chữ Kirin, chẳng hạn một khóa học dạy bằng tiếng Anh.',
     'ease.speech': 'Bài học có thể được đọc to.',
     'ease.speechNote':
       'Phần mô tả bài học và bản ghi lời của nó đều có một nút để đọc bằng chính giọng của thiết bị bạn, nếu thiết bị có giọng cho ngôn ngữ của bài học. Lời văn không được gửi đi đâu cả. Câu nào chứa một câu kinh viết kèm dấu nguyên âm thì được bỏ qua: câu kinh không dành cho giọng của máy.',
@@ -342,6 +374,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'แบบอักษรที่ออกแบบสำหรับภาวะอ่านลำบาก',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: ตัวอักษรแต่ละตัวหนากว่าที่ส่วนล่าง จึงสับสนกับตัวอื่นได้ยากขึ้น แบบอักษรนี้เปลี่ยนเฉพาะอักษรละตินและอักษรซีริลลิก ส่วนอักษรอาหรับและอักษรอื่นทั้งหมดยังคงเดิม ผู้อ่านบางคนรู้สึกว่าอ่านง่ายขึ้น แต่งานวิจัยยังไม่ได้แสดงว่าช่วยได้ทุกคน',
+    'ease.lettersElsewhere':
+      'แบบอักษรนี้ไม่มีตัวอักษรสำหรับภาษาของหน้านี้ ในหน้านี้แบบอักษรจะเปลี่ยนเฉพาะข้อความในภาษาที่เขียนด้วยอักษรละตินหรืออักษรซีริลลิก เช่น หลักสูตรที่สอนเป็นภาษาอังกฤษ',
     'ease.speech': 'บทเรียนอ่านออกเสียงได้',
     'ease.speechNote':
       'คำอธิบายบทเรียนและบทถอดความแต่ละส่วนมีปุ่มที่อ่านออกเสียงด้วยเสียงของอุปกรณ์คุณเอง หากอุปกรณ์มีเสียงสำหรับภาษาของบทเรียน ข้อความไม่ถูกส่งไปที่ใด ประโยคที่มีอายะฮ์ซึ่งเขียนพร้อมเครื่องหมายสระจะถูกข้ามไป เพราะอายะฮ์ไม่ใช่สิ่งที่ควรอ่านด้วยเสียงของเครื่อง',
@@ -360,6 +394,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Font na ginawa para sa dyslexia',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: mas mabigat ang ibaba ng bawat titik, kaya mas mahirap itong mapagkamalang iba. Mga titik na Latin at Cyrillic lamang ang binabago nito; ang Arabe at lahat ng iba pang sulat ay nananatiling gaya ng dati. May mga mambabasang nadadalian dito; hindi pa naipapakita ng mga pag-aaral na nakatutulong ito sa lahat.',
+    'ease.lettersElsewhere':
+      'Walang mga titik ang font na ito para sa wika ng pahinang ito. Dito, binabago lamang nito ang tekstong nasa wikang isinusulat sa mga titik na Latin o Cyrillic, halimbawa isang kursong itinuturo sa Ingles.',
     'ease.speech': 'Maaaring basahin nang malakas ang aralin.',
     'ease.speechNote':
       'Ang paglalarawan ng aralin at ang transcript nito ay may kani-kaniyang button na bumabasa sa mga ito sa sariling boses ng device mo, kung may boses ang device para sa wika ng aralin. Walang pinadadalhan ng mga salita. Nilalaktawan ang pangungusap na may talata ng Quran na isinulat nang may mga tanda ng patinig: ang talata ng Quran ay hindi para sa boses ng makina.',
@@ -379,6 +415,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Disleksiya uchun yaratilgan shrift',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: har bir harfning pastki qismi ogʻirroq, shuning uchun uni boshqasi bilan adashtirish qiyinroq. U faqat lotin va kirill harflarini oʻzgartiradi; arab yozuvi va boshqa barcha yozuvlar oʻzgarmaydi. Baʼzi oʻquvchilarga u osonroq tuyuladi; tadqiqotlar uning hammaga yordam berishini koʻrsatmagan.',
+    'ease.lettersElsewhere':
+      'Bu shriftda ushbu sahifa tilining harflari yoʻq. Bu yerda u faqat lotin yoki kirill harflarida yoziladigan tildagi matnni oʻzgartiradi, masalan, ingliz tilida oʻqitiladigan kursni.',
     'ease.speech': 'Darsni ovoz chiqarib oʻqitish mumkin.',
     'ease.speechNote':
       'Dars tavsifi va uning yozma matni yonida ularni qurilmangizning oʻz ovozi bilan oʻqiydigan tugma bor, agar qurilmada dars tili uchun ovoz boʻlsa. Soʻzlar hech qayerga yuborilmaydi. Harakatlari bilan yozilgan oyat bor gap tashlab ketiladi: oyat mashina ovozi uchun emas.',
@@ -398,6 +436,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Дислексияға арналған қаріп',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: әр әріптің төменгі жағы ауырлау, сондықтан оны басқасымен шатастыру қиынырақ. Ол тек латын және кирилл әріптерін өзгертеді; араб жазуы мен басқа жазулардың бәрі сол күйінде қалады. Кейбір оқырмандарға ол жеңілірек көрінеді; зерттеулер оның бәріне көмектесетінін көрсеткен жоқ.',
+    'ease.lettersElsewhere':
+      'Бұл қаріпте осы беттің тілінің әріптері жоқ. Мұнда ол тек латын немесе кирилл әріптерімен жазылатын тілдегі мәтінді өзгертеді, мысалы, ағылшын тілінде оқытылатын курсты.',
     'ease.speech': 'Сабақты дауыстап оқытуға болады.',
     'ease.speechNote':
       'Сабақтың сипаттамасы мен жазбаша мәтінінің әрқайсысында оны құрылғыңыздың өз даусымен оқитын түйме бар, егер құрылғыда сабақ тіліне арналған дауыс болса. Сөздер еш жерге жіберілмейді. Харекеттерімен жазылған аят бар сөйлем қалдырылады: аят машина даусына арналмаған.',
@@ -416,6 +456,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Disleksiya üçün hazırlanmış şrift',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: hər hərfin aşağı hissəsi daha qalındır, ona görə onu başqası ilə qarışdırmaq çətinləşir. O yalnız latın və kiril hərflərini dəyişir; ərəb yazısı və bütün digər yazılar olduğu kimi qalır. Bəzi oxucular onu daha asan sayır; araşdırmalar onun hamıya kömək etdiyini göstərməyib.',
+    'ease.lettersElsewhere':
+      'Bu şriftdə bu səhifənin dili üçün hərf yoxdur. Burada o yalnız latın və ya kiril hərfləri ilə yazılan dildəki mətni dəyişir, məsələn, ingilis dilində tədris olunan kursu.',
     'ease.speech': 'Dərs ucadan oxuna bilər.',
     'ease.speechNote':
       'Dərsin təsvirinin və yazılı mətninin hər birində onu cihazınızın öz səsi ilə oxuyan düymə var, əgər cihazda dərsin dili üçün səs varsa. Sözlər heç yerə göndərilmir. Hərəkələri ilə yazılmış ayə olan cümlə buraxılır: ayə maşının səsi üçün deyil.',
@@ -434,6 +476,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Ҳуруфе, ки барои дислексия сохта шудааст',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: қисми поёни ҳар ҳарф вазнинтар аст, аз ин рӯ онро бо ҳарфи дигар омехтан душвортар аст. Он танҳо ҳарфҳои лотинӣ ва кириллиро тағйир медиҳад; хати арабӣ ва ҳамаи хатҳои дигар чунон ки ҳастанд мемонанд. Ба баъзе хонандагон он осонтар менамояд; таҳқиқот нишон надодааст, ки он ба ҳама кумак мекунад.',
+    'ease.lettersElsewhere':
+      'Ин ҳуруф барои забони ин саҳифа ҳарф надорад. Дар ин ҷо он танҳо матнеро тағйир медиҳад, ки бо забони бо ҳарфҳои лотинӣ ё кириллӣ навишташаванда бошад, масалан, курсе, ки бо забони англисӣ таълим дода мешавад.',
     'ease.speech': 'Дарсро бо овози баланд хондан мумкин аст.',
     'ease.speechNote':
       'Тавсифи дарс ва матни хаттии он ҳар кадом тугмае доранд, ки онро бо овози худи дастгоҳи шумо мехонад, агар дастгоҳ барои забони дарс овоз дошта бошад. Калимаҳо ба ҳеҷ ҷо фиристода намешаванд. Ҷумлае, ки дар он ояти бо ҳаракатҳо навишташуда ҳаст, партофта мешавад: оят барои овози мошин нест.',
@@ -453,6 +497,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Дислексия үчүн жасалган арип',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: ар бир тамганын асты оорураак, ошондуктан аны башкасы менен чаташтыруу кыйыныраак. Ал латын жана кирилл тамгаларын гана өзгөртөт; араб жазуусу жана башка бардык жазуулар ошол бойдон калат. Айрым окурмандарга ал жеңилирээк көрүнөт; изилдөөлөр анын баарына жардам берерин көрсөткөн эмес.',
+    'ease.lettersElsewhere':
+      'Бул арипте ушул барактын тилинин тамгалары жок. Бул жерде ал латын же кирилл тамгалары менен жазылган тилдеги текстти гана өзгөртөт, мисалы, англис тилинде окутулган курсту.',
     'ease.speech': 'Сабакты үн чыгарып окутса болот.',
     'ease.speechNote':
       'Сабактын сүрөттөмөсүнүн жана жазуу түрүндөгү текстинин ар биринде аны түзмөгүңүздүн өз үнү менен окуган баскыч бар, эгер түзмөктө сабактын тили үчүн үн болсо. Сөздөр эч жакка жөнөтүлбөйт. Харакаттары менен жазылган аят бар сүйлөм калтырылат: аят машинанын үнү үчүн эмес.',
@@ -472,6 +518,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'Disleksiýa üçin ýasalan şrift',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: her harpyň aşaky bölegi agyrrak, şonuň üçin ony başgasy bilen garyşdyrmak kynrak. Ol diňe latyn we kiril harplaryny üýtgedýär; arap ýazuwy we beýleki ähli ýazuwlar öňküsi ýaly galýar. Käbir okyjylara ol aňsadrak görünýär; barlaglar onuň hemmelere kömek edýändigini görkezmedi.',
+    'ease.lettersElsewhere':
+      'Bu şriftde şu sahypanyň diliniň harplary ýok. Bu ýerde ol diňe latyn ýa-da kiril harplary bilen ýazylýan dildäki teksti üýtgedýär, mysal üçin, iňlis dilinde okadylýan kursy.',
     'ease.speech': 'Sapagy sesli okadyp bolýar.',
     'ease.speechNote':
       'Sapagyň beýanynyň we ýazuw tekstiniň her birinde ony enjamyňyzyň öz sesi bilen okaýan düwme bar, eger enjamda sapagyň dili üçin ses bar bolsa. Sözler hiç ýere iberilmeýär. Hereketleri bilen ýazylan aýat bar sözlem goýberilýär: aýat maşynyň sesi üçin däl.',
@@ -491,6 +539,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'வாசிப்புக் குறைபாட்டுக்காக உருவாக்கப்பட்ட எழுத்துரு',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: ஒவ்வொரு எழுத்தும் அடிப்பகுதியில் கனமாக உள்ளது; அதனால் அதை வேறொன்றாகத் தவறாகக் கருதுவது கடினம். இது லத்தீன் மற்றும் சிரிலிக் எழுத்துகளை மட்டுமே மாற்றுகிறது; அரபியும் மற்ற எல்லா எழுத்துமுறைகளும் அப்படியே இருக்கும். சில வாசகர்களுக்கு இது எளிதாக இருக்கிறது; இது எல்லோருக்கும் உதவுகிறது என்று ஆய்வுகள் காட்டவில்லை.',
+    'ease.lettersElsewhere':
+      'இந்த எழுத்துருவில் இந்தப் பக்கத்தின் மொழிக்கான எழுத்துகள் இல்லை. இங்கே அது லத்தீன் அல்லது சிரிலிக் எழுத்துகளில் எழுதப்படும் மொழியில் உள்ள உரையை மட்டுமே மாற்றுகிறது; எடுத்துக்காட்டாக, ஆங்கிலத்தில் கற்பிக்கப்படும் பாடநெறி.',
     'ease.speech': 'பாடத்தை உரக்க வாசிக்கச் செய்யலாம்.',
     'ease.speechNote':
       'பாடத்தின் விளக்கத்துக்கும் அதன் எழுத்துப் படிவத்துக்கும் தனித்தனியே ஒரு பொத்தான் உள்ளது; உங்கள் சாதனத்தில் பாடத்தின் மொழிக்கான குரல் இருந்தால், அது உங்கள் சாதனத்தின் சொந்தக் குரலில் அவற்றை வாசிக்கும். சொற்கள் எங்கும் அனுப்பப்படுவதில்லை. உயிர்க்குறிகளுடன் எழுதப்பட்ட வசனம் உள்ள வாக்கியம் விடப்படும்: வசனம் இயந்திரத்தின் குரலுக்கானது அல்ல.',
@@ -510,6 +560,8 @@ export const EASE: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'ease.lettersDyslexic': 'डिस्लेक्सियाका लागि बनाइएको फन्ट',
     'ease.lettersDyslexicNote':
       'OpenDyslexic: हरेक अक्षर तल्लो भागमा गह्रौँ छ, त्यसैले त्यसलाई अर्कोसँग झुक्किन गाह्रो हुन्छ। यसले ल्याटिन र सिरिलिक अक्षर मात्र बदल्छ; अरबी र अरू सबै लिपि जस्ताको तस्तै रहन्छन्। केही पाठकलाई यो सजिलो लाग्छ; अध्ययनहरूले यसले सबैलाई मद्दत गर्छ भनेर देखाएका छैनन्।',
+    'ease.lettersElsewhere':
+      'यस फन्टमा यो पृष्ठको भाषाका अक्षर छैनन्। यहाँ यसले ल्याटिन वा सिरिलिक अक्षरमा लेखिने भाषाको पाठ मात्र बदल्छ, जस्तै अङ्ग्रेजीमा पढाइने पाठ्यक्रम।',
     'ease.speech': 'पाठ ठूलो स्वरमा पढेर सुनाउन सकिन्छ।',
     'ease.speechNote':
       'पाठको विवरण र यसको लिखित पाठ दुवैमा एउटा बटन छ, जसले तिनलाई तपाईंको यन्त्रको आफ्नै आवाजमा पढ्छ, यदि यन्त्रमा पाठको भाषाको आवाज छ भने। शब्दहरू कतै पठाइँदैनन्। स्वरचिह्नसहित लेखिएको आयत भएको वाक्य छोडिन्छ: आयत मेसिनको आवाजका लागि होइन।',

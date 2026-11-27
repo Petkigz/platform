@@ -10939,8 +10939,18 @@ started: recitation correction, native apps, push notifications.
   beside the two files in `web/public/fonts/opendyslexic`), it is the
   platform's first downloaded font, and a browser fetches it only for a
   reader who chose it. It has Latin, Greek and Cyrillic letters only, so
-  Arabic and every other script are drawn as before; the page says that,
-  and that studies have not shown such a font helps everyone. *Reading
+  it is applied only where the page, or a passage marked with its
+  language, is in a language written in those letters
+  (`LETTERS_NOT_FOR` in `lib/a11y.ts`, the same list as the `:lang()`
+  list in `globals.css`; a test holds them together). A page in Arabic or
+  Chinese is left exactly as it was, fetches no font and says why under
+  the choice. The page also says that studies have not shown such a font
+  helps everyone. **Two defects of the first build (`d528fb1`), found in a
+  browser after the push and corrected:** the font's own space, digits
+  and punctuation were used inside Arabic text, which set Arabic words
+  far apart; and its wide letters ran past the edge of a 320px phone on
+  the settings page, `/language` and `/about`. An Arabic sentence with no
+  `lang` mark on an English page still gets the wide spaces. *Reading
   aloud:* a lesson's description and transcript each have a button that
   reads them in the device's own voice (`lib/read-aloud.ts`): no provider
   and no bill, and the words are sent nowhere. The voice is chosen by the
@@ -10950,8 +10960,10 @@ started: recitation correction, native apps, push notifications.
   signs) is left out**: a machine's voice has no tajwid. A verse typed
   with no marks at all is not recognised and would be read.
   **Not done:** the button has been heard in no browser by anybody (what
-  it is given to read is tested; the speaking is the browser's, and there
-  is no browser on the machine this was written on); the font has been
-  looked at in a browser only by CI's smoke, at one width, on one page;
-  nobody with dyslexia and nobody who relies on a screen reader has tried
-  either. Thirteen sentences in 27 languages, read by no speaker.
+  it is given to read is tested; the speaking is the browser's, and nobody
+  has listened to it); the font has
+  been looked at in one browser, Chromium, on the public pages and the
+  pages the browser smokes open, at 320px with the largest text, in
+  eleven languages, and on no telephone; nobody with dyslexia and nobody
+  who relies on a screen reader has tried either. Fourteen sentences in
+  27 languages, read by no speaker.
