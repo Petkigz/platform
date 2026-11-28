@@ -1,0 +1,81 @@
+# The one migration after the 371, on the AyahSpring test project only:
+# 20261281165000_role_questions_about_oneself.sql (whether an account is staff
+# is answered to that account, to functions that run with the owner's rights
+# and to the server's key; `anon` and `authenticated` are refused about
+# anybody else). It adds five functions and changes how nine run and one
+# policy; no table, column or row changes.
+# One-time: scripts/hosted-migration-372.mjs refuses unless the hosted history
+# is exactly the 371, nothing of the migration is there, and a rehearsal on
+# the hosted database shows the two roles refused about somebody else, a
+# caller still answered about itself, and every role assignment and teacher
+# page as it was.
+#
+# NOT STARTED, and nobody has been asked to approve it (2026-11-28). The step
+# before it (371) has to have run first: until then this one refuses. It
+# starts only on a commit whose message begins with the words in the `if`
+# below; the environment then still requires the owner's approval before the
+# job, and so before any secret, is released. One-time: once it has run, never
+# push those words again.
+#
+# Like the two steps before it, this one does not refuse a project that holds
+# accounts: the site is deployed.
+#
+# The job checks out the commit this step was reviewed at (2774626,
+# which holds exactly the 372) and runs that tree's script, test and
+# migrations, so a migration added later cannot reach the hosted project
+# through it.
+name: Apply Supabase test migration 372
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+# A group of its own, as the ones before it had: every push starts every one
+# of these workflows (each then skips), and GitHub keeps one run waiting in a
+# group and cancels the rest. The script refuses unless the hosted history is
+# exactly the 371.
+concurrency:
+  group: ayahspring-supabase-test-migration-372
+  cancel-in-progress: false
+jobs:
+  apply-372:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: apply ayahspring test migration 372')
+    runs-on: ubuntu-latest
+    environment: ayahspring-test-migration-apply
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The tree with exactly the 372 migrations this step was reviewed for.
+          ref: 2774626f8d9bdf3921ae5abce86b89c7d26a3e69
+          persist-credentials: false
+      - name: The tree is the one reviewed, with 372 migrations and no more
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '2774626f8d9bdf3921ae5abce86b89c7d26a3e69'
+          test "$(ls supabase/migrations/*.sql | wc -l)" = '372'
+          test "$(ls supabase/migrations/*.sql | tail -1)" = 'supabase/migrations/20261281165000_role_questions_about_oneself.sql'
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # Everything below this comment and above the last step runs without the
+      # database secret.
+      - name: Install reviewed dependencies and CLI
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase" --version)" = '3.1.0'
+      - name: The plan, against the real migrations in a local engine
+        run: node --test scripts/hosted-migration-372.test.mjs
+      - name: What the tested database gives anon and authenticated
+        run: node scripts/api-role-privileges.mjs --write "$RUNNER_TEMP/expected-privileges.json"
+      - name: Check, rehearse on the test project, apply the one, compare
+        run: node scripts/hosted-migration-372.mjs
+        env:
+          SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+          AYAHSPRING_EXPECTED_PRIVILEGES: ${{ runner.temp }}/expected-privileges.json
+          AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
+          AYAHSPRING_TEST_APPLY_READY: ${{ vars.AYAHSPRING_TEST_APPLY_READY }}
