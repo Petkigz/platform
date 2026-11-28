@@ -6,6 +6,7 @@ import { CONSOLE_LINKS, QUEUE_WORDS } from './admin-console.ts';
 import { LOCALES, languageShownFor } from './i18n/index.ts';
 import { CATALOGUES } from './i18n/messages/catalogues.ts';
 import { en } from './i18n/messages/en.ts';
+import { CONSOLE } from './i18n/messages/console.ts';
 import { HELD_FOR_REVIEW } from './i18n/messages/held.ts';
 import { STAFF } from './i18n/messages/staff.ts';
 
@@ -95,7 +96,12 @@ test('the page says its top from the catalogue, and marks what is still English'
   assert.match(page, /languageShownFor\(locale, 'staff'\)/u);
   assert.match(page, /const frame = shown\.code !== locale \? \{ lang: shown\.code, dir: shown\.dir \} : \{\};/u);
   assert.match(page, /const english = shown\.code === 'en' \? \{\} : \(\{ lang: 'en', dir: 'ltr' \} as const\);/u);
-  assert.match(page, /<span \{\.\.\.english\}>\{link\.note\}<\/span>/u);
+  // The sentence beside a link is the catalogue's too, in the language its part is shown in.
+  assert.match(page, /notes: languageShownFor\(locale, 'console'\)/u);
+  assert.match(page, /const tn = translator\(notes\.code\);/u);
+  assert.match(page, /const noteMark = notes\.code === shown\.code \? \{\} : \{ lang: notes\.code, dir: notes\.dir \};/u);
+  assert.match(page, /<span \{\.\.\.noteMark\}>\{tn\(link\.note\)\}<\/span>/u);
+  assert.doesNotMatch(page, /<span \{\.\.\.english\}>\{link\.note\}/u);
   assert.match(page, /<div \{\.\.\.english\} data-staff-switchboard>/u);
   assert.match(page, /: \{ label: q\.label, detail: q\.detail, mark: english \}/u);
   for (const count of ['n(waiting)', 'n(busy.length)', 'n(q.count)', 'n(dormant.length)', 'n(i + 1)']) assert.ok(page.includes(count), count);
@@ -108,4 +114,63 @@ test('the page says its top from the catalogue, and marks what is still English'
     const at = page.indexOf(typed);
     assert.ok(at > start && at < end, typed);
   }
+});
+
+// The second part (`console.`), 2026-11-28: the word in the navigation and the sentence beside each link.
+const NOTE_KEYS = (Object.keys(en) as (keyof typeof en)[]).filter((key) => key.startsWith('console.'));
+
+test('console. is written in every language the dashboard is', () => {
+  assert.equal(NOTE_KEYS.length, 44);
+  assert.equal(NOTE_KEYS[0], 'console.nav');
+  // Every sentence belongs to a link, and every link has one.
+  const linked = Object.values(CONSOLE_LINKS).flat().map((link) => link.note);
+  assert.deepEqual([...linked].sort(), NOTE_KEYS.filter((key) => key !== 'console.nav').sort());
+  assert.deepEqual(Object.keys(CONSOLE).sort(), [...LANGUAGES].sort());
+  for (const code of LANGUAGES) {
+    const own = CONSOLE[code];
+    assert.ok(own, code);
+    assert.deepEqual(Object.keys(own).sort(), [...NOTE_KEYS].sort(), code);
+    for (const key of NOTE_KEYS) {
+      const value: string = own[key]!;
+      assert.ok(value.trim() !== '' && value === value.trim() && !value.includes('  '), `${code} ${key}`);
+      assert.equal(CATALOGUES[code]?.[key], value, `${code} ${key} is served`);
+      assert.notEqual(value, en[key], `${code} ${key} is the English sentence`);
+      // It follows the screen's name and a dash: no gap to fill, no code marks, no closing stop.
+      assert.doesNotMatch(value, /[{}`]/u, `${code} ${key}`);
+      assert.doesNotMatch(value, /[.。।۔]$/u, `${code} ${key} ends with a full stop`);
+    }
+    if (code.startsWith('zh')) assert.ok(!Object.values(own).join('').includes('您'), code);
+    assert.equal(languageShownFor(code, 'console').code, code);
+  }
+  for (const code of Object.keys(HELD_FOR_REVIEW)) assert.equal(languageShownFor(code as never, 'console').code, 'en', code);
+  // English: the same rules.
+  for (const key of NOTE_KEYS) assert.doesNotMatch(en[key], /[{}`]|\.$/u, key);
+  // French spacing before a colon, a semicolon and a question mark.
+  for (const value of Object.values(CONSOLE.fr!)) assert.doesNotMatch(value, /[^\u00a0][:;?]\s|[^\u00a0][:;?]$/u, value);
+});
+
+test('the sentences keep the words the page above them uses', () => {
+  for (const code of LANGUAGES) {
+    const all = CATALOGUES[code]!;
+    // The word in the navigation is the word over the page it opens.
+    assert.equal(all['console.nav'], all['staff.eyebrow'], code);
+    // The sentence beside "Payment disputes" is the queue's own, without its stop
+    // (and without its capital, in the scripts that have one: it follows a dash).
+    const low = (text: string) => text.toLocaleLowerCase(code);
+    assert.equal(low(all['console.nDisputes']!), low(all['staff.dDisputes']!.replace(/[.。।۔]$/u, '')), code);
+    // What a member of staff types or looks up stays in Latin letters.
+    assert.ok(all['console.nScreenings']!.includes('platform.safeguarding'), code);
+    assert.ok(all['console.nPanels']!.includes('governance.panel_required'), code);
+    assert.ok(all['console.nInstitutions']!.includes('DNS'), code);
+    // No two screens are described by one sentence.
+    const notes = NOTE_KEYS.filter((key) => key !== 'console.nav').map((key) => all[key]!);
+    assert.equal(new Set(notes).size, 43, code);
+    // The ijazah register says "recorded" and never "verified": two quoted words, and they differ.
+    const parts = all['console.nIjazah']!.split(/[“”«»「」„]/u);
+    assert.equal(parts.length, 5, `${code}: ${all['console.nIjazah']}`);
+    assert.notEqual(parts[1]!.trim(), parts[3]!.trim(), code);
+    assert.ok(parts[1]!.trim() !== '' && parts[3]!.trim() !== '', code);
+  }
+  assert.equal(en['console.nav'], 'Admin');
+  assert.equal(en['console.nDisputes'], en['staff.dDisputes'].replace(/\.$/u, '').replace(/^A/u, 'a'));
 });

@@ -682,13 +682,15 @@ written: not a held draft, nothing.
   which are marked as English there. Also on 2026-11-28, the top of
   the staff console, `/admin`: what is waiting, the queues, what a new
   platform still needs, the headings and the name of every staff screen
-  (`staff.`, 89 sentences, unreviewed). **Still English there, and
-  marked as English:** the sentence beside each of the 43 links, and
-  the owner's switchboard (revenue share, translation line, counts,
-  retention clock, the flag register and its preconditions, which are
-  rows of the database), and the word "Admin" in the main navigation,
-  which is not marked. Every other staff page is still English, with
-  no mark.)* The teacher's class
+  (`staff.`, 89 sentences, unreviewed), and then the sentence beside
+  each of its 43 links and the word for the console in the main
+  navigation (`console.`, 44 sentences, unreviewed; they state what a
+  screen will and will not do, so a speaker's reading matters more for
+  them than for a heading). **Still English there, and marked as
+  English:** the owner's switchboard (revenue share, translation line,
+  counts, retention clock, the flag register and its preconditions,
+  which are rows of the database). Every other staff page is still
+  English, with no mark.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

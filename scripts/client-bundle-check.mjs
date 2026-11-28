@@ -299,6 +299,12 @@ for (const [file, key] of [
   ['staff.ts', 'staff.notOwner'],
   ['staff.ts', 'staff.dormantBody'],
   ['staff.ts', 'staff.safeguarding'],
+  // The sentence beside each link of the console (2026-11-28) is drawn on
+  // the server too. Only the one word for the console in the navigation is
+  // handed to a script, as a property, and it is not looked for here.
+  ['console.ts', 'console.nRefunds'],
+  ['console.ts', 'console.nScreenings'],
+  ['console.ts', 'console.nIjazah'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

@@ -23,8 +23,9 @@ import type { Messages } from './en.ts';
  * word has to agree with it. French puts a no-break space before `:`, `;`
  * and `?`.
  *
- * Not here: the sentence beside each link, and the owner's switchboard.
- * The page says those in English and marks them as English.
+ * Not here: the sentence beside each link, which is a part of its own
+ * (`console.ts`, written the same day), and the owner's switchboard, which
+ * the page says in English and marks as English.
  *
  * Made by `scripts/catalogue-part/gen.py` from
  * `scripts/catalogue-part/data/staff.txt`.

@@ -8,10 +8,12 @@
 // for; the page in English and in Arabic for the owner and for a support
 // agent; counts in the reader's digits; that a queue is named by its code and
 // one the page has no words for keeps the database's English, marked as
-// English; that the sentence beside each link and the owner's switchboard are
-// still English and are marked so; that a language held for review is
-// given English in a marked frame; and, with a browser, that the page does
-// not scroll sideways at three widths and that in Arabic the English
+// English; that the sentence beside each link is in the reader's language
+// too (since the second unit of 2026-11-28) and carries no mark; that the
+// owner's switchboard is still English and is marked so; that a language
+// held for review is given English in a marked frame; and, with a browser,
+// that the page does not scroll sideways at three widths, that the word for
+// the console in the main navigation is the reader's, and that in Arabic the
 // sentence beside a link is drawn after the link. The expected sentences are typed here
 // rather than imported, so this fails if a catalogue changes without anybody
 // looking at the page.
@@ -160,6 +162,9 @@ try {
     '>Money</h2>', '<p class="lede">What was charged, what goes back,', '<p data-staff-link="/admin/orders"><a href="/admin/orders">Orders awaiting payment</a> — <span>the only orders whose total can still change',
     '>Publication</h2>', '<a href="/admin/reviewers">Reviewer register</a>', '>Institutions</h3>', '>Support</h2>', '<a href="/admin/support">Support queue</a>',
     '>Everyone’s work</h2>', '<a href="/admin/roles">Roles</a>', '<a href="/learn">Back to my learning</a>',
+    // The sentence beside a link is the catalogue's; a flag's key is written as the register writes it.
+    '<p data-staff-link="/admin/roles"><a href="/admin/roles">Roles</a> — <span>who may do what. Every check in the database reads these</span></p>',
+    'While platform.safeguarding is on, a course a child may be shown cannot be published', 'and with governance.panel_required off nothing waits on it</span>',
   ], 'owner in English');
   lacks(en, ['lang="en"', 'data-staff-not-owner', 'No queue has anything in it'], 'owner in English');
   assert.equal((en.match(/data-staff-link=/g) ?? []).length, 43);
@@ -186,25 +191,30 @@ try {
     // The switchboard is still English, and says so to the browser.
     '<div lang="en" dir="ltr" data-staff-switchboard="true">', 'Feature flags</h2>',
     '>المال</h2>', '<p class="lede">ما حُصِّل، وما يُعاد،',
-    // A link's name is Arabic; the sentence beside it is still English, marked.
-    '<p data-staff-link="/admin/orders"><a href="/admin/orders">طلبات شراء تنتظر الدفع</a> — <span lang="en" dir="ltr">the only orders whose total can still change',
+    // A link's name is Arabic and so is the sentence beside it, with no mark: it is the page's language.
+    '<p data-staff-link="/admin/orders"><a href="/admin/orders">طلبات شراء تنتظر الدفع</a> — <span>الطلبات الوحيدة التي ما زال مجموعها قابلًا للتغيير: سجِّل على الطلب خصمًا أو ضريبة أو رسمًا أو تقريبًا، أو اسحبه</span></p>',
+    // What a member of staff types or looks up stays in Latin letters inside the Arabic.
+    'ما دام platform.safeguarding مفعَّلًا', 'governance.panel_required', ' DNS ',
     '>النشر</h2>', '<a href="/admin/reviewers">سجلّ المراجعين</a>', '<a href="/admin/panels">الهيئات العلمية</a>', '>المؤسسات</h3>',
     '>الدعم</h2>', '<a href="/admin/support">قائمة الدعم</a>', '>عمل الجميع</h2>', '<a href="/admin/appeals">التظلّمات</a>',
   ], 'owner in Arabic');
   // Outside what is marked as English, none of the database's words for a queue is left.
   const unmarked = ar.replace(/<div lang="en" dir="ltr" data-staff-switchboard="true">[\s\S]*?<h2 style="margin-top:2\.5rem">المال<\/h2>/u, '').replace(/<(span|p|div|a|li)[^>]* lang="en" dir="ltr"[^>]*>[\s\S]*?<\/\1>/gu, '');
   lacks(unmarked, [...DATABASE_ENGLISH, 'What is waiting', 'Administration', 'Paused', 'Publication', 'Waiting:', 'the only orders', 'Feature flags'], 'the unmarked part of the Arabic page');
+  // No sentence beside a link is English any more, marked or not.
+  lacks(ar, ['the only orders', 'money going back out', 'who may do what', 'courses waiting for a reviewer', 'Aggregates only'], 'the Arabic page');
   assert.equal((ar.match(/data-staff-link=/g) ?? []).length, 43);
-  assert.equal((ar.match(/ — <span lang="en" dir="ltr">/g) ?? []).length, 43);
+  assert.equal((ar.match(/ — <span lang="en" dir="ltr">/g) ?? []).length, 0);
+  assert.equal((ar.match(/<\/a> — <span>[^<]+<\/span><\/p>/g) ?? []).length, 43);
 
   // Persian digits are pinned: 1,239 waiting.
   const fa = inner(await page('/admin', { cookie, 'accept-language': 'fa' }));
   has(fa, ['<h1>چه چیزی در انتظار است</h1>', 'در انتظار: ۱٬۲۳۹. صف‌هایی که چیزی در آن‌هاست: ۳.', '<span class="badge neutral">متوقف</span>'], 'owner in Persian');
   // French keeps its no-break space before a colon.
   const fr = inner(await page('/admin', { cookie, 'accept-language': 'fr' }));
-  has(fr, ['<h1>Ce qui attend</h1>', 'En attente\u00a0: 1\u202f239. Files qui contiennent quelque chose\u00a0: 3.', '<a href="/admin/reviewers">Registre des relecteurs</a>'], 'owner in French');
+  has(fr, ['<h1>Ce qui attend</h1>', 'En attente\u00a0: 1\u202f239. Files qui contiennent quelque chose\u00a0: 3.', '<a href="/admin/reviewers">Registre des relecteurs</a>', '<span>les seules commandes dont le total peut encore changer\u00a0: enregistrez-y une remise, une taxe, des frais ou un arrondi, ou retirez la commande</span>'], 'owner in French');
   // A language held for review: English, in a frame that says so.
-  has(inner(await page('/admin', { cookie, 'accept-language': 'ha' })), ['<div class="container section staff-page" lang="en" dir="ltr">', '<h1>What is waiting</h1>', '<div data-staff-switchboard="true">'], 'held-language staff page');
+  has(inner(await page('/admin', { cookie, 'accept-language': 'ha' })), ['<div class="container section staff-page" lang="en" dir="ltr">', '<h1>What is waiting</h1>', '<div data-staff-switchboard="true">', '<a href="/admin/orders">Orders awaiting payment</a> — <span>the only orders whose total can still change'], 'held-language staff page');
 
   // A platform that is set up: no panel, and the queue sentence is the page's own.
   state.facts = { subject_areas: 6, courses: 3, course_versions: 2, reviewer_profiles: 1 };
@@ -232,11 +242,13 @@ try {
   has(sw, [
     '<h1>Kinachosubiri</h1>', 'Kila foleni ya wafanyakazi iliyoorodheshwa hapa iko tupu.', 'Hakuna foleni yenye kitu. Hakuna chochote katika ukurasa huu kinachokuhitaji leo.',
     'Pia zimeangaliwa, na ziko tupu: <span><a href="/admin/support">Kesi za msaada</a></span><span> · <a href="/admin/reports">Maudhui yaliyoripotiwa</a></span>',
-    'data-staff-not-owner="true">Swichi za vipengele na mgao wa mapato ni vya msimamizi wa jukwaa.', '>Kazi ya kila mtu</h2>', '<a href="/admin/support">Foleni ya msaada</a>',
+    'data-staff-not-owner="true">Swichi za vipengele na mgao wa mapato ni vya msimamizi wa jukwaa.', '>Kazi ya kila mtu</h2>',
+    '<p data-staff-link="/admin/support"><a href="/admin/support">Foleni ya msaada</a> — <span>maombi ambayo watu walifungua kutoka Msaada. Kuzima kipengele husimamisha mapya; hakufungi yaliyo njiani</span></p>',
   ], 'support agent in Swahili');
-  lacks(sw, ['What is waiting', 'Support cases', 'Reported content', 'Everyone’s work', 'belong to the platform admin'], 'support agent in Swahili');
+  lacks(sw, ['What is waiting', 'Support cases', 'Reported content', 'Everyone’s work', 'belong to the platform admin', 'requests people opened from Help', 'lang="en"'], 'support agent in Swahili');
+  assert.equal((sw.match(/<\/a> — <span>[^<]+<\/span><\/p>/g) ?? []).length, 21);
 
-  console.log('Staff console: signed out goes to sign-in and somebody who is not staff goes home with the queues not asked for; the owner’s page whole in English and in Arabic with counts as this Node writes them for Arabic (Western digits when this was written), Persian digits pinned, French spacing kept; a queue named by its code, and one with no words here left in the database’s English and marked; all 43 links named in the reader’s language with the sentence beside each still English and marked; the switchboard still English and marked; a held language given English in a marked frame; the setup panel gone once the platform is set up; a support agent shown 21 links, no switchboard, no money, and the register not read.');
+  console.log('Staff console: signed out goes to sign-in and somebody who is not staff goes home with the queues not asked for; the owner’s page whole in English and in Arabic with counts as this Node writes them for Arabic (Western digits when this was written), Persian digits pinned, French spacing kept; a queue named by its code, and one with no words here left in the database’s English and marked; all 43 links named in the reader’s language and the sentence beside each in it too, unmarked, with the flag keys and DNS left in Latin letters; the switchboard still English and marked; a held language given English in a marked frame; the setup panel gone once the platform is set up; a support agent shown 21 links, no switchboard, no money, and the register not read.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -262,7 +274,7 @@ try {
     state.flags = LONG_FLAGS;
     for (const who of ['owner', 'support']) {
       state.who = who;
-      for (const [code, heading] of [['en', 'What is waiting'], ['ar', 'ما ينتظر'], ['ta', 'காத்திருப்பவை']]) {
+      for (const [code, heading, word] of [['en', 'What is waiting', 'Admin'], ['ar', 'ما ينتظر', 'الإدارة'], ['ta', 'காத்திருப்பவை', 'நிர்வாகம்']]) {
         // The largest text in the dyslexia font is the widest the page is ever asked to be, whatever fonts the machine has.
         for (const [width, a11y] of [[320, null], [320, 'v1.larger.normal.system.dyslexic'], [390, null], [1440, null]]) {
           const label = `${who} ${code} ${width}${a11y ? ' largest text and the dyslexia font' : ''}`;
@@ -270,27 +282,35 @@ try {
           assert.equal(await tab.evaluate(() => document.documentElement.lang), code, label);
           assert.equal(await tab.getByRole('heading', { name: heading, exact: true, level: 1 }).count(), 1, `${label}: heading`);
           await fits(tab, width, `${label} /admin`);
+          // The way back to the console, in the main navigation: the reader's
+          // word for it, with no language mark of its own, and it is this page.
+          const back = tab.locator('nav.nav a[href="/admin"]');
+          await back.waitFor({ state: 'attached', timeout: 10000 });
+          assert.deepEqual(await back.evaluate((a) => [a.textContent, a.getAttribute('lang'), a.getAttribute('dir'), a.getAttribute('aria-current')]), [word, null, null, 'page'], `${label}: the console's word in the navigation`);
           if (who === 'owner') assert.equal(await tab.locator('[data-staff-switchboard] .lessons li').count(), LONG_FLAGS.length, `${label}: the register's rows`);
           if (code === 'ar') {
-            // An English sentence beside an Arabic link starts after the link:
-            // on the link's left when they share a line, otherwise below it.
+            // The sentence beside an Arabic link starts after the link: on the
+            // link's left when they share a line, otherwise below it. (It was
+            // English until 2026-11-28, and this is what caught it being drawn
+            // before the link; it is kept for the Latin words inside it.)
             // Lines are told apart by their middles, because an Arabic font's
             // box is taller than the line and overlaps the one under it.
             const order = await tab.evaluate(() => [...document.querySelectorAll('[data-staff-link]')].map((p) => {
               const parts = p.querySelector('a').getClientRects(); const link = parts[parts.length - 1];
-              const note = p.querySelector('span[lang="en"]').getClientRects()[0];
+              const note = p.querySelector('span').getClientRects()[0];
               const middle = (r) => (r.top + r.bottom) / 2;
               const sameLine = Math.abs(middle(note) - middle(link)) < Math.min(note.height, link.height) / 2;
               return { href: p.getAttribute('data-staff-link'), ok: sameLine ? note.right <= link.left + 1 : middle(note) > middle(link) };
             }).filter((row) => !row.ok).map((row) => row.href));
-            assert.deepEqual(order, [], `${label}: an English sentence is drawn before the link it follows`);
+            assert.equal(await tab.locator('[data-staff-link] span[lang]').count(), 0, `${label}: a sentence beside a link is marked as another language`);
+            assert.deepEqual(order, [], `${label}: a sentence is drawn before the link it follows`);
           }
           assert.deepEqual(errors, [], label);
           await context.close();
         }
       }
     }
-    console.log('Staff console in a browser: the owner’s page and a support agent’s, in English, Arabic and Tamil at 320, 390 and 1440 pixels, and at 320 with the largest text in the dyslexia font, with a flag register of long keys, do not scroll sideways; in Arabic the English sentence beside a link starts after the link.');
+    console.log('Staff console in a browser: the owner’s page and a support agent’s, in English, Arabic and Tamil at 320, 390 and 1440 pixels, and at 320 with the largest text in the dyslexia font, with a flag register of long keys, do not scroll sideways; the console’s word in the main navigation is the reader’s, unmarked, and is the current page; in Arabic the sentence beside a link starts after the link.');
   }
   console.log('Staff console HTTP smoke passed. Not real Auth, RLS, `is_privileged()`, `has_role()` or `staff_attention()`; nobody here is staff, and no speaker has read the translations.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }

@@ -101,7 +101,7 @@ export const QUEUE_WORDS: Readonly<Record<string, { label: MessageKey; detail: M
   media: { label: 'staff.qMedia', detail: 'staff.dMedia' },
 };
 
-export type ConsoleLink = { href: string; label: MessageKey; note: string };
+export type ConsoleLink = { href: string; label: MessageKey; note: MessageKey };
 
 /**
  * The screens below the queues, grouped by who may open them.
@@ -115,238 +115,239 @@ export type ConsoleLink = { href: string; label: MessageKey; note: string };
  * belongs to conceptually. Being honest about the gate beats being tidy about
  * the filing.
  *
- * `label` is a key of the catalogue. `note` is still an English sentence: the
- * forty-three of them are not in the catalogue yet, and the page marks each
- * as English for a reader who is shown the rest in another language.
+ * `label` and `note` are keys of the catalogue. The note is the sentence
+ * beside the link (`console.n…`, in `i18n/messages/console.ts` since
+ * 2026-11-28); its English is in `en.ts`, where a flag's key is written as
+ * the register writes it and without the backticks it used to carry here.
  */
 export const CONSOLE_LINKS = {
   money: [
     {
       href: '/admin/orders',
       label: 'staff.lOrders',
-      note: 'the only orders whose total can still change: record a discount, tax, fee or rounding against one, or withdraw one',
+      note: 'console.nOrders',
     },
     {
       href: '/admin/refunds',
       label: 'staff.lRefunds',
-      note: 'money going back out. Approving is an agreement, not a transfer',
+      note: 'console.nRefunds',
     },
     {
       href: '/admin/financial-adjustments',
       label: 'staff.lAdjustments',
-      note: 'append-only accounting corrections and earnings clawbacks',
+      note: 'console.nAdjustments',
     },
     {
       href: '/admin/reconciliation',
       label: 'staff.lReconciliation',
-      note: 'signed statement rows against the internal ledger',
+      note: 'console.nReconciliation',
     },
     {
       href: '/admin/disputes',
       label: 'staff.lDisputes',
-      note: 'a chargeback has a deadline; the provider decides what happens if it passes',
+      note: 'console.nDisputes',
     },
     {
       href: '/admin/tax',
       label: 'staff.lTax',
-      note: 'what a buyer is charged on top of the price, by the country they buy from',
+      note: 'console.nTax',
     },
     {
       href: '/admin/exchange-rates',
       label: 'staff.lRates',
-      note: 'what one currency was worth in another, when, and who said so',
+      note: 'console.nRates',
     },
     {
       href: '/admin/revenue',
       label: 'staff.lRevenue',
-      note: 'what sold in a period by currency, course, plan and teacher, with refunds beside the sale and never netted out of sight',
+      note: 'console.nRevenue',
     },
     {
       href: '/admin/money-report',
       label: 'staff.lMoneyReport',
-      note: 'what moved in a period, in the one currency the platform is read in, with the rate beside every figure',
+      note: 'console.nMoneyReport',
     },
     {
       href: '/admin/renewals',
       label: 'staff.lRenewals',
-      note: 'every live subscription expanded forward at the price it was sold at. Committed, not arrived — nothing charges a renewal yet',
+      note: 'console.nRenewals',
     },
     {
       href: '/admin/payouts',
       label: 'staff.lPayouts',
-      note: 'what teachers have asked to be paid, and the refund hold that keeps a sale from leaving before it can be reversed',
+      note: 'console.nPayouts',
     },
   ],
   publication: [
     {
       href: '/admin/courses',
       label: 'share.courses',
-      note: 'every course, which door it stands behind and how many learners it holds. Changing an audience is recorded against your name, with both sides of the change',
+      note: 'console.nCourses',
     },
     {
       href: '/admin/teachers',
       label: 'tq.title',
-      note: 'the people asking to teach, and everyone who may teach here with what each has published and how many learners their courses hold. Approving an application is the appointment: it grants the role, with your reason against the applicant',
+      note: 'console.nTeachers',
     },
     {
       href: '/admin/reviews',
       label: 'staff.lAssign',
-      note: 'courses waiting for a reviewer',
+      note: 'console.nAssign',
     },
     {
       href: '/admin/subjects',
       label: 'staff.lSubjects',
-      note: 'the vocabulary of the catalogue: what a learner can filter by, and what a badge on a course card may say. A subject in use by a live course cannot be retired',
+      note: 'console.nSubjects',
     },
     {
       href: '/admin/reviewers',
       label: 'staff.lReviewers',
-      note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified',
+      note: 'console.nReviewers',
     },
     {
       href: '/admin/screenings',
       label: 'staff.lScreenings',
-      note: 'every appointed teacher and whether a check is on file: what kind, when, when it lapses, who recorded it. The reference to the document is stored and never shown again, and a record cannot be edited — a new check supersedes it. While `platform.safeguarding` is on, a course a child may be shown cannot be published unless its author holds a passed, unexpired check and has acknowledged the conduct policy',
+      note: 'console.nScreenings',
     },
     {
       href: '/admin/ijazah',
       label: 'staff.lIjazah',
-      note: 'who authorised whom, for what, and what you were shown. Yours alone to record: a chain of transmission is not something this platform has the standing to check, so the register says “recorded”, never “verified”, and nothing here is visible to a learner',
+      note: 'console.nIjazah',
     },
     {
       href: '/admin/translations',
       label: 'staff.lTranslations',
-      note: 'corrections sent by people who speak the language, each shown against the line it replaces and against the catalogue that is actually built. Yours alone to decide: accepting a line does not change the site — the paste block does that — and a language is only described as read when every part of it has a published read — or when one person has published a whole-catalogue read — with every correction decided',
+      note: 'console.nTranslations',
     },
   ],
   institution: [
     {
       href: '/admin/institutions',
       label: 'inst.title',
-      note: 'madrasahs, schools and organisations with their own page: open one, check the DNS record behind a domain claim, and change who administers it. An institution sees counts of its own members and never a learner’s name, and it cannot buy seats — invoicing needs terms and a provider nobody has',
+      note: 'console.nInstitutions',
     },
   ],
   sponsorship: [
     {
       href: '/admin/sponsorships',
       label: 'account.sponsorHeading',
-      note: 'learners asking for a course, and donors paying for one. Deciding needs a written reason and recording a payment needs a reference; a sponsored seat is not an order, so it carries no tax and no teacher earning',
+      note: 'console.nSponsorships',
     },
   ],
   referral: [
     {
       href: '/admin/referrals',
       label: 'staff.lInvitations',
-      note: 'who invited whom, what it earned and what the yearly cap or a refund stopped. Both rewards are discounts on a course — nothing is paid out, so there is no balance here',
+      note: 'console.nInvitations',
     },
   ],
   support: [
     {
       href: '/admin/support',
       label: 'staff.lSupport',
-      note: 'requests people opened from Help. Turning the feature off stops new ones; it does not close what is in flight',
+      note: 'console.nSupport',
     },
   ],
   shared: [
     {
       href: '/admin/users',
       label: 'staff.lUsers',
-      note: 'every account on the platform, searchable by name or email — accounts, not children',
+      note: 'console.nUsers',
     },
     {
       href: '/admin/settings',
       label: 'staff.lControls',
-      note: 'the numbers behind features that are already on. Only the ones your role owns are shown, and each change needs a reason',
+      note: 'console.nControls',
     },
     {
       href: '/admin/reports',
       label: 'staff.lReports',
-      note: 'problems readers flagged in a lesson or an answer. Closing one needs a written note',
+      note: 'console.nReports',
     },
     {
       href: '/admin/media',
       label: 'staff.lMedia',
-      note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason',
+      note: 'console.nMedia',
     },
     {
       href: '/admin/course-reviews',
       label: 'staff.lCourseReviews',
-      note: 'learner ratings that include words, held until someone reads them',
+      note: 'console.nCourseReviews',
     },
     {
       href: '/admin/discussion',
       label: 'staff.lDiscussion',
-      note: 'learner questions and peer answers held for review',
+      note: 'console.nDiscussion',
     },
     {
       href: '/admin/boards',
       label: 'staff.lBoards',
-      note: 'posts on the students’ and the teachers’ boards that somebody reported. A post there is shown at once, so this is where one is taken down. Seeing who is behind a username needs a reason and is recorded',
+      note: 'console.nBoards',
     },
     {
       href: '/admin/ai-support',
       label: 'staff.lAssistant',
-      note: 'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing',
+      note: 'console.nAssistant',
     },
     {
       href: '/admin/connections',
       label: 'staff.lConnections',
-      note: 'the outside accounts this site uses (database, email, scheduler, storage, payments) and which are still to be connected. The owner only; names of missing settings, never a value',
+      note: 'console.nConnections',
     },
     {
       href: '/admin/messages',
       label: 'staff.lMessages',
-      note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured',
+      note: 'console.nMessages',
     },
     {
       href: '/admin/plans',
       label: 'staff.lPlans',
-      note: 'versioned terms, entitlements and recurring prices',
+      note: 'console.nPlans',
     },
     {
       href: '/admin/panels',
       label: 'staff.lPanels',
-      note: 'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it',
+      note: 'console.nPanels',
     },
     {
       href: '/admin/takedowns',
       label: 'staff.lTakedowns',
-      note: 'a notice holds the version it names out of distribution the moment it is entered — nothing is deleted, so the decision still has its evidence. The teacher answers on their own page, somebody other than the person who took the notice decides it, and a hold changes no money',
+      note: 'console.nTakedowns',
     },
     {
       href: '/admin/incidents',
       label: 'staff.lIncidents',
-      note: 'what happened, who has to be told and by when, and the timeline as it happens. Counts, never a list of names; every deadline is typed by a person because the rule differs by market. Nothing here detects a breach and nothing sends a notification',
+      note: 'console.nIncidents',
     },
     {
       href: '/admin/policies',
       label: 'staff.lPolicies',
-      note: 'every document with the versions that have been in force and the draft waiting now. Publishing needs a date and a written reason, and is refused while a question only you can answer is still marked in the text',
+      note: 'console.nPolicies',
     },
     {
       href: '/admin/certificates',
       label: 'nav.certificates',
-      note: 'issue completion certificates and record revocations with a reason',
+      note: 'console.nCertificates',
     },
     {
       href: '/admin/analytics',
       label: 'staff.lAnalytics',
-      note: 'what people do, kept forever, by event and by day. Aggregates only',
+      note: 'console.nAnalytics',
     },
     {
       href: '/admin/guardians',
       label: 'staff.lGuardians',
-      note: 'adults asking to be recognised as a child’s parent',
+      note: 'console.nGuardians',
     },
     {
       href: '/admin/appeals',
       label: 'staff.lAppeals',
-      note: 'teachers contesting a rejection. You cannot decide an appeal against your own decision',
+      note: 'console.nAppeals',
     },
     {
       href: '/admin/roles',
       label: 'tq.roles',
-      note: 'who may do what. Every check in the database reads these',
+      note: 'console.nRoles',
     },
   ],
 } as const satisfies Record<string, readonly ConsoleLink[]>;

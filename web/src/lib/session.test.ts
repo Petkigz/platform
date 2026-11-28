@@ -130,10 +130,12 @@ test('staff are told so only by an exact true, and only when signed in', () => {
 test('staff have a way back to the console from every page, and nobody else is shown one', () => {
   // The owner, 2026-11-27: after opening another tab of the header there was
   // "no button or element" that led back to the console.
-  assert.deepEqual(staffNavLink({ signedIn: true, name: null, staff: true }), { label: 'Admin', href: '/admin' });
-  assert.equal(staffNavLink({ signedIn: true, name: 'Amina', staff: false }), null);
-  assert.equal(staffNavLink({ signedIn: true, name: 'Amina' }), null);
-  assert.equal(staffNavLink({ signedIn: false, name: null, staff: true }), null);
+  // The word is handed in: it is the catalogue's, in the reader's language.
+  assert.deepEqual(staffNavLink({ signedIn: true, name: null, staff: true }, 'Admin'), { label: 'Admin', href: '/admin' });
+  assert.deepEqual(staffNavLink({ signedIn: true, name: null, staff: true }, 'الإدارة'), { label: 'الإدارة', href: '/admin' });
+  assert.equal(staffNavLink({ signedIn: true, name: 'Amina', staff: false }, 'Admin'), null);
+  assert.equal(staffNavLink({ signedIn: true, name: 'Amina' }, 'Admin'), null);
+  assert.equal(staffNavLink({ signedIn: false, name: null, staff: true }, 'Admin'), null);
 
   const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
   // The answer comes from the question `/admin` itself is guarded by, so the
@@ -143,9 +145,19 @@ test('staff have a way back to the console from every page, and nobody else is s
   assert.match(route, /staff: privileged === true/u);
   // It is in the main navigation, drawn by the layout on every page, and it
   // shares the masthead's one request.
-  assert.match(read('../app/layout.tsx'), /<nav className="nav"[^>]*>\s*<StaffNavLink \/>/u);
+  const layout = read('../app/layout.tsx');
+  assert.match(layout, /<nav className="nav"[^>]*>\s*<StaffNavLink\s/u);
+  // The layout reads the word on the server, in the language the console's
+  // sentences are shown in, and marks it only when that is not the page's.
+  assert.match(layout, /const consoleShown = languageShownFor\(code, 'console'\);/u);
+  assert.match(layout, /label=\{translator\(consoleShown\.code\)\('console\.nav'\)\}/u);
+  assert.match(layout, /mark=\{consoleShown\.code !== code \? \{ lang: consoleShown\.code, dir: consoleShown\.dir \} : undefined\}/u);
   const link = read('../app/_shared/staff-nav-link.tsx');
   assert.match(link, /sessionOnce\(\)/u);
   assert.doesNotMatch(link, /fetch\(/u);
-  assert.match(link, /lang="en"/u);
+  // No English word and no fixed language in the component any more.
+  assert.doesNotMatch(link, /lang="en"|'Admin'/u);
+  assert.match(link, /staffNavLink\(session, label\)/u);
+  assert.match(link, /\{\.\.\.\(mark \?\? \{\}\)\}/u);
+  assert.doesNotMatch(read('./session.ts'), /label: 'Admin'/u);
 });

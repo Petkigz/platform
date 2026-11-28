@@ -1,0 +1,35 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The staff console (`/admin`), second part: the word for the console in
+ * the main navigation, and the sentence beside each of its 43 links.
+ *
+ * Written on 2026-11-28, in the same twenty-seven languages as the
+ * dashboard. **Written by the people who built the site and read by no
+ * speaker.** A sentence here says what a screen is for and what it will
+ * not do ("approving is an agreement, not a transfer"), and a member of
+ * staff reads it before opening the screen. A wrong one misdescribes a
+ * rule; nothing here enforces one.
+ *
+ * A sentence follows the screen's name and a dash, so it begins small and
+ * ends without a full stop. The word in the navigation is the word the
+ * page's own eyebrow uses. The sentence beside "Payment disputes" is the
+ * sentence the queue of the same name uses, and a board, a reviewer, the
+ * register, a panel, its quorum and chair, a sponsored seat and a
+ * certificate keep the words the older parts gave them.
+ *
+ * Three things stay in Latin letters in every language, because they are
+ * what a member of staff types or looks up: the flag keys
+ * `platform.safeguarding` and `governance.panel_required`, and `DNS`.
+ * "Recorded" and "verified" on the ijazah register are in each language's
+ * own quotation marks; the register says the first and never the second.
+ * French puts a no-break space before `:`, `;` and `?` and inside « ».
+ *
+ * Not here: the owner's switchboard (a flag's description, the revenue
+ * share form) and what the database says a flag still needs. The page says
+ * those in English and marks them as English.
+ *
+ * Made by `scripts/catalogue-part/gen.py` from
+ * `scripts/catalogue-part/data/console.txt`.
+ */

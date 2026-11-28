@@ -118,6 +118,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // The notice about changed documents is in the language the policy pages
   // are in for this reader: theirs, or English marked as English.
   const policyShown = languageShownFor(code, 'policy');
+  // "Admin" in the navigation, for staff: the console's own word for itself.
+  const consoleShown = languageShownFor(code, 'console');
   const policyWords = translator(policyShown.code);
 
   return (
@@ -155,7 +157,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             />
 
             <nav className="nav" aria-label={t('nav.main')} tabIndex={0}>
-              <StaffNavLink />
+              <StaffNavLink
+                label={translator(consoleShown.code)('console.nav')}
+                mark={consoleShown.code !== code ? { lang: consoleShown.code, dir: consoleShown.dir } : undefined}
+              />
               <NavLink href="/catalogue">{t('nav.catalogue')}</NavLink>
               <NavLink href="/learn">{t('nav.learn')}</NavLink>
               <NavLink href="/family">{t('nav.family')}</NavLink>

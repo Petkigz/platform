@@ -127,14 +127,14 @@ export type CallToAction = { label: string; href: string };
  * not say so, and a way back that has to be guessed is not one.
  *
  * So staff get a link that names the place, on every page, and nobody else is
- * shown it. The word is English because the console was; since 2026-11-28
- * the top of the console is in the reader's language and this word is the
- * one left behind. It is drawn by a client component, so its translation has
- * to live in the part every page carries, not under `staff.`.
+ * shown it. The word was English while the console was. Since 2026-11-28 it
+ * is `console.nav` of the catalogue, in the reader's language: the layout
+ * reads it on the server and hands it to the client component that draws
+ * the link, so the word is given here rather than known here.
  */
-export function staffNavLink(session: SessionSummary): CallToAction | null {
+export function staffNavLink(session: SessionSummary, label: string): CallToAction | null {
   if (!session.signedIn || session.staff !== true) return null;
-  return { label: 'Admin', href: '/admin' };
+  return { label, href: '/admin' };
 }
 
 /**

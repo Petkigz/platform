@@ -43,7 +43,7 @@ async function readerLanguage() {
     chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
     acceptLanguage: hdrs.get('accept-language'),
   });
-  return { locale, shown: languageShownFor(locale, 'staff') };
+  return { locale, shown: languageShownFor(locale, 'staff'), notes: languageShownFor(locale, 'console') };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -99,11 +99,12 @@ type Attention = {
  *
  * **In the reader's language since 2026-11-28, in part.** What is waiting, the
  * queues, what a new platform still needs, the headings and the name of every
- * screen are sentences of the catalogue (`staff.`). Two things are not, and
- * are marked as English (`lang="en"`) wherever the rest is in another
- * language: the sentence beside each link, and the owner's switchboard (the
- * revenue share, the translation line, the four counts, the retention clock
- * and the flag register, whose preconditions are rows of the database).
+ * screen are sentences of the catalogue (`staff.`), and so is the sentence
+ * beside each link (`console.`). One thing is not, and is marked as English
+ * (`lang="en"`) wherever the rest is in another language: the owner's
+ * switchboard (the revenue share, the translation line, the four counts, the
+ * retention clock and the flag register, whose preconditions are rows of the
+ * database).
  */
 export default async function AdminPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -118,15 +119,20 @@ export default async function AdminPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const { locale, shown } = await readerLanguage();
+  const { locale, shown, notes } = await readerLanguage();
   const t = translator(shown.code);
   const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
   const n = (value: number) => formatNumber(shown.code, value);
   // What is still said in English, on a page otherwise in another language.
   const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  // The sentence beside a link is a second part of the catalogue (`console.`).
+  // It is written in the languages the top of the page is, so the mark is
+  // empty; it is there for the day one part is held and the other is not.
+  const tn = translator(notes.code);
+  const noteMark = notes.code === shown.code ? {} : { lang: notes.code, dir: notes.dir };
   const linkLine = (link: ConsoleLink) => (
     <p key={link.href} data-staff-link={link.href}>
-      <Link href={link.href}>{t(link.label)}</Link> — <span {...english}>{link.note}</span>
+      <Link href={link.href}>{t(link.label)}</Link> — <span {...noteMark}>{tn(link.note)}</span>
     </p>
   );
 

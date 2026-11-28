@@ -88,6 +88,7 @@ import { PANEL } from './panel.ts';
 import { REVIEW } from './review.ts';
 import { REVIEW_ASSIGNMENT } from './review-assignment.ts';
 import { STAFF } from './staff.ts';
+import { CONSOLE } from './console.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -951,6 +952,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   REVIEW_ASSIGNMENT,
   // The staff console (`/admin`), on the same rule.
   STAFF,
+  // The staff console's navigation word and the sentence beside each of its links, on the same rule.
+  CONSOLE,
 );
 
 /**

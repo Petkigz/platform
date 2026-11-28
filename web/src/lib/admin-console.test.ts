@@ -85,7 +85,16 @@ test('every screen is listed once, under one gate, with a name from the catalogu
   for (const link of all) {
     assert.match(link.href, /^\/admin\/[a-z-]+$/u);
     assert.ok(en[link.label].length > 0, link.href);
-    assert.ok(link.note.length > 0 && !link.note.endsWith('.'), link.href);
+    // The sentence beside it is a key too, and follows a dash: no closing stop.
+    assert.match(link.note, /^console\.n[A-Z][A-Za-z]+$/u, link.href);
+    assert.ok(en[link.note].length > 0 && !en[link.note].endsWith('.'), link.href);
+    assert.doesNotMatch(en[link.note], /`/u, link.href);
+  }
+  assert.equal(new Set(all.map((link) => link.note)).size, 43);
+  assert.equal(new Set(all.map((link) => en[link.note])).size, 43);
+  // A link's sentence is named after the link: `staff.lRefunds` has `console.nRefunds`.
+  for (const link of all) {
+    if (link.label.startsWith('staff.l')) assert.equal(link.note, `console.n${link.label.slice('staff.l'.length)}`, link.href);
   }
 });
 

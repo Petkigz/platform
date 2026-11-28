@@ -4051,6 +4051,97 @@ export const en = {
   'staff.lAnalytics': 'Analytics',
   'staff.lGuardians': 'Guardian verification',
   'staff.lAppeals': 'Appeals',
+  // The staff console, second part (2026-11-28): the word for it in the main
+  // navigation, and the sentence beside each of its 43 links. A sentence
+  // follows the screen's name and a dash, so it begins small and ends
+  // without a full stop. A flag's key is written as the register writes it.
+  'console.nav': 'Admin',
+  'console.nOrders':
+    'the only orders whose total can still change: record a discount, tax, fee or rounding against one, or withdraw one',
+  'console.nRefunds':
+    'money going back out. Approving is an agreement, not a transfer',
+  'console.nAdjustments':
+    'append-only accounting corrections and earnings clawbacks',
+  'console.nReconciliation':
+    'signed statement rows against the internal ledger',
+  'console.nDisputes':
+    'a chargeback has a deadline; the provider decides what happens if it passes',
+  'console.nTax':
+    'what a buyer is charged on top of the price, by the country they buy from',
+  'console.nRates':
+    'what one currency was worth in another, when, and who said so',
+  'console.nRevenue':
+    'what sold in a period by currency, course, plan and teacher, with refunds beside the sale and never netted out of sight',
+  'console.nMoneyReport':
+    'what moved in a period, in the one currency the platform is read in, with the rate beside every figure',
+  'console.nRenewals':
+    'every live subscription expanded forward at the price it was sold at. Committed, not arrived — nothing charges a renewal yet',
+  'console.nPayouts':
+    'what teachers have asked to be paid, and the refund hold that keeps a sale from leaving before it can be reversed',
+  'console.nCourses':
+    'every course, which door it stands behind and how many learners it holds. Changing an audience is recorded against your name, with both sides of the change',
+  'console.nTeachers':
+    'the people asking to teach, and everyone who may teach here with what each has published and how many learners their courses hold. Approving an application is the appointment: it grants the role, with your reason against the applicant',
+  'console.nAssign':
+    'courses waiting for a reviewer',
+  'console.nSubjects':
+    'the vocabulary of the catalogue: what a learner can filter by, and what a badge on a course card may say. A subject in use by a live course cannot be retired',
+  'console.nReviewers':
+    'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified',
+  'console.nScreenings':
+    'every appointed teacher and whether a check is on file: what kind, when, when it lapses, who recorded it. The reference to the document is stored and never shown again, and a record cannot be edited — a new check supersedes it. While platform.safeguarding is on, a course a child may be shown cannot be published unless its author holds a passed, unexpired check and has acknowledged the conduct policy',
+  'console.nIjazah':
+    'who authorised whom, for what, and what you were shown. Yours alone to record: a chain of transmission is not something this platform has the standing to check, so the register says “recorded”, never “verified”, and nothing here is visible to a learner',
+  'console.nTranslations':
+    'corrections sent by people who speak the language, each shown against the line it replaces and against the catalogue that is actually built. Yours alone to decide: accepting a line does not change the site — the paste block does that — and a language is only described as read when every part of it has a published read — or when one person has published a whole-catalogue read — with every correction decided',
+  'console.nInstitutions':
+    'madrasahs, schools and organisations with their own page: open one, check the DNS record behind a domain claim, and change who administers it. An institution sees counts of its own members and never a learner’s name, and it cannot buy seats — invoicing needs terms and a provider nobody has',
+  'console.nSponsorships':
+    'learners asking for a course, and donors paying for one. Deciding needs a written reason and recording a payment needs a reference; a sponsored seat is not an order, so it carries no tax and no teacher earning',
+  'console.nInvitations':
+    'who invited whom, what it earned and what the yearly cap or a refund stopped. Both rewards are discounts on a course — nothing is paid out, so there is no balance here',
+  'console.nSupport':
+    'requests people opened from Help. Turning the feature off stops new ones; it does not close what is in flight',
+  'console.nUsers':
+    'every account on the platform, searchable by name or email — accounts, not children',
+  'console.nControls':
+    'the numbers behind features that are already on. Only the ones your role owns are shown, and each change needs a reason',
+  'console.nReports':
+    'problems readers flagged in a lesson or an answer. Closing one needs a written note',
+  'console.nMedia':
+    'every master anybody has uploaded. Quarantine and withdrawal both need a written reason',
+  'console.nCourseReviews':
+    'learner ratings that include words, held until someone reads them',
+  'console.nDiscussion':
+    'learner questions and peer answers held for review',
+  'console.nBoards':
+    'posts on the students’ and the teachers’ boards that somebody reported. A post there is shown at once, so this is where one is taken down. Seeing who is behind a username needs a reason and is recorded',
+  'console.nAssistant':
+    'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing',
+  'console.nConnections':
+    'the outside accounts this site uses (database, email, scheduler, storage, payments) and which are still to be connected. The owner only; names of missing settings, never a value',
+  'console.nMessages':
+    'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured',
+  'console.nPlans':
+    'versioned terms, entitlements and recurring prices',
+  'console.nPanels':
+    'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it',
+  'console.nTakedowns':
+    'a notice holds the version it names out of distribution the moment it is entered — nothing is deleted, so the decision still has its evidence. The teacher answers on their own page, somebody other than the person who took the notice decides it, and a hold changes no money',
+  'console.nIncidents':
+    'what happened, who has to be told and by when, and the timeline as it happens. Counts, never a list of names; every deadline is typed by a person because the rule differs by market. Nothing here detects a breach and nothing sends a notification',
+  'console.nPolicies':
+    'every document with the versions that have been in force and the draft waiting now. Publishing needs a date and a written reason, and is refused while a question only you can answer is still marked in the text',
+  'console.nCertificates':
+    'issue completion certificates and record revocations with a reason',
+  'console.nAnalytics':
+    'what people do, kept forever, by event and by day. Aggregates only',
+  'console.nGuardians':
+    'adults asking to be recognised as a child’s parent',
+  'console.nAppeals':
+    'teachers contesting a rejection. You cannot decide an appeal against your own decision',
+  'console.nRoles':
+    'who may do what. Every check in the database reads these',
 } as const;
 
 export type MessageKey = keyof typeof en;

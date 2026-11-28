@@ -140,6 +140,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'review',
   'ra',
   'staff',
+  'console',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

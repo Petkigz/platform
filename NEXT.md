@@ -11404,8 +11404,8 @@ started: recitation correction, native apps, push notifications.
   it already do. "The switches below are the reason this page exists"
   was said to people who are shown no switches, and is gone.
   **Still English, and marked as English wherever the rest is not:** the
-  sentence beside each of the 43 links (about 5,900 characters, the next
-  unit), and the owner's switchboard: the revenue share form, the
+  sentence beside each of the 43 links (about 5,900 characters; *done the
+  same day, see the next entry*), and the owner's switchboard: the revenue share form, the
   translation line, the four counts, the retention clock and the flag
   register, whose descriptions and preconditions are rows of the
   database.
@@ -11453,7 +11453,7 @@ started: recitation correction, native apps, push notifications.
   sentences are translated. Counts on the Arabic page are in Western
   digits ("1,239"), which is what `Intl` gives for `ar` and what every
   other page of the site shows; Persian has its own.
-  *Found and left:* the link to this page in the main navigation still
+  *Found and left (and done the same day, see the next entry):* the link to this page in the main navigation still
   says "Admin" in every language, unmarked (`staffNavLink()` in
   `web/src/lib/session.ts`, whose comment says "the word is English
   because the console is", which is now half true). It is drawn by a
@@ -11470,3 +11470,70 @@ started: recitation correction, native apps, push notifications.
   `/admin/course-reviews` and the other 40 staff screens; the flag
   descriptions. An "appeal" was given a word of its own in Uzbek, Kazakh
   and Tajik without looking up what the older parts call one.
+- **The sentence beside each link of the staff console, and the word
+  "Admin" in the main navigation, are in the reader's language
+  (2026-11-28, second unit; the owner's switchboard is not).**
+  What the first unit left in English on `/admin`, apart from the
+  switchboard. *Now from the catalogue* (`console.`, 44 sentences, the
+  twenty-seven languages, **read by no speaker**): the 43 sentences that
+  say what a screen is for and what it will not do ("approving is an
+  agreement, not a transfer"; "you cannot decide an appeal against your
+  own decision"), and one word, `console.nav`, for the link to the
+  console in the main navigation. These are longer and denser than
+  anything else on the page (about 5,900 characters of English, some
+  1,200 sentences across the languages), and they describe rules about
+  money, safeguarding and governance. A wrong one misdescribes a rule to
+  the member of staff reading it; none of them enforces anything.
+  *How they are kept consistent:* a link's sentence is named after the
+  link (`staff.lRefunds` has `console.nRefunds`). In every language the
+  word in the navigation is the word over the page it opens; the sentence
+  beside "Payment disputes" is the queue's own sentence without its stop;
+  the two boards, a reviewer, the register, a panel, its quorum and
+  chair, a sponsored seat and a certificate keep the words the older
+  parts gave them. The flag keys `platform.safeguarding` and
+  `governance.panel_required`, and `DNS`, stay in Latin letters in every
+  language, because they are what somebody types or looks up; the
+  backticks the English carried around a key are gone, since the page
+  drew them as backticks. "Recorded" and "verified" on the ijazah
+  register are in each language's quotation marks. In English the word in
+  the navigation is still "Admin" and the page's eyebrow "Administration";
+  in the other languages they are one word.
+  *The word in the navigation:* it is drawn by a script (it waits for the
+  masthead's one question), and the console's sentences are not sent to
+  the browser. So the layout reads the one word on the server and hands
+  it over, with a language mark only when it is not in the page's
+  language (a language held for review gets "Admin", marked English).
+  `staffNavLink()` no longer knows an English word.
+  *On the page:* the sentence is no longer marked `lang="en"`; a mark is
+  kept in the code for the day one of the two parts is held and the other
+  is not, and is empty today.
+  *Checked by:* `web/src/lib/admin-page.test.ts` (every language holds
+  the 44, none is the English sentence, none ends with a stop or keeps a
+  code mark; the rules of consistency above, for each language; French
+  spacing), `admin-console.test.ts` (43 links, 43 different sentences,
+  each named after its link), `session.test.ts` (the layout hands the
+  word over and the script holds none);
+  `scripts/admin-route-smoke.mjs` (in CI): the owner's Arabic page has 43
+  sentences beside 43 links, none marked and none English, with the flag
+  keys and `DNS` inside the Arabic; one whole sentence each in Arabic,
+  French (with its no-break space) and Swahili; a held language gets the
+  English sentence inside its marked frame. With a browser (the
+  responsive workflow): the same 24 drawings as before still fit 320
+  pixels with sentences in Arabic and Tamil instead of English; the link
+  in the navigation says the reader's word, carries no mark and is the
+  current page; in Arabic every sentence starts after its link.
+  `scripts/client-bundle-check.mjs` looks for three of the sentences in
+  every script the browser downloads, in each language whose sentence
+  holds a letter English does not, and finds none.
+  *Looked at, drawn (Chromium in the sandbox, Noto fonts put in by
+  hand):* the Arabic and Tamil pages at 390 and 1440 pixels. The Arabic
+  paragraphs are no longer ragged; `platform.safeguarding` sits inside
+  the Arabic line in the right order; the navigation shows "الإدارة" and
+  "நிர்வாகம்" underlined as the current page.
+  **Not done:** read by anybody who speaks any of the languages, which
+  matters more here than for a heading, because these sentences state
+  rules; seen under a real staff session; Firefox and WebKit. The
+  switchboard (a flag's description and what it still needs, which are
+  rows of the database, the revenue share form, the translation line,
+  the four counts and the retention clock) is still English and marked.
+  Every other staff page is still English, with no mark.
