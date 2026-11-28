@@ -5,7 +5,7 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { isFlagEnabled } from '@/lib/flags';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_STATUS_LABEL, type VersionStatus } from '@/lib/authoring';
-import { SEVERITY, type RehearsalLesson } from '@/lib/lesson-preview';
+import { SEVERITY, type RehearsalLesson, rehearsalBadgeOf } from '@/lib/lesson-preview';
 import { loadRehearsal } from '@/lib/version-rehearsal';
 
 export const dynamic = 'force-dynamic';
@@ -258,10 +258,14 @@ export default async function VersionRehearsalPage({
   );
 }
 
-/** A word for how a lesson reads, so a scan down forty rows finds the bad ones. */
+/**
+ * A word for how a lesson reads, so a scan down forty rows finds the bad ones.
+ * Which of the four it is comes from `rehearsalBadgeOf()`, which the
+ * reviewer's outline asks too.
+ */
+const BADGE_WORD = { empty: 'Nothing in it', silent: 'Nothing to play', noted: 'Worth a look', ready: 'Ready' } as const;
+
 function Badge({ lesson }: { lesson: RehearsalLesson }) {
-  if (lesson.preview.rows.length === 0) return <span className="badge neutral">Nothing in it</span>;
-  if (lesson.severity === SEVERITY.silent) return <span className="badge neutral">Nothing to play</span>;
-  if (lesson.severity === SEVERITY.noted) return <span className="badge neutral">Worth a look</span>;
-  return <span className="badge ok">Ready</span>;
+  const badge = rehearsalBadgeOf(lesson);
+  return <span className={badge === 'ready' ? 'badge ok' : 'badge neutral'}>{BADGE_WORD[badge]}</span>;
 }

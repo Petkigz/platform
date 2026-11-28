@@ -418,6 +418,22 @@ export type Rehearsal = {
   nextAlso: number;
 };
 
+/**
+ * How a lesson reads at a glance, by name.
+ *
+ * One answer for the author's rehearsal and the reviewer's outline, so that
+ * two screens describing one lesson cannot disagree; each page says the name
+ * in its own words (the reviewer's in the reader's language since 2026-11-28).
+ */
+export type RehearsalBadge = 'empty' | 'silent' | 'noted' | 'ready';
+
+export function rehearsalBadgeOf(lesson: Pick<RehearsalLesson, 'preview' | 'severity'>): RehearsalBadge {
+  if (lesson.preview.rows.length === 0) return 'empty';
+  if (lesson.severity === SEVERITY.silent) return 'silent';
+  if (lesson.severity === SEVERITY.noted) return 'noted';
+  return 'ready';
+}
+
 const TROUBLE: Record<Exclude<Playback, 'video' | 'audio' | 'download'>, string> = {
   link: 'opens as a link rather than in the page',
   uploaded: 'is uploaded; whether it plays depends on the copies below',

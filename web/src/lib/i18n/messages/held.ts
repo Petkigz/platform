@@ -138,6 +138,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'tpub',
   'panel',
   'review',
+  'ra',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

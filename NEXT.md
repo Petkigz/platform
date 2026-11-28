@@ -11151,7 +11151,8 @@ started: recitation correction, native apps, push notifications.
   say the same English), `voc.mts` (what older keys say in each
   language), `headers/` (the comment at the top of a part) and
   `data/review.txt`.
-  **Still English:** `/review/[assignmentId]`, and the staff areas
+  **Still English:** `/review/[assignmentId]` *(written the next day,
+  see below)*, and the staff areas
   (`/admin`, `/teach`, `/institution`).
 - **The responsive workflow's first job is now two.** With the review
   check added, the job `responsive` ran to its 25 minute limit on the
@@ -11202,8 +11203,11 @@ started: recitation correction, native apps, push notifications.
   do what a reviewer does. `DB_SUITES='a,b' node supabase/tests/run.mjs`
   runs a few suites while writing one.
   **Not done:** the hosted project is at 370 and has every one of these
-  holes until the 371st is applied by a job of its own, which is not
-  written because the owner has not asked for it. Read on 2026-11-27:
+  holes until the 371st is applied. Its job was written on 2026-11-28,
+  when the owner asked for it (`scripts/hosted-migration-371.mjs`,
+  `.github/workflows/supabase-test-371.yml`), and run `46104196908`
+  has waited since for the owner's approval in the environment
+  `ayahspring-test-migration-apply`. Read on 2026-11-27:
   it holds one account and no course version, enrolment, reviewer,
   assignment or decision, so nothing existed that they could be used
   on. The other functions that answer a question about a user id they
@@ -11211,3 +11215,61 @@ started: recitation correction, native apps, push notifications.
   `can_…(uuid)`) tell anybody signed in (the first two, anybody at all)
   whether an account is staff; they write nothing and were left.
   Nothing here was tried through PostgREST or a real session.
+- **One assignment, `/review/[assignmentId]`, in the reader's language,
+  and nine faults on the page (2026-11-28, unreviewed).** The page, its
+  decision card and its declaration say everything from the catalogue
+  (`ra.`, 53 sentences in the twenty-seven languages,
+  `messages/review-assignment.ts`); the two cards run in the browser and
+  are handed their words. Found while it was written:
+  1. A declined, a cancelled and a completed review were each shown the
+     form for recording a decision. The form is now offered only on a
+     review accepted or in progress with no decision on it
+     (`assignmentSeatOf()`); a closed one says it is closed.
+  2. An assignment that could not be read was "not found".
+  3. An outline that could not be read was "This version has no
+     sections. There is nothing to review"; its counts were 0.
+  4. Delivery copies that could not be read were each "no delivery copy
+     has been encoded yet".
+  5. A failed read of the transcripts, of the previews switch or of what
+     the version needs was the page that says the site broke. Each now
+     leaves the page standing with one notice; what a learner gets is
+     not worked out when the switch could not be read.
+  6. A decision that was recorded while the course did not move was
+     answered 409 with an error, as if nothing had been recorded, and
+     the reviewer's only way on was to decide again (which migration 371
+     refuses). `/api/review` now answers 200 with `moved: 'no'` (or
+     `'already'` when another decision had moved it), and the card says
+     so.
+  7. Any failure was printed as the database's English sentence. The
+     route names each refusal (`signedOut`, `notYours`, `notOpen`,
+     `conflict`, `reason`, `refused`, `unsure`); an answer nobody could
+     read is "nobody can say", not a refusal.
+  8. The lesson player on this page was English in every language: it
+     has its own sentences, which a page must hand over, and this one
+     did not.
+  9. Before the reviewer's words were written the buttons borrowed the
+     board's "Approve" and "Reject", which in most of the languages are
+     a vote ("for", "against"), and "Decline" from the merge screen,
+     which in many is the word for rejecting. They have words of their
+     own now (`ra.approve`, `ra.reject`, `ra.decline`). Found only
+     because the smoke types the sentences it expects.
+  The author's rehearsal page and this one ask one function which badge
+  a lesson gets (`rehearsalBadgeOf()`).
+  *Checked by:* `web/src/lib/review-assignment-page.test.ts` (8 tests);
+  `scripts/review-assignment-smoke.mjs` against a synthetic Auth and
+  REST (the page in English, Arabic, Persian and a held language; each
+  seat; each failed read; thirteen requests refused by their shape; the
+  database's refusals by name; with a browser, four languages at four
+  sizes and every refusal in Arabic). It runs in CI and in the job
+  `responsive`.
+  **Still English, and marked as English on this page:** the two panels
+  shared with the author's and the staff's pages (what the version
+  needs, and the checks on it), wrapped `lang="en" dir="ltr"` with a
+  sentence above them saying so. Their route,
+  `/api/review/requirements`, was not touched. Also English: the name of
+  a quality in the player's menu ("480p — standard") and the sentence
+  the playback route sends when a lesson cannot be played.
+  **Not done:** no speaker has read the 53 sentences, and a decision
+  here moves a course towards publication. Nothing was tried against
+  the hosted project or with a real session; the hosted project has no
+  reviewer and no assignment.

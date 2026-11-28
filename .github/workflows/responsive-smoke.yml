@@ -167,6 +167,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Review register responsive test::${s}`)' "$RUNNER_TEMP/review-responsive.log"
             exit 1
           fi
+      - name: Check one review assignment, its decision and standing aside with synthetic data
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/review-assignment-smoke.mjs > "$RUNNER_TEMP/assignment-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/assignment-responsive.log"
+          else
+            cat "$RUNNER_TEMP/assignment-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Review assignment responsive test::${s}`)' "$RUNNER_TEMP/assignment-responsive.log"
+            exit 1
+          fi
       - name: Check the export pages, their buttons and the print stylesheet with synthetic data
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

@@ -279,7 +279,7 @@ test('a length is printed in the digits the page was given, or not at all', () =
 test('an answer to an offer that says neither yes nor no declines nothing', () => {
   const route = readFileSync(new URL('../app/api/review/route.ts', import.meta.url), 'utf8');
   const respond = route.slice(route.indexOf("b.action === 'respond'"), route.indexOf("b.action === 'decide'"));
-  assert.match(respond, /typeof b\.accept !== 'boolean'[\s\S]*status: 400[\s\S]*respondToAssignment/u, 'the answer is checked before the database is asked');
+  assert.match(respond, /typeof b\.accept !== 'boolean'\) return fail\('refused', [^)]*, 400\);[\s\S]*respondToAssignment/u, 'the answer is checked before the database is asked');
   assert.doesNotMatch(respond, /accept: b\.accept === true/u, 'anything but true must not be read as declining');
 });
 

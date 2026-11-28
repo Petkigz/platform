@@ -2785,3 +2785,60 @@ p.support-small { margin: 0; }
 .register-form { margin-block-start: 0.75rem; }
 .register-pair { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); }
 .register-pair select { min-width: 0; }
+
+/* --------------------------------------------------------------------------
+   One assignment (`/review/[assignmentId]`), 2026-11-28. These were inline
+   styles while the page was English only; logical properties throughout.
+   -------------------------------------------------------------------------- */
+
+.assignment-page h1 { overflow-wrap: anywhere; }
+.assignment-page .badges { margin-block: 0.5rem 1rem; }
+.assignment-page .assignment-gap { margin-block: 1rem; }
+.assignment-gist { margin-block-start: 1.75rem; }
+.assignment-gist h2 { margin-block-start: 0; }
+.assignment-gist p { margin-block: 0 0.5rem; }
+.assignment-gist .assignment-next { margin-block-end: 0.75rem; overflow-wrap: anywhere; }
+.assignment-small { font-size: 0.9rem; }
+.assignment-gist .assignment-small { margin-block-end: 0; }
+.assignment-page .assignment-head { margin-block-start: 1.75rem; }
+.assignment-section { margin-block-end: 1rem; }
+.assignment-section h3 { margin-block-start: 0; overflow-wrap: anywhere; }
+.assignment-section > .empty { margin-block-end: 0; }
+/* A lesson's row holds its title, up to two badges, a transcript and its
+   players: it wraps, the title keeps the first line to itself when it is
+   long, and a badge may take a second line instead of pushing the row off a
+   narrow screen. */
+.assignment-section .lessons li { flex-wrap: wrap; }
+.assignment-section .lessons .t { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.assignment-section .lessons .badge { flex: 0 1 auto; white-space: normal; }
+.assignment-wide { flex-basis: 100%; min-width: 0; }
+.assignment-transcript { white-space: pre-wrap; overflow-wrap: anywhere; }
+.assignment-media { display: grid; gap: 0.75rem; margin-block-start: 0.5rem; flex-basis: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.assignment-section + .assignment-small, .assignment-page > .assignment-small { margin-block-start: 1rem; }
+.assignment-checks { margin-block-start: 1rem; }
+/* The two panels shared with the author's and the staff's pages. They were
+   laid out for a wide screen: at 320px with the largest text a setting's name
+   (`governance.min_approvals`) and a row of two menus were wider than their
+   card. Here they wrap. */
+.assignment-page [data-assign-english] .card { overflow-wrap: anywhere; }
+.assignment-page [data-assign-english] .card .outline-h { flex-wrap: wrap; gap: 0.5rem; }
+.assignment-page [data-assign-english] .card .row { flex-wrap: wrap; }
+.assignment-page [data-assign-english] .card .row > .btn { flex: 0 1 auto; max-width: 100%; white-space: normal; }
+.assignment-page [data-assign-english] .card .row > .meta { flex: 1 1 12rem; min-width: 0; }
+.assignment-page [data-assign-english] .card select,
+.assignment-page [data-assign-english] .card textarea { min-width: 0; max-width: 100%; }
+.assignment-page [data-assign-english] .stack { grid-template-columns: minmax(0, 1fr); }
+.assignment-actions .notice { margin-block-end: 1rem; }
+.assignment-actions .card h3 { margin-block-start: 0; }
+.assignment-actions .card > .meta { margin-block: 0.75rem 0; }
+.assignment-actions .card > h3 + .meta { margin-block-start: 0; margin-block-end: 0.75rem; }
+.assignment-actions textarea { width: 100%; font-family: inherit; }
+.assignment-buttons { flex-wrap: wrap; margin-block-start: 0.75rem; }
+.assignment-actions [data-assign-decided] ul { margin-block: 0.5rem 0; }
+.assignment-actions [data-assign-decided] li { overflow-wrap: anywhere; }
+.assignment-stand { margin-block-start: 1.5rem; }
+.assignment-open { cursor: pointer; color: var(--green-700); }
+.assignment-declare.stack { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; margin-block-start: 0.75rem; }
+.assignment-declare > .meta { margin-block-start: 0; }
+.assignment-declare textarea { width: 100%; font-family: inherit; }
+.assignment-declare select { min-width: 0; }

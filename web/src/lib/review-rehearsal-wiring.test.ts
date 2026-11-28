@@ -27,6 +27,9 @@ const read = (path: string) => readFileSync(join(here, '..', path), 'utf8');
 const reviewPage = read('app/review/[assignmentId]/page.tsx');
 const previewPage = read('app/teach/[courseId]/preview/[lessonId]/page.tsx');
 const reviewLib = read('lib/review.ts');
+// The reviewer's page is in the reader's language since 2026-11-28: its
+// sentences are the catalogue's, and the English of each is checked there.
+const english = read('lib/i18n/messages/en.ts');
 
 test('the reviewer is shown the same rehearsal the author is', () => {
   assert.match(reviewPage, /loadRehearsal\(supabase, assignment\.courseVersionId/);
@@ -41,17 +44,19 @@ test('the reviewer is shown the same rehearsal the author is', () => {
 test('the reviewer is told what a learner gets, not what to decide', () => {
   // A scholarly reviewer judges what is taught; this panel says what arrives.
   // A panel that read as a verdict would be the platform deciding the review.
-  assert.match(reviewPage, /The decision is yours/);
-  assert.match(reviewPage, /nothing here is a reason to accept or decline on its own/);
+  assert.match(reviewPage, /\{t\('ra\.notVerdict'\)\}/);
+  assert.match(english, /'ra\.notVerdict':\s*'[^']*The decision is yours, and nothing here is a reason to accept or decline on its own/);
   // And it must not carry the author's imperative.
   assert.ok(!/Before this reaches a learner/.test(reviewPage));
+  assert.ok(!/'ra\.[a-zA-Z]+':\s*'[^']*Before this reaches a learner/.test(english));
 });
 
 test('an unreadable encoding state is admitted, not reported as broken', () => {
   // A timeout on the delivery read must not turn into "this file does not play":
   // the reviewer would be told something false about a lesson they must judge.
   assert.match(reviewPage, /loaded && !loaded\.deliveryKnown/);
-  assert.match(reviewPage, /nobody asked about rather than one that failed/);
+  assert.match(reviewPage, /loaded && !loaded\.deliveryKnown && <p className="muted">\{t\('ra\.deliveryUnknown'\)\}<\/p>/);
+  assert.match(english, /'ra\.deliveryUnknown':\s*'[^']*nobody asked about rather than one that failed/);
 
   const version: AuthoredVersion = {
     id: 'v',
@@ -110,8 +115,12 @@ test('the outline and the rehearsal come from one read', () => {
 
 test('the badge vocabulary is the author’s, word for word', () => {
   const rehearsalPage = read('app/teach/[courseId]/preview/page.tsx');
-  for (const word of ['Nothing in it', 'Nothing to play', 'Worth a look', 'Ready']) {
-    assert.ok(reviewPage.includes(word), `the reviewer's badge is missing "${word}"`);
+  // Which badge a lesson gets is asked of one function by both pages; the
+  // reviewer's is said in the reader's language, and its English is the author's word.
+  assert.match(reviewPage, /BADGE_KEY\[rehearsalBadgeOf\(told\)\]/);
+  assert.match(rehearsalPage, /rehearsalBadgeOf\(lesson\)/);
+  for (const [key, word] of [['bEmpty', 'Nothing in it'], ['bSilent', 'Nothing to play'], ['bNoted', 'Worth a look'], ['bReady', 'Ready']] as const) {
+    assert.ok(english.includes(`'ra.${key}': '${word}',`), `the reviewer's badge is missing "${word}"`);
     assert.ok(rehearsalPage.includes(word), `the author's badge is missing "${word}"`);
   }
 });
@@ -120,7 +129,8 @@ test('the reviewer can open the lesson they are told to open', () => {
   // The link goes to the author's preview page, so that page has to admit an
   // active reviewer — otherwise the panel points at a 404 and the reviewer
   // concludes the lesson is missing.
-  assert.match(reviewPage, /href=\{`\/teach\/\$\{assignment\.courseId\}\/preview\/\$\{rehearsal\.next\.lessonId\}`\}/);
+  assert.match(reviewPage, /const next = rehearsal\?\.next \?\? null;/);
+  assert.match(reviewPage, /href=\{`\/teach\/\$\{assignment\.courseId\}\/preview\/\$\{next\.lessonId\}`\}/);
   assert.match(previewPage, /may_review_version_media/);
 
   // That course id comes from the version, not from the nested course relation:

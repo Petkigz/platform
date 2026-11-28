@@ -173,6 +173,13 @@ export async function fetchMyAssignments(
   }));
 }
 
+/**
+ * One assignment, or null when there is none this person may read.
+ *
+ * A read that failed is thrown (2026-11-28). Until then it was answered as
+ * null too, so the page said "not found" and the route said "not yours" about
+ * an assignment nobody had managed to read.
+ */
 export async function fetchAssignment(
   supabase: SupabaseClient,
   assignmentId: string,
@@ -183,9 +190,10 @@ export async function fetchAssignment(
       'id, course_version_id, review_scope, assignment_status, assigned_at, due_at, course_versions ( course_id, courses ( title, slug ) ), content_review_decisions ( id, decision, rationale, decided_at )',
     )
     .eq('id', assignmentId)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) return null;
+  if (error) throw new Error(error.message);
+  if (!data) return null;
 
   const r = data as unknown as AssignmentRow;
   return {
@@ -237,15 +245,17 @@ export async function respondToAssignment(
     // cra_update admits privileged users and the assigned reviewer, so anyone
     // else gets a policy error — or, if the row simply is not theirs, zero
     // rows matched. Both are the same answer from here.
+    const state = stateOf(error);
     if (/policy|permission/i.test(error.message)) {
-      return { ok: false, code: 'forbidden', message: 'That assignment is not yours.' };
+      return { ok: false, code: 'forbidden', message: 'That assignment is not yours.', state };
     }
-    return { ok: false, code: 'rejected', message: error.message };
+    return { ok: false, code: 'rejected', message: error.message, state };
   }
 
   const row = (data?.[0] ?? null) as { assignment_status?: string } | null;
   if (!row?.assignment_status) {
-    return { ok: false, code: 'forbidden', message: 'That assignment is not yours.' };
+    // No row and no error: the update policy admitted nothing. That is an answer.
+    return { ok: false, code: 'forbidden', message: 'That assignment is not yours.', state: '42501' };
   }
   return { ok: true, value: { status: row.assignment_status as AssignmentStatus } };
 }
@@ -289,14 +299,16 @@ export async function recordDecision(
     .select('decision');
 
   if (error) {
+    const state = stateOf(error);
     if (/assigned reviewer|insufficient_privilege/i.test(error.message)) {
       return {
         ok: false,
         code: 'forbidden',
         message: 'Only the reviewer named on this assignment can decide it.',
+        state,
       };
     }
-    return { ok: false, code: 'rejected', message: error.message };
+    return { ok: false, code: 'rejected', message: error.message, state };
   }
 
   const row = (data?.[0] ?? null) as { decision?: string } | null;
@@ -315,10 +327,7 @@ export async function applyDecisionToVersion(
   supabase: SupabaseClient,
   args: { versionId: string; decision: Decision; actorId: string },
 ): Promise<ReviewOutcome<{ status: string }>> {
-  const to =
-    args.decision === 'approved' ? 'approved'
-    : args.decision === 'revision_requested' ? 'rejected'
-    : 'rejected';
+  const to = versionStatusAfter(args.decision);
 
   const { data, error } = await supabase.rpc('set_course_version_status', {
     p_version_id: args.versionId,
@@ -327,8 +336,20 @@ export async function applyDecisionToVersion(
     p_reason: `Review decision: ${DECISION_LABEL[args.decision]}`,
   });
 
-  if (error) return { ok: false, code: 'rejected', message: error.message };
-  return { ok: true, value: { status: (data as unknown as string) ?? to } };
+  if (error) return { ok: false, code: 'rejected', message: error.message, state: stateOf(error) };
+  // The function answers with the version's row.
+  const moved = (data as { version_status?: unknown } | null)?.version_status;
+  return { ok: true, value: { status: typeof moved === 'string' ? moved : to } };
+}
+
+/** Where a decision moves a submitted version. */
+export function versionStatusAfter(decision: Decision): 'approved' | 'rejected' {
+  return decision === 'approved' ? 'approved' : 'rejected';
+}
+
+/** The database's own state on a refusal; null when the answer carried none (a gateway's page, a lost connection). */
+function stateOf(error: { code?: string | null }): string | null {
+  return typeof error.code === 'string' && error.code !== '' ? error.code : null;
 }
 
 // ---------------------------------------------------------------------------

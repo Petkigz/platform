@@ -86,6 +86,7 @@ import { ASIA_FIL } from './asia-fil.ts';
 import { ASIA_MY } from './asia-my.ts';
 import { PANEL } from './panel.ts';
 import { REVIEW } from './review.ts';
+import { REVIEW_ASSIGNMENT } from './review-assignment.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -945,6 +946,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   PANEL,
   // The review queue and a reviewer's place on the register (`/review`), on the same rule.
   REVIEW,
+  // One assignment on the review queue, on the same rule.
+  REVIEW_ASSIGNMENT,
 );
 
 /**

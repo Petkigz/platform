@@ -1765,7 +1765,7 @@ Iniatas: {date}
 Takdang petsa: {date}
 Ang pasya mo: {decision}
 Inaprubahan
-Humiling ng mga rebisyon
+Hiniling ang mga rebisyon
 Hindi inaprubahan
 Tingnan ang alok
 Buksan ang pagsusuri

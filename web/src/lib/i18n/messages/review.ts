@@ -2024,7 +2024,7 @@ export const REVIEW: Partial<Record<LocaleCode, Partial<Messages>>> = {
     'review.due': 'Takdang petsa: {date}',
     'review.yourDecision': 'Ang pasya mo: {decision}',
     'review.decApproved': 'Inaprubahan',
-    'review.decRevision': 'Humiling ng mga rebisyon',
+    'review.decRevision': 'Hiniling ang mga rebisyon',
     'review.decRejected': 'Hindi inaprubahan',
     'review.viewOffer': 'Tingnan ang alok',
     'review.open': 'Buksan ang pagsusuri',

@@ -3867,6 +3867,79 @@ export const en = {
   'review.eRefused': 'It was not recorded. Load the page again to see what the register holds.',
   'review.eUnsure':
     'Nobody can say whether that was recorded. Load the page again and look before sending it again.',
+  // One assignment (`/review/[assignmentId]`): what a learner gets, the outline,
+  // the decision and standing aside. 2026-11-28.
+  'ra.decisions': 'Decisions',
+  'ra.gistHead': 'What a learner gets',
+  'ra.allOpen': 'Every lesson gives a learner something to open. Lessons: {n}',
+  'ra.someOpen': 'Lessons that give a learner something to open: {some} of {all}',
+  'ra.nothing': 'Lessons that give a learner nothing at all: {n}',
+  'ra.trouble': 'Lessons with something worth knowing before they reach a learner: {n}',
+  'ra.nextEmpty':
+    'Worth opening first: {lesson}. It has nothing in it at all, so a learner gets a title and an empty page.',
+  'ra.nextSilent':
+    'Looks finished, and is not: {lesson}. Something is attached to it, and a learner can open none of it.',
+  'ra.nextNoted':
+    'Worth a look: {lesson}. A learner can use it, and there is something about it worth knowing first.',
+  'ra.nextAlso': 'Other lessons at the same stage: {n}',
+  'ra.asLearner': 'See it as a learner',
+  'ra.deliveryUnknown':
+    'The encoding state of uploaded files could not be read just now, so a file shown without a player may be one nobody asked about rather than one that failed.',
+  'ra.notVerdict':
+    'This says what a learner would meet, not what to decide. The decision is yours, and nothing here is a reason to accept or decline on its own: a scholarly review is about what is taught, and this is about what arrives.',
+  'ra.outline': 'Outline',
+  'ra.noSections':
+    'This version has no sections. There is nothing to review, and it cannot be published.',
+  'ra.noLessons': 'No lessons.',
+  'ra.bEmpty': 'Nothing in it',
+  'ra.bSilent': 'Nothing to play',
+  'ra.bNoted': 'Worth a look',
+  'ra.bReady': 'Ready',
+  'ra.noCopy':
+    '{name}: no delivery copy has been encoded yet, so there is nothing to watch, and a learner would get a sentence where the player should be.',
+  'ra.watchable':
+    'You can watch the delivery copies of these lessons while this review is open. You cannot save them, and the file a teacher uploaded is not served to you: what is under review is what a learner will see.',
+  'ra.notWatchable':
+    'The lessons can be played from the moment a review is accepted until it is closed, so they cannot be played here now.',
+  'ra.needsHead': 'What this version needs, and what has been checked',
+  'ra.english': 'The two panels below are in English for now.',
+  'ra.decisionHead': 'Your decision',
+  'ra.backQueue': 'Back to the queue',
+  'ra.unread': 'This review could not be read just now. Try again in a moment.',
+  'ra.outlineUnread':
+    'The outline of this course could not be read just now, so it is not shown. Load the page again before you decide.',
+  'ra.partUnread':
+    'Some of this page could not be read just now, so it is incomplete. Load it again before you decide.',
+  'ra.offerHead': 'This review is offered to you',
+  'ra.offerNote': 'Nothing is expected until you accept it.',
+  'ra.accept': 'Accept this review',
+  // Turning an offer down is not rejecting a course, and many languages have two words.
+  'ra.decline': 'Decline',
+  'ra.recordHead': 'Record your decision',
+  'ra.reason': 'Reason',
+  'ra.reasonHint':
+    'What did you check, and what did you find? This is the record a teacher would appeal against.',
+  // A reviewer's own verbs: `panel.approve` and `panel.reject` are a vote ("for", "against").
+  'ra.approve': 'Approve',
+  'ra.revise': 'Request revisions',
+  'ra.reject': 'Reject',
+  'ra.approveNote':
+    'Approving moves the version to approved, where platform staff can publish it. You cannot publish it yourself, and you cannot approve a course you wrote.',
+  'ra.decided': 'You have already recorded a decision on this review.',
+  'ra.closedNote': 'This review is closed, so no decision can be recorded on it.',
+  'ra.notMoved':
+    'Your decision was recorded. The course itself could not be moved on from here; platform staff can see your decision and move it. You do not need to decide again.',
+  'ra.eNotYours': 'That review is not yours.',
+  'ra.eNotOpen':
+    'This review is not open for that any more. Load the page again to see where it stands.',
+  'ra.eConflict': 'A conflict you declared bars you from deciding this review.',
+  'ra.eReason': 'Give a reason for the decision.',
+  'ra.eRefused': 'It was not recorded. Load the page again to see where the review stands.',
+  'ra.standHead': 'Cannot review this impartially?',
+  'ra.declared': 'Declared',
+  'ra.declareOpen': 'Declare a conflict about this course',
+  'ra.declareNote':
+    'Declaring bars you from deciding this review at once, and keeps barring you until platform staff have heard it. It does not close the review: if it is still an offer, decline it as well; otherwise staff close it.',
 } as const;
 
 export type MessageKey = keyof typeof en;

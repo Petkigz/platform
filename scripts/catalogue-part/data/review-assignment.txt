@@ -1,0 +1,1458 @@
+### ar
+القرارات
+ما يحصل عليه المتعلّم
+كل درس يقدّم للمتعلّم شيئًا يفتحه. الدروس: {n}
+الدروس التي تقدّم للمتعلّم شيئًا يفتحه: {some} من {all}
+الدروس التي لا تقدّم للمتعلّم شيئًا على الإطلاق: {n}
+الدروس التي فيها ما يحسن معرفته قبل أن تصل إلى المتعلّم: {n}
+يحسن فتحه أولًا: {lesson}. ليس فيه شيء على الإطلاق، فلا يجد المتعلّم إلا عنوانًا وصفحة فارغة.
+يبدو مكتملًا وليس كذلك: {lesson}. أُرفق به شيء، ولا يستطيع المتعلّم أن يفتح شيئًا منه.
+يستحق نظرة: {lesson}. يستطيع المتعلّم أن يستفيد منه، وفيه ما يحسن معرفته أولًا.
+دروس أخرى في المرحلة نفسها: {n}
+شاهده كما يراه المتعلّم
+تعذّرت الآن قراءة حالة ترميز الملفات المرفوعة، فالملف الذي يظهر بلا مشغّل قد يكون ملفًا لم يُسأل عنه أحد، لا ملفًا فشل ترميزه.
+هذا يبيّن ما سيجده المتعلّم، لا ما ينبغي أن تقرّره. القرار قرارك، وليس في شيء مما هنا سبب كافٍ وحده للقبول أو للاعتذار: المراجعة العلمية تنظر في ما يُدرَّس، وهذا ينظر في ما يصل.
+المخطط
+ليس في هذه النسخة أقسام. لا يوجد ما يُراجَع، ولا يمكن نشرها.
+لا دروس.
+لا شيء فيه
+لا شيء يُشغَّل
+يستحق نظرة
+جاهز
+{name}: لم تُرمَّز بعدُ نسخة للعرض، فلا يوجد ما يُشاهَد، وسيجد المتعلّم جملة في مكان المشغّل.
+يمكنك مشاهدة نسخ العرض لهذه الدروس ما دامت هذه المراجعة مفتوحة. لا يمكنك حفظها، والملف الذي رفعه المعلّم لا يُقدَّم لك: الذي يُراجَع هو ما سيراه المتعلّم.
+يمكن تشغيل الدروس من لحظة قبول المراجعة إلى أن تُغلق، ولذلك لا يمكن تشغيلها هنا الآن.
+ما تحتاج إليه هذه النسخة، وما جرى التحقق منه
+اللوحتان التاليتان بالإنجليزية في الوقت الحاضر.
+قرارك
+العودة إلى القائمة
+تعذّرت قراءة هذه المراجعة الآن. حاول مرة أخرى بعد قليل.
+تعذّرت الآن قراءة مخطط هذه الدورة، ولذلك لا يُعرض. أعد تحميل الصفحة قبل أن تقرّر.
+تعذّرت الآن قراءة جزء من هذه الصفحة، فهي غير مكتملة. أعد تحميلها قبل أن تقرّر.
+هذه المراجعة معروضة عليك
+لا يُنتظر منك شيء حتى تقبلها.
+اقبل هذه المراجعة
+اعتذر عنها
+سجّل قرارك
+السبب
+ما الذي تحققت منه، وماذا وجدت؟ هذا هو السجل الذي قد يتظلّم منه المعلّم.
+وافق
+اطلب تعديلات
+ارفض
+الموافقة تنقل النسخة إلى حالة «تمت الموافقة»، وعندها يستطيع فريق المنصة نشرها. لا يمكنك نشرها بنفسك، ولا الموافقة على دورة كتبتها أنت.
+لقد سجّلت قرارًا في هذه المراجعة من قبل.
+هذه المراجعة مغلقة، فلا يمكن تسجيل قرار فيها.
+سُجّل قرارك. أما الدورة نفسها فتعذّر نقلها من هنا؛ فريق المنصة يرى قرارك ويستطيع نقلها. لا تحتاج إلى أن تقرّر مرة أخرى.
+هذه المراجعة ليست لك.
+لم تعد هذه المراجعة مفتوحة لذلك. أعد تحميل الصفحة لترى أين وصلت.
+تعارض أفصحت عنه يمنعك من البتّ في هذه المراجعة.
+اذكر سببًا للقرار.
+لم يُسجَّل. أعد تحميل الصفحة لترى أين وصلت المراجعة.
+لا تستطيع مراجعتها بحياد؟
+أُفصح عنه
+أفصح عن تعارض يخص هذه الدورة
+الإفصاح يمنعك فورًا من البتّ في هذه المراجعة، ويبقى المنع قائمًا إلى أن ينظر فيه فريق المنصة. وهو لا يغلق المراجعة: إن كانت ما تزال عرضًا فاعتذر عنها أيضًا؛ وإلا فالفريق هو من يغلقها.
+### ur
+فیصلے
+متعلم کو کیا ملتا ہے
+ہر سبق متعلم کو کھولنے کے لیے کچھ دیتا ہے۔ اسباق: {n}
+وہ اسباق جو متعلم کو کھولنے کے لیے کچھ دیتے ہیں: {all} میں سے {some}
+وہ اسباق جو متعلم کو کچھ بھی نہیں دیتے: {n}
+وہ اسباق جن کے بارے میں متعلم تک پہنچنے سے پہلے کچھ جان لینا بہتر ہے: {n}
+پہلے اسے کھولنا بہتر ہے: {lesson}۔ اس میں کچھ بھی نہیں، اس لیے متعلم کو صرف ایک عنوان اور خالی صفحہ ملتا ہے۔
+مکمل لگتا ہے، مگر ہے نہیں: {lesson}۔ اس کے ساتھ کچھ منسلک ہے، اور متعلم اس میں سے کچھ بھی نہیں کھول سکتا۔
+ایک نظر ڈالنے کے لائق: {lesson}۔ متعلم اسے استعمال کر سکتا ہے، اور اس کے بارے میں پہلے کچھ جان لینا بہتر ہے۔
+اسی مرحلے پر دوسرے اسباق: {n}
+اسے متعلم کی طرح دیکھیں
+اپ لوڈ کی گئی فائلوں کی انکوڈنگ کی حالت ابھی نہیں پڑھی جا سکی، اس لیے جو فائل پلیئر کے بغیر دکھائی دے وہ ایسی بھی ہو سکتی ہے جس کے بارے میں کسی نے پوچھا ہی نہیں، نہ کہ ایسی جو ناکام ہوئی۔
+یہ بتاتا ہے کہ متعلم کو کیا ملے گا، یہ نہیں کہ کیا فیصلہ کیا جائے۔ فیصلہ آپ کا ہے، اور یہاں کی کوئی بات اکیلی قبول یا معذرت کرنے کی وجہ نہیں: علمی جائزہ اس بارے میں ہے کہ کیا پڑھایا جاتا ہے، اور یہ اس بارے میں کہ کیا پہنچتا ہے۔
+خاکہ
+اس نسخے میں کوئی حصہ نہیں۔ جائزہ لینے کو کچھ نہیں، اور اسے شائع نہیں کیا جا سکتا۔
+کوئی سبق نہیں۔
+اس میں کچھ نہیں
+چلانے کو کچھ نہیں
+ایک نظر ڈالنے کے لائق
+تیار
+{name}: ابھی تک دکھانے کی کوئی نقل انکوڈ نہیں ہوئی، اس لیے دیکھنے کو کچھ نہیں، اور متعلم کو پلیئر کی جگہ ایک جملہ ملے گا۔
+جب تک یہ جائزہ کھلا ہے آپ ان اسباق کی دکھانے والی نقلیں دیکھ سکتے ہیں۔ آپ انہیں محفوظ نہیں کر سکتے، اور استاد کی اپ لوڈ کی ہوئی فائل آپ کو نہیں دی جاتی: جائزہ اسی چیز کا ہے جو متعلم دیکھے گا۔
+اسباق جائزہ قبول ہونے کے لمحے سے اس کے بند ہونے تک چلائے جا سکتے ہیں، اس لیے وہ ابھی یہاں نہیں چلائے جا سکتے۔
+اس نسخے کو کیا درکار ہے، اور کیا جانچا جا چکا ہے
+نیچے کے دونوں خانے فی الحال انگریزی میں ہیں۔
+آپ کا فیصلہ
+قطار پر واپس
+یہ جائزہ ابھی نہیں پڑھا جا سکا۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔
+اس کورس کا خاکہ ابھی نہیں پڑھا جا سکا، اس لیے وہ نہیں دکھایا گیا۔ فیصلہ کرنے سے پہلے صفحہ دوبارہ کھولیں۔
+اس صفحے کا کچھ حصہ ابھی نہیں پڑھا جا سکا، اس لیے یہ نامکمل ہے۔ فیصلہ کرنے سے پہلے اسے دوبارہ کھولیں۔
+یہ جائزہ آپ کو پیش کیا گیا ہے
+جب تک آپ اسے قبول نہ کریں، آپ سے کچھ متوقع نہیں۔
+یہ جائزہ قبول کریں
+معذرت کریں
+اپنا فیصلہ درج کریں
+وجہ
+آپ نے کیا جانچا، اور کیا پایا؟ یہی وہ ریکارڈ ہے جس کے خلاف استاد اپیل کر سکتا ہے۔
+منظور کریں
+ترامیم طلب کریں
+مسترد کریں
+منظوری نسخے کو «منظور شدہ» حالت میں لے جاتی ہے، جہاں پلیٹ فارم کا عملہ اسے شائع کر سکتا ہے۔ آپ اسے خود شائع نہیں کر سکتے، اور نہ اپنے لکھے ہوئے کورس کو منظور کر سکتے ہیں۔
+آپ اس جائزے پر پہلے ہی فیصلہ درج کر چکے ہیں۔
+یہ جائزہ بند ہے، اس لیے اس پر کوئی فیصلہ درج نہیں ہو سکتا۔
+آپ کا فیصلہ درج ہو گیا۔ خود کورس کو یہاں سے آگے نہیں بڑھایا جا سکا؛ پلیٹ فارم کا عملہ آپ کا فیصلہ دیکھ سکتا ہے اور اسے آگے بڑھا سکتا ہے۔ آپ کو دوبارہ فیصلہ کرنے کی ضرورت نہیں۔
+یہ جائزہ آپ کا نہیں۔
+یہ جائزہ اب اس کام کے لیے کھلا نہیں۔ صفحہ دوبارہ کھولیں اور دیکھیں کہ یہ کہاں کھڑا ہے۔
+آپ کا اعلان کردہ ایک تعارض آپ کو اس جائزے کا فیصلہ کرنے سے روکتا ہے۔
+فیصلے کی وجہ بتائیں۔
+یہ درج نہیں ہوا۔ صفحہ دوبارہ کھولیں اور دیکھیں کہ جائزہ کہاں کھڑا ہے۔
+اس کا غیر جانب دارانہ جائزہ نہیں لے سکتے؟
+اعلان ہو گیا
+اس کورس کے بارے میں تعارض کا اعلان کریں
+اعلان آپ کو فوراً اس جائزے کا فیصلہ کرنے سے روک دیتا ہے، اور تب تک روکے رکھتا ہے جب تک پلیٹ فارم کا عملہ اسے سن نہ لے۔ یہ جائزے کو بند نہیں کرتا: اگر یہ ابھی پیشکش ہے تو اس سے معذرت بھی کریں؛ ورنہ عملہ اسے بند کرتا ہے۔
+### fa
+تصمیم‌ها
+آنچه به یادگیرنده می‌رسد
+هر درس چیزی برای باز کردن به یادگیرنده می‌دهد. درس‌ها: {n}
+درس‌هایی که چیزی برای باز کردن به یادگیرنده می‌دهند: {some} از {all}
+درس‌هایی که هیچ چیزی به یادگیرنده نمی‌دهند: {n}
+درس‌هایی که بهتر است پیش از رسیدن به یادگیرنده چیزی درباره‌شان دانسته شود: {n}
+بهتر است اول این باز شود: {lesson}. هیچ چیزی در آن نیست، پس یادگیرنده فقط یک عنوان و یک صفحهٔ خالی می‌بیند.
+تمام‌شده به نظر می‌رسد و نیست: {lesson}. چیزی به آن پیوست شده است و یادگیرنده هیچ‌کدام را نمی‌تواند باز کند.
+ارزش یک نگاه را دارد: {lesson}. یادگیرنده می‌تواند از آن استفاده کند، و چیزی درباره‌اش هست که بهتر است اول دانسته شود.
+درس‌های دیگر در همین مرحله: {n}
+آن را مثل یادگیرنده ببینید
+وضعیت رمزگذاری فایل‌های بارگذاری‌شده اکنون خوانده نشد، پس فایلی که بدون پخش‌کننده دیده می‌شود ممکن است فایلی باشد که کسی درباره‌اش نپرسیده، نه فایلی که ناموفق بوده است.
+این می‌گوید یادگیرنده با چه روبه‌رو می‌شود، نه اینکه چه تصمیمی بگیرید. تصمیم با شماست، و هیچ‌چیز در اینجا به‌تنهایی دلیلی برای پذیرفتن یا نپذیرفتن نیست: بازبینی علمی دربارهٔ چیزی است که آموزش داده می‌شود، و این دربارهٔ چیزی است که می‌رسد.
+طرح کلی
+این نسخه هیچ بخشی ندارد. چیزی برای بازبینی نیست، و نمی‌توان آن را منتشر کرد.
+درسی نیست.
+چیزی در آن نیست
+چیزی برای پخش نیست
+ارزش یک نگاه را دارد
+آماده
+{name}: هنوز نسخهٔ نمایشی رمزگذاری نشده است، پس چیزی برای تماشا نیست و یادگیرنده به‌جای پخش‌کننده یک جمله می‌بیند.
+تا وقتی این بازبینی باز است می‌توانید نسخه‌های نمایشی این درس‌ها را تماشا کنید. نمی‌توانید آن‌ها را ذخیره کنید، و فایلی که معلم بارگذاری کرده به شما داده نمی‌شود: آنچه بازبینی می‌شود همان است که یادگیرنده خواهد دید.
+درس‌ها از لحظهٔ پذیرفتن بازبینی تا بسته شدن آن قابل پخش‌اند، پس اکنون در اینجا پخش نمی‌شوند.
+آنچه این نسخه لازم دارد، و آنچه بررسی شده است
+دو بخش زیر فعلاً به انگلیسی است.
+تصمیم شما
+بازگشت به صف
+این بازبینی اکنون خوانده نشد. کمی بعد دوباره تلاش کنید.
+طرح کلی این دوره اکنون خوانده نشد، پس نشان داده نمی‌شود. پیش از تصمیم‌گیری صفحه را دوباره بار کنید.
+بخشی از این صفحه اکنون خوانده نشد، پس کامل نیست. پیش از تصمیم‌گیری آن را دوباره بار کنید.
+این بازبینی به شما پیشنهاد شده است
+تا آن را نپذیرید، چیزی از شما انتظار نمی‌رود.
+این بازبینی را بپذیرید
+نپذیرفتن
+تصمیم خود را ثبت کنید
+دلیل
+چه چیزی را بررسی کردید و چه یافتید؟ این همان سابقه‌ای است که معلم می‌تواند به آن اعتراض کند.
+تأیید
+درخواست اصلاح
+رد
+تأیید، نسخه را به وضعیت «تأییدشده» می‌برد و آنجا کارکنان سکو می‌توانند منتشرش کنند. خودتان نمی‌توانید آن را منتشر کنید، و نمی‌توانید دوره‌ای را که خودتان نوشته‌اید تأیید کنید.
+شما پیش‌تر دربارهٔ این بازبینی تصمیمی ثبت کرده‌اید.
+این بازبینی بسته است، پس نمی‌توان تصمیمی برای آن ثبت کرد.
+تصمیم شما ثبت شد. خودِ دوره از اینجا جلو برده نشد؛ کارکنان سکو تصمیم شما را می‌بینند و می‌توانند آن را جلو ببرند. لازم نیست دوباره تصمیم بگیرید.
+این بازبینی از آنِ شما نیست.
+این بازبینی دیگر برای این کار باز نیست. صفحه را دوباره بار کنید تا ببینید در چه وضعی است.
+تعارضی که اعلام کرده‌اید مانع تصمیم‌گیری شما دربارهٔ این بازبینی است.
+برای تصمیم دلیلی بنویسید.
+ثبت نشد. صفحه را دوباره بار کنید تا ببینید بازبینی در چه وضعی است.
+نمی‌توانید بی‌طرفانه بازبینی کنید؟
+اعلام شد
+اعلام تعارض دربارهٔ این دوره
+اعلام، بی‌درنگ مانع تصمیم‌گیری شما دربارهٔ این بازبینی می‌شود و تا وقتی کارکنان سکو به آن رسیدگی کنند مانع می‌ماند. بازبینی را نمی‌بندد: اگر هنوز پیشنهاد است، آن را هم نپذیرید؛ وگرنه کارکنان آن را می‌بندند.
+### fa-af
+تصمیم‌ها
+آنچه به یادگیرنده می‌رسد
+هر درس چیزی برای باز کردن به یادگیرنده می‌دهد. درس‌ها: {n}
+درس‌هایی که چیزی برای باز کردن به یادگیرنده می‌دهند: {some} از {all}
+درس‌هایی که هیچ چیزی به یادگیرنده نمی‌دهند: {n}
+درس‌هایی که بهتر است پیش از رسیدن به یادگیرنده چیزی درباره‌شان دانسته شود: {n}
+بهتر است اول این باز شود: {lesson}. هیچ چیزی در آن نیست، پس یادگیرنده تنها یک عنوان و یک صفحهٔ خالی می‌بیند.
+تمام‌شده معلوم می‌شود و نیست: {lesson}. چیزی به آن ضمیمه شده است و یادگیرنده هیچ‌کدام را باز کرده نمی‌تواند.
+به یک نگاه می‌ارزد: {lesson}. یادگیرنده می‌تواند از آن استفاده کند، و چیزی درباره‌اش است که بهتر است اول دانسته شود.
+درس‌های دیگر در همین مرحله: {n}
+آن را مانند یادگیرنده ببینید
+حالت رمزگذاری فایل‌های بارشده فعلاً خوانده نشد، پس فایلی که بدون پخش‌کننده دیده می‌شود شاید فایلی باشد که کسی درباره‌اش نپرسیده، نه فایلی که ناکام شده است.
+این می‌گوید یادگیرنده با چه روبه‌رو می‌شود، نه اینکه چه تصمیم بگیرید. تصمیم از شماست، و هیچ‌چیز در اینجا به تنهایی دلیلی برای پذیرفتن یا رد کردن نیست: بازبینی علمی دربارهٔ چیزی است که تدریس می‌شود، و این دربارهٔ چیزی است که می‌رسد.
+طرح کلی
+این نسخه هیچ بخشی ندارد. چیزی برای بازبینی نیست، و نشر شده نمی‌تواند.
+درسی نیست.
+چیزی در آن نیست
+چیزی برای پخش نیست
+به یک نگاه می‌ارزد
+آماده
+{name}: هنوز نسخهٔ نمایشی رمزگذاری نشده است، پس چیزی برای تماشا نیست و یادگیرنده به جای پخش‌کننده یک جمله می‌بیند.
+تا وقتی این بازبینی باز است می‌توانید نسخه‌های نمایشی این درس‌ها را تماشا کنید. آن‌ها را ذخیره کرده نمی‌توانید، و فایلی که استاد بار کرده به شما داده نمی‌شود: آنچه بازبینی می‌شود همان است که یادگیرنده خواهد دید.
+درس‌ها از لحظهٔ پذیرفتن بازبینی تا بسته شدن آن پخش شده می‌توانند، پس فعلاً در اینجا پخش نمی‌شوند.
+آنچه این نسخه ضرورت دارد، و آنچه بررسی شده است
+دو بخش زیر فعلاً به انگلیسی است.
+تصمیم شما
+بازگشت به صف
+این بازبینی فعلاً خوانده نشد. کمی بعد دوباره کوشش کنید.
+طرح کلی این دوره فعلاً خوانده نشد، پس نشان داده نمی‌شود. پیش از تصمیم‌گیری صفحه را دوباره باز کنید.
+بخشی از این صفحه فعلاً خوانده نشد، پس کامل نیست. پیش از تصمیم‌گیری آن را دوباره باز کنید.
+این بازبینی به شما پیشنهاد شده است
+تا آن را نپذیرید، چیزی از شما توقع نمی‌رود.
+این بازبینی را بپذیرید
+نپذیرفتن
+تصمیم خود را ثبت کنید
+دلیل
+چه چیزی را بررسی کردید و چه یافتید؟ این همان سابقه‌ای است که استاد می‌تواند بر آن اعتراض کند.
+تأیید
+درخواست اصلاح
+رد
+تأیید، نسخه را به حالت «تأییدشده» می‌برد و آنجا کارمندان پلتفرم می‌توانند نشرش کنند. خودتان آن را نشر کرده نمی‌توانید، و دوره‌ای را که خودتان نوشته‌اید تأیید کرده نمی‌توانید.
+شما پیش‌تر دربارهٔ این بازبینی تصمیمی ثبت کرده‌اید.
+این بازبینی بسته است، پس تصمیمی برای آن ثبت شده نمی‌تواند.
+تصمیم شما ثبت شد. خودِ دوره از اینجا پیش برده نشد؛ کارمندان پلتفرم تصمیم شما را می‌بینند و می‌توانند آن را پیش ببرند. لازم نیست دوباره تصمیم بگیرید.
+این بازبینی از شما نیست.
+این بازبینی دیگر برای این کار باز نیست. صفحه را دوباره باز کنید تا ببینید در چه حالت است.
+تعارضی که اعلام کرده‌اید مانع تصمیم‌گیری شما دربارهٔ این بازبینی است.
+برای تصمیم دلیلی بنویسید.
+ثبت نشد. صفحه را دوباره باز کنید تا ببینید بازبینی در چه حالت است.
+بی‌طرفانه بازبینی کرده نمی‌توانید؟
+اعلام شد
+اعلام تعارض دربارهٔ این دوره
+اعلام، فوراً مانع تصمیم‌گیری شما دربارهٔ این بازبینی می‌شود و تا وقتی کارمندان پلتفرم به آن رسیدگی کنند مانع می‌ماند. بازبینی را نمی‌بندد: اگر هنوز پیشنهاد است، آن را هم رد کنید؛ ورنه کارمندان آن را می‌بندند.
+### tr
+Kararlar
+Öğrenenin eline ne geçiyor
+Her ders öğrenene açabileceği bir şey veriyor. Dersler: {n}
+Öğrenene açabileceği bir şey veren dersler: {some} / {all}
+Öğrenene hiçbir şey vermeyen dersler: {n}
+Öğrenene ulaşmadan önce bilinmesinde yarar olan bir şeyi bulunan dersler: {n}
+Önce bunu açmakta yarar var: {lesson}. İçinde hiçbir şey yok; öğrenen bir başlık ve boş bir sayfa görüyor.
+Bitmiş görünüyor ama değil: {lesson}. Ona bir şey eklenmiş, ama öğrenen bunların hiçbirini açamıyor.
+Bir göz atmaya değer: {lesson}. Öğrenen onu kullanabiliyor, ama önce bilinmesinde yarar olan bir şey var.
+Aynı aşamadaki diğer dersler: {n}
+Öğrenen gibi gör
+Yüklenen dosyaların kodlama durumu şu anda okunamadı; bu yüzden oynatıcısız görünen bir dosya, başarısız olmuş bir dosya değil, hakkında kimsenin soru sormadığı bir dosya olabilir.
+Bu, öğrenenin neyle karşılaşacağını söyler, neye karar verileceğini değil. Karar sizindir ve buradaki hiçbir şey tek başına kabul etmek ya da geri çevirmek için bir neden değildir: ilmî değerlendirme neyin öğretildiğiyle, bu ise neyin ulaştığıyla ilgilidir.
+Ana hat
+Bu sürümde hiç bölüm yok. Değerlendirilecek bir şey yok ve yayımlanamaz.
+Ders yok.
+İçinde bir şey yok
+Oynatılacak bir şey yok
+Bir göz atmaya değer
+Hazır
+{name}: henüz bir gösterim kopyası kodlanmadı; bu yüzden izlenecek bir şey yok ve öğrenen oynatıcının yerinde bir cümle görür.
+Bu değerlendirme açık olduğu sürece bu derslerin gösterim kopyalarını izleyebilirsiniz. Onları kaydedemezsiniz ve öğretmenin yüklediği dosya size sunulmaz: değerlendirilen şey, öğrenenin göreceği şeydir.
+Dersler, değerlendirmenin kabul edildiği andan kapatıldığı ana kadar oynatılabilir; bu yüzden şu anda burada oynatılamaz.
+Bu sürümün neye ihtiyacı var ve neler denetlendi
+Aşağıdaki iki bölüm şimdilik İngilizce.
+Kararınız
+Sıraya dön
+Bu değerlendirme şu anda okunamadı. Biraz sonra yeniden deneyin.
+Bu kursun ana hattı şu anda okunamadı; bu yüzden gösterilmiyor. Karar vermeden önce sayfayı yeniden yükleyin.
+Bu sayfanın bir kısmı şu anda okunamadı; bu yüzden eksik. Karar vermeden önce yeniden yükleyin.
+Bu değerlendirme size teklif edildi
+Kabul edene kadar sizden bir şey beklenmiyor.
+Bu değerlendirmeyi kabul et
+Geri çevir
+Kararınızı kaydedin
+Gerekçe
+Neyi denetlediniz ve ne buldunuz? Bu, öğretmenin itiraz edeceği kayıttır.
+Onayla
+Düzeltme iste
+Reddet
+Onaylamak sürümü “onaylandı” durumuna taşır; orada platform görevlileri onu yayımlayabilir. Onu kendiniz yayımlayamazsınız ve kendi yazdığınız bir kursu onaylayamazsınız.
+Bu değerlendirme için zaten bir karar kaydettiniz.
+Bu değerlendirme kapalı; bu yüzden ona karar kaydedilemez.
+Kararınız kaydedildi. Kursun kendisi buradan ilerletilemedi; platform görevlileri kararınızı görebilir ve kursu ilerletebilir. Yeniden karar vermeniz gerekmez.
+Bu değerlendirme sizin değil.
+Bu değerlendirme artık buna açık değil. Ne durumda olduğunu görmek için sayfayı yeniden yükleyin.
+Beyan ettiğiniz bir çıkar çatışması bu değerlendirmede karar vermenize engel oluyor.
+Karar için bir gerekçe yazın.
+Kaydedilmedi. Değerlendirmenin ne durumda olduğunu görmek için sayfayı yeniden yükleyin.
+Bunu tarafsızca değerlendiremiyor musunuz?
+Beyan edildi
+Bu kursla ilgili bir çıkar çatışması beyan et
+Beyan, bu değerlendirmede karar vermenizi hemen engeller ve platform görevlileri onu ele alana kadar engellemeyi sürdürür. Değerlendirmeyi kapatmaz: hâlâ bir teklifse onu ayrıca geri çevirin; değilse görevliler kapatır.
+### id
+Keputusan
+Apa yang didapat pelajar
+Setiap pelajaran memberi pelajar sesuatu untuk dibuka. Pelajaran: {n}
+Pelajaran yang memberi pelajar sesuatu untuk dibuka: {some} dari {all}
+Pelajaran yang tidak memberi pelajar apa pun: {n}
+Pelajaran dengan hal yang perlu diketahui sebelum sampai ke pelajar: {n}
+Sebaiknya dibuka lebih dulu: {lesson}. Tidak ada isinya sama sekali, jadi pelajar hanya mendapat judul dan halaman kosong.
+Tampak selesai, padahal belum: {lesson}. Ada sesuatu yang dilampirkan, dan pelajar tidak dapat membuka satu pun.
+Layak dilihat: {lesson}. Pelajar dapat memakainya, dan ada hal tentangnya yang perlu diketahui lebih dulu.
+Pelajaran lain pada tahap yang sama: {n}
+Lihat sebagai pelajar
+Status pengodean berkas yang diunggah tidak dapat dibaca saat ini, jadi berkas yang tampil tanpa pemutar mungkin berkas yang belum ditanyakan siapa pun, bukan berkas yang gagal.
+Ini menyatakan apa yang akan ditemui pelajar, bukan apa yang harus diputuskan. Keputusan ada di tangan Anda, dan tidak ada hal di sini yang dengan sendirinya menjadi alasan untuk menerima atau menolak: tinjauan keilmuan adalah tentang apa yang diajarkan, sedangkan ini tentang apa yang sampai.
+Kerangka
+Versi ini tidak memiliki bagian. Tidak ada yang dapat ditinjau, dan versi ini tidak dapat diterbitkan.
+Tidak ada pelajaran.
+Tidak ada isinya
+Tidak ada yang dapat diputar
+Layak dilihat
+Siap
+{name}: belum ada salinan tayang yang dikodekan, jadi tidak ada yang dapat ditonton, dan pelajar akan mendapat sebuah kalimat di tempat pemutar.
+Anda dapat menonton salinan tayang pelajaran-pelajaran ini selama tinjauan ini terbuka. Anda tidak dapat menyimpannya, dan berkas yang diunggah guru tidak disajikan kepada Anda: yang ditinjau adalah apa yang akan dilihat pelajar.
+Pelajaran dapat diputar sejak tinjauan diterima sampai tinjauan ditutup, jadi sekarang tidak dapat diputar di sini.
+Apa yang dibutuhkan versi ini, dan apa yang sudah diperiksa
+Dua panel di bawah ini untuk sementara berbahasa Inggris.
+Keputusan Anda
+Kembali ke antrean
+Tinjauan ini tidak dapat dibaca saat ini. Coba lagi sebentar lagi.
+Kerangka kursus ini tidak dapat dibaca saat ini, jadi tidak ditampilkan. Muat ulang halaman sebelum Anda memutuskan.
+Sebagian halaman ini tidak dapat dibaca saat ini, jadi belum lengkap. Muat ulang sebelum Anda memutuskan.
+Tinjauan ini ditawarkan kepada Anda
+Tidak ada yang diharapkan dari Anda sampai Anda menerimanya.
+Terima tinjauan ini
+Tolak tawaran
+Catat keputusan Anda
+Alasan
+Apa yang Anda periksa, dan apa yang Anda temukan? Inilah catatan yang dapat digugat oleh guru.
+Setujui
+Minta revisi
+Tolak
+Menyetujui memindahkan versi ke status “disetujui”, dan di sana staf platform dapat menerbitkannya. Anda tidak dapat menerbitkannya sendiri, dan Anda tidak dapat menyetujui kursus yang Anda tulis.
+Anda sudah mencatat keputusan untuk tinjauan ini.
+Tinjauan ini sudah ditutup, jadi keputusan tidak dapat dicatat padanya.
+Keputusan Anda sudah dicatat. Kursusnya sendiri tidak dapat dipindahkan dari sini; staf platform dapat melihat keputusan Anda dan memindahkannya. Anda tidak perlu memutuskan lagi.
+Tinjauan itu bukan milik Anda.
+Tinjauan ini tidak lagi terbuka untuk hal itu. Muat ulang halaman untuk melihat keadaannya.
+Benturan kepentingan yang Anda nyatakan menghalangi Anda memutuskan tinjauan ini.
+Berikan alasan untuk keputusan itu.
+Tidak dicatat. Muat ulang halaman untuk melihat keadaan tinjauan ini.
+Tidak dapat meninjau ini secara tidak memihak?
+Dinyatakan
+Nyatakan benturan kepentingan tentang kursus ini
+Pernyataan langsung menghalangi Anda memutuskan tinjauan ini, dan terus menghalangi sampai staf platform menanganinya. Pernyataan tidak menutup tinjauan: jika masih berupa tawaran, tolak juga tawaran itu; jika tidak, staf yang menutupnya.
+### ms
+Keputusan
+Apa yang pelajar dapat
+Setiap pelajaran memberi pelajar sesuatu untuk dibuka. Pelajaran: {n}
+Pelajaran yang memberi pelajar sesuatu untuk dibuka: {some} daripada {all}
+Pelajaran yang tidak memberi pelajar apa-apa langsung: {n}
+Pelajaran dengan perkara yang wajar diketahui sebelum sampai kepada pelajar: {n}
+Elok dibuka dahulu: {lesson}. Tiada apa-apa langsung di dalamnya, jadi pelajar hanya mendapat tajuk dan halaman kosong.
+Nampak siap, tetapi belum: {lesson}. Ada sesuatu yang dilampirkan, dan pelajar tidak dapat membuka satu pun.
+Wajar dilihat: {lesson}. Pelajar boleh menggunakannya, dan ada perkara tentangnya yang wajar diketahui dahulu.
+Pelajaran lain pada peringkat yang sama: {n}
+Lihat sebagai pelajar
+Status pengekodan fail yang dimuat naik tidak dapat dibaca sekarang, jadi fail yang dipaparkan tanpa pemain mungkin fail yang belum ditanya oleh sesiapa, bukan fail yang gagal.
+Ini menyatakan apa yang akan ditemui pelajar, bukan apa yang perlu diputuskan. Keputusan itu milik anda, dan tiada apa-apa di sini yang dengan sendirinya menjadi sebab untuk menerima atau menolak: semakan ilmiah adalah tentang apa yang diajar, dan ini tentang apa yang sampai.
+Rangka
+Versi ini tidak mempunyai bahagian. Tiada apa-apa untuk disemak, dan versi ini tidak boleh diterbitkan.
+Tiada pelajaran.
+Tiada apa-apa di dalamnya
+Tiada apa-apa untuk dimainkan
+Wajar dilihat
+Sedia
+{name}: belum ada salinan tayangan yang dikodkan, jadi tiada apa-apa untuk ditonton, dan pelajar akan mendapat satu ayat di tempat pemain.
+Anda boleh menonton salinan tayangan pelajaran ini selagi semakan ini terbuka. Anda tidak boleh menyimpannya, dan fail yang dimuat naik oleh guru tidak dihidangkan kepada anda: yang disemak ialah apa yang akan dilihat oleh pelajar.
+Pelajaran boleh dimainkan dari saat semakan diterima hingga semakan ditutup, jadi pelajaran tidak boleh dimainkan di sini sekarang.
+Apa yang diperlukan oleh versi ini, dan apa yang telah diperiksa
+Dua panel di bawah buat masa ini dalam bahasa Inggeris.
+Keputusan anda
+Kembali ke barisan
+Semakan ini tidak dapat dibaca sekarang. Cuba lagi sebentar lagi.
+Rangka kursus ini tidak dapat dibaca sekarang, jadi rangka itu tidak dipaparkan. Muat semula halaman sebelum anda membuat keputusan.
+Sebahagian halaman ini tidak dapat dibaca sekarang, jadi halaman ini tidak lengkap. Muat semula sebelum anda membuat keputusan.
+Semakan ini ditawarkan kepada anda
+Tiada apa-apa yang diharapkan sehingga anda menerimanya.
+Terima semakan ini
+Tolak tawaran
+Rekodkan keputusan anda
+Sebab
+Apa yang anda periksa, dan apa yang anda dapati? Inilah rekod yang boleh dirayu oleh guru.
+Luluskan
+Minta semakan semula
+Tolak
+Meluluskan memindahkan versi kepada status “diluluskan”, dan di situ kakitangan platform boleh menerbitkannya. Anda tidak boleh menerbitkannya sendiri, dan anda tidak boleh meluluskan kursus yang anda tulis.
+Anda sudah merekodkan keputusan untuk semakan ini.
+Semakan ini sudah ditutup, jadi keputusan tidak boleh direkodkan padanya.
+Keputusan anda telah direkodkan. Kursus itu sendiri tidak dapat dipindahkan dari sini; kakitangan platform boleh melihat keputusan anda dan memindahkannya. Anda tidak perlu membuat keputusan sekali lagi.
+Semakan itu bukan milik anda.
+Semakan ini tidak lagi terbuka untuk itu. Muat semula halaman untuk melihat kedudukannya.
+Konflik yang anda isytiharkan menghalang anda daripada memutuskan semakan ini.
+Berikan sebab bagi keputusan itu.
+Tidak direkodkan. Muat semula halaman untuk melihat kedudukan semakan ini.
+Tidak dapat menyemak ini secara saksama?
+Diisytiharkan
+Isytiharkan konflik tentang kursus ini
+Pengisytiharan serta-merta menghalang anda daripada memutuskan semakan ini, dan terus menghalang sehingga kakitangan platform mendengarnya. Pengisytiharan tidak menutup semakan: jika masih tawaran, tolak juga tawaran itu; jika tidak, kakitangan yang menutupnya.
+### bn
+সিদ্ধান্ত
+শিক্ষার্থী কী পায়
+প্রতিটি পাঠ শিক্ষার্থীকে খোলার মতো কিছু দেয়। পাঠ: {n}
+যে পাঠগুলো শিক্ষার্থীকে খোলার মতো কিছু দেয়: {all}টির মধ্যে {some}
+যে পাঠগুলো শিক্ষার্থীকে কিছুই দেয় না: {n}
+যে পাঠগুলো সম্পর্কে শিক্ষার্থীর কাছে পৌঁছানোর আগে কিছু জেনে নেওয়া ভালো: {n}
+আগে এটি খোলা ভালো: {lesson}। এতে কিছুই নেই, তাই শিক্ষার্থী শুধু একটি শিরোনাম আর একটি ফাঁকা পাতা পায়।
+শেষ হয়েছে মনে হয়, কিন্তু হয়নি: {lesson}। এতে কিছু সংযুক্ত আছে, আর শিক্ষার্থী তার কোনোটিই খুলতে পারে না।
+একবার দেখার মতো: {lesson}। শিক্ষার্থী এটি ব্যবহার করতে পারে, তবে এ সম্পর্কে আগে কিছু জেনে নেওয়া ভালো।
+একই পর্যায়ে থাকা অন্য পাঠ: {n}
+শিক্ষার্থীর মতো করে দেখুন
+আপলোড করা ফাইলগুলোর এনকোডিংয়ের অবস্থা এখন পড়া যায়নি, তাই প্লেয়ার ছাড়া দেখানো কোনো ফাইল ব্যর্থ হওয়া ফাইল না হয়ে এমন ফাইলও হতে পারে যার কথা কেউ জিজ্ঞেস করেনি।
+এটি বলে শিক্ষার্থী কী পাবে, কী সিদ্ধান্ত নিতে হবে তা নয়। সিদ্ধান্ত আপনার, আর এখানকার কোনো কিছুই একা গ্রহণ বা প্রত্যাখ্যানের কারণ নয়: ইলমি পর্যালোচনা কী শেখানো হচ্ছে তা নিয়ে, আর এটি কী পৌঁছায় তা নিয়ে।
+রূপরেখা
+এই সংস্করণে কোনো অংশ নেই। পর্যালোচনা করার কিছু নেই, আর এটি প্রকাশ করা যাবে না।
+কোনো পাঠ নেই।
+এতে কিছু নেই
+চালানোর মতো কিছু নেই
+একবার দেখার মতো
+প্রস্তুত
+{name}: দেখানোর কোনো কপি এখনো এনকোড হয়নি, তাই দেখার কিছু নেই, আর শিক্ষার্থী প্লেয়ারের জায়গায় একটি বাক্য পাবে।
+এই পর্যালোচনা খোলা থাকা পর্যন্ত আপনি এই পাঠগুলোর দেখানোর কপি দেখতে পারেন। আপনি সেগুলো সংরক্ষণ করতে পারবেন না, আর শিক্ষকের আপলোড করা ফাইল আপনাকে দেওয়া হয় না: শিক্ষার্থী যা দেখবে, পর্যালোচনা তারই।
+পর্যালোচনা গ্রহণ করার মুহূর্ত থেকে তা বন্ধ হওয়া পর্যন্ত পাঠগুলো চালানো যায়, তাই এখন এখানে চালানো যাবে না।
+এই সংস্করণের কী দরকার, আর কী যাচাই করা হয়েছে
+নিচের দুটি প্যানেল আপাতত ইংরেজিতে।
+আপনার সিদ্ধান্ত
+সারিতে ফিরে যান
+এই পর্যালোচনাটি এখন পড়া যায়নি। একটু পরে আবার চেষ্টা করুন।
+এই কোর্সের রূপরেখা এখন পড়া যায়নি, তাই দেখানো হচ্ছে না। সিদ্ধান্ত নেওয়ার আগে পাতাটি আবার লোড করুন।
+এই পাতার কিছু অংশ এখন পড়া যায়নি, তাই এটি অসম্পূর্ণ। সিদ্ধান্ত নেওয়ার আগে আবার লোড করুন।
+এই পর্যালোচনাটি আপনাকে প্রস্তাব করা হয়েছে
+আপনি গ্রহণ না করা পর্যন্ত আপনার কাছে কিছু আশা করা হচ্ছে না।
+এই পর্যালোচনা গ্রহণ করুন
+ফিরিয়ে দিন
+আপনার সিদ্ধান্ত নথিভুক্ত করুন
+কারণ
+আপনি কী যাচাই করেছেন, আর কী পেয়েছেন? শিক্ষক এই নথির বিরুদ্ধেই আপিল করবেন।
+অনুমোদন করুন
+সংশোধন চান
+প্রত্যাখ্যান করুন
+অনুমোদন করলে সংস্করণটি “অনুমোদিত” অবস্থায় যায়, সেখানে প্ল্যাটফর্মের কর্মীরা এটি প্রকাশ করতে পারেন। আপনি নিজে এটি প্রকাশ করতে পারবেন না, আর নিজের লেখা কোর্স অনুমোদন করতে পারবেন না।
+আপনি এই পর্যালোচনায় আগেই একটি সিদ্ধান্ত নথিভুক্ত করেছেন।
+এই পর্যালোচনাটি বন্ধ, তাই এতে কোনো সিদ্ধান্ত নথিভুক্ত করা যাবে না।
+আপনার সিদ্ধান্ত নথিভুক্ত হয়েছে। কোর্সটিকে এখান থেকে এগিয়ে নেওয়া যায়নি; প্ল্যাটফর্মের কর্মীরা আপনার সিদ্ধান্ত দেখতে পারেন এবং কোর্সটি এগিয়ে নিতে পারেন। আপনাকে আবার সিদ্ধান্ত নিতে হবে না।
+ওই পর্যালোচনাটি আপনার নয়।
+এই পর্যালোচনাটি আর এ কাজের জন্য খোলা নেই। এটি কোন অবস্থায় আছে দেখতে পাতাটি আবার লোড করুন।
+আপনার ঘোষণা করা একটি সংঘাত আপনাকে এই পর্যালোচনায় সিদ্ধান্ত দিতে বাধা দিচ্ছে।
+সিদ্ধান্তের একটি কারণ লিখুন।
+এটি নথিভুক্ত হয়নি। পর্যালোচনাটি কোন অবস্থায় আছে দেখতে পাতাটি আবার লোড করুন।
+নিরপেক্ষভাবে পর্যালোচনা করতে পারছেন না?
+ঘোষণা করা হয়েছে
+এই কোর্স সম্পর্কে স্বার্থের সংঘাত ঘোষণা করুন
+ঘোষণা করলে সঙ্গে সঙ্গে আপনি এই পর্যালোচনায় সিদ্ধান্ত দিতে পারবেন না, আর প্ল্যাটফর্মের কর্মীরা তা না শোনা পর্যন্ত এই বাধা থাকবে। এতে পর্যালোচনা বন্ধ হয় না: এটি এখনো প্রস্তাব হলে সেটিও প্রত্যাখ্যান করুন; নইলে কর্মীরা এটি বন্ধ করবেন।
+### hi
+फ़ैसले
+सीखने वाले को क्या मिलता है
+हर पाठ सीखने वाले को खोलने के लिए कुछ देता है। पाठ: {n}
+वे पाठ जो सीखने वाले को खोलने के लिए कुछ देते हैं: {all} में से {some}
+वे पाठ जो सीखने वाले को कुछ भी नहीं देते: {n}
+वे पाठ जिनके बारे में सीखने वाले तक पहुँचने से पहले कुछ जान लेना अच्छा है: {n}
+पहले इसे खोलना अच्छा रहेगा: {lesson}। इसमें कुछ भी नहीं है, इसलिए सीखने वाले को बस एक शीर्षक और खाली पेज मिलता है।
+पूरा लगता है, पर है नहीं: {lesson}। इसके साथ कुछ जुड़ा है, और सीखने वाला उसमें से कुछ भी नहीं खोल सकता।
+एक नज़र डालने लायक़: {lesson}। सीखने वाला इसे इस्तेमाल कर सकता है, और इसके बारे में पहले कुछ जान लेना अच्छा है।
+इसी चरण के दूसरे पाठ: {n}
+इसे सीखने वाले की तरह देखें
+अपलोड की गई फ़ाइलों की एन्कोडिंग की स्थिति अभी पढ़ी नहीं जा सकी, इसलिए बिना प्लेयर के दिखने वाली फ़ाइल ऐसी भी हो सकती है जिसके बारे में किसी ने पूछा ही नहीं, न कि ऐसी जो नाकाम हुई।
+यह बताता है कि सीखने वाले को क्या मिलेगा, यह नहीं कि क्या फ़ैसला किया जाए। फ़ैसला आपका है, और यहाँ की कोई बात अकेले स्वीकार करने या मना करने की वजह नहीं है: इल्मी समीक्षा इस बारे में है कि क्या पढ़ाया जाता है, और यह इस बारे में कि क्या पहुँचता है।
+रूपरेखा
+इस संस्करण में कोई खंड नहीं है। समीक्षा करने को कुछ नहीं है, और इसे प्रकाशित नहीं किया जा सकता।
+कोई पाठ नहीं।
+इसमें कुछ नहीं
+चलाने को कुछ नहीं
+एक नज़र डालने लायक़
+तैयार
+{name}: दिखाने वाली कोई प्रति अभी तक एन्कोड नहीं हुई है, इसलिए देखने को कुछ नहीं है, और सीखने वाले को प्लेयर की जगह एक वाक्य मिलेगा।
+जब तक यह समीक्षा खुली है, आप इन पाठों की दिखाने वाली प्रतियाँ देख सकते हैं। आप उन्हें सहेज नहीं सकते, और शिक्षक की अपलोड की हुई फ़ाइल आपको नहीं दी जाती: समीक्षा उसी की है जो सीखने वाला देखेगा।
+पाठ समीक्षा स्वीकार होने के पल से उसके बंद होने तक चलाए जा सकते हैं, इसलिए वे अभी यहाँ नहीं चलाए जा सकते।
+इस संस्करण को क्या चाहिए, और क्या जाँचा जा चुका है
+नीचे के दोनों पैनल फ़िलहाल अंग्रेज़ी में हैं।
+आपका फ़ैसला
+कतार पर वापस
+यह समीक्षा अभी पढ़ी नहीं जा सकी। थोड़ी देर में फिर कोशिश करें।
+इस कोर्स की रूपरेखा अभी पढ़ी नहीं जा सकी, इसलिए वह नहीं दिखाई गई है। फ़ैसला करने से पहले पेज फिर से लोड करें।
+इस पेज का कुछ हिस्सा अभी पढ़ा नहीं जा सका, इसलिए यह अधूरा है। फ़ैसला करने से पहले इसे फिर से लोड करें।
+यह समीक्षा आपको प्रस्तावित की गई है
+जब तक आप इसे स्वीकार नहीं करते, आपसे कुछ अपेक्षित नहीं है।
+यह समीक्षा स्वीकार करें
+मना करें
+अपना फ़ैसला दर्ज करें
+कारण
+आपने क्या जाँचा, और क्या पाया? यही वह रिकॉर्ड है जिसके ख़िलाफ़ शिक्षक अपील करेगा।
+मंज़ूर करें
+संशोधन माँगें
+नामंज़ूर करें
+मंज़ूरी संस्करण को “मंज़ूर” स्थिति में ले जाती है, जहाँ प्लैटफ़ॉर्म के कर्मचारी उसे प्रकाशित कर सकते हैं। आप उसे ख़ुद प्रकाशित नहीं कर सकते, और अपने लिखे कोर्स को मंज़ूर नहीं कर सकते।
+आप इस समीक्षा पर पहले ही फ़ैसला दर्ज कर चुके हैं।
+यह समीक्षा बंद है, इसलिए इस पर कोई फ़ैसला दर्ज नहीं किया जा सकता।
+आपका फ़ैसला दर्ज हो गया। कोर्स को यहाँ से आगे नहीं बढ़ाया जा सका; प्लैटफ़ॉर्म के कर्मचारी आपका फ़ैसला देख सकते हैं और उसे आगे बढ़ा सकते हैं। आपको दोबारा फ़ैसला करने की ज़रूरत नहीं है।
+वह समीक्षा आपकी नहीं है।
+यह समीक्षा अब इस काम के लिए खुली नहीं है। यह कहाँ खड़ी है, देखने के लिए पेज फिर से लोड करें।
+आपका घोषित किया हुआ एक टकराव आपको इस समीक्षा का फ़ैसला करने से रोकता है।
+फ़ैसले का कारण लिखें।
+यह दर्ज नहीं हुआ। समीक्षा कहाँ खड़ी है, देखने के लिए पेज फिर से लोड करें।
+इसकी निष्पक्ष समीक्षा नहीं कर सकते?
+घोषित
+इस कोर्स के बारे में हितों के टकराव की घोषणा करें
+घोषणा आपको तुरंत इस समीक्षा का फ़ैसला करने से रोक देती है, और तब तक रोके रखती है जब तक प्लैटफ़ॉर्म के कर्मचारी उसे सुन न लें। इससे समीक्षा बंद नहीं होती: अगर यह अभी प्रस्ताव है, तो उसे भी मना करें; नहीं तो कर्मचारी उसे बंद करते हैं।
+### fr
+Décisions
+Ce que reçoit un apprenant
+Chaque leçon donne à l’apprenant quelque chose à ouvrir. Leçons : {n}
+Leçons qui donnent à l’apprenant quelque chose à ouvrir : {some} sur {all}
+Leçons qui ne donnent rien du tout à l’apprenant : {n}
+Leçons comportant un point à connaître avant qu’elles n’atteignent un apprenant : {n}
+À ouvrir en premier : {lesson}. Elle ne contient rien du tout, si bien que l’apprenant obtient un titre et une page vide.
+Semble terminée, et ne l’est pas : {lesson}. Quelque chose y est joint, et l’apprenant ne peut rien en ouvrir.
+Mérite un coup d’œil : {lesson}. L’apprenant peut s’en servir, et il y a un point à connaître d’abord à son sujet.
+Autres leçons au même stade : {n}
+La voir comme un apprenant
+L’état d’encodage des fichiers téléversés n’a pas pu être lu pour l’instant ; un fichier affiché sans lecteur peut donc être un fichier sur lequel personne n’a posé la question, et non un fichier en échec.
+Ceci dit ce qu’un apprenant trouverait, non ce qu’il faut décider. La décision vous appartient, et rien ici n’est à lui seul une raison d’accepter ou de décliner : une relecture savante porte sur ce qui est enseigné, et ceci porte sur ce qui arrive.
+Plan
+Cette version n’a aucune section. Il n’y a rien à relire, et elle ne peut pas être publiée.
+Aucune leçon.
+Rien dedans
+Rien à lire
+Mérite un coup d’œil
+Prête
+{name} : aucune copie de diffusion n’a encore été encodée ; il n’y a donc rien à regarder, et un apprenant obtiendrait une phrase à la place du lecteur.
+Vous pouvez regarder les copies de diffusion de ces leçons tant que cette relecture est ouverte. Vous ne pouvez pas les enregistrer, et le fichier téléversé par l’enseignant ne vous est pas servi : ce qui est relu est ce que verra un apprenant.
+Les leçons peuvent être lues à partir du moment où une relecture est acceptée et jusqu’à sa clôture ; elles ne peuvent donc pas être lues ici pour l’instant.
+Ce dont cette version a besoin, et ce qui a été vérifié
+Les deux panneaux ci-dessous sont en anglais pour l’instant.
+Votre décision
+Retour à la file
+Cette relecture n’a pas pu être lue pour l’instant. Réessayez dans un instant.
+Le plan de ce cours n’a pas pu être lu pour l’instant ; il n’est donc pas affiché. Rechargez la page avant de décider.
+Une partie de cette page n’a pas pu être lue pour l’instant ; elle est donc incomplète. Rechargez-la avant de décider.
+Cette relecture vous est proposée
+Rien n’est attendu de vous tant que vous ne l’avez pas acceptée.
+Accepter cette relecture
+Décliner
+Consigner votre décision
+Motif
+Qu’avez-vous vérifié, et qu’avez-vous constaté ? C’est la trace contre laquelle un enseignant ferait appel.
+Approuver
+Demander des révisions
+Rejeter
+Approuver fait passer la version à l’état « approuvée », où l’équipe de la plateforme peut la publier. Vous ne pouvez pas la publier vous-même, et vous ne pouvez pas approuver un cours que vous avez écrit.
+Vous avez déjà consigné une décision pour cette relecture.
+Cette relecture est close ; aucune décision ne peut donc y être consignée.
+Votre décision a été consignée. Le cours lui-même n’a pas pu être avancé d’ici ; l’équipe de la plateforme peut voir votre décision et le faire avancer. Vous n’avez pas à décider de nouveau.
+Cette relecture n’est pas la vôtre.
+Cette relecture n’est plus ouverte à cela. Rechargez la page pour voir où elle en est.
+Un conflit que vous avez déclaré vous empêche de trancher cette relecture.
+Donnez un motif à la décision.
+Rien n’a été consigné. Rechargez la page pour voir où en est la relecture.
+Vous ne pouvez pas relire ceci de façon impartiale ?
+Déclaré
+Déclarer un conflit d’intérêts au sujet de ce cours
+La déclaration vous empêche aussitôt de trancher cette relecture, et continue de vous en empêcher jusqu’à ce que l’équipe de la plateforme l’ait examinée. Elle ne clôt pas la relecture : si c’est encore une proposition, déclinez-la aussi ; sinon, c’est l’équipe qui la clôt.
+### es
+Decisiones
+Lo que recibe un estudiante
+Cada lección le da al estudiante algo que abrir. Lecciones: {n}
+Lecciones que le dan al estudiante algo que abrir: {some} de {all}
+Lecciones que no le dan nada en absoluto al estudiante: {n}
+Lecciones con algo que conviene saber antes de que lleguen a un estudiante: {n}
+Conviene abrirla primero: {lesson}. No contiene nada en absoluto, así que el estudiante recibe un título y una página vacía.
+Parece terminada, y no lo está: {lesson}. Tiene algo adjunto, y el estudiante no puede abrir nada de ello.
+Merece un vistazo: {lesson}. El estudiante puede usarla, y hay algo sobre ella que conviene saber antes.
+Otras lecciones en la misma etapa: {n}
+Verla como un estudiante
+El estado de codificación de los archivos subidos no pudo leerse ahora, así que un archivo mostrado sin reproductor puede ser uno por el que nadie preguntó y no uno que falló.
+Esto dice lo que encontraría un estudiante, no lo que hay que decidir. La decisión es suya, y nada de lo que hay aquí es por sí solo una razón para aceptar o declinar: una revisión académica trata de lo que se enseña, y esto trata de lo que llega.
+Esquema
+Esta versión no tiene secciones. No hay nada que revisar, y no puede publicarse.
+Sin lecciones.
+Nada dentro
+Nada que reproducir
+Merece un vistazo
+Lista
+{name}: todavía no se ha codificado ninguna copia de entrega, así que no hay nada que ver, y un estudiante recibiría una frase donde debería estar el reproductor.
+Puede ver las copias de entrega de estas lecciones mientras esta revisión esté abierta. No puede guardarlas, y el archivo que subió el docente no se le sirve: lo que se revisa es lo que verá un estudiante.
+Las lecciones pueden reproducirse desde el momento en que se acepta una revisión hasta que se cierra, así que ahora no pueden reproducirse aquí.
+Lo que necesita esta versión, y lo que se ha comprobado
+Los dos paneles de abajo están en inglés por ahora.
+Su decisión
+Volver a la cola
+Esta revisión no pudo leerse ahora. Inténtelo de nuevo en un momento.
+El esquema de este curso no pudo leerse ahora, así que no se muestra. Vuelva a cargar la página antes de decidir.
+Parte de esta página no pudo leerse ahora, así que está incompleta. Vuelva a cargarla antes de decidir.
+Esta revisión se le ofrece a usted
+No se espera nada de usted hasta que la acepte.
+Aceptar esta revisión
+Declinar
+Registrar su decisión
+Motivo
+¿Qué comprobó y qué encontró? Este es el registro contra el que un docente apelaría.
+Aprobar
+Pedir cambios
+Rechazar
+Aprobar pasa la versión al estado «aprobada», donde el personal de la plataforma puede publicarla. Usted no puede publicarla, y no puede aprobar un curso que haya escrito.
+Ya ha registrado una decisión en esta revisión.
+Esta revisión está cerrada, así que no puede registrarse ninguna decisión en ella.
+Su decisión quedó registrada. El curso en sí no pudo avanzarse desde aquí; el personal de la plataforma puede ver su decisión y hacerlo avanzar. No necesita decidir de nuevo.
+Esa revisión no es suya.
+Esta revisión ya no está abierta para eso. Vuelva a cargar la página para ver en qué punto está.
+Un conflicto que usted declaró le impide decidir esta revisión.
+Dé un motivo para la decisión.
+No se registró. Vuelva a cargar la página para ver en qué punto está la revisión.
+¿No puede revisar esto con imparcialidad?
+Declarado
+Declarar un conflicto de intereses sobre este curso
+Declararlo le impide de inmediato decidir esta revisión, y se lo sigue impidiendo hasta que el personal de la plataforma lo haya examinado. No cierra la revisión: si todavía es una oferta, declínela también; si no, la cierra el personal.
+### pt
+Decisões
+O que um aluno recebe
+Cada lição dá ao aluno algo para abrir. Lições: {n}
+Lições que dão ao aluno algo para abrir: {some} de {all}
+Lições que não dão absolutamente nada ao aluno: {n}
+Lições com algo que convém saber antes de chegarem a um aluno: {n}
+Convém abrir primeiro: {lesson}. Não tem absolutamente nada, por isso o aluno recebe um título e uma página vazia.
+Parece concluída, e não está: {lesson}. Tem algo anexado, e o aluno não consegue abrir nada disso.
+Merece uma vista de olhos: {lesson}. O aluno pode usá-la, e há algo sobre ela que convém saber primeiro.
+Outras lições na mesma fase: {n}
+Ver como um aluno
+O estado de codificação dos ficheiros carregados não pôde ser lido agora, por isso um ficheiro mostrado sem leitor pode ser um sobre o qual ninguém perguntou, e não um que falhou.
+Isto diz o que um aluno encontraria, não o que decidir. A decisão é sua, e nada do que aqui está é, por si só, uma razão para aceitar ou recusar: uma revisão académica é sobre o que se ensina, e isto é sobre o que chega.
+Estrutura
+Esta versão não tem secções. Não há nada para rever, e não pode ser publicada.
+Sem lições.
+Nada lá dentro
+Nada para reproduzir
+Merece uma vista de olhos
+Pronta
+{name}: ainda não foi codificada nenhuma cópia de entrega, por isso não há nada para ver, e um aluno receberia uma frase no lugar do leitor.
+Pode ver as cópias de entrega destas lições enquanto esta revisão estiver aberta. Não pode guardá-las, e o ficheiro que o professor carregou não lhe é servido: o que está em revisão é o que um aluno vai ver.
+As lições podem ser reproduzidas desde o momento em que uma revisão é aceite até ser fechada, por isso não podem ser reproduzidas aqui agora.
+O que esta versão precisa, e o que foi verificado
+Os dois painéis abaixo estão em inglês por agora.
+A sua decisão
+Voltar à fila
+Não foi possível ler esta revisão agora. Tente de novo dentro de momentos.
+Não foi possível ler agora a estrutura deste curso, por isso não é mostrada. Volte a carregar a página antes de decidir.
+Não foi possível ler agora parte desta página, por isso está incompleta. Volte a carregá-la antes de decidir.
+Esta revisão é-lhe proposta
+Nada é esperado de si até a aceitar.
+Aceitar esta revisão
+Recusar
+Registar a sua decisão
+Motivo
+O que verificou, e o que encontrou? Este é o registo contra o qual um professor recorreria.
+Aprovar
+Pedir alterações
+Rejeitar
+Aprovar passa a versão para o estado «aprovada», onde a equipa da plataforma a pode publicar. Não pode publicá-la por si, e não pode aprovar um curso que tenha escrito.
+Já registou uma decisão nesta revisão.
+Esta revisão está fechada, por isso não pode ser registada nela nenhuma decisão.
+A sua decisão foi registada. O curso em si não pôde ser avançado a partir daqui; a equipa da plataforma pode ver a sua decisão e fazê-lo avançar. Não precisa de decidir de novo.
+Essa revisão não é sua.
+Esta revisão já não está aberta para isso. Volte a carregar a página para ver em que ponto está.
+Um conflito que declarou impede-o de decidir esta revisão.
+Indique um motivo para a decisão.
+Não foi registado. Volte a carregar a página para ver em que ponto está a revisão.
+Não consegue rever isto com imparcialidade?
+Declarado
+Declarar um conflito de interesses sobre este curso
+Declarar impede-o de imediato de decidir esta revisão, e continua a impedi-lo até a equipa da plataforma o ter apreciado. Não fecha a revisão: se ainda for uma proposta, recuse-a também; caso contrário, é a equipa que a fecha.
+### sw
+Maamuzi
+Anachopata mwanafunzi
+Kila somo linampa mwanafunzi kitu cha kufungua. Masomo: {n}
+Masomo yanayompa mwanafunzi kitu cha kufungua: {some} kati ya {all}
+Masomo yasiyompa mwanafunzi chochote kabisa: {n}
+Masomo yenye jambo linalofaa kujulikana kabla hayajamfikia mwanafunzi: {n}
+Linafaa kufunguliwa kwanza: {lesson}. Halina chochote kabisa ndani yake, kwa hiyo mwanafunzi anapata kichwa na ukurasa mtupu.
+Linaonekana limekamilika, na halijakamilika: {lesson}. Kuna kitu kilichoambatishwa, na mwanafunzi hawezi kufungua chochote kati yake.
+Linafaa kutazamwa: {lesson}. Mwanafunzi anaweza kulitumia, na kuna jambo kulihusu linalofaa kujulikana kwanza.
+Masomo mengine katika hatua hiyo hiyo: {n}
+Litazame kama mwanafunzi
+Hali ya usimbaji wa faili zilizopakiwa haikuweza kusomwa sasa hivi, kwa hiyo faili inayoonyeshwa bila kichezaji inaweza kuwa faili ambayo hakuna aliyeiulizia, si faili iliyoshindikana.
+Hii inasema mwanafunzi atakutana na nini, si nini cha kuamua. Uamuzi ni wako, na hakuna chochote hapa ambacho peke yake ni sababu ya kukubali au kukataa: ukaguzi wa kielimu unahusu kinachofundishwa, na hii inahusu kinachofika.
+Muhtasari
+Toleo hili halina sehemu. Hakuna cha kukagua, na haliwezi kuchapishwa.
+Hakuna masomo.
+Halina kitu ndani
+Hakuna cha kucheza
+Linafaa kutazamwa
+Tayari
+{name}: hakuna nakala ya kuonyesha iliyosimbwa bado, kwa hiyo hakuna cha kutazama, na mwanafunzi angepata sentensi mahali pa kichezaji.
+Unaweza kutazama nakala za kuonyesha za masomo haya ukaguzi huu ukiwa wazi. Huwezi kuzihifadhi, na faili aliyopakia mwalimu haitolewi kwako: kinachokaguliwa ni kile atakachoona mwanafunzi.
+Masomo yanaweza kuchezwa tangu ukaguzi unapokubaliwa hadi unapofungwa, kwa hiyo hayawezi kuchezwa hapa sasa.
+Toleo hili linahitaji nini, na nini kimehakikiwa
+Paneli mbili zilizo hapa chini ziko kwa Kiingereza kwa sasa.
+Uamuzi wako
+Rudi kwenye foleni
+Ukaguzi huu haukuweza kusomwa sasa hivi. Jaribu tena baada ya muda mfupi.
+Muhtasari wa kozi hii haukuweza kusomwa sasa hivi, kwa hiyo hauonyeshwi. Pakia ukurasa upya kabla ya kuamua.
+Sehemu ya ukurasa huu haikuweza kusomwa sasa hivi, kwa hiyo haujakamilika. Upakie upya kabla ya kuamua.
+Ukaguzi huu umetolewa kwako
+Hakuna kinachotarajiwa mpaka uukubali.
+Kubali ukaguzi huu
+Kataa ombi
+Andika uamuzi wako
+Sababu
+Ulihakiki nini, na ulikuta nini? Hii ndiyo kumbukumbu ambayo mwalimu angeikatia rufaa.
+Idhinisha
+Omba marekebisho
+Kataa
+Kuidhinisha kunapeleka toleo kwenye hali ya “limeidhinishwa”, ambapo wafanyakazi wa jukwaa wanaweza kulichapisha. Huwezi kulichapisha wewe mwenyewe, na huwezi kuidhinisha kozi uliyoiandika.
+Tayari umeandika uamuzi kwenye ukaguzi huu.
+Ukaguzi huu umefungwa, kwa hiyo hakuna uamuzi unaoweza kuandikwa juu yake.
+Uamuzi wako umeandikwa. Kozi yenyewe haikuweza kusogezwa mbele kutoka hapa; wafanyakazi wa jukwaa wanaweza kuona uamuzi wako na kuisogeza. Huhitaji kuamua tena.
+Ukaguzi huo si wako.
+Ukaguzi huu hauko wazi tena kwa jambo hilo. Pakia ukurasa upya uone ulipofikia.
+Mgongano uliotamka unakuzuia kuamua ukaguzi huu.
+Toa sababu ya uamuzi.
+Haukuandikwa. Pakia ukurasa upya uone ukaguzi ulipofikia.
+Huwezi kukagua hii bila upendeleo?
+Umetamkwa
+Tamka mgongano wa maslahi kuhusu kozi hii
+Kutamka kunakuzuia mara moja kuamua ukaguzi huu, na kunaendelea kukuzuia mpaka wafanyakazi wa jukwaa waushughulikie. Hakufungi ukaguzi: ikiwa bado ni ombi, likatae pia; vinginevyo wafanyakazi ndio wanaoufunga.
+### af
+Besluite
+Wat ’n leerder kry
+Elke les gee die leerder iets om oop te maak. Lesse: {n}
+Lesse wat die leerder iets gee om oop te maak: {some} van {all}
+Lesse wat die leerder hoegenaamd niks gee nie: {n}
+Lesse met iets wat die moeite werd is om te weet voordat hulle ’n leerder bereik: {n}
+Die moeite werd om eerste oop te maak: {lesson}. Daar is hoegenaamd niks in nie, dus kry die leerder ’n titel en ’n leë bladsy.
+Lyk klaar, en is nie: {lesson}. Iets is daaraan geheg, en die leerder kan niks daarvan oopmaak nie.
+Die moeite werd om na te kyk: {lesson}. Die leerder kan dit gebruik, en daar is iets daaroor wat eers geweet moet word.
+Ander lesse op dieselfde stadium: {n}
+Sien dit soos ’n leerder
+Die enkoderingstoestand van opgelaaide lêers kon nie nou gelees word nie, dus kan ’n lêer wat sonder ’n speler gewys word een wees waaroor niemand gevra het nie, eerder as een wat misluk het.
+Dit sê wat ’n leerder sou teëkom, nie wat om te besluit nie. Die besluit is joune, en niks hier is op sy eie ’n rede om te aanvaar of van die hand te wys nie: ’n vakkundige beoordeling gaan oor wat onderrig word, en dit gaan oor wat aankom.
+Uiteensetting
+Hierdie weergawe het geen afdelings nie. Daar is niks om te beoordeel nie, en dit kan nie gepubliseer word nie.
+Geen lesse nie.
+Niks daarin nie
+Niks om te speel nie
+Die moeite werd om na te kyk
+Gereed
+{name}: geen afleweringskopie is nog geënkodeer nie, dus is daar niks om na te kyk nie, en ’n leerder sou ’n sin kry waar die speler moes wees.
+Jy kan na die afleweringskopieë van hierdie lesse kyk terwyl hierdie beoordeling oop is. Jy kan hulle nie stoor nie, en die lêer wat ’n onderwyser opgelaai het, word nie aan jou bedien nie: wat beoordeel word, is wat ’n leerder sal sien.
+Die lesse kan gespeel word van die oomblik dat ’n beoordeling aanvaar word totdat dit gesluit word, dus kan hulle nie nou hier gespeel word nie.
+Wat hierdie weergawe nodig het, en wat nagegaan is
+Die twee panele hieronder is vir eers in Engels.
+Jou besluit
+Terug na die tou
+Hierdie beoordeling kon nie nou gelees word nie. Probeer oor ’n oomblik weer.
+Die uiteensetting van hierdie kursus kon nie nou gelees word nie, dus word dit nie gewys nie. Laai die bladsy weer voordat jy besluit.
+’n Deel van hierdie bladsy kon nie nou gelees word nie, dus is dit onvolledig. Laai dit weer voordat jy besluit.
+Hierdie beoordeling word aan jou aangebied
+Niks word verwag totdat jy dit aanvaar nie.
+Aanvaar hierdie beoordeling
+Wys van die hand
+Teken jou besluit aan
+Rede
+Wat het jy nagegaan, en wat het jy gevind? Dit is die rekord waarteen ’n onderwyser sou appelleer.
+Keur goed
+Vra hersienings
+Keur af
+Goedkeuring skuif die weergawe na “goedgekeur”, waar platformpersoneel dit kan publiseer. Jy kan dit nie self publiseer nie, en jy kan nie ’n kursus goedkeur wat jy geskryf het nie.
+Jy het reeds ’n besluit oor hierdie beoordeling aangeteken.
+Hierdie beoordeling is gesluit, dus kan geen besluit daarop aangeteken word nie.
+Jou besluit is aangeteken. Die kursus self kon nie van hier af aangeskuif word nie; platformpersoneel kan jou besluit sien en dit aanskuif. Jy hoef nie weer te besluit nie.
+Daardie beoordeling is nie joune nie.
+Hierdie beoordeling is nie meer daarvoor oop nie. Laai die bladsy weer om te sien waar dit staan.
+’n Botsing wat jy verklaar het, verhinder jou om oor hierdie beoordeling te besluit.
+Gee ’n rede vir die besluit.
+Dit is nie aangeteken nie. Laai die bladsy weer om te sien waar die beoordeling staan.
+Kan jy dit nie onpartydig beoordeel nie?
+Verklaar
+Verklaar ’n botsing van belange oor hierdie kursus
+Die verklaring verhinder jou dadelik om oor hierdie beoordeling te besluit, en hou aan om jou te verhinder totdat platformpersoneel dit aangehoor het. Dit sluit nie die beoordeling nie: as dit nog ’n aanbod is, wys dit ook van die hand; anders sluit die personeel dit.
+### zh-hans
+决定
+学习者能得到什么
+每一课都有可供学习者打开的内容。课数：{n}
+有内容可供学习者打开的课：{all} 课中的 {some} 课
+完全没有内容给学习者的课：{n}
+在到达学习者之前有事项值得了解的课：{n}
+值得先打开：{lesson}。里面什么都没有，学习者只会看到一个标题和一张空白页。
+看起来已完成，其实没有：{lesson}。它附有内容，但学习者一样也打不开。
+值得看一眼：{lesson}。学习者可以使用它，但有一件事值得先了解。
+处于同一阶段的其他课：{n}
+以学习者的视角查看
+上传文件的编码状态暂时无法读取，因此没有播放器的文件可能只是没有人查询过，而不是编码失败。
+这里说的是学习者会遇到什么，而不是该作出什么决定。决定由你作出，这里的任何一项都不能单独成为接受或谢绝的理由：学术审阅关乎所教的内容，这里关乎送达的内容。
+大纲
+这个版本没有任何章节。没有可审阅的内容，也无法发布。
+没有课。
+里面没有内容
+没有可播放的内容
+值得看一眼
+就绪
+{name}：尚未编码出播放副本，因此没有可观看的内容，学习者会在播放器的位置看到一句话。
+在这次审阅开放期间，你可以观看这些课的播放副本。你不能保存它们，教师上传的原文件也不会提供给你：受审阅的是学习者将看到的内容。
+从审阅被接受起到关闭为止，课可以播放，因此现在无法在这里播放。
+这个版本需要什么，以及已检查了什么
+下面两个面板暂时为英文。
+你的决定
+返回队列
+暂时无法读取这次审阅。请稍后再试。
+暂时无法读取这门课程的大纲，因此没有显示。请在作出决定前重新加载页面。
+本页有一部分暂时无法读取，因此内容不完整。请在作出决定前重新加载。
+这次审阅是向你发出的邀请
+在你接受之前，不要求你做任何事。
+接受这次审阅
+谢绝
+记录你的决定
+理由
+你检查了什么，发现了什么？教师提出申诉时依据的就是这份记录。
+通过
+要求修改
+否决
+通过会把版本转为“已通过”状态，平台工作人员可在该状态下发布它。你不能自己发布，也不能通过自己撰写的课程。
+你已经为这次审阅记录过决定。
+这次审阅已关闭，因此无法为它记录决定。
+你的决定已记录。课程本身未能从这里向前推进；平台工作人员可以看到你的决定并推进课程。你不需要再次作出决定。
+那次审阅不属于你。
+这次审阅已不再接受该操作。请重新加载页面，查看它的现状。
+你申报的一项利益冲突使你不能对这次审阅作出决定。
+请为决定写明理由。
+没有记录。请重新加载页面，查看这次审阅的现状。
+无法公正地审阅它？
+已申报
+申报与这门课程有关的利益冲突
+申报会立即使你不能对这次审阅作出决定，并且在平台工作人员处理之前一直如此。申报不会关闭这次审阅：如果它仍是邀请，请同时谢绝；否则由工作人员关闭。
+### zh-hant
+決定
+學習者能得到什麼
+每一課都有可供學習者打開的內容。課數：{n}
+有內容可供學習者打開的課：{all} 課中的 {some} 課
+完全沒有內容給學習者的課：{n}
+在到達學習者之前有事項值得了解的課：{n}
+值得先打開：{lesson}。裡面什麼都沒有，學習者只會看到一個標題和一張空白頁。
+看起來已完成，其實沒有：{lesson}。它附有內容，但學習者一樣也打不開。
+值得看一眼：{lesson}。學習者可以使用它，但有一件事值得先了解。
+處於同一階段的其他課：{n}
+以學習者的視角查看
+上傳檔案的編碼狀態暫時無法讀取，因此沒有播放器的檔案可能只是沒有人查詢過，而不是編碼失敗。
+這裡說的是學習者會遇到什麼，而不是該作出什麼決定。決定由你作出，這裡的任何一項都不能單獨成為接受或婉拒的理由：學術審閱關乎所教的內容，這裡關乎送達的內容。
+大綱
+這個版本沒有任何章節。沒有可審閱的內容，也無法發布。
+沒有課。
+裡面沒有內容
+沒有可播放的內容
+值得看一眼
+就緒
+{name}：尚未編碼出播放副本，因此沒有可觀看的內容，學習者會在播放器的位置看到一句話。
+在這次審閱開放期間，你可以觀看這些課的播放副本。你不能儲存它們，教師上傳的原檔案也不會提供給你：受審閱的是學習者將看到的內容。
+從審閱被接受起到關閉為止，課可以播放，因此現在無法在這裡播放。
+這個版本需要什麼，以及已檢查了什麼
+下面兩個面板暫時為英文。
+你的決定
+返回佇列
+暫時無法讀取這次審閱。請稍後再試。
+暫時無法讀取這門課程的大綱，因此沒有顯示。請在作出決定前重新載入頁面。
+本頁有一部分暫時無法讀取，因此內容不完整。請在作出決定前重新載入。
+這次審閱是向你發出的邀請
+在你接受之前，不要求你做任何事。
+接受這次審閱
+婉拒
+記錄你的決定
+理由
+你檢查了什麼，發現了什麼？教師提出申訴時依據的就是這份記錄。
+通過
+要求修改
+否決
+通過會把版本轉為「已通過」狀態，平台工作人員可在該狀態下發布它。你不能自己發布，也不能通過自己撰寫的課程。
+你已經為這次審閱記錄過決定。
+這次審閱已關閉，因此無法為它記錄決定。
+你的決定已記錄。課程本身未能從這裡向前推進；平台工作人員可以看到你的決定並推進課程。你不需要再次作出決定。
+那次審閱不屬於你。
+這次審閱已不再接受該操作。請重新載入頁面，查看它的現狀。
+你申報的一項利益衝突使你不能對這次審閱作出決定。
+請為決定寫明理由。
+沒有記錄。請重新載入頁面，查看這次審閱的現狀。
+無法公正地審閱它？
+已申報
+申報與這門課程有關的利益衝突
+申報會立即使你不能對這次審閱作出決定，並且在平台工作人員處理之前一直如此。申報不會關閉這次審閱：如果它仍是邀請，請同時婉拒；否則由工作人員關閉。
+### vi
+Quyết định
+Người học nhận được gì
+Bài học nào cũng cho người học một thứ để mở. Số bài học: {n}
+Bài học cho người học một thứ để mở: {some} trên {all}
+Bài học không cho người học bất cứ thứ gì: {n}
+Bài học có điều nên biết trước khi đến với người học: {n}
+Nên mở trước: {lesson}. Trong đó không có gì cả, nên người học chỉ nhận được một tiêu đề và một trang trống.
+Trông như đã xong, nhưng chưa: {lesson}. Có thứ được đính kèm, và người học không mở được thứ nào.
+Đáng xem qua: {lesson}. Người học dùng được bài này, và có một điều về nó nên biết trước.
+Bài học khác ở cùng giai đoạn: {n}
+Xem như người học
+Hiện chưa đọc được trạng thái mã hóa của các tệp đã tải lên, nên một tệp hiện ra không có trình phát có thể là tệp chưa ai hỏi đến chứ không phải tệp bị lỗi.
+Phần này cho biết người học sẽ gặp gì, không phải nên quyết định thế nào. Quyết định là của bạn, và không điều gì ở đây tự nó là lý do để nhận hay từ chối: duyệt học thuật là về điều được dạy, còn phần này là về điều đến được nơi.
+Dàn bài
+Phiên bản này không có phần nào. Không có gì để duyệt, và không thể xuất bản.
+Không có bài học.
+Không có gì bên trong
+Không có gì để phát
+Đáng xem qua
+Sẵn sàng
+{name}: chưa có bản phát nào được mã hóa, nên không có gì để xem, và người học sẽ nhận được một câu ở chỗ lẽ ra là trình phát.
+Bạn có thể xem các bản phát của những bài học này trong lúc lượt duyệt này còn mở. Bạn không thể lưu chúng, và tệp giáo viên tải lên không được gửi cho bạn: thứ được duyệt là thứ người học sẽ thấy.
+Bài học phát được từ lúc lượt duyệt được nhận cho đến khi nó đóng, nên bây giờ không phát được ở đây.
+Phiên bản này cần gì, và những gì đã được kiểm tra
+Hai bảng bên dưới hiện bằng tiếng Anh.
+Quyết định của bạn
+Quay lại hàng chờ
+Hiện chưa đọc được lượt duyệt này. Hãy thử lại sau giây lát.
+Hiện chưa đọc được dàn bài của khóa học này nên nó không được hiển thị. Hãy tải lại trang trước khi quyết định.
+Hiện chưa đọc được một phần của trang này nên trang chưa đầy đủ. Hãy tải lại trước khi quyết định.
+Lượt duyệt này được mời đến bạn
+Chưa ai chờ đợi gì ở bạn cho đến khi bạn nhận.
+Nhận lượt duyệt này
+Từ chối nhận
+Ghi nhận quyết định của bạn
+Lý do
+Bạn đã kiểm tra gì, và thấy gì? Đây là bản ghi mà giáo viên sẽ khiếu nại.
+Chấp thuận
+Yêu cầu chỉnh sửa
+Bác bỏ
+Chấp thuận sẽ chuyển phiên bản sang trạng thái “đã chấp thuận”, ở đó nhân viên nền tảng có thể xuất bản nó. Bạn không thể tự xuất bản, và không thể chấp thuận khóa học do chính bạn viết.
+Bạn đã ghi nhận một quyết định cho lượt duyệt này rồi.
+Lượt duyệt này đã đóng nên không thể ghi nhận quyết định cho nó.
+Quyết định của bạn đã được ghi nhận. Riêng khóa học thì chưa chuyển tiếp được từ đây; nhân viên nền tảng thấy được quyết định của bạn và có thể chuyển nó. Bạn không cần quyết định lại.
+Lượt duyệt đó không phải của bạn.
+Lượt duyệt này không còn mở cho việc đó. Hãy tải lại trang để xem nó đang ở đâu.
+Một xung đột bạn đã khai báo ngăn bạn quyết định lượt duyệt này.
+Hãy nêu lý do cho quyết định.
+Chưa được ghi nhận. Hãy tải lại trang để xem lượt duyệt đang ở đâu.
+Không thể duyệt một cách vô tư?
+Đã khai báo
+Khai báo xung đột lợi ích về khóa học này
+Khai báo sẽ lập tức ngăn bạn quyết định lượt duyệt này, và tiếp tục ngăn cho đến khi nhân viên nền tảng xem xét. Nó không đóng lượt duyệt: nếu đây vẫn là lời mời, hãy từ chối cả lời mời; nếu không, nhân viên sẽ đóng.
+### th
+คำตัดสิน
+สิ่งที่ผู้เรียนได้รับ
+ทุกบทเรียนมีบางอย่างให้ผู้เรียนเปิด บทเรียน: {n}
+บทเรียนที่มีบางอย่างให้ผู้เรียนเปิด: {some} จาก {all}
+บทเรียนที่ไม่มีอะไรให้ผู้เรียนเลย: {n}
+บทเรียนที่มีเรื่องควรรู้ก่อนจะไปถึงผู้เรียน: {n}
+ควรเปิดดูก่อน: {lesson} ข้างในไม่มีอะไรเลย ผู้เรียนจึงได้เพียงชื่อบทเรียนกับหน้าว่าง
+ดูเหมือนเสร็จแล้ว แต่ยังไม่เสร็จ: {lesson} มีบางอย่างแนบอยู่ แต่ผู้เรียนเปิดไม่ได้สักอย่าง
+ควรดูสักหน่อย: {lesson} ผู้เรียนใช้งานได้ และมีเรื่องเกี่ยวกับบทเรียนนี้ที่ควรรู้ก่อน
+บทเรียนอื่นที่อยู่ในขั้นเดียวกัน: {n}
+ดูแบบที่ผู้เรียนเห็น
+ขณะนี้อ่านสถานะการเข้ารหัสของไฟล์ที่อัปโหลดไม่ได้ ไฟล์ที่แสดงโดยไม่มีตัวเล่นจึงอาจเป็นไฟล์ที่ยังไม่มีใครถามถึง ไม่ใช่ไฟล์ที่ล้มเหลว
+ส่วนนี้บอกว่าผู้เรียนจะพบอะไร ไม่ได้บอกว่าควรตัดสินอย่างไร การตัดสินเป็นของคุณ และไม่มีสิ่งใดในนี้ที่เป็นเหตุผลให้รับหรือปฏิเสธได้โดยลำพัง: การตรวจทานทางวิชาการว่าด้วยสิ่งที่สอน ส่วนนี้ว่าด้วยสิ่งที่ไปถึง
+โครงร่าง
+เวอร์ชันนี้ไม่มีหมวดใดเลย ไม่มีอะไรให้ตรวจทาน และเผยแพร่ไม่ได้
+ไม่มีบทเรียน
+ข้างในไม่มีอะไร
+ไม่มีอะไรให้เล่น
+ควรดูสักหน่อย
+พร้อม
+{name}: ยังไม่มีสำเนาสำหรับแสดงที่เข้ารหัสแล้ว จึงไม่มีอะไรให้ดู และผู้เรียนจะได้เห็นประโยคหนึ่งแทนตัวเล่น
+คุณดูสำเนาสำหรับแสดงของบทเรียนเหล่านี้ได้ตลอดเวลาที่งานตรวจทานนี้ยังเปิดอยู่ คุณบันทึกสำเนาไว้ไม่ได้ และไฟล์ที่ผู้สอนอัปโหลดจะไม่ถูกส่งให้คุณ: สิ่งที่ถูกตรวจทานคือสิ่งที่ผู้เรียนจะเห็น
+บทเรียนเล่นได้ตั้งแต่ตอนที่รับงานตรวจทานจนถึงตอนที่งานปิด ตอนนี้จึงเล่นที่นี่ไม่ได้
+เวอร์ชันนี้ต้องการอะไร และตรวจอะไรไปแล้ว
+สองแผงด้านล่างยังเป็นภาษาอังกฤษอยู่ในตอนนี้
+คำตัดสินของคุณ
+กลับไปที่คิว
+ขณะนี้อ่านงานตรวจทานนี้ไม่ได้ โปรดลองอีกครั้งในอีกสักครู่
+ขณะนี้อ่านโครงร่างของคอร์สนี้ไม่ได้ จึงไม่ได้แสดงไว้ โปรดโหลดหน้านี้ใหม่ก่อนตัดสิน
+ขณะนี้อ่านบางส่วนของหน้านี้ไม่ได้ หน้านี้จึงไม่ครบ โปรดโหลดใหม่ก่อนตัดสิน
+งานตรวจทานนี้ถูกเสนอให้คุณ
+ยังไม่มีใครคาดหวังอะไรจนกว่าคุณจะรับงาน
+รับงานตรวจทานนี้
+ไม่รับงานนี้
+บันทึกคำตัดสินของคุณ
+เหตุผล
+คุณตรวจอะไร และพบอะไร นี่คือบันทึกที่ผู้สอนจะใช้อุทธรณ์
+อนุมัติ
+ขอการแก้ไข
+ไม่อนุมัติหลักสูตรนี้
+การอนุมัติจะย้ายเวอร์ชันไปยังสถานะ “อนุมัติแล้ว” ซึ่งเจ้าหน้าที่ของแพลตฟอร์มเผยแพร่ได้ คุณเผยแพร่เองไม่ได้ และอนุมัติคอร์สที่คุณเขียนเองไม่ได้
+คุณบันทึกคำตัดสินของงานตรวจทานนี้ไว้แล้ว
+งานตรวจทานนี้ปิดแล้ว จึงบันทึกคำตัดสินไม่ได้
+บันทึกคำตัดสินของคุณแล้ว ส่วนตัวคอร์สยังย้ายต่อจากตรงนี้ไม่ได้ เจ้าหน้าที่ของแพลตฟอร์มเห็นคำตัดสินของคุณและย้ายคอร์สได้ คุณไม่ต้องตัดสินอีกครั้ง
+งานตรวจทานนั้นไม่ใช่ของคุณ
+งานตรวจทานนี้ไม่เปิดให้ทำเช่นนั้นแล้ว โปรดโหลดหน้านี้ใหม่เพื่อดูว่างานอยู่ในสถานะใด
+ผลประโยชน์ทับซ้อนที่คุณแจ้งไว้ทำให้คุณตัดสินงานตรวจทานนี้ไม่ได้
+โปรดให้เหตุผลของคำตัดสิน
+ไม่ได้บันทึก โปรดโหลดหน้านี้ใหม่เพื่อดูว่างานตรวจทานอยู่ในสถานะใด
+ตรวจทานงานนี้อย่างเป็นกลางไม่ได้ใช่ไหม
+แจ้งแล้ว
+แจ้งผลประโยชน์ทับซ้อนเกี่ยวกับคอร์สนี้
+การแจ้งจะทำให้คุณตัดสินงานตรวจทานนี้ไม่ได้ในทันที และจะเป็นเช่นนั้นจนกว่าเจ้าหน้าที่ของแพลตฟอร์มจะพิจารณา การแจ้งไม่ได้ปิดงานตรวจทาน: หากยังเป็นข้อเสนออยู่ โปรดปฏิเสธข้อเสนอด้วย มิฉะนั้นเจ้าหน้าที่จะเป็นผู้ปิด
+### fil
+Mga pasya
+Ang natatanggap ng mag-aaral
+Bawat aralin ay may naibibigay sa mag-aaral na mabubuksan. Mga aralin: {n}
+Mga araling may naibibigay sa mag-aaral na mabubuksan: {some} sa {all}
+Mga araling walang kahit anong naibibigay sa mag-aaral: {n}
+Mga araling may dapat malaman bago makarating sa mag-aaral: {n}
+Mainam na unahing buksan: {lesson}. Wala itong kahit anong laman, kaya pamagat at blangkong pahina lang ang makukuha ng mag-aaral.
+Mukhang tapos na, pero hindi pa: {lesson}. May nakakabit dito, at wala ni isa roon ang mabubuksan ng mag-aaral.
+Mainam na tingnan: {lesson}. Magagamit ito ng mag-aaral, at may isang bagay tungkol dito na dapat munang malaman.
+Iba pang aralin sa parehong yugto: {n}
+Tingnan gaya ng mag-aaral
+Hindi mabasa ngayon ang kalagayan ng pag-encode ng mga in-upload na file, kaya ang file na ipinapakitang walang player ay maaaring file na wala pang nagtanong tungkol dito, hindi file na pumalya.
+Sinasabi nito kung ano ang madaratnan ng mag-aaral, hindi kung ano ang ipapasya. Sa iyo ang pasya, at wala rito ang sapat na dahilan nang mag-isa para tanggapin o tanggihan: ang pagsusuring pang-iskolar ay tungkol sa itinuturo, at ito ay tungkol sa nakararating.
+Balangkas
+Walang seksiyon ang bersiyong ito. Walang masusuri, at hindi ito mailalathala.
+Walang aralin.
+Walang laman
+Walang mapapatugtog
+Mainam na tingnan
+Handa
+{name}: wala pang kopyang pampalabas na na-encode, kaya walang mapapanood, at isang pangungusap ang makukuha ng mag-aaral sa dapat sana ay kinalalagyan ng player.
+Mapapanood mo ang mga kopyang pampalabas ng mga araling ito habang bukas ang pagsusuring ito. Hindi mo sila mase-save, at hindi ibinibigay sa iyo ang file na in-upload ng guro: ang sinusuri ay ang makikita ng mag-aaral.
+Mapapatugtog ang mga aralin mula sa sandaling tanggapin ang pagsusuri hanggang sa isara ito, kaya hindi sila mapapatugtog dito ngayon.
+Ang kailangan ng bersiyong ito, at ang nasuri na
+Nasa Ingles muna ang dalawang panel sa ibaba.
+Ang pasya mo
+Bumalik sa pila
+Hindi mabasa ngayon ang pagsusuring ito. Subukan muli maya-maya.
+Hindi mabasa ngayon ang balangkas ng kursong ito, kaya hindi ito ipinapakita. I-load muli ang pahina bago ka magpasya.
+Hindi mabasa ngayon ang bahagi ng pahinang ito, kaya kulang ito. I-load ito muli bago ka magpasya.
+Iniaalok sa iyo ang pagsusuring ito
+Walang inaasahan sa iyo hangga’t hindi mo ito tinatanggap.
+Tanggapin ang pagsusuring ito
+Tanggihan ang alok
+Itala ang pasya mo
+Dahilan
+Ano ang sinuri mo, at ano ang nakita mo? Ito ang talang iaapela ng guro.
+Aprubahan
+Humiling ng mga rebisyon
+Huwag aprubahan
+Inililipat ng pag-apruba ang bersiyon sa kalagayang “naaprubahan”, kung saan mailalathala ito ng mga kawani ng platform. Hindi mo ito mailalathala nang ikaw mismo, at hindi mo maaaprubahan ang kursong isinulat mo.
+Nakapagtala ka na ng pasya sa pagsusuring ito.
+Sarado na ang pagsusuring ito, kaya walang pasyang maitatala rito.
+Naitala ang pasya mo. Ang kurso mismo ay hindi naisulong mula rito; nakikita ng mga kawani ng platform ang pasya mo at maisusulong nila ito. Hindi mo kailangang magpasya muli.
+Hindi sa iyo ang pagsusuring iyon.
+Hindi na bukas ang pagsusuring ito para diyan. I-load muli ang pahina para makita kung nasaan na ito.
+Isang salungatang idineklara mo ang pumipigil sa iyong pagpasyahan ang pagsusuring ito.
+Magbigay ng dahilan para sa pasya.
+Hindi ito naitala. I-load muli ang pahina para makita kung nasaan na ang pagsusuri.
+Hindi mo ito masusuri nang walang kinikilingan?
+Naideklara
+Magdeklara ng salungatan ng interes tungkol sa kursong ito
+Agad kang pinipigilan ng deklarasyon na pagpasyahan ang pagsusuring ito, at patuloy kang pipigilan hanggang sa dinggin ito ng mga kawani ng platform. Hindi nito isinasara ang pagsusuri: kung alok pa ito, tanggihan mo rin; kung hindi, ang mga kawani ang magsasara.
+### uz
+Qarorlar
+Oʻquvchi nima oladi
+Har bir dars oʻquvchiga ochish uchun biror narsa beradi. Darslar: {n}
+Oʻquvchiga ochish uchun biror narsa beradigan darslar: {all} tadan {some} tasi
+Oʻquvchiga umuman hech narsa bermaydigan darslar: {n}
+Oʻquvchiga yetib borishidan oldin bilib qoʻyishga arziydigan jihati bor darslar: {n}
+Avval shuni ochgan maʼqul: {lesson}. Unda umuman hech narsa yoʻq, shuning uchun oʻquvchi faqat sarlavha va boʻsh sahifani koʻradi.
+Tugagandek koʻrinadi, lekin tugamagan: {lesson}. Unga nimadir biriktirilgan, ammo oʻquvchi ulardan hech birini ocha olmaydi.
+Bir koʻz tashlashga arziydi: {lesson}. Oʻquvchi undan foydalana oladi, lekin u haqda avval bilib qoʻyishga arziydigan narsa bor.
+Shu bosqichdagi boshqa darslar: {n}
+Oʻquvchi koʻzi bilan koʻrish
+Yuklangan fayllarning kodlash holatini hozir oʻqib boʻlmadi, shuning uchun pleyersiz koʻrsatilgan fayl muvaffaqiyatsiz tugagan fayl emas, balki hech kim soʻramagan fayl boʻlishi mumkin.
+Bu oʻquvchi nimaga duch kelishini aytadi, qanday qaror qilishni emas. Qaror sizniki, va bu yerdagi hech narsa oʻzicha qabul qilish yoki rad etish uchun sabab emas: ilmiy taqriz nima oʻrgatilayotgani haqida, bu esa nima yetib borishi haqida.
+Reja
+Bu versiyada boʻlimlar yoʻq. Taqriz qilinadigan narsa yoʻq va uni nashr etib boʻlmaydi.
+Darslar yoʻq.
+Ichida hech narsa yoʻq
+Ijro etiladigan narsa yoʻq
+Bir koʻz tashlashga arziydi
+Tayyor
+{name}: koʻrsatish nusxasi hali kodlanmagan, shuning uchun tomosha qiladigan narsa yoʻq va oʻquvchi pleyer oʻrnida bitta gapni koʻradi.
+Bu taqriz ochiq turgan paytda shu darslarning koʻrsatish nusxalarini tomosha qilishingiz mumkin. Ularni saqlab ololmaysiz va oʻqituvchi yuklagan fayl sizga berilmaydi: taqriz qilinayotgan narsa oʻquvchi koʻradigan narsadir.
+Darslarni taqriz qabul qilingan paytdan u yopilgunga qadar ijro etish mumkin, shuning uchun hozir bu yerda ijro etib boʻlmaydi.
+Bu versiyaga nima kerak va nimalar tekshirilgan
+Quyidagi ikki panel hozircha ingliz tilida.
+Qaroringiz
+Navbatga qaytish
+Bu taqrizni hozir oʻqib boʻlmadi. Birozdan soʻng qayta urinib koʻring.
+Bu kursning rejasini hozir oʻqib boʻlmadi, shuning uchun u koʻrsatilmayapti. Qaror qilishdan oldin sahifani qayta yuklang.
+Bu sahifaning bir qismini hozir oʻqib boʻlmadi, shuning uchun u toʻliq emas. Qaror qilishdan oldin uni qayta yuklang.
+Bu taqriz sizga taklif qilingan
+Qabul qilmaguningizcha sizdan hech narsa kutilmaydi.
+Bu taqrizni qabul qilish
+Taklifni rad etish
+Qaroringizni qayd eting
+Sabab
+Nimani tekshirdingiz va nimani topdingiz? Oʻqituvchi aynan shu yozuv ustidan shikoyat qiladi.
+Maʼqullash
+Tuzatishlar soʻrash
+Rad etish
+Maʼqullash versiyani “maʼqullangan” holatiga oʻtkazadi, u yerda platforma xodimlari uni nashr eta oladi. Uni oʻzingiz nashr eta olmaysiz va oʻzingiz yozgan kursni maʼqullay olmaysiz.
+Siz bu taqriz boʻyicha qarorni allaqachon qayd etgansiz.
+Bu taqriz yopilgan, shuning uchun unga qaror qayd etib boʻlmaydi.
+Qaroringiz qayd etildi. Kursning oʻzini bu yerdan oldinga surib boʻlmadi; platforma xodimlari qaroringizni koʻradi va uni oldinga sura oladi. Qayta qaror qilishingiz shart emas.
+U taqriz sizniki emas.
+Bu taqriz endi buning uchun ochiq emas. Uning qay holatda ekanini koʻrish uchun sahifani qayta yuklang.
+Siz bayon qilgan toʻqnashuv bu taqriz boʻyicha qaror qilishingizga toʻsqinlik qiladi.
+Qaror uchun sabab yozing.
+Qayd etilmadi. Taqriz qay holatda ekanini koʻrish uchun sahifani qayta yuklang.
+Buni xolis taqriz qila olmaysizmi?
+Bayon qilindi
+Bu kurs boʻyicha manfaatlar toʻqnashuvini bayon qilish
+Bayonot sizni bu taqriz boʻyicha qaror qilishdan darhol toʻsadi va platforma xodimlari uni koʻrib chiqmaguncha toʻsib turadi. U taqrizni yopmaydi: agar u hali taklif boʻlsa, uni ham rad eting; aks holda uni xodimlar yopadi.
+### kk
+Шешімдер
+Оқушы не алады
+Әр сабақ оқушыға ашатын бірдеңе береді. Сабақтар: {n}
+Оқушыға ашатын бірдеңе беретін сабақтар: {all} ішінен {some}
+Оқушыға мүлде ештеңе бермейтін сабақтар: {n}
+Оқушыға жеткенге дейін біліп алған жөн жайы бар сабақтар: {n}
+Алдымен осыны ашқан жөн: {lesson}. Ішінде мүлде ештеңе жоқ, сондықтан оқушы тек тақырып пен бос бетті көреді.
+Аяқталған сияқты көрінеді, бірақ аяқталмаған: {lesson}. Оған бірдеңе тіркелген, бірақ оқушы оның ешқайсысын аша алмайды.
+Бір қарап шығуға тұрарлық: {lesson}. Оқушы оны пайдалана алады, бірақ ол туралы алдымен біліп алған жөн нәрсе бар.
+Осы кезеңдегі басқа сабақтар: {n}
+Оқушы көзімен қарау
+Жүктелген файлдардың кодталу күйі қазір оқылмады, сондықтан ойнатқышсыз көрсетілген файл сәтсіз аяқталған файл емес, ешкім сұрамаған файл болуы мүмкін.
+Бұл оқушының неге тап болатынын айтады, қандай шешім қабылдау керегін емес. Шешім сіздікі, және мұндағы ешнәрсе өздігінен қабылдауға не бас тартуға себеп емес: ғылыми рецензия не оқытылатыны туралы, ал бұл не жететіні туралы.
+Жоспар
+Бұл нұсқада бөлімдер жоқ. Рецензиялайтын ештеңе жоқ, және оны жариялау мүмкін емес.
+Сабақтар жоқ.
+Ішінде ештеңе жоқ
+Ойнататын ештеңе жоқ
+Бір қарап шығуға тұрарлық
+Дайын
+{name}: көрсету көшірмесі әлі кодталмаған, сондықтан көретін ештеңе жоқ, ал оқушы ойнатқыштың орнында бір сөйлемді көреді.
+Осы рецензия ашық тұрғанда осы сабақтардың көрсету көшірмелерін көре аласыз. Оларды сақтай алмайсыз, және мұғалім жүктеген файл сізге берілмейді: рецензияланатын нәрсе — оқушы көретін нәрсе.
+Сабақтарды рецензия қабылданған сәттен ол жабылғанға дейін ойнатуға болады, сондықтан қазір мұнда ойнатылмайды.
+Бұл нұсқаға не керек және не тексерілген
+Төмендегі екі панель әзірге ағылшын тілінде.
+Шешіміңіз
+Кезекке оралу
+Бұл рецензия қазір оқылмады. Сәлден соң қайталап көріңіз.
+Бұл курстың жоспары қазір оқылмады, сондықтан ол көрсетілмейді. Шешім қабылдамас бұрын бетті қайта жүктеңіз.
+Бұл беттің бір бөлігі қазір оқылмады, сондықтан ол толық емес. Шешім қабылдамас бұрын оны қайта жүктеңіз.
+Бұл рецензия сізге ұсынылды
+Оны қабылдағанша сізден ештеңе күтілмейді.
+Осы рецензияны қабылдау
+Бас тарту
+Шешіміңізді тіркеңіз
+Себеп
+Нені тексердіңіз және не таптыңыз? Мұғалім дәл осы жазбаға шағымданады.
+Мақұлдау
+Түзетулер сұрау
+Қабылдамау
+Мақұлдау нұсқаны «мақұлданған» күйіне көшіреді, сонда платформа қызметкерлері оны жариялай алады. Оны өзіңіз жариялай алмайсыз және өзіңіз жазған курсты мақұлдай алмайсыз.
+Сіз бұл рецензия бойынша шешімді әлдеқашан тіркегенсіз.
+Бұл рецензия жабық, сондықтан оған шешім тіркеу мүмкін емес.
+Шешіміңіз тіркелді. Курстың өзін осы жерден ілгері жылжыту мүмкін болмады; платформа қызметкерлері шешіміңізді көреді және оны жылжыта алады. Қайта шешім қабылдаудың қажеті жоқ.
+Ол рецензия сіздікі емес.
+Бұл рецензия енді бұған ашық емес. Оның қандай күйде екенін көру үшін бетті қайта жүктеңіз.
+Сіз мәлімдеген қақтығыс осы рецензия бойынша шешім қабылдауыңызға кедергі болады.
+Шешімнің себебін жазыңыз.
+Тіркелмеді. Рецензияның қандай күйде екенін көру үшін бетті қайта жүктеңіз.
+Мұны бейтарап рецензиялай алмайсыз ба?
+Мәлімделді
+Осы курс бойынша мүдделер қақтығысын мәлімдеу
+Мәлімдеме сізді осы рецензия бойынша шешім қабылдаудан бірден тосады және платформа қызметкерлері оны қарағанша тосып тұрады. Ол рецензияны жаппайды: егер ол әлі ұсыныс болса, одан да бас тартыңыз; әйтпесе оны қызметкерлер жабады.
+### az
+Qərarlar
+Öyrənən nə alır
+Hər dərs öyrənənə açmaq üçün nəsə verir. Dərslər: {n}
+Öyrənənə açmaq üçün nəsə verən dərslər: {all} dərsdən {some}
+Öyrənənə ümumiyyətlə heç nə verməyən dərslər: {n}
+Öyrənənə çatmazdan əvvəl bilinməsi yaxşı olan cəhəti olan dərslər: {n}
+Əvvəlcə bunu açmaq yaxşıdır: {lesson}. İçində ümumiyyətlə heç nə yoxdur, ona görə öyrənən yalnız başlıq və boş səhifə görür.
+Bitmiş kimi görünür, amma bitməyib: {lesson}. Ona nəsə əlavə olunub, amma öyrənən onların heç birini aça bilmir.
+Bir nəzər salmağa dəyər: {lesson}. Öyrənən ondan istifadə edə bilir, amma onun haqqında əvvəlcə bilinməsi yaxşı olan bir şey var.
+Eyni mərhələdəki digər dərslər: {n}
+Öyrənən kimi bax
+Yüklənmiş faylların kodlaşdırma vəziyyəti indi oxuna bilmədi, ona görə pleyersiz göstərilən fayl uğursuz olmuş fayl yox, heç kimin soruşmadığı fayl ola bilər.
+Bu, öyrənənin nə ilə qarşılaşacağını deyir, nəyə qərar veriləcəyini yox. Qərar sizindir və buradakı heç nə təkbaşına qəbul etmək və ya imtina etmək üçün səbəb deyil: elmi rəy nəyin öyrədildiyi barədədir, bu isə nəyin çatdığı barədə.
+Plan
+Bu versiyada bölmə yoxdur. Rəy veriləcək heç nə yoxdur və onu dərc etmək olmaz.
+Dərs yoxdur.
+İçində heç nə yoxdur
+Oxudulacaq heç nə yoxdur
+Bir nəzər salmağa dəyər
+Hazırdır
+{name}: nümayiş nüsxəsi hələ kodlaşdırılmayıb, ona görə baxılası heç nə yoxdur və öyrənən pleyerin yerində bir cümlə görəcək.
+Bu rəy açıq olduğu müddətdə bu dərslərin nümayiş nüsxələrinə baxa bilərsiniz. Onları yadda saxlaya bilməzsiniz və müəllimin yüklədiyi fayl sizə verilmir: rəy verilən şey öyrənənin görəcəyi şeydir.
+Dərsləri rəy qəbul edildiyi andan bağlanana qədər oxutmaq olar, ona görə indi burada oxutmaq olmur.
+Bu versiyaya nə lazımdır və nələr yoxlanılıb
+Aşağıdakı iki panel hələlik ingilis dilindədir.
+Qərarınız
+Növbəyə qayıt
+Bu rəy indi oxuna bilmədi. Bir azdan yenidən cəhd edin.
+Bu kursun planı indi oxuna bilmədi, ona görə göstərilmir. Qərar verməzdən əvvəl səhifəni yenidən yükləyin.
+Bu səhifənin bir hissəsi indi oxuna bilmədi, ona görə natamamdır. Qərar verməzdən əvvəl onu yenidən yükləyin.
+Bu rəy sizə təklif olunub
+Onu qəbul edənə qədər sizdən heç nə gözlənilmir.
+Bu rəyi qəbul et
+İmtina et
+Qərarınızı qeyd edin
+Səbəb
+Nəyi yoxladınız və nə tapdınız? Müəllim məhz bu qeyddən şikayət edəcək.
+Təsdiqlə
+Düzəliş istə
+Rədd et
+Təsdiq versiyanı “təsdiqlənib” vəziyyətinə keçirir, orada platforma əməkdaşları onu dərc edə bilər. Onu özünüz dərc edə bilməzsiniz və özünüzün yazdığınız kursu təsdiq edə bilməzsiniz.
+Siz bu rəy üzrə artıq qərar qeyd etmisiniz.
+Bu rəy bağlıdır, ona görə ona qərar qeyd etmək olmaz.
+Qərarınız qeyd olundu. Kursun özünü buradan irəli aparmaq mümkün olmadı; platforma əməkdaşları qərarınızı görür və onu irəli apara bilər. Yenidən qərar verməyinizə ehtiyac yoxdur.
+O rəy sizin deyil.
+Bu rəy artıq bunun üçün açıq deyil. Onun hansı vəziyyətdə olduğunu görmək üçün səhifəni yenidən yükləyin.
+Bəyan etdiyiniz toqquşma bu rəy üzrə qərar verməyinizə mane olur.
+Qərar üçün səbəb yazın.
+Qeyd olunmadı. Rəyin hansı vəziyyətdə olduğunu görmək üçün səhifəni yenidən yükləyin.
+Buna qərəzsiz rəy verə bilmirsiniz?
+Bəyan olundu
+Bu kursla bağlı maraqlar toqquşmasını bəyan et
+Bəyanat bu rəy üzrə qərar verməyinizə dərhal mane olur və platforma əməkdaşları ona baxana qədər mane olmaqda davam edir. O, rəyi bağlamır: əgər o hələ təklifdirsə, ondan da imtina edin; əks halda onu əməkdaşlar bağlayır.
+### tg
+Қарорҳо
+Омӯзанда чӣ мегирад
+Ҳар дарс ба омӯзанда чизе медиҳад, ки онро кушояд. Дарсҳо: {n}
+Дарсҳое, ки ба омӯзанда чизе барои кушодан медиҳанд: {some} аз {all}
+Дарсҳое, ки ба омӯзанда тамоман чизе намедиҳанд: {n}
+Дарсҳое, ки пеш аз расидан ба омӯзанда чизе дар борааш донистан меарзад: {n}
+Беҳтар аст аввал ҳаминро кушоед: {lesson}. Дар он тамоман чизе нест, бинобар ин омӯзанда танҳо унвон ва саҳифаи холиро мебинад.
+Тайёр менамояд, вале нест: {lesson}. Ба он чизе замима шудааст, аммо омӯзанда ҳеҷ кадомашро кушода наметавонад.
+Ба як нигоҳ меарзад: {lesson}. Омӯзанда онро истифода бурда метавонад, вале дар борааш чизе ҳаст, ки аввал донистан меарзад.
+Дарсҳои дигар дар ҳамин марҳила: {n}
+Чун омӯзанда дидан
+Ҳолати рамзгузории файлҳои боршуда ҳоло хонда нашуд, бинобар ин файле, ки бе плеер нишон дода мешавад, шояд файле бошад, ки касе дар борааш напурсидааст, на файле, ки ноком шудааст.
+Ин мегӯяд, ки омӯзанда бо чӣ рӯ ба рӯ мешавад, на ин ки чӣ қарор бояд кард. Қарор аз они шумост, ва ҳеҷ чиз дар ин ҷо худ ба худ сабаби қабул ё рад кардан нест: бознигарии илмӣ дар бораи он аст, ки чӣ таълим дода мешавад, ва ин дар бораи он аст, ки чӣ мерасад.
+Нақша
+Ин нусха ягон бахш надорад. Чизе барои бознигарӣ нест, ва онро нашр кардан мумкин нест.
+Дарс нест.
+Дар он чизе нест
+Чизе барои пахш нест
+Ба як нигоҳ меарзад
+Тайёр
+{name}: нусхаи намоишӣ ҳанӯз рамзгузорӣ нашудааст, бинобар ин чизе барои тамошо нест, ва омӯзанда ба ҷойи плеер як ҷумларо мебинад.
+То вақте ки ин бознигарӣ кушода аст, шумо нусхаҳои намоишии ин дарсҳоро тамошо карда метавонед. Онҳоро захира карда наметавонед, ва файле, ки муаллим бор кардааст, ба шумо дода намешавад: он чи бознигарӣ мешавад, ҳамон аст, ки омӯзанда хоҳад дид.
+Дарсҳоро аз лаҳзаи қабул шудани бознигарӣ то баста шуданаш пахш кардан мумкин аст, бинобар ин ҳоло дар ин ҷо пахш намешаванд.
+Ба ин нусха чӣ лозим аст ва чӣ тафтиш шудааст
+Ду панели поён ҳоло ба забони англисӣ мебошанд.
+Қарори шумо
+Бозгашт ба навбат
+Ин бознигарӣ ҳоло хонда нашуд. Каме баъдтар боз кӯшиш кунед.
+Нақшаи ин курс ҳоло хонда нашуд, бинобар ин нишон дода намешавад. Пеш аз қарор саҳифаро аз нав бор кунед.
+Як қисми ин саҳифа ҳоло хонда нашуд, бинобар ин он нопурра аст. Пеш аз қарор онро аз нав бор кунед.
+Ин бознигарӣ ба шумо пешниҳод шудааст
+То онро қабул накунед, аз шумо чизе интизор нест.
+Ин бознигариро қабул кунед
+Даст кашидан
+Қарори худро сабт кунед
+Сабаб
+Чиро тафтиш кардед ва чӣ ёфтед? Муаллим маҳз аз ҳамин сабт шикоят мекунад.
+Тасдиқ
+Дархости ислоҳ
+Рад
+Тасдиқ нусхаро ба ҳолати «тасдиқшуда» мегузаронад, ки он ҷо кормандони платформа онро нашр карда метавонанд. Шумо онро худатон нашр карда наметавонед ва курсеро, ки худатон навиштаед, тасдиқ карда наметавонед.
+Шумо аллакай оид ба ин бознигарӣ қарор сабт кардаед.
+Ин бознигарӣ баста аст, бинобар ин ба он қарор сабт кардан мумкин нест.
+Қарори шумо сабт шуд. Худи курсро аз ин ҷо пеш бурдан муяссар нашуд; кормандони платформа қарори шуморо мебинанд ва онро пеш бурда метавонанд. Аз нав қарор кардан лозим нест.
+Он бознигарӣ аз они шумо нест.
+Ин бознигарӣ дигар барои ин кор кушода нест. Саҳифаро аз нав бор кунед, то бинед, ки он дар чӣ ҳолат аст.
+Бархӯрде, ки шумо изҳор кардаед, ба шумо имкон намедиҳад, ки оид ба ин бознигарӣ қарор кунед.
+Сабаби қарорро нависед.
+Сабт нашуд. Саҳифаро аз нав бор кунед, то бинед, ки бознигарӣ дар чӣ ҳолат аст.
+Инро беғаразона бознигарӣ карда наметавонед?
+Изҳор шуд
+Изҳори бархӯрди манфиатҳо оид ба ин курс
+Изҳорот фавран шуморо аз қарор кардан оид ба ин бознигарӣ бозмедорад ва то он даме ки кормандони платформа онро баррасӣ кунанд, бозмедорад. Он бознигариро намебандад: агар он ҳанӯз пешниҳод бошад, онро низ рад кунед; вагарна онро кормандон мебанданд.
+### ky
+Чечимдер
+Окуучу эмне алат
+Ар бир сабак окуучуга ача турган бир нерсе берет. Сабактар: {n}
+Окуучуга ача турган бир нерсе берген сабактар: {all} ичинен {some}
+Окуучуга такыр эч нерсе бербеген сабактар: {n}
+Окуучуга жеткенге чейин билип алуу керек болгон жагы бар сабактар: {n}
+Адегенде ушуну ачкан оң: {lesson}. Ичинде такыр эч нерсе жок, ошондуктан окуучу аталыш менен бош баракты гана көрөт.
+Бүткөндөй көрүнөт, бирок бүтө элек: {lesson}. Ага бир нерсе тиркелген, бирок окуучу алардын бирин да ача албайт.
+Бир карап коюуга арзыйт: {lesson}. Окуучу аны колдоно алат, бирок ал тууралуу адегенде билип алуу керек болгон нерсе бар.
+Ушул эле баскычтагы башка сабактар: {n}
+Окуучунун көзү менен көрүү
+Жүктөлгөн файлдардын коддолуу абалы азыр окулган жок, ошондуктан ойноткучсуз көрсөтүлгөн файл ишке ашпай калган файл эмес, эч ким сурабаган файл болушу мүмкүн.
+Бул окуучу эмнеге туш болорун айтат, кандай чечим кабыл алуу керектигин эмес. Чечим сиздики, жана бул жердеги эч нерсе өзүнчө кабыл алууга же баш тартууга себеп эмес: илимий рецензия эмне окутулары жөнүндө, ал эми бул эмне жетери жөнүндө.
+План
+Бул версияда бөлүмдөр жок. Рецензиялай турган эч нерсе жок, жана аны жарыялоо мүмкүн эмес.
+Сабактар жок.
+Ичинде эч нерсе жок
+Ойното турган эч нерсе жок
+Бир карап коюуга арзыйт
+Даяр
+{name}: көрсөтүү көчүрмөсү али коддоло элек, ошондуктан көрө турган эч нерсе жок, жана окуучу ойноткучтун ордунан бир сүйлөмдү көрөт.
+Бул рецензия ачык турганда ушул сабактардын көрсөтүү көчүрмөлөрүн көрө аласыз. Аларды сактай албайсыз, жана мугалим жүктөгөн файл сизге берилбейт: рецензияланып жаткан нерсе окуучу көрө турган нерсе.
+Сабактарды рецензия кабыл алынган учурдан ал жабылганга чейин ойнотууга болот, ошондуктан азыр бул жерде ойнотулбайт.
+Бул версияга эмне керек жана эмнелер текшерилген
+Төмөндөгү эки панель азырынча англис тилинде.
+Чечимиңиз
+Кезекке кайтуу
+Бул рецензия азыр окулган жок. Бир аздан кийин кайра аракет кылыңыз.
+Бул курстун планы азыр окулган жок, ошондуктан ал көрсөтүлгөн жок. Чечим кабыл алардан мурун баракты кайра жүктөңүз.
+Бул барактын бир бөлүгү азыр окулган жок, ошондуктан ал толук эмес. Чечим кабыл алардан мурун аны кайра жүктөңүз.
+Бул рецензия сизге сунушталды
+Аны кабыл алмайынча сизден эч нерсе күтүлбөйт.
+Бул рецензияны кабыл алуу
+Баш тартуу
+Чечимиңизди каттаңыз
+Себеп
+Эмнени текшердиңиз жана эмне таптыңыз? Мугалим дал ушул жазууга даттанат.
+Жактыруу
+Оңдоолорду суроо
+Четке кагуу
+Жактыруу версияны «жактырылган» абалына өткөрөт, ал жерде платформанын кызматкерлери аны жарыялай алат. Аны өзүңүз жарыялай албайсыз жана өзүңүз жазган курсту жактыра албайсыз.
+Сиз бул рецензия боюнча чечимди мурун эле каттагансыз.
+Бул рецензия жабык, ошондуктан ага чечим каттоо мүмкүн эмес.
+Чечимиңиз катталды. Курстун өзүн бул жерден алдыга жылдыруу мүмкүн болгон жок; платформанын кызматкерлери чечимиңизди көрөт жана аны жылдыра алат. Кайра чечим кабыл алуунун кереги жок.
+Ал рецензия сиздики эмес.
+Бул рецензия эми буга ачык эмес. Анын кандай абалда экенин көрүү үчүн баракты кайра жүктөңүз.
+Сиз билдирген кагылыш бул рецензия боюнча чечим кабыл алууңузга тоскоол болот.
+Чечимдин себебин жазыңыз.
+Катталган жок. Рецензиянын кандай абалда экенин көрүү үчүн баракты кайра жүктөңүз.
+Муну калыс рецензиялай албайсызбы?
+Билдирилди
+Ушул курс боюнча кызыкчылыктардын кагылышын билдирүү
+Билдирүү сизди бул рецензия боюнча чечим кабыл алуудан дароо тосот жана платформанын кызматкерлери аны караганга чейин тосуп турат. Ал рецензияны жаппайт: эгер ал али сунуш болсо, андан да баш тартыңыз; болбосо аны кызматкерлер жабат.
+### tk
+Kararlar
+Okuwçy näme alýar
+Her sapak okuwça açar ýaly bir zat berýär. Sapaklar: {n}
+Okuwça açar ýaly bir zat berýän sapaklar: {all} sapakdan {some}
+Okuwça asla hiç zat bermeýän sapaklar: {n}
+Okuwça ýetmezden öň bilinmegi peýdaly bolan zady bar sapaklar: {n}
+Ilki şuny açmak gowy: {lesson}. Onuň içinde asla hiç zat ýok, şonuň üçin okuwçy diňe at bilen boş sahypany görýär.
+Taýýar ýaly görünýär, ýöne taýýar däl: {lesson}. Oňa bir zat goşulypdyr, ýöne okuwçy olaryň hiç birini açyp bilmeýär.
+Bir göz aýlamaga degýär: {lesson}. Okuwçy ony ulanyp bilýär, ýöne ol barada ilki bilinmegi peýdaly bir zat bar.
+Şol bir tapgyrdaky beýleki sapaklar: {n}
+Okuwçynyň gözi bilen görmek
+Ýüklenen faýllaryň kodlaşdyryş ýagdaýyny häzir okap bolmady, şonuň üçin pleýersiz görkezilýän faýl şowsuz bolan faýl däl-de, hiç kimiň soramadyk faýly bolup biler.
+Bu okuwçynyň näme bilen ýüzbe-ýüz boljakdygyny aýdýar, nähili karar bermelidigini däl. Karar siziňki, we bu ýerdäki hiç zat özbaşyna kabul etmäge ýa-da ret etmäge sebäp däl: ylmy syn nämäniň öwredilýändigi barada, bu bolsa nämäniň ýetýändigi barada.
+Meýilnama
+Bu wersiýada bölüm ýok. Syn berer ýaly zat ýok, we ony çap edip bolmaýar.
+Sapak ýok.
+Içinde hiç zat ýok
+Oýnadar ýaly zat ýok
+Bir göz aýlamaga degýär
+Taýýar
+{name}: görkeziş nusgasy entek kodlaşdyrylmandyr, şonuň üçin tomaşa eder ýaly zat ýok, we okuwçy pleýeriň ýerinde bir sözlemi görer.
+Bu syn açyk durka şu sapaklaryň görkeziş nusgalaryna tomaşa edip bilersiňiz. Olary saklap bilmersiňiz, we mugallymyň ýüklän faýly size berilmeýär: syn berilýän zat okuwçynyň görjek zadydyr.
+Sapaklary syn kabul edilen pursatdan ol ýapylýança oýnadyp bolýar, şonuň üçin häzir bu ýerde oýnadyp bolmaýar.
+Bu wersiýa näme gerek we nämeler barlandy
+Aşakdaky iki panel häzirlikçe iňlis dilinde.
+Kararyňyz
+Nobata dolanmak
+Bu syny häzir okap bolmady. Birazdan täzeden synanyşyň.
+Bu kursuň meýilnamasyny häzir okap bolmady, şonuň üçin ol görkezilmeýär. Karar bermezden öň sahypany täzeden ýükläň.
+Bu sahypanyň bir bölegini häzir okap bolmady, şonuň üçin ol doly däl. Karar bermezden öň ony täzeden ýükläň.
+Bu syn size teklip edildi
+Ony kabul edýänçäňiz sizden hiç zat garaşylmaýar.
+Bu syny kabul etmek
+Teklibi ret etmek
+Kararyňyzy ýazga geçiriň
+Sebäp
+Nämäni barladyňyz we näme tapdyňyz? Mugallym hut şu ýazgydan şikaýat eder.
+Tassyklamak
+Düzedişleri soramak
+Ret etmek
+Tassyklamak wersiýany «tassyklanan» ýagdaýyna geçirýär, şol ýerde platformanyň işgärleri ony çap edip bilýär. Ony özüňiz çap edip bilmersiňiz we öz ýazan kursuňyzy tassyklap bilmersiňiz.
+Siz bu syn boýunça karary eýýäm ýazga geçirdiňiz.
+Bu syn ýapyk, şonuň üçin oňa karar ýazga geçirip bolmaýar.
+Kararyňyz ýazga geçirildi. Kursuň özüni bu ýerden öňe süýşürip bolmady; platformanyň işgärleri kararyňyzy görýär we ony süýşürip bilýär. Täzeden karar bermegiňiz gerek däl.
+Ol syn siziňki däl.
+Bu syn indi munuň üçin açyk däl. Onuň nähili ýagdaýdadygyny görmek üçin sahypany täzeden ýükläň.
+Siziň beýan eden çaknyşmagyňyz bu syn boýunça karar bermegiňize päsgel berýär.
+Kararyň sebäbini ýazyň.
+Ýazga geçirilmedi. Synyň nähili ýagdaýdadygyny görmek üçin sahypany täzeden ýükläň.
+Muňa bitarap syn berip bilmeýärsiňizmi?
+Beýan edildi
+Şu kurs boýunça bähbitleriň çaknyşmagyny beýan etmek
+Beýannama sizi bu syn boýunça karar bermekden derrew saklaýar we platformanyň işgärleri oňa seredýänçä saklap durýar. Ol syny ýapmaýar: eger ol entek teklip bolsa, ony hem ret ediň; ýogsam ony işgärler ýapýar.
+### ta
+முடிவுகள்
+கற்பவருக்கு என்ன கிடைக்கிறது
+ஒவ்வொரு பாடமும் கற்பவர் திறக்க ஏதாவது ஒன்றைத் தருகிறது. பாடங்கள்: {n}
+கற்பவர் திறக்க ஏதாவது தரும் பாடங்கள்: {all} இல் {some}
+கற்பவருக்கு எதுவுமே தராத பாடங்கள்: {n}
+கற்பவரைச் சென்றடையும் முன் தெரிந்துகொள்ள வேண்டிய ஒன்று உள்ள பாடங்கள்: {n}
+முதலில் இதைத் திறப்பது நல்லது: {lesson}. இதில் எதுவுமே இல்லை, எனவே கற்பவருக்கு ஒரு தலைப்பும் வெற்றுப் பக்கமும் மட்டுமே கிடைக்கும்.
+முடிந்தது போலத் தெரிகிறது, ஆனால் முடியவில்லை: {lesson}. இதில் ஏதோ இணைக்கப்பட்டுள்ளது, ஆனால் கற்பவரால் அதில் எதையும் திறக்க முடியாது.
+ஒரு முறை பார்க்கத் தக்கது: {lesson}. கற்பவர் இதைப் பயன்படுத்த முடியும், ஆனால் இதைப் பற்றி முதலில் தெரிந்துகொள்ள வேண்டிய ஒன்று உள்ளது.
+அதே நிலையில் உள்ள பிற பாடங்கள்: {n}
+கற்பவர் பார்ப்பது போலப் பார்
+பதிவேற்றிய கோப்புகளின் குறியாக்க நிலையை இப்போது படிக்க முடியவில்லை, எனவே இயக்கி இல்லாமல் காட்டப்படும் கோப்பு தோல்வியடைந்த கோப்பாக இல்லாமல், யாரும் கேட்டிராத கோப்பாகவும் இருக்கலாம்.
+இது கற்பவர் எதைச் சந்திப்பார் என்பதைச் சொல்கிறது, என்ன முடிவு செய்ய வேண்டும் என்பதை அல்ல. முடிவு உங்களுடையது, இங்குள்ள எதுவும் தனியாக ஏற்கவோ மறுக்கவோ காரணம் அல்ல: அறிவுசார் மதிப்பாய்வு என்ன கற்பிக்கப்படுகிறது என்பதைப் பற்றியது, இது என்ன சென்றடைகிறது என்பதைப் பற்றியது.
+சுருக்க வரைவு
+இந்தப் பதிப்பில் பிரிவுகள் இல்லை. மதிப்பாய்வு செய்ய எதுவும் இல்லை, இதை வெளியிடவும் முடியாது.
+பாடங்கள் இல்லை.
+இதில் எதுவும் இல்லை
+இயக்க எதுவும் இல்லை
+ஒரு முறை பார்க்கத் தக்கது
+தயார்
+{name}: காட்டுவதற்கான நகல் இன்னும் குறியாக்கப்படவில்லை, எனவே பார்க்க எதுவும் இல்லை, கற்பவருக்கு இயக்கியின் இடத்தில் ஒரு வாக்கியம் கிடைக்கும்.
+இந்த மதிப்பாய்வு திறந்திருக்கும் வரை இந்தப் பாடங்களின் காட்டுவதற்கான நகல்களை நீங்கள் பார்க்கலாம். அவற்றைச் சேமிக்க முடியாது, ஆசிரியர் பதிவேற்றிய கோப்பு உங்களுக்கு வழங்கப்படாது: மதிப்பாய்வு செய்யப்படுவது கற்பவர் பார்க்கப்போவதே.
+மதிப்பாய்வு ஏற்கப்பட்ட நொடி முதல் அது மூடப்படும் வரை பாடங்களை இயக்கலாம், எனவே இப்போது இங்கே இயக்க முடியாது.
+இந்தப் பதிப்புக்கு என்ன தேவை, என்ன சரிபார்க்கப்பட்டுள்ளது
+கீழே உள்ள இரண்டு பலகங்களும் தற்போது ஆங்கிலத்தில் உள்ளன.
+உங்கள் முடிவு
+வரிசைக்குத் திரும்பு
+இந்த மதிப்பாய்வை இப்போது படிக்க முடியவில்லை. சிறிது நேரத்தில் மீண்டும் முயலுங்கள்.
+இந்தப் பாடநெறியின் சுருக்க வரைவை இப்போது படிக்க முடியவில்லை, எனவே அது காட்டப்படவில்லை. முடிவு செய்யும் முன் பக்கத்தை மீண்டும் ஏற்றுங்கள்.
+இந்தப் பக்கத்தின் ஒரு பகுதியை இப்போது படிக்க முடியவில்லை, எனவே இது முழுமையாக இல்லை. முடிவு செய்யும் முன் மீண்டும் ஏற்றுங்கள்.
+இந்த மதிப்பாய்வு உங்களுக்கு முன்வைக்கப்பட்டுள்ளது
+நீங்கள் ஏற்கும் வரை உங்களிடம் எதுவும் எதிர்பார்க்கப்படவில்லை.
+இந்த மதிப்பாய்வை ஏற்கவும்
+மறுக்கவும்
+உங்கள் முடிவைப் பதிவு செய்யுங்கள்
+காரணம்
+எதைச் சரிபார்த்தீர்கள், என்ன கண்டீர்கள்? ஆசிரியர் மேல்முறையீடு செய்வது இந்தப் பதிவுக்கு எதிராகத்தான்.
+ஒப்புதல் அளி
+திருத்தங்களைக் கோரு
+நிராகரி
+ஒப்புதல் அளிப்பது பதிப்பை “ஒப்புதல் பெற்றது” என்ற நிலைக்கு நகர்த்தும்; அங்கே தளத்தின் பணியாளர்கள் அதை வெளியிடலாம். நீங்களே அதை வெளியிட முடியாது, நீங்கள் எழுதிய பாடநெறிக்கு ஒப்புதல் அளிக்கவும் முடியாது.
+இந்த மதிப்பாய்வில் நீங்கள் ஏற்கெனவே ஒரு முடிவைப் பதிவு செய்துள்ளீர்கள்.
+இந்த மதிப்பாய்வு மூடப்பட்டுள்ளது, எனவே இதில் முடிவைப் பதிவு செய்ய முடியாது.
+உங்கள் முடிவு பதிவாகியது. பாடநெறியை இங்கிருந்து முன்னே நகர்த்த முடியவில்லை; தளத்தின் பணியாளர்கள் உங்கள் முடிவைப் பார்க்கலாம், அதை நகர்த்தலாம். நீங்கள் மீண்டும் முடிவு செய்யத் தேவையில்லை.
+அந்த மதிப்பாய்வு உங்களுடையது அல்ல.
+இந்த மதிப்பாய்வு இனி அதற்குத் திறந்திருக்கவில்லை. இது எந்த நிலையில் உள்ளது என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றுங்கள்.
+நீங்கள் அறிவித்த ஒரு முரண் இந்த மதிப்பாய்வில் முடிவு செய்வதிலிருந்து உங்களைத் தடுக்கிறது.
+முடிவுக்கு ஒரு காரணம் எழுதுங்கள்.
+இது பதிவாகவில்லை. மதிப்பாய்வு எந்த நிலையில் உள்ளது என்று பார்க்கப் பக்கத்தை மீண்டும் ஏற்றுங்கள்.
+இதை நடுநிலையாக மதிப்பாய்வு செய்ய முடியவில்லையா?
+அறிவிக்கப்பட்டது
+இந்தப் பாடநெறி குறித்து நலன் முரணை அறிவி
+அறிவிப்பு உடனே இந்த மதிப்பாய்வில் முடிவு செய்வதிலிருந்து உங்களைத் தடுக்கும்; தளத்தின் பணியாளர்கள் அதைக் கேட்கும் வரை தடுத்துக்கொண்டே இருக்கும். அது மதிப்பாய்வை மூடாது: இது இன்னும் அழைப்பாக இருந்தால் அதையும் மறுத்துவிடுங்கள்; இல்லையெனில் பணியாளர்கள் அதை மூடுவார்கள்.
+### ne
+निर्णयहरू
+सिकारुले के पाउँछ
+हरेक पाठले सिकारुलाई खोल्ने केही दिन्छ। पाठहरू: {n}
+सिकारुलाई खोल्ने केही दिने पाठहरू: {all} मध्ये {some}
+सिकारुलाई केही पनि नदिने पाठहरू: {n}
+सिकारुसम्म पुग्नुअघि जान्न लायक कुरा भएका पाठहरू: {n}
+पहिले यो खोल्नु राम्रो: {lesson}। यसमा केही पनि छैन, त्यसैले सिकारुले एउटा शीर्षक र खाली पृष्ठ मात्र पाउँछ।
+सकिएको जस्तो देखिन्छ, तर सकिएको छैन: {lesson}। यसमा केही जोडिएको छ, तर सिकारुले त्यसमध्ये केही पनि खोल्न सक्दैन।
+एक पटक हेर्न लायक: {lesson}। सिकारुले यो प्रयोग गर्न सक्छ, तर यसबारे पहिले जान्न लायक एउटा कुरा छ।
+उही चरणका अरू पाठहरू: {n}
+सिकारुले जस्तै हेर्नुहोस्
+अपलोड गरिएका फाइलहरूको इन्कोडिङको अवस्था अहिले पढ्न सकिएन, त्यसैले प्लेयरबिना देखाइएको फाइल असफल भएको फाइल नभई कसैले नसोधेको फाइल पनि हुन सक्छ।
+यसले सिकारुले के भेट्छ भन्ने बताउँछ, के निर्णय गर्ने भन्ने होइन। निर्णय तपाईंको हो, र यहाँको कुनै पनि कुरा एक्लैले स्वीकार गर्ने वा अस्वीकार गर्ने कारण होइन: विद्वत् समीक्षा के सिकाइन्छ भन्नेबारे हो, र यो के पुग्छ भन्नेबारे हो।
+रूपरेखा
+यो संस्करणमा कुनै खण्ड छैन। समीक्षा गर्ने केही छैन, र यसलाई प्रकाशित गर्न सकिँदैन।
+पाठ छैन।
+यसमा केही छैन
+चलाउने केही छैन
+एक पटक हेर्न लायक
+तयार
+{name}: देखाउने प्रति अझै इन्कोड भएको छैन, त्यसैले हेर्ने केही छैन, र सिकारुले प्लेयरको ठाउँमा एउटा वाक्य पाउँछ।
+यो समीक्षा खुला रहुन्जेल तपाईं यी पाठहरूका देखाउने प्रतिहरू हेर्न सक्नुहुन्छ। तपाईं तिनलाई सुरक्षित गर्न सक्नुहुन्न, र शिक्षकले अपलोड गरेको फाइल तपाईंलाई दिइँदैन: समीक्षा हुने कुरा सिकारुले देख्ने कुरा नै हो।
+समीक्षा स्वीकार भएको क्षणदेखि बन्द नभएसम्म पाठहरू चलाउन सकिन्छ, त्यसैले अहिले यहाँ चलाउन सकिँदैन।
+यो संस्करणलाई के चाहिन्छ, र के जाँचिएको छ
+तलका दुई प्यानल अहिलेका लागि अङ्ग्रेजीमा छन्।
+तपाईंको निर्णय
+लाममा फर्कनुहोस्
+यो समीक्षा अहिले पढ्न सकिएन। केही बेरमा फेरि प्रयास गर्नुहोस्।
+यो कोर्सको रूपरेखा अहिले पढ्न सकिएन, त्यसैले देखाइएको छैन। निर्णय गर्नुअघि पृष्ठ फेरि लोड गर्नुहोस्।
+यो पृष्ठको केही भाग अहिले पढ्न सकिएन, त्यसैले यो अधुरो छ। निर्णय गर्नुअघि फेरि लोड गर्नुहोस्।
+यो समीक्षा तपाईंलाई प्रस्ताव गरिएको छ
+तपाईंले स्वीकार नगरुन्जेल तपाईंबाट केही अपेक्षा गरिएको छैन।
+यो समीक्षा स्वीकार गर्नुहोस्
+अस्वीकार गर्नुहोस्
+आफ्नो निर्णय दर्ता गर्नुहोस्
+कारण
+तपाईंले के जाँच्नुभयो, र के पाउनुभयो? शिक्षकले पुनरावेदन गर्ने अभिलेख यही हो।
+स्वीकृत गर्नुहोस्
+संशोधन माग्नुहोस्
+अस्वीकृत गर्नुहोस्
+स्वीकृतिले संस्करणलाई “स्वीकृत” अवस्थामा सार्छ, जहाँ प्लेटफर्मका कर्मचारीले यसलाई प्रकाशित गर्न सक्छन्। तपाईं आफैँ प्रकाशित गर्न सक्नुहुन्न, र आफूले लेखेको कोर्स स्वीकृत गर्न सक्नुहुन्न।
+तपाईंले यो समीक्षामा पहिले नै निर्णय दर्ता गरिसक्नुभएको छ।
+यो समीक्षा बन्द छ, त्यसैले यसमा निर्णय दर्ता गर्न सकिँदैन।
+तपाईंको निर्णय दर्ता भयो। कोर्सलाई भने यहाँबाट अगाडि सार्न सकिएन; प्लेटफर्मका कर्मचारीले तपाईंको निर्णय देख्न र कोर्स अगाडि सार्न सक्छन्। तपाईंले फेरि निर्णय गर्नु पर्दैन।
+त्यो समीक्षा तपाईंको होइन।
+यो समीक्षा अब त्यसका लागि खुला छैन। यो कुन अवस्थामा छ हेर्न पृष्ठ फेरि लोड गर्नुहोस्।
+तपाईंले घोषणा गरेको एउटा द्वन्द्वले तपाईंलाई यो समीक्षाको निर्णय गर्नबाट रोक्छ।
+निर्णयको कारण लेख्नुहोस्।
+यो दर्ता भएन। समीक्षा कुन अवस्थामा छ हेर्न पृष्ठ फेरि लोड गर्नुहोस्।
+यसको निष्पक्ष समीक्षा गर्न सक्नुहुन्न?
+घोषणा गरियो
+यो कोर्सबारे स्वार्थको द्वन्द्व घोषणा गर्नुहोस्
+घोषणाले तपाईंलाई तुरुन्तै यो समीक्षाको निर्णय गर्नबाट रोक्छ, र प्लेटफर्मका कर्मचारीले सुनुवाइ नगरुन्जेल रोकिरहन्छ। यसले समीक्षा बन्द गर्दैन: यो अझै प्रस्ताव हो भने त्यसलाई पनि अस्वीकार गर्नुहोस्; नत्र कर्मचारीले बन्द गर्छन्।

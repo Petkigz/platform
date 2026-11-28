@@ -1,0 +1,32 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * One assignment (`/review/[assignmentId]`): what a learner would get from
+ * the version under review, its outline, the answer to an offer, the
+ * decision, and standing aside.
+ *
+ * Written on 2026-11-28, in the same twenty-seven languages as the
+ * dashboard. **Written by the people who built the site and read by no
+ * speaker.** A decision recorded here moves a course towards publication
+ * and is the record a teacher appeals against, and a declaration made here
+ * bars its reviewer at once, so a speaker's reading matters here more than
+ * on most pages.
+ *
+ * A review, a conflict, a decision and the queue are named with the words
+ * `/review` uses in each language (`messages/review.ts`), so that one thing
+ * has one name; the page also says some of that part's sentences, and
+ * "Sections", "Lessons", "Free preview" and "Transcript" are the keys other
+ * pages already had. "Approve", "Reject" and "Decline" are this page's own:
+ * the board's `panel.approve` and `panel.reject` are a vote ("for" and
+ * "against" in most of these languages), and `merge.decline` is in many the
+ * word for rejecting, which here is a decision about a course and not the
+ * turning down of an offer. The two forms run in
+ * the browser and are handed their words by the page; none is in a script.
+ * A count follows a colon and is already in the reader's digits, so that no
+ * word has to agree with it. French puts a no-break space before `:`, `;`
+ * and `?`.
+ *
+ * `{lesson}` in the three `ra.next…` sentences is where the lesson's title
+ * goes, in its own direction, and `{name}` in `ra.noCopy` is a file's name.
+ */

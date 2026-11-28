@@ -11,6 +11,8 @@ look at `git status` before running it again. Kept in the repository since
 import re, sys
 section, const, stem, n, what, words = sys.argv[1:7]
 n = int(n)
+# The day written into the count's comment. Set it to the day of the unit.
+DAY = '2026-11-28'
 def edit(path, fn):
     s = open(path, encoding='utf8').read(); t = fn(s); assert t != s, path; open(path, 'w', encoding='utf8').write(t)
 def last_import(s, pat, line):
@@ -42,12 +44,12 @@ def comp(s):
 edit('src/lib/companion-i18n.test.ts', comp)
 # held-translations test
 def ht(s):
-    s = last_import(s, r"^import \{ [A-Z_]+ \} from '\./i18n/messages/(?:about|saved|paths|downloads|ask|panel|review|support|course-parts|teacher-page)\.ts';$", f"import {{ {const} }} from './i18n/messages/{stem}.ts';")
+    s = last_import(s, r"^import \{ [A-Z_]+ \} from '\./i18n/messages/(?:about|saved|paths|downloads|ask|panel|review|review-assignment|support|course-parts|teacher-page)\.ts';$", f"import {{ {const} }} from './i18n/messages/{stem}.ts';")
     m = re.search(r"assert\.deepEqual\(\[\.\.\.UNWRITTEN_WHILE_HELD\], \[[^\]]*'\]\);", s); assert m
     block = m.group(0); s = s.replace(block, block[:-3] + f", '{section}']);")
     m = re.search(r"  assert\.equal\(unwrittenKeys\.length, (\d+)\);\n", s); assert m
     total = int(m.group(1)) + n
-    s = s[:m.start()] + f"  // ({words} more on 2026-11-27: {what[0].lower() + what[1:]}.)\n  assert.equal(unwrittenKeys.length, {total});\n  assert.equal(unwrittenKeys.filter((key) => key.startsWith('{section}.')).length, {n});\n" + s[m.end():]
+    s = s[:m.start()] + f"  // ({words} more on {DAY}: {what[0].lower() + what[1:]}.)\n  assert.equal(unwrittenKeys.length, {total});\n  assert.equal(unwrittenKeys.filter((key) => key.startsWith('{section}.')).length, {n});\n" + s[m.end():]
     m = list(re.finditer(r"^  assert\.deepEqual\(Object\.keys\([A-Z_]+\)\.sort\(\), written\);\n", s, re.M)); e = m[-1].end()
     s = s[:e] + f"  assert.deepEqual(Object.keys({const}).sort(), written);\n" + s[e:]
     m = re.search(r"(      \.\.\.[A-Z_]+\[code\],\n)    \};\n    assert\.deepEqual\(Object\.keys\(own\)", s); assert m

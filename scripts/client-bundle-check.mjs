@@ -287,6 +287,12 @@ for (const [file, key] of [
   ['review.ts', 'review.qualRule'],
   ['review.ts', 'review.declareWhy'],
   ['review.ts', 'review.eUnsure'],
+  // One assignment (2026-11-28): the decision and the declaration are
+  // scripts handed their words by `/review/[assignmentId]`.
+  ['review-assignment.ts', 'ra.notVerdict'],
+  ['review-assignment.ts', 'ra.approveNote'],
+  ['review-assignment.ts', 'ra.notMoved'],
+  ['review-assignment.ts', 'ra.declareNote'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);
