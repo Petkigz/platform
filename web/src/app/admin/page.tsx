@@ -4,7 +4,8 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { fetchFlags, groupFlags } from '@/lib/flags';
+import { fetchFlags, flagGroupKey, groupFlags, type FlagToggleWords } from '@/lib/flags';
+import type { RevenueShareWords } from '@/lib/revenue-share';
 import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { FlagToggle } from './flag-toggle';
 import { RevenueShareForm } from './revenue-share-form';
@@ -43,7 +44,12 @@ async function readerLanguage() {
     chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
     acceptLanguage: hdrs.get('accept-language'),
   });
-  return { locale, shown: languageShownFor(locale, 'staff'), notes: languageShownFor(locale, 'console') };
+  return {
+    locale,
+    shown: languageShownFor(locale, 'staff'),
+    notes: languageShownFor(locale, 'console'),
+    board: languageShownFor(locale, 'switch'),
+  };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -97,14 +103,18 @@ type Attention = {
  *   - Nothing is counted twice. The total is the sum of the cards, not a
  *     separate query that could disagree with them.
  *
- * **In the reader's language since 2026-11-28, in part.** What is waiting, the
- * queues, what a new platform still needs, the headings and the name of every
- * screen are sentences of the catalogue (`staff.`), and so is the sentence
- * beside each link (`console.`). One thing is not, and is marked as English
- * (`lang="en"`) wherever the rest is in another language: the owner's
- * switchboard (the revenue share, the translation line, the four counts, the
- * retention clock and the flag register, whose preconditions are rows of the
- * database).
+ * **In the reader's language since 2026-11-28.** What is waiting, the queues,
+ * what a new platform still needs, the headings and the name of every screen
+ * are sentences of the catalogue (`staff.`); so is the sentence beside each
+ * link (`console.`), and so is the owner's switchboard (`switch.`): the
+ * revenue share and its form, the translation line, the four counts, the
+ * retention clock, and the register's groups, badges and refusals.
+ *
+ * Four things on it are not, and each is marked as English (`lang="en"`)
+ * wherever the rest is in another language, because each is something the
+ * database wrote: what a flag still needs (its precondition), the name of a
+ * group the page has not heard of, the label and detail of a queue the page
+ * has not heard of, and the database's own sentence when it refuses a change.
  */
 export default async function AdminPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -119,7 +129,7 @@ export default async function AdminPage() {
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
 
-  const { locale, shown, notes } = await readerLanguage();
+  const { locale, shown, notes, board } = await readerLanguage();
   const t = translator(shown.code);
   const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
   const n = (value: number) => formatNumber(shown.code, value);
@@ -130,6 +140,12 @@ export default async function AdminPage() {
   // empty; it is there for the day one part is held and the other is not.
   const tn = translator(notes.code);
   const noteMark = notes.code === shown.code ? {} : { lang: notes.code, dir: notes.dir };
+  // The owner's switchboard is a third part (`switch.`), on the same rule.
+  const tb = translator(board.code);
+  const boardMark = board.code === shown.code ? {} : { lang: board.code, dir: board.dir };
+  const nb = (value: number) => formatNumber(board.code, value);
+  // What the database wrote, inside the switchboard.
+  const boardEnglish = board.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
   const linkLine = (link: ConsoleLink) => (
     <p key={link.href} data-staff-link={link.href}>
       <Link href={link.href}>{t(link.label)}</Link> — <span {...noteMark}>{tn(link.note)}</span>
@@ -195,6 +211,51 @@ export default async function AdminPage() {
   const deployGated = flags.filter((f) => f.gateType === 'code').length;
   // Only the ones still off: one that is on needs nothing more.
   const setupGated = flags.filter((f) => f.gateType === 'admin_setup' && !f.enabled).length;
+
+  // Every sentence the two forms say, in the language the switchboard is in.
+  // They are client components and the catalogue's `switch.` part never goes
+  // to the browser, so the page hands the words over.
+  const flagWords: FlagToggleWords = {
+    gates: {
+      'switch.gateRuntime': tb('switch.gateRuntime'),
+      'switch.gateSetupFirst': tb('switch.gateSetupFirst'),
+      'switch.gateSetupOn': tb('switch.gateSetupOn'),
+      'switch.gateDeploy': tb('switch.gateDeploy'),
+    },
+    on: tb('switch.on'),
+    off: tb('switch.off'),
+    refusals: {
+      notOwner: tb('switch.eNotOwner'),
+      deploy: tb('switch.eDeploy'),
+      unknown: tb('switch.eUnknown'),
+      refused: tb('switch.eRefused'),
+      signedOut: tb('switch.eSignedOut'),
+      unsure: tb('switch.eUnsure'),
+    },
+    markEnglish: board.code !== 'en',
+  };
+  const shareWords: RevenueShareWords = {
+    title: tb('switch.rsTitle'),
+    badge: tb('switch.rsBadge', { percent: nb(revenueSharePercent) }),
+    body: tb('switch.rsBody'),
+    zero: tb('switch.rsZero'),
+    field: tb('switch.rsField'),
+    reason: tb('switch.rsReason'),
+    example: tb('switch.rsExample'),
+    save: tb('switch.rsSave'),
+    saving: tb('switch.rsSaving'),
+    saved: tb('switch.rsSaved'),
+    refusals: {
+      percent: tb('switch.rsEPercent'),
+      reason: tb('switch.rsEReason'),
+      long: tb('switch.rsELong'),
+      notAllowed: tb('switch.rsENotAllowed'),
+      signedOut: tb('switch.eSignedOut'),
+      refused: tb('switch.rsERefused'),
+      unsure: tb('switch.rsEUnsure'),
+    },
+    markEnglish: board.code !== 'en',
+  };
 
   const emptyLede = setupFacts ? emptyQueueLede(setupFacts) : null;
   const notOwner = switchboardNotice(facts);
@@ -307,82 +368,86 @@ export default async function AdminPage() {
       ) : null}
 
       {sections.switchboard ? (
-        <div {...english} data-staff-switchboard>
-          <h2 style={{ marginTop: '2.5rem' }}>Feature flags</h2>
-          <p className="lede">
-            Everything is built and shipped off. Turn features on here as their
-            preconditions are met.
-          </p>
+        <div {...boardMark} data-staff-switchboard>
+          <h2 style={{ marginTop: '2.5rem' }}>{tb('switch.title')}</h2>
+          <p className="lede">{tb('switch.lede')}</p>
 
-          <RevenueShareForm currentPercent={revenueSharePercent} />
+          <RevenueShareForm currentPercent={revenueSharePercent} shownPercent={nb(revenueSharePercent)} words={shareWords} />
 
-          {translation ? (
+          {translation && translationMonth ? (
             <div className={translation.warn ? 'notice warn' : 'notice'} data-translation-month>
-              <strong>Translation.</strong> {translation.state} {translation.used}
+              <strong>{tb('switch.trHead')}</strong> {tb(translation.state)}{' '}
+              {tb('switch.trUsed', {
+                characters: nb(translationMonth.characters),
+                monthly: nb(translationMonth.monthly),
+                share: nb(translation.share),
+                requests: nb(translationMonth.requests),
+                people: nb(translationMonth.people),
+                daily: nb(translationMonth.daily),
+              })}
             </div>
           ) : null}
 
           <div className="stats">
             <div>
-              <div className="n">{on}</div>
-              <div className="l">Enabled</div>
+              <div className="n">{nb(on)}</div>
+              <div className="l">{tb('switch.statOn')}</div>
             </div>
             <div>
-              <div className="n">{flags.length - on}</div>
-              <div className="l">Off</div>
+              <div className="n">{nb(flags.length - on)}</div>
+              <div className="l">{tb('switch.statOff')}</div>
             </div>
             <div>
-              <div className="n">{setupGated}</div>
-              <div className="l">Off, outside setup first</div>
+              <div className="n">{nb(setupGated)}</div>
+              <div className="l">{tb('switch.statSetup')}</div>
             </div>
             <div>
-              <div className="n">{deployGated}</div>
-              <div className="l">Need a deploy</div>
+              <div className="n">{nb(deployGated)}</div>
+              <div className="l">{tb('switch.statDeploy')}</div>
             </div>
           </div>
 
-          <p style={{ marginTop: '1.5rem' }}>
-            <Link href="/admin/retention">Retention clock</Link> — the two things the privacy
-            notice promises to delete on a date: a support case three years after it closes, and a
-            record that a teacher was checked seven years after the later of the check and their
-            eighteenth birthday. The page says what is due, what has no clock because nobody closed
-            it, and takes the deletion in a bounded batch
+          <p style={{ marginTop: '1.5rem' }} data-switch-retention>
+            <Link href="/admin/retention">{tb('switch.retention')}</Link> — {tb('switch.retentionNote')}
           </p>
 
-          <div className="notice" style={{ marginTop: '1.5rem' }}>
-            A flag marked <strong>needs a deploy</strong> cannot be switched on
-            here, and the refusal is enforced in the database rather than by hiding
-            the control. Each one carries the precondition that has to be true
-            first — a flag with no written precondition is a bug waiting to be
-            enabled.
+          <div className="notice" style={{ marginTop: '1.5rem' }} data-switch-deploy-note>
+            {tb('switch.deployNote')}
           </div>
 
           {flags.length === 0 ? (
-            <p className="empty">The flag register is empty.</p>
+            <p className="empty">{tb('switch.empty')}</p>
           ) : (
-            groups.map((g) => (
-              <div key={g.group}>
-                <div className="outline-h">
-                  <h3>{g.group}</h3>
-                  <span className="muted" style={{ fontSize: '0.85rem' }}>
-                    {g.flags.filter((f) => f.enabled).length} / {g.flags.length} on
-                  </span>
+            groups.map((g) => {
+              const groupKey = flagGroupKey(g.group);
+              return (
+                <div key={g.group}>
+                  <div className="outline-h">
+                    {groupKey ? <h3>{tb(groupKey)}</h3> : <h3 {...boardEnglish}>{g.group}</h3>}
+                    <span className="muted" style={{ fontSize: '0.85rem' }}>
+                      {tb('switch.groupOn', {
+                        on: nb(g.flags.filter((f) => f.enabled).length),
+                        total: nb(g.flags.length),
+                      })}
+                    </span>
+                  </div>
+                  <div className="card">
+                    <ul className="lessons">
+                      {g.flags.map((f) => (
+                        <FlagToggle
+                          key={f.key}
+                          flagKey={f.key}
+                          enabled={f.enabled}
+                          gateType={f.gateType}
+                          preconditions={f.preconditions}
+                          words={flagWords}
+                        />
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-                <div className="card">
-                  <ul className="lessons">
-                    {g.flags.map((f) => (
-                      <FlagToggle
-                        key={f.key}
-                        flagKey={f.key}
-                        enabled={f.enabled}
-                        gateType={f.gateType}
-                        preconditions={f.preconditions}
-                      />
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       ) : (

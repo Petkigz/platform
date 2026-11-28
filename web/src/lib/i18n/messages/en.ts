@@ -4142,6 +4142,76 @@ export const en = {
     'teachers contesting a rejection. You cannot decide an appeal against your own decision',
   'console.nRoles':
     'who may do what. Every check in the database reads these',
+  // The owner's switchboard on the staff console (`/admin`): the flag
+  // register, the revenue share, the translation line, the four counts and
+  // the retention clock. Only the platform admin is shown it. A count follows
+  // a colon. A setting's name (`GOOGLE_TRANSLATE_API_KEY`, `platform.translate`)
+  // is written as it is typed. What a flag still needs is a row of the
+  // database and is not here: the page shows it in English, marked.
+  'switch.title': 'Feature flags',
+  'switch.lede': 'Everything is built and shipped off. Turn features on here as their preconditions are met.',
+  'switch.statOn': 'Enabled',
+  'switch.statOff': 'Off',
+  'switch.statSetup': 'Off, outside setup first',
+  'switch.statDeploy': 'Need a deploy',
+  'switch.retention': 'Retention clock',
+  'switch.retentionNote':
+    'the two things the privacy notice promises to delete on a date: a support case three years after it closes, and a record that a teacher was checked seven years after the later of the check and their eighteenth birthday. The page says what is due, what has no clock because nobody closed it, and takes the deletion in a bounded batch',
+  'switch.deployNote':
+    'A flag marked “Needs a deploy” cannot be switched on here, and the refusal is enforced in the database rather than by hiding the control. Each one carries the precondition that has to be true first. A flag with no written precondition is a bug waiting to be enabled.',
+  'switch.empty': 'The flag register is empty.',
+  'switch.groupOn': 'On: {on} of {total}',
+  'switch.gLearner': 'Learner features',
+  'switch.gTeaching': 'Teaching',
+  'switch.gMoney': 'Money',
+  'switch.gFamilies': 'Children and families',
+  'switch.gPlatform': 'Platform',
+  'switch.gDelivery': 'Delivery',
+  'switch.gGovernance': 'Governance',
+  'switch.gOther': 'Other',
+  'switch.trHead': 'Translation.',
+  'switch.trOn':
+    'Translation is on. A signed-in reader can press “Translate” under what somebody wrote, and that text is sent to Google.',
+  'switch.trOnNoKey':
+    'The translation switch is on, but this server has no GOOGLE_TRANSLATE_API_KEY, so no button is drawn and nothing is sent.',
+  'switch.trOffKey': 'Translation is off. This server has a key; the platform.translate switch below turns the button on.',
+  'switch.trOffNoKey': 'Translation is off, and this server has no GOOGLE_TRANSLATE_API_KEY. It needs both.',
+  'switch.trUsed':
+    'Characters this month: {characters} of {monthly} ({share}%). Requests: {requests}. People: {people}. The most one person may send in a day: {daily}. Members stop at four fifths of the month; the rest is kept for staff.',
+  // One row of the register: the badge beside a switch, and what it is told.
+  'switch.gateRuntime': 'Runtime toggle',
+  'switch.gateSetupFirst': 'Outside setup first',
+  'switch.gateSetupOn': 'On, uses outside setup',
+  'switch.gateDeploy': 'Needs a deploy',
+  'switch.on': 'On',
+  'switch.off': 'Off',
+  'switch.eNotOwner': 'Only the platform admin can change a feature switch. This one is as it was.',
+  'switch.eDeploy':
+    'That flag needs a deploy before it can run, so it cannot be switched on here. What has to be true first is written under its name.',
+  'switch.eUnknown': 'There is no switch by that name any more. Load the page again.',
+  'switch.eRefused': 'The database refused that change, and the switch is as it was. What it said:',
+  'switch.eUnsure':
+    'Nobody can say whether that switch changed. Load the page again and look at it before pressing again.',
+  'switch.eSignedOut': 'You are signed out. Sign in again, then try once more.',
+  // The revenue share.
+  'switch.rsTitle': 'Teacher revenue share',
+  'switch.rsBadge': 'To teachers: {percent}%',
+  'switch.rsBody':
+    'The teacher’s percentage of what a course sale brings in. Changing it applies only to orders confirmed afterwards: every earnings entry keeps the share it was earned under, so money already booked cannot move. Processing fees, how tax is treated, and whether the share is the same for every teacher still need a policy decision; the percentage does not stand in for deciding those terms, and it does not switch payouts on.',
+  'switch.rsZero': 'It is 0% now: teachers earn no share and the platform keeps what a sale brings in.',
+  'switch.rsField': 'Teacher share, whole percent',
+  'switch.rsReason': 'Reason for this change (kept in the audit log)',
+  'switch.rsExample': 'For example: approved policy on paying teachers, reviewed on…',
+  'switch.rsSave': 'Save revenue share',
+  'switch.rsSaving': 'Saving…',
+  'switch.rsSaved': 'Saved.',
+  'switch.rsEPercent': 'Enter a whole percentage from 0 to 100.',
+  'switch.rsEReason': 'Give a written reason. It will be kept in the audit log.',
+  'switch.rsELong': 'Keep the reason under 500 characters.',
+  'switch.rsENotAllowed': 'Only a finance admin or the platform admin can change the revenue share. It is as it was.',
+  'switch.rsERefused': 'The database refused that change, and the share is as it was. What it said:',
+  'switch.rsEUnsure':
+    'Nobody can say whether the share was saved. Load the page again and read the figure before saving again.',
 } as const;
 
 export type MessageKey = keyof typeof en;

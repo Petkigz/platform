@@ -10,18 +10,22 @@
 // one the page has no words for keeps the database's English, marked as
 // English; that the sentence beside each link is in the reader's language
 // too (since the second unit of 2026-11-28) and carries no mark; that the
-// owner's switchboard is still English and is marked so; that a language
-// held for review is given English in a marked frame; and, with a browser,
-// that the page does not scroll sideways at three widths, that the word for
-// the console in the main navigation is the reader's, and that in Arabic the
-// sentence beside a link is drawn after the link. The expected sentences are typed here
-// rather than imported, so this fails if a catalogue changes without anybody
-// looking at the page.
+// owner's switchboard is in the reader's language as well (the third unit of
+// that day), with the three things the database wrote in it marked as
+// English: a flag's precondition, a group the page has not heard of, and the
+// database's sentence when it refuses; that a language held for review is
+// given English in a marked frame; and, with a browser, that the page does
+// not scroll sideways at three widths, that the word for the console in the
+// main navigation is the reader's, that in Arabic the sentence beside a link
+// is drawn after the link, and what a switch and the revenue share form say
+// when the stand-in refuses, answers with a gateway's page, or agrees. The
+// expected sentences are typed here rather than imported, so this fails if a
+// catalogue changes without anybody looking at the page.
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -51,14 +55,22 @@ const FLAG = { key: 'synthetic.flag', description: 'SYNTHETIC flag description',
 // it in another (CI, 2026-11-28), so the drawn check uses these.
 const LONG_FLAGS = [
   FLAG,
-  { ...FLAG, key: 'companion.calculated_prayer_times', gate_type: 'admin_setup', preconditions: 'SYNTHETIC precondition that runs to several lines: the outside account has to exist, its secret has to be set, and somebody has to have tried it once.' },
-  { ...FLAG, key: 'family.child_password_recovery', gate_type: 'code', preconditions: 'SYNTHETIC precondition for a flag that needs a deploy.' },
-  { ...FLAG, key: 'family.guardian_verification', value_text: 'true', gate_type: 'admin_setup', preconditions: null },
+  { ...FLAG, key: 'companion.calculated_prayer_times', flag_group: 'Learner features', gate_type: 'admin_setup', preconditions: 'SYNTHETIC precondition that runs to several lines: the outside account has to exist, its secret has to be set, and somebody has to have tried it once.' },
+  { ...FLAG, key: 'family.child_password_recovery', flag_group: 'Children and families', gate_type: 'code', preconditions: 'SYNTHETIC precondition for a flag that needs a deploy.' },
+  { ...FLAG, key: 'family.guardian_verification', flag_group: 'Children and families', value_text: 'true', gate_type: 'admin_setup', preconditions: null },
 ];
 const state = {
   flags: [FLAG],
   // Who is asking: 'owner', 'support' or 'learner'.
   who: 'owner',
+  // What the Translate button has sent this month. Null: the read fails.
+  month: null,
+  // How a write to the register answers: 'ok', 'owner' (only the platform
+  // admin may), 'other' (a sentence the page has no name for) or 'gateway'
+  // (a page that is not the database's).
+  write: 'ok',
+  // How the revenue share's writer answers: 'ok' or 'other'.
+  share: 'ok',
   // How much of a platform there is: counts of subjects, courses, published versions, reviewers.
   facts: { subject_areas: 0, courses: 0, course_versions: 0, reviewer_profiles: 0 },
 };
@@ -85,13 +97,31 @@ const fake = createServer(async (req, res) => {
     const queues = owner ? OWNER_QUEUES : SUPPORT_QUEUES;
     return send({ generatedAt: '2026-11-28T08:00:00Z', waitingCount: queues.reduce((sum, q) => sum + q.count, 0), queues, canSeeFinance: owner, canSeeGovernance: owner, canSeeSupport: true });
   }
-  if (path === '/rest/v1/rpc/translation_month') { res.writeHead(500); return send({ code: 'XX000', message: 'SYNTHETIC failure', details: null, hint: null }); }
+  if (path === '/rest/v1/rpc/translation_month') {
+    if (state.month) return send(state.month);
+    res.writeHead(500); return send({ code: 'XX000', message: 'SYNTHETIC failure', details: null, hint: null });
+  }
+  if (path === '/rest/v1/rpc/set_revenue_share_percent') {
+    if (state.share === 'ok') { state.percent = payload.p_percent; return send(payload.p_percent); }
+    res.writeHead(400); return send({ code: 'P0001', message: 'SYNTHETIC refusal of the share', details: null, hint: null });
+  }
   if (Object.hasOwn(state.facts, table)) {
     res.setHeader('content-range', `*/${state.facts[table]}`);
     return req.method === 'HEAD' ? res.end() : send([]);
   }
   if (path === '/rest/v1/platform_settings') {
-    return send(url.searchParams.get('key') ? [{ value_text: '30' }] : state.flags);
+    const key = url.searchParams.get('key')?.replace(/^eq\./, '') ?? null;
+    if (key === 'teaching.revenue_share_percent') return send([{ value_text: String(state.percent ?? 30) }]);
+    if (req.method === 'PATCH') {
+      // The switch's write. Nothing here is the table's trigger or its policy.
+      if (state.write === 'gateway') { res.writeHead(502, { 'content-type': 'text/html' }); return res.end('<html><body>Bad gateway</body></html>'); }
+      if (state.write === 'owner') { res.writeHead(403); return send({ code: '42501', message: 'SYNTHETIC: only the platform admin may change a switch', details: null, hint: null }); }
+      if (state.write === 'other') { res.writeHead(400); return send({ code: 'P0001', message: 'SYNTHETIC refusal by the database', details: null, hint: null }); }
+      const row = { ...state.flags.find((f) => f.key === key), ...payload };
+      state.flags = state.flags.map((f) => (f.key === key ? row : f));
+      return send(row);
+    }
+    return send(key ? state.flags.filter((f) => f.key === key) : state.flags);
   }
   if (path === '/rest/v1/user_profiles') return send(signedIn ? [{ display_name: 'Synthetic staff', account_status: 'active', deleted_at: null, preferred_language: 'en', timezone: null }] : []);
   if (path === '/rest/v1/rpc/notification_badge') return send(0);
@@ -158,7 +188,13 @@ try {
     '>2</div><div style="font-weight:600;margin-top:0.15rem">SYNTHETIC queue label</div>', 'SYNTHETIC queue sentence.',
     'Also looked at, and empty: <span><a href="/admin/support">Support cases</a></span><span> · <a href="/admin/appeals">Governance appeals</a></span>',
     '<strong>Queues paused by a feature switch: 2</strong>', '<li>Teacher payouts</li><li>Support cases</li>',
-    '<div data-staff-switchboard="true">', 'Feature flags</h2>', 'SYNTHETIC precondition',
+    '<div data-staff-switchboard="true">', 'Feature flags</h2>', 'data-flag-precondition="true">SYNTHETIC precondition</span>',
+    '<p class="lede">Everything is built and shipped off. Turn features on here as their preconditions are met.</p>',
+    '<h3>Teacher revenue share</h3><span class="badge neutral">To teachers: 30%</span>', 'Teacher share, whole percent', 'placeholder="For example: approved policy on paying teachers, reviewed on…"', '>Save revenue share</button>',
+    '<div class="n">0</div><div class="l">Enabled</div>', '<div class="n">1</div><div class="l">Off</div>', '<div class="l">Off, outside setup first</div>', '<div class="l">Need a deploy</div>',
+    '<a href="/admin/retention">Retention clock</a> — the two things the privacy notice promises to delete on a date',
+    'A flag marked “Needs a deploy” cannot be switched on here',
+    '<h3>Synthetic group</h3>', '>On: 0 of 1</span>', 'data-flag-gate="true">Runtime toggle</span>', 'aria-label="synthetic.flag: Off"',
     '>Money</h2>', '<p class="lede">What was charged, what goes back,', '<p data-staff-link="/admin/orders"><a href="/admin/orders">Orders awaiting payment</a> — <span>the only orders whose total can still change',
     '>Publication</h2>', '<a href="/admin/reviewers">Reviewer register</a>', '>Institutions</h3>', '>Support</h2>', '<a href="/admin/support">Support queue</a>',
     '>Everyone’s work</h2>', '<a href="/admin/roles">Roles</a>', '<a href="/learn">Back to my learning</a>',
@@ -188,8 +224,17 @@ try {
     `>${AR(2)}</div><div style="font-weight:600;margin-top:0.15rem" lang="en" dir="ltr">SYNTHETIC queue label</div>`, 'lang="en" dir="ltr">SYNTHETIC queue sentence.</p>',
     'فُحصت أيضًا وهي فارغة: <span><a href="/admin/support">طلبات الدعم</a></span><span> · <a href="/admin/appeals">تظلّمات الحوكمة</a></span>',
     `<strong>قوائم أوقفها مفتاح ميزة: ${AR(2)}</strong>`, '<li>مدفوعات المعلمين</li><li>طلبات الدعم</li>', 'إطفاء ميزة يوقف وصول عمل جديد.',
-    // The switchboard is still English, and says so to the browser.
-    '<div lang="en" dir="ltr" data-staff-switchboard="true">', 'Feature flags</h2>',
+    // The switchboard is Arabic too, and carries no mark: it is the page's language.
+    '<div data-staff-switchboard="true">', '>مفاتيح الميزات</h2>',
+    '<p class="lede">كل شيء مبنيّ ومنشور وهو مُطفأ. شغِّل الميزات من هنا كلما تحققت شروطها المسبقة.</p>',
+    `<h3>حصة المعلمين من الإيرادات</h3><span class="badge neutral">للمعلمين: ${AR(30)}%</span>`, 'حصة المعلم، نسبة مئوية صحيحة', 'placeholder="مثال: سياسة معتمدة لأجور المعلمين، روجعت بتاريخ…"', '>حفظ حصة الإيرادات</button>',
+    `<div class="n">${AR(0)}</div><div class="l">مفعَّلة</div>`, `<div class="n">${AR(1)}</div><div class="l">مُطفأة</div>`, '<div class="l">مُطفأة، والإعداد الخارجي أولًا</div>', '<div class="l">تحتاج إلى نشر</div>',
+    '<a href="/admin/retention">ساعة الاحتفاظ</a> — الأمران اللذان يَعِد إشعار الخصوصية بحذفهما في تاريخ محدد',
+    'الميزة التي عليها «يحتاج إلى نشر» لا يمكن تشغيلها من هنا',
+    `>المفعَّل: ${AR(0)} من ${AR(1)}</span>`, 'data-flag-gate="true">تشغيل مباشر</span>', 'aria-label="synthetic.flag: مُطفأ"',
+    // Two things in it are the database's, and are marked as English: a group the page has not heard of, and what a flag still needs.
+    '<h3 lang="en" dir="ltr">Synthetic group</h3>', 'lang="en" dir="ltr" data-flag-precondition="true">SYNTHETIC precondition</span>',
+    '<code style="font-size:0.85rem" dir="ltr">synthetic.flag</code>',
     '>المال</h2>', '<p class="lede">ما حُصِّل، وما يُعاد،',
     // A link's name is Arabic and so is the sentence beside it, with no mark: it is the page's language.
     '<p data-staff-link="/admin/orders"><a href="/admin/orders">طلبات شراء تنتظر الدفع</a> — <span>الطلبات الوحيدة التي ما زال مجموعها قابلًا للتغيير: سجِّل على الطلب خصمًا أو ضريبة أو رسمًا أو تقريبًا، أو اسحبه</span></p>',
@@ -199,8 +244,16 @@ try {
     '>الدعم</h2>', '<a href="/admin/support">قائمة الدعم</a>', '>عمل الجميع</h2>', '<a href="/admin/appeals">التظلّمات</a>',
   ], 'owner in Arabic');
   // Outside what is marked as English, none of the database's words for a queue is left.
-  const unmarked = ar.replace(/<div lang="en" dir="ltr" data-staff-switchboard="true">[\s\S]*?<h2 style="margin-top:2\.5rem">المال<\/h2>/u, '').replace(/<(span|p|div|a|li)[^>]* lang="en" dir="ltr"[^>]*>[\s\S]*?<\/\1>/gu, '');
-  lacks(unmarked, [...DATABASE_ENGLISH, 'What is waiting', 'Administration', 'Paused', 'Publication', 'Waiting:', 'the only orders', 'Feature flags'], 'the unmarked part of the Arabic page');
+  const unmarked = ar.replace(/<(span|p|div|a|li|h3)[^>]* lang="en" dir="ltr"[^>]*>[\s\S]*?<\/\1>/gu, '');
+  lacks(unmarked, [
+    ...DATABASE_ENGLISH, 'What is waiting', 'Administration', 'Paused', 'Publication', 'Waiting:', 'the only orders',
+    // The switchboard's English, none of which is left, and what the database wrote, none of which is unmarked.
+    'Feature flags', 'Everything is built', 'Teacher revenue share', 'to teachers', 'To teachers', 'whole percent', 'Reason for this change', 'For example', 'Save revenue share',
+    'Enabled', 'Need a deploy', 'Needs a deploy', 'Retention clock', 'the privacy notice', 'cannot be switched on here', 'Runtime toggle', 'On: ', ': Off"', ': off"',
+    'SYNTHETIC precondition', 'Synthetic group', 'SYNTHETIC',
+  ], 'the unmarked part of the Arabic page');
+  // The switchboard is not a block of English any more.
+  lacks(ar, ['<div lang="en" dir="ltr" data-staff-switchboard="true">', 'data-translation-month'], 'the Arabic page');
   // No sentence beside a link is English any more, marked or not.
   lacks(ar, ['the only orders', 'money going back out', 'who may do what', 'courses waiting for a reviewer', 'Aggregates only'], 'the Arabic page');
   assert.equal((ar.match(/data-staff-link=/g) ?? []).length, 43);
@@ -209,12 +262,30 @@ try {
 
   // Persian digits are pinned: 1,239 waiting.
   const fa = inner(await page('/admin', { cookie, 'accept-language': 'fa' }));
-  has(fa, ['<h1>چه چیزی در انتظار است</h1>', 'در انتظار: ۱٬۲۳۹. صف‌هایی که چیزی در آن‌هاست: ۳.', '<span class="badge neutral">متوقف</span>'], 'owner in Persian');
+  has(fa, [
+    '<h1>چه چیزی در انتظار است</h1>', 'در انتظار: ۱٬۲۳۹. صف‌هایی که چیزی در آن‌هاست: ۳.', '<span class="badge neutral">متوقف</span>',
+    // The switchboard writes its numbers in Persian digits too: the share, the four counts, a group's count.
+    '<h3>سهم معلمان از درآمد</h3><span class="badge neutral">برای معلمان: ۳۰%</span>', '<div class="n">۰</div><div class="l">روشن</div>', '<div class="n">۱</div><div class="l">خاموش</div>', '>روشن: ۰ از ۱</span>',
+  ], 'owner in Persian');
   // French keeps its no-break space before a colon.
   const fr = inner(await page('/admin', { cookie, 'accept-language': 'fr' }));
+  has(fr, ['<span class="badge neutral">Aux enseignants\u00a0: 30\u00a0%</span>', '>Activées\u00a0: 0 sur 1</span>', 'Une fonction marquée «\u00a0Demande un déploiement\u00a0» ne peut pas être activée ici'], 'the switchboard in French');
   has(fr, ['<h1>Ce qui attend</h1>', 'En attente\u00a0: 1\u202f239. Files qui contiennent quelque chose\u00a0: 3.', '<a href="/admin/reviewers">Registre des relecteurs</a>', '<span>les seules commandes dont le total peut encore changer\u00a0: enregistrez-y une remise, une taxe, des frais ou un arrondi, ou retirez la commande</span>'], 'owner in French');
   // A language held for review: English, in a frame that says so.
-  has(inner(await page('/admin', { cookie, 'accept-language': 'ha' })), ['<div class="container section staff-page" lang="en" dir="ltr">', '<h1>What is waiting</h1>', '<div data-staff-switchboard="true">', '<a href="/admin/orders">Orders awaiting payment</a> — <span>the only orders whose total can still change'], 'held-language staff page');
+  const ha = inner(await page('/admin', { cookie, 'accept-language': 'ha' }));
+  has(ha, ['<div class="container section staff-page" lang="en" dir="ltr">', '<h1>What is waiting</h1>', '<div data-staff-switchboard="true">', 'Feature flags</h2>', '<h3>Teacher revenue share</h3>', '<a href="/admin/orders">Orders awaiting payment</a> — <span>the only orders whose total can still change'], 'held-language staff page');
+  // Inside that frame nothing needs a second mark: the frame already says English.
+  assert.equal((ha.match(/ lang="en"/g) ?? []).length, 1, 'held-language staff page marks English inside its English frame');
+
+  // What the Translate button sent this month, once the read answers. The
+  // switch is on and this server has no key, which is the state said loudest.
+  state.month = { on: true, monthStarts: '2026-11-01', characters: 320000, requests: 412, people: 3, monthly: 400000, daily: 20000 };
+  has(inner(await page('/admin', { cookie, 'accept-language': 'en' })), ['<div class="notice warn" data-translation-month="true"><strong>Translation.</strong> The translation switch is on, but this server has no GOOGLE_TRANSLATE_API_KEY, so no button is drawn and nothing is sent. Characters this month: 320,000 of 400,000 (80%). Requests: 412. People: 3. The most one person may send in a day: 20,000. Members stop at four fifths of the month; the rest is kept for staff.</div>'], 'the translation month in English');
+  has(inner(await page('/admin', { cookie, 'accept-language': 'ar' })), [`<div class="notice warn" data-translation-month="true"><strong>الترجمة.</strong> مفتاح الترجمة مفعَّل، لكن هذا الخادم ليس فيه GOOGLE_TRANSLATE_API_KEY، فلا يُعرض أي زر ولا يُرسَل شيء. الأحرف هذا الشهر: ${AR(320000)} من ${AR(400000)} (${AR(80)}%). الطلبات: ${AR(412)}. الأشخاص: ${AR(3)}. أقصى ما يرسله شخص واحد في اليوم: ${AR(20000)}.`], 'the translation month in Arabic');
+  has(inner(await page('/admin', { cookie, 'accept-language': 'fa' })), ['<strong>ترجمه.</strong> کلید ترجمه روشن است، اما این سرور GOOGLE_TRANSLATE_API_KEY ندارد', 'نویسه‌های این ماه: ۳۲۰٬۰۰۰ از ۴۰۰٬۰۰۰ (۸۰%). درخواست‌ها: ۴۱۲. افراد: ۳.'], 'the translation month in Persian');
+  state.month = { ...state.month, on: false, characters: 12 };
+  has(inner(await page('/admin', { cookie, 'accept-language': 'sw' })), ['<div class="notice" data-translation-month="true"><strong>Tafsiri.</strong> Tafsiri imezimwa, na seva hii haina GOOGLE_TRANSLATE_API_KEY. Inahitaji vyote viwili. Herufi za mwezi huu: 12 kati ya 400,000 (0%).'], 'the translation month in Swahili');
+  state.month = null;
 
   // A platform that is set up: no panel, and the queue sentence is the page's own.
   state.facts = { subject_areas: 6, courses: 3, course_versions: 2, reviewer_profiles: 1 };
@@ -245,10 +316,10 @@ try {
     'data-staff-not-owner="true">Swichi za vipengele na mgao wa mapato ni vya msimamizi wa jukwaa.', '>Kazi ya kila mtu</h2>',
     '<p data-staff-link="/admin/support"><a href="/admin/support">Foleni ya msaada</a> — <span>maombi ambayo watu walifungua kutoka Msaada. Kuzima kipengele husimamisha mapya; hakufungi yaliyo njiani</span></p>',
   ], 'support agent in Swahili');
-  lacks(sw, ['What is waiting', 'Support cases', 'Reported content', 'Everyone’s work', 'belong to the platform admin', 'requests people opened from Help', 'lang="en"'], 'support agent in Swahili');
+  lacks(sw, ['What is waiting', 'Support cases', 'Reported content', 'Everyone’s work', 'belong to the platform admin', 'requests people opened from Help', 'lang="en"', 'data-staff-switchboard', 'Swichi za vipengele</h2>', 'data-revenue-share'], 'support agent in Swahili');
   assert.equal((sw.match(/<\/a> — <span>[^<]+<\/span><\/p>/g) ?? []).length, 21);
 
-  console.log('Staff console: signed out goes to sign-in and somebody who is not staff goes home with the queues not asked for; the owner’s page whole in English and in Arabic with counts as this Node writes them for Arabic (Western digits when this was written), Persian digits pinned, French spacing kept; a queue named by its code, and one with no words here left in the database’s English and marked; all 43 links named in the reader’s language and the sentence beside each in it too, unmarked, with the flag keys and DNS left in Latin letters; the switchboard still English and marked; a held language given English in a marked frame; the setup panel gone once the platform is set up; a support agent shown 21 links, no switchboard, no money, and the register not read.');
+  console.log('Staff console: signed out goes to sign-in and somebody who is not staff goes home with the queues not asked for; the owner’s page whole in English and in Arabic with counts as this Node writes them for Arabic (Western digits when this was written), Persian digits pinned, French spacing kept; a queue named by its code, and one with no words here left in the database’s English and marked; all 43 links named in the reader’s language and the sentence beside each in it too, unmarked, with the flag keys and DNS left in Latin letters; the switchboard in the reader’s language with its numbers in the reader’s digits, and a flag’s precondition and a group the page has not heard of left in the database’s English and marked; the translation line said from the month the stand-in gave, and not drawn when the read fails; a held language given English in one marked frame; the setup panel gone once the platform is set up; a support agent shown 21 links, no switchboard, no money, and the register not read.');
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
@@ -264,14 +335,113 @@ try {
       await tab.goto(`${origin}/admin`, { waitUntil: 'networkidle' });
       return { context, tab, errors };
     };
+    // For a person to look at, when asked: ADMIN_SMOKE_SHOTS names a directory.
+    const shots = process.env.ADMIN_SMOKE_SHOTS;
+    const shoot = async (target, name) => { if (shots) await target.screenshot({ path: join(shots, `${name}.png`) }); };
     const fits = async (tab, width, label) => {
       const scroll = await tab.evaluate(() => document.documentElement.scrollWidth);
       // Name what sticks out, so the failure says where to look.
       const wide = scroll <= width + 1 ? [] : await tab.evaluate((limit) => [...document.querySelectorAll('main *')].filter((el) => { const r = el.getBoundingClientRect(); return r.right > limit + 1 || r.left < -1; }).map((el) => `${el.tagName.toLowerCase()}.${el.className} "${(el.textContent ?? '').slice(0, 30)}"`).slice(0, 6), width);
-      assert.ok(scroll <= width + 1, `${label}: the page scrolls sideways (${scroll}): ${wide.join(' | ')}`);
+      // A word too long for its box sticks out of it without making the box
+      // any wider, so the words are measured as well as the boxes.
+      const words = scroll <= width + 1 ? [] : await tab.evaluate((limit) => {
+        const found = []; const walker = document.createTreeWalker(document.querySelector('main'), NodeFilter.SHOW_TEXT); const range = document.createRange();
+        for (let node = walker.nextNode(); node && found.length < 6; node = walker.nextNode()) {
+          if (!node.textContent.trim()) continue;
+          range.selectNodeContents(node);
+          if ([...range.getClientRects()].some((r) => r.right > limit + 1 || r.left < -1)) found.push(`${node.parentElement.tagName.toLowerCase()}.${node.parentElement.className} "${node.textContent.trim().slice(0, 40)}"`);
+        }
+        return found;
+      }, width);
+      assert.ok(scroll <= width + 1, `${label}: the page scrolls sideways (${scroll}): boxes ${wide.join(' | ') || 'none'}; words ${words.join(' | ') || 'none'}`);
     };
     state.facts = { subject_areas: 0, courses: 0, course_versions: 0, reviewer_profiles: 0 };
     state.flags = LONG_FLAGS;
+    // What a switch says when a change is not made, typed here in three languages.
+    const SWITCH_SAYS = {
+      en: {
+        off: 'Off', on: 'On',
+        notOwner: 'Only the platform admin can change a feature switch. This one is as it was.',
+        refused: 'The database refused that change, and the switch is as it was. What it said:',
+        unsure: 'Nobody can say whether that switch changed. Load the page again and look at it before pressing again.',
+      },
+      ar: {
+        off: 'مُطفأ', on: 'مفعَّل',
+        notOwner: 'مدير المنصة وحده يستطيع تغيير مفتاح ميزة. وهذا المفتاح باقٍ كما كان.',
+        refused: 'رفضت قاعدة البيانات هذا التغيير، والمفتاح باقٍ كما كان. وهذا ما قالته:',
+        unsure: 'لا أحد يستطيع أن يقول هل تغيّر هذا المفتاح. أعد تحميل الصفحة وانظر إليه قبل أن تضغط من جديد.',
+      },
+      ta: {
+        off: 'அணைந்துள்ளது', on: 'இயக்கத்தில்',
+        notOwner: 'அம்சச் சுவிட்சைத் தள நிர்வாகி மட்டுமே மாற்ற முடியும். இந்தச் சுவிட்சு இருந்தபடியே உள்ளது.',
+        refused: 'தரவுத்தளம் அந்த மாற்றத்தை மறுத்தது; சுவிட்சு இருந்தபடியே உள்ளது. அது சொன்னது:',
+        unsure: 'அந்தச் சுவிட்சு மாறியதா என்று யாராலும் சொல்ல முடியாது. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் அழுத்துவதற்கு முன் அதைப் பாருங்கள்.',
+      },
+    };
+    // Press the first switch against each answer the stand-in can give. A
+    // change that is not made leaves the switch as it was and says why, in the
+    // reader's language; the database's own sentence is marked as English.
+    const pressSwitch = async (tab, code, width, label) => {
+      const says = SWITCH_SAYS[code];
+      const row = tab.locator('[data-staff-switchboard] .lessons li').filter({ hasText: 'synthetic.flag' });
+      const control = row.getByRole('switch');
+      assert.equal(await control.getAttribute('aria-label'), `synthetic.flag: ${says.off}`, `${label}: the switch's name`);
+      const alert = row.locator('[role="alert"]');
+      const writes = () => calls.filter((c) => c.method === 'PATCH' && c.path === '/rest/v1/platform_settings');
+      // Press, and wait for what is expected to be on the row. Before the page
+      // has hydrated a press does nothing, so a press that changed nothing on
+      // the page is made again.
+      const press = async (expected, what) => {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          await control.click();
+          try { await expected.waitFor({ state: 'attached', timeout: 5000 }); return; } catch { /* press again */ }
+        }
+        assert.fail(`${label}: the switch never showed ${what}`);
+      };
+      // Each answer differs from the one before it, so an old sentence left on the row cannot pass for a new one.
+      for (const [write, refusal, said] of [['owner', 'notOwner', null], ['gateway', 'unsure', null], ['other', 'refused', 'SYNTHETIC refusal by the database'], ['cut', 'unsure', null]]) {
+        // 'cut': the API itself is not reached; the connection goes before any answer.
+        state.write = write === 'cut' ? 'ok' : write;
+        if (write === 'cut') await tab.route('**/api/admin/flags', (route) => route.abort());
+        const before = writes().length;
+        await press(row.locator(`[data-flag-refusal="${refusal}"]`), `"${refusal}" for "${write}"`);
+        assert.equal((await alert.textContent()).trim(), said ? `${says[refusal]} ${said}` : says[refusal], `${label}: what the switch says for "${write}"`);
+        if (said) assert.deepEqual(await alert.locator('[data-flag-said]').evaluate((el) => [el.textContent, el.getAttribute('lang'), el.getAttribute('dir')]), code === 'en' ? [said, null, null] : [said, 'en', 'ltr'], `${label}: the database's sentence and its mark`);
+        assert.equal(await control.getAttribute('aria-checked'), 'false', `${label}: a change that was not made is shown as made ("${write}")`);
+        if (write === 'cut') {
+          assert.equal(writes().length, before, `${label}: the cut request reached the stand-in`);
+          await tab.unroute('**/api/admin/flags');
+        } else {
+          assert.ok(writes().length > before, `${label}: "${write}" was answered without the stand-in being asked`);
+        }
+        await fits(tab, width, `${label} /admin after "${write}"`);
+        await shoot(row, `switch-${code}-${width}-${write}`);
+      }
+      // And a change that is made: the switch is on, says so, and says nothing else.
+      // The switch turns at once and is turned back if the answer is a refusal,
+      // so "on" is only looked at after the stand-in has answered and the page
+      // has been drawn again from what it now holds.
+      state.write = 'ok';
+      const made = writes().length;
+      // The answer is held back for a moment and the switch is pressed twice
+      // more meanwhile: from a press until its answer it takes no other, or
+      // two changes would be in flight and the last answer would win.
+      await tab.route('**/api/admin/flags', async (route) => { await new Promise((done) => setTimeout(done, 1500)); await route.continue(); });
+      await control.click();
+      await control.evaluate((el) => { el.click(); el.click(); });
+      assert.equal(await control.isDisabled(), true, `${label}: the switch can be pressed again before it is answered`);
+      for (let i = 0; i < 60 && writes().length === made; i += 1) await tab.waitForTimeout(250);
+      await tab.waitForTimeout(750);
+      await tab.unroute('**/api/admin/flags');
+      assert.equal(writes().length, made + 1, `${label}: three presses before the answer, one write`);
+      await tab.waitForLoadState('networkidle');
+      await tab.waitForTimeout(500);
+      assert.equal(await control.getAttribute('aria-checked'), 'true', `${label}: a change that was made is not shown`);
+      assert.equal(await alert.count(), 0, `${label}: a change that was made still shows a refusal`);
+      assert.equal(await control.getAttribute('aria-label'), `synthetic.flag: ${says.on}`, `${label}: the switch's name once on`);
+      assert.deepEqual(writes().at(-1).payload, { value_text: 'true' }, `${label}: what was written`);
+      state.flags = LONG_FLAGS;
+    };
     for (const who of ['owner', 'support']) {
       state.who = who;
       for (const [code, heading, word] of [['en', 'What is waiting', 'Admin'], ['ar', 'ما ينتظر', 'الإدارة'], ['ta', 'காத்திருப்பவை', 'நிர்வாகம்']]) {
@@ -287,7 +457,16 @@ try {
           const back = tab.locator('nav.nav a[href="/admin"]');
           await back.waitFor({ state: 'attached', timeout: 10000 });
           assert.deepEqual(await back.evaluate((a) => [a.textContent, a.getAttribute('lang'), a.getAttribute('dir'), a.getAttribute('aria-current')]), [word, null, null, 'page'], `${label}: the console's word in the navigation`);
-          if (who === 'owner') assert.equal(await tab.locator('[data-staff-switchboard] .lessons li').count(), LONG_FLAGS.length, `${label}: the register's rows`);
+          if (who === 'owner') {
+            assert.equal(await tab.locator('[data-staff-switchboard] .lessons li').count(), LONG_FLAGS.length, `${label}: the register's rows`);
+            // The switchboard is the page's language: no mark of its own, and the only English marked in it is the database's.
+            assert.deepEqual(await tab.locator('[data-staff-switchboard]').evaluate((el) => [el.getAttribute('lang'), el.getAttribute('dir')]), [null, null], `${label}: the switchboard's mark`);
+            assert.deepEqual(
+              await tab.locator('[data-staff-switchboard] [lang]').evaluateAll((els) => [...new Set(els.map((el) => `${el.tagName.toLowerCase()}${el.hasAttribute('data-flag-precondition') ? '[precondition]' : ''}:${el.getAttribute('lang')}`))].sort()),
+              code === 'en' ? [] : ['h3:en', 'span[precondition]:en'], `${label}: what is marked inside the switchboard`);
+            await shoot(tab.locator('[data-staff-switchboard]'), `board-${code}-${width}${a11y ? '-widest' : ''}`);
+            if (width === 320 && !a11y) await pressSwitch(tab, code, width, label);
+          }
           if (code === 'ar') {
             // The sentence beside an Arabic link starts after the link: on the
             // link's left when they share a line, otherwise below it. (It was
@@ -310,6 +489,56 @@ try {
         }
       }
     }
+    // The revenue share, in Persian: the page shows Persian digits, so the
+    // form reads them. What cannot be a percentage, and a missing reason, are
+    // refused before anything is sent; the stand-in's refusal is marked as
+    // English; and what is saved is the number that was typed.
+    {
+      state.who = 'owner';
+      const label = 'owner fa 320, the revenue share';
+      const { context, tab, errors } = await open('fa', 320, null);
+      const form = tab.locator('form[data-revenue-share]');
+      const field = form.locator('input[type="text"]');
+      const refusal = form.locator('[role="alert"]');
+      const sent = () => calls.filter((c) => c.path === '/rest/v1/rpc/set_revenue_share_percent');
+      const save = async (attribute, value) => {
+        for (let i = 0; i < 40; i += 1) {
+          await form.getByRole('button').click();
+          await tab.waitForTimeout(300);
+          if ((await form.locator(`[${attribute}]`).count()) && (value === null || (await form.locator(`[${attribute}]`).getAttribute(attribute)) === value)) return;
+        }
+        assert.fail(`${label}: the form never showed ${attribute}=${value}`);
+      };
+      assert.equal(await form.locator('.badge').textContent(), 'برای معلمان: ۳۰%', `${label}: the badge`);
+      assert.equal(await field.inputValue(), '۳۰', `${label}: the field opens with the figure in the page's digits`);
+      const before = sent().length;
+      await field.fill('۱۰۱');
+      await save('data-revenue-share-refusal', 'percent');
+      assert.equal((await refusal.textContent()).trim(), 'درصدی صحیح از ۰ تا ۱۰۰ وارد کنید.', `${label}: 101`);
+      await field.fill('۴۰');
+      await save('data-revenue-share-refusal', 'reason');
+      assert.equal((await refusal.textContent()).trim(), 'دلیلی بنویسید. در سابقهٔ ممیزی نگه داشته می‌شود.', `${label}: no reason`);
+      assert.equal(sent().length, before, `${label}: something was sent before the form was whole`);
+      await form.locator('textarea').fill('SYNTHETIC reason');
+      state.share = 'other';
+      await save('data-revenue-share-refusal', 'refused');
+      assert.equal((await refusal.textContent()).trim(), 'پایگاه داده این تغییر را نپذیرفت و سهم همان‌طور که بود مانده است. آنچه گفت: SYNTHETIC refusal of the share', `${label}: the stand-in refused`);
+      assert.deepEqual(await refusal.locator('[data-revenue-share-said]').evaluate((el) => [el.getAttribute('lang'), el.getAttribute('dir')]), ['en', 'ltr'], `${label}: the mark on the database's sentence`);
+      await fits(tab, 320, `${label} after a refusal`);
+      await shoot(form, 'share-fa-320-refused');
+      state.share = 'ok';
+      await form.getByRole('button').click();
+      await form.locator('[role="status"]').waitFor({ state: 'visible', timeout: 15000 });
+      assert.equal(await form.locator('[role="status"]').textContent(), 'ذخیره شد.', `${label}: saved`);
+      assert.equal(await refusal.count(), 0, `${label}: a refusal is still shown after saving`);
+      assert.deepEqual(sent().at(-1).payload, { p_percent: 40, p_reason: 'SYNTHETIC reason' }, `${label}: what was sent`);
+      assert.equal(await field.inputValue(), '۴۰', `${label}: the field after saving keeps what was typed`);
+      await tab.waitForFunction(() => document.querySelector('form[data-revenue-share] .badge')?.textContent === 'برای معلمان: ۴۰%', null, { timeout: 15000 });
+      assert.deepEqual(errors, [], label);
+      await context.close();
+      state.percent = 30;
+    }
+    console.log('Staff console in a browser, the switchboard: in English, Arabic and Tamil the switchboard carries no language mark and the only English marked inside it is a group the page has not heard of and a flag’s precondition; a switch pressed against a stand-in that says only the platform admin may, that refuses in its own words, that answers with a gateway’s page, and against a connection that is cut, stays as it was and says which in the reader’s language, with the stand-in’s sentence marked as English; a change that is made turns it on, and pressed three times before its answer comes it is written once. In Persian the revenue share form reads ۱۰۱ and refuses it, refuses a missing reason, sends nothing for either, shows the stand-in’s refusal marked as English, and saves ۴۰ as 40; the field opens with ۳۰ and keeps ۴۰, and the figure beside the heading becomes ۴۰ once the page is drawn again.');
     console.log('Staff console in a browser: the owner’s page and a support agent’s, in English, Arabic and Tamil at 320, 390 and 1440 pixels, and at 320 with the largest text in the dyslexia font, with a flag register of long keys, do not scroll sideways; the console’s word in the main navigation is the reader’s, unmarked, and is the current page; in Arabic the sentence beside a link starts after the link.');
   }
   console.log('Staff console HTTP smoke passed. Not real Auth, RLS, `is_privileged()`, `has_role()` or `staff_attention()`; nobody here is staff, and no speaker has read the translations.');

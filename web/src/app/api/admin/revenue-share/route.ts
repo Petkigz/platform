@@ -57,7 +57,11 @@ export async function POST(request: Request) {
   );
 
   if (!result.ok) {
-    const status = result.code === 'not_authorized' ? 403 : result.code === 'invalid' ? 400 : 409;
+    const status =
+      result.code === 'not_authorized' ? 403
+      : result.code === 'invalid' ? 400
+      : result.code === 'unsure' ? 502
+      : 409;
     return NextResponse.json(result, { status });
   }
 

@@ -200,22 +200,29 @@ export function parseTranslationMonth(input: unknown): TranslationMonth | null {
 }
 
 /**
- * What the owner is told about translation, in one sentence each. English:
- * the dashboard it is drawn on is English.
+ * What the owner is told about translation: which sentence says the state,
+ * and how much of the month is used. Keys and numbers since 2026-11-28; the
+ * dashboard says them in the reader's language.
  *
  * `hasKey` is whether this server has a key. The switch being on with no key
  * is the state worth saying loudest, because nothing else on the platform
  * shows it: the button is simply not drawn.
  */
-export function translationMonthLines(month: TranslationMonth, hasKey: boolean): { state: string; used: string; warn: boolean } {
-  const state = month.on && hasKey
-    ? 'Translation is on. A signed-in reader can press Translate under what somebody wrote, and that text is sent to Google.'
+export type TranslationStateKey =
+  | 'switch.trOn'
+  | 'switch.trOnNoKey'
+  | 'switch.trOffKey'
+  | 'switch.trOffNoKey';
+
+export function translationMonthLines(month: TranslationMonth, hasKey: boolean): { state: TranslationStateKey; share: number; warn: boolean } {
+  const state: TranslationStateKey = month.on && hasKey
+    ? 'switch.trOn'
     : month.on
-      ? 'The Translate switch is on, but this server has no GOOGLE_TRANSLATE_API_KEY, so no button is drawn and nothing is sent.'
+      ? 'switch.trOnNoKey'
       : hasKey
-        ? 'Translation is off. This server has a key; the platform.translate switch below turns the button on.'
-        : 'Translation is off, and this server has no GOOGLE_TRANSLATE_API_KEY. It needs both.';
+        ? 'switch.trOffKey'
+        : 'switch.trOffNoKey';
+  // A limit of nought is not a division.
   const share = month.monthly > 0 ? Math.floor((month.characters * 100) / month.monthly) : 0;
-  const used = `This month: ${month.characters.toLocaleString('en')} of ${month.monthly.toLocaleString('en')} characters (${share}%), in ${month.requests.toLocaleString('en')} ${month.requests === 1 ? 'request' : 'requests'} by ${month.people.toLocaleString('en')} ${month.people === 1 ? 'person' : 'people'}. One person may send ${month.daily.toLocaleString('en')} a day. Members stop at four fifths of the month; the rest is kept for staff.`;
-  return { state, used, warn: (month.on && !hasKey) || (month.monthly > 0 && month.characters * 5 >= month.monthly * 4) };
+  return { state, share, warn: (month.on && !hasKey) || (month.monthly > 0 && month.characters * 5 >= month.monthly * 4) };
 }

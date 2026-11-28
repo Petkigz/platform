@@ -26,9 +26,10 @@ import type { Messages } from './en.ts';
  * own quotation marks; the register says the first and never the second.
  * French puts a no-break space before `:`, `;` and `?` and inside « ».
  *
- * Not here: the owner's switchboard (a flag's description, the revenue
- * share form) and what the database says a flag still needs. The page says
- * those in English and marks them as English.
+ * Not here: the owner's switchboard, which is a part of its own
+ * (`switch.ts`, written the same day). What the database says a flag still
+ * needs is a row of the database: the page says it in English and marks it
+ * as English.
  *
  * Made by `scripts/catalogue-part/gen.py` from
  * `scripts/catalogue-part/data/console.txt`.

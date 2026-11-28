@@ -105,7 +105,21 @@ export type FlagErrorCode =
   | 'unknown_flag'
   | 'code_gated'
   | 'not_boolean'
-  | 'rejected';
+  | 'rejected'
+  | 'unsure';
+
+/**
+ * Whether an error is an answer at all. PostgreSQL and PostgREST both give a
+ * refusal a code. An error with none is a gateway's page or a connection that
+ * went (and class 08 is the connection itself): the request may have been
+ * carried out and the answer lost, so nobody can say what happened.
+ */
+export function isNoAnswer(error: { code?: string | null } | null | undefined): boolean {
+  const state = String(error?.code ?? '');
+  return state === '' || state.startsWith('08');
+}
+
+const UNSURE = 'Nobody can say whether that switch changed. Load the page again and look at it before pressing again.';
 
 /**
  * Enable or disable a flag.
@@ -118,11 +132,19 @@ export async function setFlag(
   supabase: SupabaseClient,
   args: { key: string; enabled: boolean },
 ): Promise<FlagOutcome> {
-  const { data: existing } = await supabase
+  const { data: existing, error: readError } = await supabase
     .from('platform_settings')
     .select(COLUMNS)
     .eq('key', args.key)
     .maybeSingle();
+
+  // A read that failed is not "no flag by that name": the page would tell the
+  // owner a switch had gone that is still there (2026-11-28).
+  if (readError) {
+    return isNoAnswer(readError)
+      ? { ok: false, code: 'unsure', message: UNSURE }
+      : { ok: false, code: 'rejected', message: readError.message };
+  }
 
   const row = existing as unknown as Row | null;
   if (!row) {
@@ -165,6 +187,10 @@ export async function setFlag(
     if (error.code === '42501' || /only the platform admin/i.test(error.message)) {
       return { ok: false, code: 'not_privileged', message: error.message };
     }
+    // No answer of the database's own: the write may have been made and the
+    // answer lost. Saying "refused" would be a guess, and so would a gateway's
+    // page shown as the database's sentence.
+    if (isNoAnswer(error)) return { ok: false, code: 'unsure', message: UNSURE };
     return { ok: false, code: 'rejected', message: error.message };
   }
 
@@ -172,19 +198,93 @@ export async function setFlag(
 }
 
 /**
- * The badge beside a switch.
+ * The badge beside a switch, as the key of the sentence that says it.
  *
  * An `admin_setup` switch said "Needs external setup" whether it was off or
  * on. The owner finished the setup, switched Google sign-in on, and the row
  * went on saying something was needed (2026-11-27). The badge now says what
  * is true for the state the switch is in: before, do the outside part first;
  * after, this is on and leans on something outside the platform.
+ *
+ * A key and not a sentence since 2026-11-28: the page says it in the
+ * reader's language.
  */
-export function gateLabel(g: GateType, enabled = false): string {
-  if (g === 'admin') return 'Runtime toggle';
-  if (g === 'admin_setup') return enabled ? 'On, uses outside setup' : 'Outside setup first';
-  return 'Needs a deploy';
+export type GateLabelKey =
+  | 'switch.gateRuntime'
+  | 'switch.gateSetupFirst'
+  | 'switch.gateSetupOn'
+  | 'switch.gateDeploy';
+
+export function gateLabelKey(g: GateType, enabled = false): GateLabelKey {
+  if (g === 'admin') return 'switch.gateRuntime';
+  if (g === 'admin_setup') return enabled ? 'switch.gateSetupOn' : 'switch.gateSetupFirst';
+  return 'switch.gateDeploy';
 }
+
+/** The group a flag with no group is listed under. */
+export const UNGROUPED = 'Other';
+
+/**
+ * The groups the page can name in the reader's language. A group's name is a
+ * value in the database (`platform_settings.flag_group`), written in English;
+ * these are the ones the migrations use. A group that is not here is shown as
+ * the database wrote it, and the page marks it as English.
+ */
+export const FLAG_GROUP_KEYS = {
+  'Learner features': 'switch.gLearner',
+  Teaching: 'switch.gTeaching',
+  Money: 'switch.gMoney',
+  'Children and families': 'switch.gFamilies',
+  Platform: 'switch.gPlatform',
+  Delivery: 'switch.gDelivery',
+  Governance: 'switch.gGovernance',
+  [UNGROUPED]: 'switch.gOther',
+} as const;
+
+export type FlagGroupKey = (typeof FLAG_GROUP_KEYS)[keyof typeof FLAG_GROUP_KEYS];
+
+export function flagGroupKey(group: string): FlagGroupKey | null {
+  return Object.hasOwn(FLAG_GROUP_KEYS, group)
+    ? FLAG_GROUP_KEYS[group as keyof typeof FLAG_GROUP_KEYS]
+    : null;
+}
+
+/**
+ * What the switch says when a change was not made, by name (2026-11-28).
+ *
+ * `unsure` is not a refusal. An answer that is not the API's own (a gateway's
+ * page, a connection that went) leaves nobody able to say whether the switch
+ * changed, and the sentence says to look before pressing again. `refused`
+ * carries the database's own sentence, which is English.
+ */
+export type FlagRefusal = 'notOwner' | 'deploy' | 'unknown' | 'refused' | 'signedOut' | 'unsure';
+
+export function flagRefusalOf(
+  status: number,
+  body: unknown,
+): { refusal: FlagRefusal; said: string | null } {
+  if (typeof body !== 'object' || body === null || (body as { ok?: unknown }).ok !== false) {
+    return { refusal: 'unsure', said: null };
+  }
+  const { code, message } = body as { code?: unknown; message?: unknown };
+  if (status === 401) return { refusal: 'signedOut', said: null };
+  if (code === 'not_privileged') return { refusal: 'notOwner', said: null };
+  if (code === 'code_gated') return { refusal: 'deploy', said: null };
+  if (code === 'unknown_flag') return { refusal: 'unknown', said: null };
+  if (code === 'unsure') return { refusal: 'unsure', said: null };
+  const said = typeof message === 'string' && message.trim() !== '' ? message.trim() : null;
+  return { refusal: 'refused', said };
+}
+
+/** Every sentence a row of the register says, handed over by the page. */
+export type FlagToggleWords = {
+  gates: Record<GateLabelKey, string>;
+  on: string;
+  off: string;
+  refusals: Record<FlagRefusal, string>;
+  /** Whether what the database wrote has to be marked as English on this page. */
+  markEnglish: boolean;
+};
 
 /** Groups in a stable, sensible order rather than alphabetical. */
 export function groupFlags(flags: PlatformFlag[]): { group: string; flags: PlatformFlag[] }[] {
@@ -198,7 +298,7 @@ export function groupFlags(flags: PlatformFlag[]): { group: string; flags: Platf
   ];
   const byGroup = new Map<string, PlatformFlag[]>();
   for (const f of flags) {
-    const g = f.group ?? 'Other';
+    const g = f.group ?? UNGROUPED;
     const list = byGroup.get(g) ?? [];
     list.push(f);
     byGroup.set(g, list);

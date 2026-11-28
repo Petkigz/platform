@@ -1,0 +1,45 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The staff console (`/admin`), third part: the owner's switchboard. The
+ * four counts above the flag register, the name of each group of flags,
+ * the label that says how a flag is gated, the words on the switch and
+ * what the page says when a switch is refused, the paragraph about
+ * translation and its month, and the revenue share form with its refusals.
+ *
+ * Written on 2026-11-28, in the same twenty-seven languages as the rest of
+ * the console. **Written by the people who built the site and read by no
+ * speaker.** These are sentences about money and about who may decide: the
+ * revenue share paragraph says what a change does and does not move, and a
+ * refusal says who is allowed. A wrong one misdescribes a rule. Nothing
+ * here enforces one: the database refuses, whatever the sentence says.
+ *
+ * A count follows a colon ("On: 3 of 9"), so that no language has to
+ * agree a noun with a number. The sentence beside "Retention clock"
+ * follows a dash, so it begins small and ends without a full stop. The two
+ * sentences that end "What it said:" are followed by the database's own
+ * sentence, which is English and is marked as English.
+ *
+ * Three things stay in Latin letters in every language, because they are
+ * what the owner types or looks up: `GOOGLE_TRANSLATE_API_KEY`,
+ * `platform.translate` and `Google`. Persian, Dari, Bengali and Nepali
+ * write their own digits, as the numbers the page formats beside them do.
+ * French puts a no-break space before `:`, `;` and `%` and inside « ».
+ * A "deploy" is said as each language's older parts say it, or in the
+ * plainest words for "a new version of the code has to be installed".
+ *
+ * Three sentences are copies, letter for letter, of what older parts say:
+ * the group "Money" (`export.inMoney`), "Saving…" (`course.saving`) and
+ * being signed out (`family.signedOut`). They are copied rather than
+ * borrowed so that this part is whole on its own: were one of those parts
+ * held for a language, a borrowed word would come out in English inside a
+ * block that is not marked as English.
+ *
+ * Not here: what the database says a flag still needs, the name of a group
+ * the page has not heard of, and the database's own sentence when it
+ * refuses. Those are English, and the page marks them as English.
+ *
+ * Made by `scripts/catalogue-part/gen.py` from
+ * `scripts/catalogue-part/data/switch.txt`.
+ */

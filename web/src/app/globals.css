@@ -2868,3 +2868,16 @@ p.support-small { margin: 0; }
    beside it ("Teacher revenue share", "30% to teachers") part the same way. */
 .staff-page .badge { max-width: 100%; white-space: normal; }
 .staff-page .outline-h { flex-wrap: wrap; }
+/* The switchboard is in the reader's language since 2026-11-28, and a
+   language may have one word longer than a phone is wide: in Tamil, with the
+   largest text in the dyslexia font, one word of the note about deploys was
+   wider than the notice and pushed the page sideways (found by the drawn
+   check). A sentence of the switchboard may break inside a word when it has
+   to; so may the label of one of its four counts, and a refusal. */
+.staff-page [data-staff-switchboard] .notice,
+.staff-page [data-staff-switchboard] .lede,
+.staff-page [data-staff-switchboard] .muted,
+.staff-page [data-staff-switchboard] .stats .l,
+.staff-page [data-staff-switchboard] label,
+.staff-page [data-staff-switchboard] [role="alert"],
+.staff-page [data-staff-switchboard] [data-switch-retention] { overflow-wrap: anywhere; }

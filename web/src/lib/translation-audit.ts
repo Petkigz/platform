@@ -163,9 +163,55 @@ export function placeholdersIn(value: string): string[] {
   return [...value.matchAll(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g)].map((match) => match[1] ?? '');
 }
 
+/**
+ * Names of code that the English sentence itself writes: a flag's key
+ * (`platform.translate`, `governance.panel_required`) or a server variable
+ * (`GOOGLE_TRANSLATE_API_KEY`).
+ *
+ * They are what somebody types or looks up, so a translation keeps them
+ * letter for letter, and that is not a word left untranslated. Not an
+ * allowlist: nothing is named here. A name counts only by its shape (small
+ * words joined by a stop with no space, or capitals joined by underscores),
+ * only when the English of the same key carries it, and only where the
+ * translation carries exactly that. A key the English does not have, a key
+ * misspelt, and English words left in a sentence are all still found.
+ * (2026-11-28: the staff console kept two flag keys in fourteen languages and
+ * the owner's switchboard a key and a variable in fourteen, seventy findings
+ * that were each correct.)
+ */
+function codeNames(english: string): string[] {
+  return english.match(/[a-z][a-z_]*(?:\.[a-z][a-z_]*)+|[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+/g) ?? [];
+}
+
+const NOT_A_NAME_CHARACTER = /[\p{Script=Latin}0-9_.]/u;
+
+/** The line with each of those names taken out where it stands whole. */
+function withoutCodeNames(value: string, english: string): string {
+  let body = value;
+  for (const name of new Set(codeNames(english))) {
+    let from = 0;
+    for (let at = body.indexOf(name, from); at !== -1; at = body.indexOf(name, from)) {
+      const before = body[at - 1] ?? ' ';
+      const after = body[at + name.length] ?? ' ';
+      // A stop after a key is the sentence's own; a letter after it is not.
+      const afterNext = body[at + name.length + 1] ?? ' ';
+      const whole =
+        !NOT_A_NAME_CHARACTER.test(before) &&
+        (!NOT_A_NAME_CHARACTER.test(after) || (after === '.' && !NOT_A_NAME_CHARACTER.test(afterNext)));
+      if (whole) {
+        body = `${body.slice(0, at)} ${body.slice(at + name.length)}`;
+        from = at + 1;
+      } else {
+        from = at + name.length;
+      }
+    }
+  }
+  return body;
+}
+
 /** The words in a line that are Latin letters and are not on the allowlist. */
-function latinWords(value: string): string[] {
-  const body = value.replace(/\{[a-zA-Z][a-zA-Z0-9]*\}/g, ' ');
+function latinWords(value: string, english = ''): string[] {
+  const body = withoutCodeNames(value, english).replace(/\{[a-zA-Z][a-zA-Z0-9]*\}/g, ' ');
   const runs = body.match(/\p{Script=Latin}{4,}/gu) ?? [];
   return [...new Set(runs)].filter(
     (word) => !BRAND_SET.has(word.toLowerCase()) && !PRODUCT_NAMES.has(word),
@@ -245,7 +291,7 @@ export function auditLine(
 
   const scripts = SCRIPTS[locale];
   if (scripts) {
-    const words = latinWords(value);
+    const words = latinWords(value, english);
     // Only meaningful where Latin is the exception rather than the alphabet.
     if (words.length > 0) findings.push({ key, kind: 'latin-word', detail: words });
     const odd = foreignCharacters(value, scripts);

@@ -305,6 +305,15 @@ for (const [file, key] of [
   ['console.ts', 'console.nRefunds'],
   ['console.ts', 'console.nScreenings'],
   ['console.ts', 'console.nIjazah'],
+  // The owner's switchboard (2026-11-28). The switch and the revenue share
+  // form are scripts, and the page hands them the reader's words as
+  // properties: one language in the HTML, none in a script. What only the
+  // owner may do, and what a refusal says, are looked for here.
+  ['switch.ts', 'switch.lede'],
+  ['switch.ts', 'switch.eNotOwner'],
+  ['switch.ts', 'switch.eUnsure'],
+  ['switch.ts', 'switch.rsBody'],
+  ['switch.ts', 'switch.rsEUnsure'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

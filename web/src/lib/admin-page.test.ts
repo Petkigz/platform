@@ -9,6 +9,8 @@ import { en } from './i18n/messages/en.ts';
 import { CONSOLE } from './i18n/messages/console.ts';
 import { HELD_FOR_REVIEW } from './i18n/messages/held.ts';
 import { STAFF } from './i18n/messages/staff.ts';
+import { SWITCH } from './i18n/messages/switch.ts';
+import { FLAG_GROUP_KEYS, flagGroupKey, groupFlags, type PlatformFlag } from './flags.ts';
 
 // The top of the staff console (`/admin`), put into the reader's language on 2026-11-28.
 
@@ -78,7 +80,7 @@ test('one thing has one name, and things that differ are told apart', () => {
   for (const value of Object.values(STAFF.fr!)) assert.doesNotMatch(value, /[^\u00a0][:;?]\s|[^\u00a0][:;?]$/u, value);
 });
 
-test('the page says its top from the catalogue, and marks what is still English', () => {
+test('the page says its top from the catalogue, and marks what the database wrote', () => {
   const page = strip(PAGE);
   const panel = strip(PANEL);
   // Every key is said: by the page, or through the tables the page reads.
@@ -102,17 +104,14 @@ test('the page says its top from the catalogue, and marks what is still English'
   assert.match(page, /const noteMark = notes\.code === shown\.code \? \{\} : \{ lang: notes\.code, dir: notes\.dir \};/u);
   assert.match(page, /<span \{\.\.\.noteMark\}>\{tn\(link\.note\)\}<\/span>/u);
   assert.doesNotMatch(page, /<span \{\.\.\.english\}>\{link\.note\}/u);
-  assert.match(page, /<div \{\.\.\.english\} data-staff-switchboard>/u);
+  // The switchboard is no longer a block of English (see the third part, below).
+  assert.doesNotMatch(page, /<div \{\.\.\.english\} data-staff-switchboard>/u);
   assert.match(page, /: \{ label: q\.label, detail: q\.detail, mark: english \}/u);
   for (const count of ['n(waiting)', 'n(busy.length)', 'n(q.count)', 'n(dormant.length)', 'n(i + 1)']) assert.ok(page.includes(count), count);
   assert.doesNotMatch(page, /\{q\.count\}|\{waiting\}/u);
-  // What is still typed in English is inside the switchboard and nowhere else.
-  const start = page.indexOf('<div {...english} data-staff-switchboard>');
-  const end = page.indexOf('data-staff-not-owner');
-  assert.ok(start > 0 && end > start);
-  for (const typed of ['Feature flags', 'Retention clock', 'needs a deploy', 'The flag register is empty.']) {
-    const at = page.indexOf(typed);
-    assert.ok(at > start && at < end, typed);
+  // Nothing the switchboard used to type is typed anywhere on the page.
+  for (const typed of ['Feature flags', 'Retention clock', 'needs a deploy', 'The flag register is empty.', '>Enabled<', 'Need a deploy', '/ {g.flags.length} on']) {
+    assert.ok(!page.includes(typed), `the page still types "${typed}"`);
   }
 });
 
@@ -173,4 +172,124 @@ test('the sentences keep the words the page above them uses', () => {
   }
   assert.equal(en['console.nav'], 'Admin');
   assert.equal(en['console.nDisputes'], en['staff.dDisputes'].replace(/\.$/u, '').replace(/^A/u, 'a'));
+});
+
+// The third part (`switch.`), 2026-11-28: the owner's switchboard.
+const BOARD_KEYS = (Object.keys(en) as (keyof typeof en)[]).filter((key) => key.startsWith('switch.'));
+// "Platform" is the word in these five, as it is over the rest of the site.
+const PLATFORM_IS_PLATFORM = ['tr', 'id', 'ms', 'af', 'fil'];
+
+test('switch. is written in every language the dashboard is', () => {
+  assert.equal(BOARD_KEYS.length, 53);
+  assert.deepEqual(Object.keys(SWITCH).sort(), [...LANGUAGES].sort());
+  for (const code of LANGUAGES) {
+    const own = SWITCH[code];
+    assert.ok(own, code);
+    assert.deepEqual(Object.keys(own).sort(), [...BOARD_KEYS].sort(), code);
+    for (const key of BOARD_KEYS) {
+      const value: string = own[key]!;
+      assert.ok(value.trim() !== '' && value === value.trim() && !value.includes('  '), `${code} ${key}`);
+      assert.equal(blanks(value), blanks(en[key]), `${code} ${key} changed its gaps`);
+      assert.equal(CATALOGUES[code]?.[key], value, `${code} ${key} is served`);
+      if (!(key === 'switch.gPlatform' && PLATFORM_IS_PLATFORM.includes(code))) {
+        assert.notEqual(value, en[key], `${code} ${key} is the English sentence`);
+      }
+    }
+    if (code.startsWith('zh')) assert.ok(!Object.values(own).join('').includes('您'), code);
+    assert.equal(languageShownFor(code, 'switch').code, code);
+  }
+  for (const code of Object.keys(HELD_FOR_REVIEW)) assert.equal(languageShownFor(code as never, 'switch').code, 'en', code);
+  // French spacing before a colon, a semicolon and a per cent sign.
+  for (const value of Object.values(SWITCH.fr!)) assert.doesNotMatch(value, /[^\u00a0][:;%]\s|[^\u00a0][:;%]$|[^\u00a0]%\)/u, value);
+});
+
+test('the switchboard keeps the words the rest of the console uses, and what is typed stays typed', () => {
+  for (const code of LANGUAGES) {
+    const all = CATALOGUES[code]!;
+    // Three sentences are copies of what older parts say, so that this part is whole on its own.
+    assert.equal(all['switch.gMoney'], all['export.inMoney'], code);
+    assert.equal(all['switch.rsSaving'], all['course.saving'], code);
+    assert.equal(all['switch.eSignedOut'], all['family.signedOut'], code);
+    // What the owner types or looks up stays in Latin letters.
+    for (const key of ['switch.trOnNoKey', 'switch.trOffNoKey'] as const) assert.ok(all[key]!.includes('GOOGLE_TRANSLATE_API_KEY'), `${code} ${key}`);
+    assert.ok(all['switch.trOffKey']!.includes('platform.translate'), code);
+    assert.ok(all['switch.trOn']!.includes('Google'), code);
+    // The button the translation line names is the button a reader presses.
+    assert.ok(all['switch.trOn']!.includes(all['translate.button']!), `${code}: ${all['switch.trOn']}`);
+    // The note about a deploy quotes the badge it is about, letter for letter.
+    assert.ok(all['switch.deployNote']!.includes(all['switch.gateDeploy']!), `${code}: ${all['switch.deployNote']}`);
+    // A switch that is on never says something is still needed; the badges differ.
+    const gates = ['switch.gateRuntime', 'switch.gateSetupFirst', 'switch.gateSetupOn', 'switch.gateDeploy'] as const;
+    assert.equal(new Set(gates.map((key) => all[key])).size, 4, code);
+    assert.notEqual(all['switch.on'], all['switch.off'], code);
+    // The two refusals that quote the database end on a colon, because its sentence follows.
+    for (const key of ['switch.eRefused', 'switch.rsERefused'] as const) assert.match(all[key]!, /[:：]$/u, `${code} ${key}`);
+    // The sentence beside "Retention clock" follows a dash: no closing stop.
+    assert.doesNotMatch(all['switch.retentionNote']!, /[.。।۔]$/u, code);
+    // The groups have eight different names.
+    assert.equal(new Set(Object.values(FLAG_GROUP_KEYS).map((key) => all[key])).size, 8, code);
+    // The percentages the form names are the ones it accepts, in the digits the page formats.
+    const digits = (value: number) => new Intl.NumberFormat(code, { useGrouping: false }).format(value);
+    const latin = (value: number) => String(value);
+    for (const [key, numbers] of [['switch.rsEPercent', [0, 100]], ['switch.rsELong', [500]], ['switch.rsZero', [0]]] as const) {
+      for (const number of numbers) {
+        assert.ok(all[key]!.includes(digits(number)) || all[key]!.includes(latin(number)), `${code} ${key} ${number}: ${all[key]}`);
+      }
+    }
+  }
+  assert.equal(en['switch.gMoney'], en['export.inMoney']);
+  assert.equal(en['switch.rsSaving'], en['course.saving']);
+  assert.equal(en['switch.eSignedOut'], en['family.signedOut']);
+  assert.ok(en['switch.deployNote'].includes(en['switch.gateDeploy']));
+});
+
+test('a group the database names is said in the reader’s language, and one it does not know is left as written', () => {
+  // The groups the migrations use.
+  const migrations = ['Learner features', 'Teaching', 'Money', 'Children and families', 'Platform', 'Delivery', 'Governance'];
+  for (const group of migrations) assert.ok(flagGroupKey(group)?.startsWith('switch.g'), group);
+  assert.equal(flagGroupKey('Other'), 'switch.gOther');
+  for (const unknown of ['Billing', 'money', '', 'toString', 'constructor', '__proto__']) assert.equal(flagGroupKey(unknown), null, unknown);
+  // A flag with no group is listed under the one the page can name.
+  const flag = (key: string, group: string | null): PlatformFlag => ({ key, description: '', enabled: false, gateType: 'admin', preconditions: null, group, updatedAt: null });
+  const groups = groupFlags([flag('a', null), flag('b', 'Zebra'), flag('c', 'Money'), flag('d', 'Governance')]);
+  assert.deepEqual(groups.map((g) => g.group), ['Money', 'Governance', 'Other', 'Zebra']);
+  assert.deepEqual(groups.map((g) => flagGroupKey(g.group)), ['switch.gMoney', 'switch.gGovernance', 'switch.gOther', null]);
+});
+
+test('the page draws the switchboard from the catalogue and hands the forms their words', () => {
+  const page = strip(PAGE);
+  const toggle = strip(read('../app/admin/flag-toggle.tsx'));
+  const form = strip(read('../app/admin/revenue-share-form.tsx'));
+  const lib = strip(read('./flags.ts')) + strip(read('./translate.ts'));
+  // Every key is said: by the page, or through the tables the page reads.
+  for (const key of BOARD_KEYS) assert.ok(page.includes(`'${key}'`) || lib.includes(`'${key}'`), `${key} is said nowhere`);
+  // The part has its own language, mark and digits.
+  assert.match(page, /board: languageShownFor\(locale, 'switch'\)/u);
+  assert.match(page, /const tb = translator\(board\.code\);/u);
+  assert.match(page, /const boardMark = board\.code === shown\.code \? \{\} : \{ lang: board\.code, dir: board\.dir \};/u);
+  assert.match(page, /<div \{\.\.\.boardMark\} data-staff-switchboard>/u);
+  for (const count of ['nb(on)', 'nb(flags.length - on)', 'nb(setupGated)', 'nb(deployGated)', 'nb(revenueSharePercent)', 'nb(translationMonth.characters)']) assert.ok(page.includes(count), count);
+  assert.doesNotMatch(page, /<div className="n">\{(on|setupGated|deployGated)\}/u);
+  // A group the page has not heard of is the database's word, and is marked.
+  assert.match(page, /\{groupKey \? <h3>\{tb\(groupKey\)\}<\/h3> : <h3 \{\.\.\.boardEnglish\}>\{g\.group\}<\/h3>\}/u);
+  // The forms are client components: they are handed words, and ask the catalogue for nothing.
+  assert.match(page, /<RevenueShareForm currentPercent=\{revenueSharePercent\} shownPercent=\{nb\(revenueSharePercent\)\} words=\{shareWords\} \/>/u);
+  assert.match(page, /words=\{flagWords\}/u);
+  for (const source of [toggle, form]) {
+    assert.match(source, /^'use client';/u);
+    assert.doesNotMatch(source, /@\/lib\/i18n|useT\(|translator\(/u);
+  }
+  // Nothing either form used to type is typed.
+  for (const typed of ['Could not change that flag', 'Needs a deploy', "'On'", "'Off'", "'off'", "? 'on' : 'off'"]) assert.ok(!toggle.includes(typed), `the switch still types "${typed}"`);
+  for (const typed of ['Teacher revenue share', 'to teachers', 'course-sale proceeds', 'It is currently 0%', 'Teacher share, whole percent', 'Reason for this change', 'For example', 'Saving…', 'Save revenue share', 'Saved.', 'Could not save']) {
+    assert.ok(!form.includes(typed), `the form still types "${typed}"`);
+  }
+  // What the database wrote is marked as English: the precondition, and its sentence when it refuses.
+  assert.match(toggle, /\{\.\.\.english\} data-flag-precondition>/u);
+  assert.match(toggle, /<span \{\.\.\.english\} data-flag-said>\{error\.said\}<\/span>/u);
+  assert.match(form, /<span \{\.\.\.english\} data-revenue-share-said>\{refusal\.said\}<\/span>/u);
+  // The percentage is read by `readPercent()`, so it is a text field and the browser's own check is off.
+  assert.match(form, /type="text"\s+inputMode="numeric"/u);
+  assert.doesNotMatch(form, /type="number"|Number\(percent\)/u);
+  assert.match(form, /noValidate/u);
 });

@@ -89,6 +89,7 @@ import { REVIEW } from './review.ts';
 import { REVIEW_ASSIGNMENT } from './review-assignment.ts';
 import { STAFF } from './staff.ts';
 import { CONSOLE } from './console.ts';
+import { SWITCH } from './switch.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -954,6 +955,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   STAFF,
   // The staff console's navigation word and the sentence beside each of its links, on the same rule.
   CONSOLE,
+  // The owner's switchboard on the staff console, on the same rule.
+  SWITCH,
 );
 
 /**

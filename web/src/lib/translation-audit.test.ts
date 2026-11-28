@@ -82,6 +82,49 @@ test('a Latin word inside a language that does not use Latin letters is flagged'
   assert.deepEqual(auditLine('fr', 'auth.resetSent', 'Un mot spam ici', 'x'), []);
 });
 
+test('a name of code the English itself writes is not a word left untranslated, and nothing else is let through', () => {
+  const english = 'With governance.panel_required off, and no GOOGLE_TRANSLATE_API_KEY, nothing waits.';
+  // Kept letter for letter, with the sentence's own stop after one of them.
+  assert.deepEqual(
+    auditLine('ar', 'x.y', 'بلا GOOGLE_TRANSLATE_API_KEY، ومع إيقاف governance.panel_required.', english),
+    [],
+  );
+  // The same names where the English of that key does not have them.
+  assert.deepEqual(
+    auditLine('ar', 'x.y', 'مع إيقاف governance.panel_required', 'Nothing waits.').flatMap((f) => f.detail),
+    ['governance', 'panel', 'required'],
+  );
+  // Misspelt, cut short, or run into another word: found.
+  for (const [line, words] of [
+    ['مع إيقاف governance.panel_requird', ['governance', 'panel', 'requird']],
+    ['مع إيقاف governance.panel', ['governance', 'panel']],
+    ['مع إيقاف governance.panel_required.again', ['governance', 'panel', 'required', 'again']],
+    ['بلا GOOGLE_TRANSLATE_API', ['TRANSLATE']],
+    ['بلا MYGOOGLE_TRANSLATE_API_KEY', ['MYGOOGLE', 'TRANSLATE']],
+  ] as const) {
+    assert.deepEqual(auditLine('ar', 'x.y', line, english).flatMap((f) => f.detail), words, line);
+  }
+  // English words left beside a name that was kept are still found.
+  assert.deepEqual(
+    auditLine('ar', 'x.y', 'nothing waits مع governance.panel_required', english).flatMap((f) => f.detail),
+    ['nothing', 'waits'],
+  );
+  // A sentence is not a name: "off. Nothing" has a stop, and a space after it.
+  assert.deepEqual(
+    auditLine('ar', 'x.y', 'هذا off.nothing هنا', 'It is off. Nothing waits.').flatMap((f) => f.detail),
+    ['nothing'],
+  );
+  // In the real catalogue: the two flag keys the staff console keeps and the
+  // key and the variable the switchboard keeps are in the English, and no
+  // language that does not write Latin letters is asked about them.
+  const names: Record<string, string> = {};
+  for (const locale of LOCALES) names[locale.code] = locale.englishName;
+  const asked = auditAll(names).flatMap((summary) =>
+    summary.findings.filter((f) => f.kind === 'latin-word' && /^(console|switch)\./.test(f.key)).map((f) => `${summary.locale} ${f.key}`),
+  );
+  assert.deepEqual(asked, []);
+});
+
 test('a character from a script the language does not use is named', () => {
   const found = auditLine('ta', 'nav.main', 'Мукьяச்', 'Main');
   assert.ok(found.some((f) => f.kind === 'foreign-script'), 'Cyrillic passed through a Tamil line');
@@ -174,7 +217,10 @@ test('the audit over the real register is small, and says so', () => {
   assert.ok(total > 0, 'the audit found nothing at all, which means it is not running');
   // (It stood at 199 until 2026-11-25, when the French for "Badges" was
   // written and is "Badges". The line was moved for that, once, and a wall
-  // is still a long way off.)
+  // is still a long way off. On 2026-11-28 the owner's switchboard would have
+  // taken it to 264, forty-two of them a flag's key or a server variable kept
+  // as the English writes it; the audit stopped asking about those, here and
+  // on the staff console, and it stands at 194.)
   assert.ok(total < 220, `the audit found ${total} things, which is a wall and not a shortlist`);
 
   // And it never claims more than it can see.

@@ -17,6 +17,7 @@ import {
   type TranslateOutcome,
 } from './translate.ts';
 import { LOCALES } from './i18n/locales.ts';
+import { en } from './i18n/messages/en.ts';
 
 const OUTCOMES = Object.keys(TRANSLATE_ENGLISH) as TranslateOutcome[];
 
@@ -158,17 +159,23 @@ test('what the month has used is read without trusting its shape, and said to th
   }
 
   const lines = translationMonthLines(month!, true);
-  assert.match(lines.state, /^Translation is on\./);
-  assert.match(lines.used, /320,000 of 400,000 characters \(80%\), in 412 requests by 1 person\./);
+  // Which sentence, and how much of the month: the dashboard says both in the reader's language.
+  assert.equal(lines.state, 'switch.trOn');
+  assert.match(en[lines.state], /^Translation is on\./);
+  assert.equal(lines.share, 80);
+  assert.equal(translationMonthLines({ ...month!, characters: 319999 }, true).share, 79);
   // Four fifths is where members stop, so it is where the owner is warned.
   assert.equal(lines.warn, true);
   assert.equal(translationMonthLines({ ...month!, characters: 319999 }, true).warn, false);
   // The switch on with no key: nothing else on the platform shows this.
   const noKey = translationMonthLines({ ...month!, characters: 0 }, false);
-  assert.match(noKey.state, /no GOOGLE_TRANSLATE_API_KEY/);
+  assert.equal(noKey.state, 'switch.trOnNoKey');
+  assert.match(en[noKey.state], /no GOOGLE_TRANSLATE_API_KEY/);
   assert.equal(noKey.warn, true);
-  assert.match(translationMonthLines({ ...month!, on: false, characters: 0 }, true).state, /^Translation is off\. This server has a key/);
-  assert.match(translationMonthLines({ ...month!, on: false, characters: 0 }, false).state, /It needs both\.$/);
+  assert.match(en[translationMonthLines({ ...month!, on: false, characters: 0 }, true).state], /^Translation is off\. This server has a key/);
+  assert.match(en[translationMonthLines({ ...month!, on: false, characters: 0 }, false).state], /It needs both\.$/);
   // A limit of nought is not a division.
-  assert.match(translationMonthLines({ ...month!, monthly: 0 }, true).used, /\(0%\)/);
+  assert.equal(translationMonthLines({ ...month!, monthly: 0 }, true).share, 0);
+  // The sentence about the month has a gap for each number the page gives it.
+  assert.equal([...en['switch.trUsed'].matchAll(/\{([a-z]+)\}/gu)].map((m) => m[1]).join(','), 'characters,monthly,share,requests,people,daily');
 });

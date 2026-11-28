@@ -75,6 +75,7 @@ export async function POST(request: Request) {
       outcome.code === 'code_gated' ? 409
       : outcome.code === 'not_privileged' ? 403
       : outcome.code === 'unknown_flag' ? 404
+      : outcome.code === 'unsure' ? 502
       : 400;
     return NextResponse.json(outcome, { status });
   }

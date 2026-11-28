@@ -686,11 +686,14 @@ written: not a held draft, nothing.
   each of its 43 links and the word for the console in the main
   navigation (`console.`, 44 sentences, unreviewed; they state what a
   screen will and will not do, so a speaker's reading matters more for
-  them than for a heading). **Still English there, and marked as
-  English:** the owner's switchboard (revenue share, translation line,
-  counts, retention clock, the flag register and its preconditions,
-  which are rows of the database). Every other staff page is still
-  English, with no mark.)* The teacher's class
+  them than for a heading), and then the owner's switchboard: the
+  counts, the groups of flags, how each is gated, the switch and its
+  refusals, the translation line and the revenue share form (`switch.`,
+  53 sentences, unreviewed; sentences about money and about who may
+  decide). **Still English there, and marked as English:** what the
+  database writes: what a flag still needs, a group or a queue the page
+  has no words for, and the database's own sentence when it refuses.
+  Every other staff page is still English, with no mark.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

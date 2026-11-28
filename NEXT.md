@@ -11537,3 +11537,100 @@ started: recitation correction, native apps, push notifications.
   rows of the database, the revenue share form, the translation line,
   the four counts and the retention clock) is still English and marked.
   Every other staff page is still English, with no mark.
+- **The owner's switchboard on the staff console is in the reader's
+  language (2026-11-28, third unit).** What the first two units left in
+  English on `/admin`, inside a frame marked as English. *Now from the
+  catalogue* (`switch.`, 53 sentences, the twenty-seven languages, **read
+  by no speaker**): the heading and the sentence under it, the four
+  counts, the retention clock's sentence, the note about flags that need a
+  deploy, the seven groups of flags the register has and "Other", "On: 3
+  of 9" beside each, the four labels that say how a flag is gated, "On"
+  and "Off" in the switch's name, the paragraph about translation and its
+  month, the revenue share form, and every refusal either of the two can
+  give. These are sentences about money and about who may decide. A wrong
+  one misdescribes a rule to the owner; none of them enforces anything,
+  the database does.
+  *Still English, and marked as English wherever the page is not:* what
+  the database says a flag still needs (a row of `platform_settings`), the
+  name of a group the page has not heard of, a queue the page has no
+  words for (its label and its sentence), and the database's own sentence
+  when it refuses for a reason the page has no name for. Flag keys,
+  `GOOGLE_TRANSLATE_API_KEY`, `platform.translate` and `Google` stay in
+  Latin letters in every language.
+  *What changed besides the words.* (1) The libraries no longer hand the
+  page English: `flags.ts`, `translate.ts` and `revenue-share.ts` return
+  a key, a name or a number, and the page says it. The switch and the
+  form are scripts and are handed the reader's words as properties, so no
+  script holds a sentence. (2) **The percentage field reads the reader's
+  digits.** The page tells a Persian reader "۰ تا ۱۰۰", and a number field
+  takes only 0 to 9, so it is a text field and `readPercent()` reads the
+  digits the site writes, from a fixed list of scripts; anything else is
+  refused before it is sent. The field opens with the figure in the
+  page's digits. A test goes through every language and every percentage
+  from 0 to 100, and found Burmese digits missing from the list (no
+  Burmese page has the field; they were added). (3) **A change that got
+  no answer is no longer called a refusal.** A switch pressed, or a share
+  saved, when the answer was a gateway's page or the connection went,
+  used to say the change was refused, and for a switch could print the
+  gateway's HTML as "what the database said". Nobody knows whether such
+  a change was made. Both now say so and say to look before pressing
+  again (outcome `unsure`, HTTP 502 from the two routes); `setFlag` no
+  longer calls a failed read "unknown flag". (4) An attribute that
+  carried the database's English group name, unmarked, on a translated
+  page is gone (the smoke found it in Arabic). (5) One Tamil word of the
+  deploy note was wider than a phone at the largest text in the dyslexia
+  font and pushed the page sideways; the switchboard's sentences may now
+  break inside a word when they have to. The check that found it did not
+  name it, because the box was not too wide, only the word; it measures
+  words now as well. (6) **A switch takes one press until it is
+  answered.** It was only held while the page was drawn again, so a
+  second press during a slow answer sent the opposite change, and the
+  switch then showed whichever answer came last. Found while making the
+  drawn check press it.
+  *The audit panel* (`translation-audit.ts`) asked, in fourteen
+  languages, whether `platform.translate` and
+  `GOOGLE_TRANSLATE_API_KEY` were words left untranslated, as it had been
+  asking about the console's two flag keys: seventy findings that were
+  each correct, and the shortlist's own test failed at 264. It no longer
+  asks about a flag's key or a server variable **when the English of the
+  same key writes exactly that name**; a key the English does not have, a
+  misspelt one, and English words beside it are still found (tested).
+  The shortlist stands at 194.
+  *Checked by:* `admin-page.test.ts`, `flags.test.ts`,
+  `revenue-share.test.ts`, `translate.test.ts`, `held-translations.test.ts`
+  and `translation-audit.test.ts`; `scripts/admin-route-smoke.mjs` in CI
+  against a stand-in API (the switchboard in English, Arabic, Persian and
+  French; a held language gets English in one marked frame; the
+  translation line from the month the stand-in gives). With a browser
+  (the responsive workflow): in English, Arabic and Tamil at 320 pixels
+  the owner presses a switch against a stand-in that says only the
+  platform admin may, that refuses in its own words, that answers with a
+  gateway's page, and with the connection cut; each time the switch stays
+  as it was and says which, in the reader's language, with the stand-in's
+  sentence marked as English; then a change that is made turns it on, and
+  pressed three times before its answer it is written once. In
+  Persian the form refuses ۱۰۱ and a missing reason without sending
+  anything, shows the stand-in's refusal, and saves ۴۰ as 40. Six of
+  these assertions were proved by breaking the page on purpose and
+  watching the smoke fail (the switch not turned back, the mark on the
+  database's sentence, the digits, the frame, the gateway's page, the
+  second press);
+  nothing else was. `scripts/client-bundle-check.mjs` looks for five of
+  the sentences in every script and finds none.
+  *Looked at, drawn (Chromium in the sandbox, Noto fonts put in by
+  hand; `ADMIN_SMOKE_SHOTS=<directory>` makes the smoke keep the
+  pictures):* the switchboard in English, Arabic and Tamil at 320 and 390
+  pixels and at the largest text, a refusal under a switch in Arabic and
+  Tamil, the form in Persian after a refusal. In Arabic and Persian the
+  percent sign is drawn on the left of the figure, which is what a
+  browser does with "30%" after Arabic letters; nobody who reads either
+  has said whether it should be written another way. At the largest text
+  in Tamil the paragraphs break inside words; it fits, and it is not
+  pleasant to read.
+  **Not done:** read by anybody who speaks any of the languages; a real
+  staff session, the real trigger or the real policy (the stand-in's
+  refusals are sentences typed into the smoke); Firefox and WebKit; the
+  preconditions, which are the longest English left on the page and are
+  rows of the database, not of the catalogue. `/teach`, `/institution`,
+  `/admin/panels`, `/admin/reviewers`, `/admin/course-reviews` and the
+  other staff pages are still English, with no mark.
