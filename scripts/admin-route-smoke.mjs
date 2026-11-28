@@ -43,7 +43,18 @@ const SUPPORT_QUEUES = [
   queue('reports', 'Reported content', 0, '/admin/reports', 'A reader flagged something. Closing one needs a written note.'),
 ];
 const FLAG = { key: 'synthetic.flag', description: 'SYNTHETIC flag description', value_type: 'boolean', value_text: 'false', gate_type: 'admin', preconditions: 'SYNTHETIC precondition', flag_group: 'Synthetic group', updated_at: null };
+// Rows shaped like the register's longest: a key of 33 letters with no place
+// to break, a precondition of several lines, and each of the three gates.
+// The short one above fitted a 320 pixel screen in one font and stuck out of
+// it in another (CI, 2026-11-28), so the drawn check uses these.
+const LONG_FLAGS = [
+  FLAG,
+  { ...FLAG, key: 'companion.calculated_prayer_times', gate_type: 'admin_setup', preconditions: 'SYNTHETIC precondition that runs to several lines: the outside account has to exist, its secret has to be set, and somebody has to have tried it once.' },
+  { ...FLAG, key: 'family.child_password_recovery', gate_type: 'code', preconditions: 'SYNTHETIC precondition for a flag that needs a deploy.' },
+  { ...FLAG, key: 'family.guardian_verification', value_text: 'true', gate_type: 'admin_setup', preconditions: null },
+];
 const state = {
+  flags: [FLAG],
   // Who is asking: 'owner', 'support' or 'learner'.
   who: 'owner',
   // How much of a platform there is: counts of subjects, courses, published versions, reviewers.
@@ -78,7 +89,7 @@ const fake = createServer(async (req, res) => {
     return req.method === 'HEAD' ? res.end() : send([]);
   }
   if (path === '/rest/v1/platform_settings') {
-    return send(url.searchParams.get('key') ? [{ value_text: '30' }] : [FLAG]);
+    return send(url.searchParams.get('key') ? [{ value_text: '30' }] : state.flags);
   }
   if (path === '/rest/v1/user_profiles') return send(signedIn ? [{ display_name: 'Synthetic staff', account_status: 'active', deleted_at: null, preferred_language: 'en', timezone: null }] : []);
   if (path === '/rest/v1/rpc/notification_badge') return send(0);
@@ -229,11 +240,12 @@ try {
   if (process.env.RESPONSIVE_PLAYWRIGHT && process.env.RESPONSIVE_CHROME) {
     const { chromium } = await import(pathToFileURL(process.env.RESPONSIVE_PLAYWRIGHT).href);
     browser = await chromium.launch({ executablePath: process.env.RESPONSIVE_CHROME, headless: true, args: ['--no-sandbox'] });
-    const open = async (code, width) => {
+    const open = async (code, width, a11y) => {
       const context = await browser.newContext({ viewport: { width, height: 900 }, locale: 'en' });
       await context.addCookies([
         { name: 'sb-127-auth-token', value: `base64-${encode(session)}`, url: origin },
         { name: 'ayahspring_locale', value: code, url: origin },
+        ...(a11y ? [{ name: 'ayahspring_a11y', value: a11y, url: origin }] : []),
       ]);
       const tab = await context.newPage();
       const errors = []; tab.on('pageerror', (e) => errors.push(String(e)));
@@ -247,15 +259,18 @@ try {
       assert.ok(scroll <= width + 1, `${label}: the page scrolls sideways (${scroll}): ${wide.join(' | ')}`);
     };
     state.facts = { subject_areas: 0, courses: 0, course_versions: 0, reviewer_profiles: 0 };
+    state.flags = LONG_FLAGS;
     for (const who of ['owner', 'support']) {
       state.who = who;
       for (const [code, heading] of [['en', 'What is waiting'], ['ar', 'ما ينتظر'], ['ta', 'காத்திருப்பவை']]) {
-        for (const width of [320, 390, 1440]) {
-          const label = `${who} ${code} ${width}`;
-          const { context, tab, errors } = await open(code, width);
+        // The largest text in the dyslexia font is the widest the page is ever asked to be, whatever fonts the machine has.
+        for (const [width, a11y] of [[320, null], [320, 'v1.larger.normal.system.dyslexic'], [390, null], [1440, null]]) {
+          const label = `${who} ${code} ${width}${a11y ? ' largest text and the dyslexia font' : ''}`;
+          const { context, tab, errors } = await open(code, width, a11y);
           assert.equal(await tab.evaluate(() => document.documentElement.lang), code, label);
           assert.equal(await tab.getByRole('heading', { name: heading, exact: true, level: 1 }).count(), 1, `${label}: heading`);
           await fits(tab, width, `${label} /admin`);
+          if (who === 'owner') assert.equal(await tab.locator('[data-staff-switchboard] .lessons li').count(), LONG_FLAGS.length, `${label}: the register's rows`);
           if (code === 'ar') {
             // An English sentence beside an Arabic link starts after the link:
             // on the link's left when they share a line, otherwise below it.
@@ -275,7 +290,7 @@ try {
         }
       }
     }
-    console.log('Staff console in a browser: the owner’s page and a support agent’s, in English, Arabic and Tamil at 320, 390 and 1440 pixels, do not scroll sideways; in Arabic the English sentence beside a link starts after the link.');
+    console.log('Staff console in a browser: the owner’s page and a support agent’s, in English, Arabic and Tamil at 320, 390 and 1440 pixels, and at 320 with the largest text in the dyslexia font, with a flag register of long keys, do not scroll sideways; in Arabic the English sentence beside a link starts after the link.');
   }
   console.log('Staff console HTTP smoke passed. Not real Auth, RLS, `is_privileged()`, `has_role()` or `staff_attention()`; nobody here is staff, and no speaker has read the translations.');
 } catch (e) { console.error(logs.slice(-4000)); throw e; }

@@ -11421,10 +11421,26 @@ started: recitation correction, native apps, push notifications.
   made on purpose to see it fail, and it did each time. With a browser
   (the responsive workflow) the same script draws the owner's page and a
   support agent's in English, Arabic and Tamil at 320, 390 and 1440
-  pixels: nothing scrolls sideways, and in Arabic the English sentence
-  beside a link starts after the link (on its left, or on the line
-  below). Two changes to the stylesheet were made on purpose to see
-  those fail, and they did. `safeguarding-queue.test.ts` used to look
+  pixels, and at 320 with the largest text in the dyslexia font, over a
+  flag register whose keys are as long as the real ones: nothing scrolls
+  sideways, and in Arabic the English sentence beside a link starts
+  after the link (on its left, or on the line below). Two changes to
+  the stylesheet were made on purpose to see those fail, and they did.
+  *What the drawn check found the first time it ran* (run `46123551438`,
+  red on `a9c8663`): **the owner's switchboard did not fit a phone, and
+  had not since it was written.** A row of the flag register is a key, the
+  gate's words and a switch, side by side, none of which could break; with
+  the register's longest key the page was 482 pixels wide on a screen of
+  320. It passed in the sandbox and failed in CI because the stand-in's
+  one flag was short and the two machines have different fonts, so the
+  stand-in now sends long keys and the widest text is asked for
+  explicitly. Fixed in `globals.css` under `.staff-page`: the key breaks
+  anywhere and the gate and switch go under it when there is no room; a
+  badge may take two lines; "Teacher revenue share" and "30% to
+  teachers" part; a first-run step's column may be narrower than its
+  longest word; and the page's heading, one word in Tamil
+  ("காத்திருப்பவை"), breaks in the largest text instead of pushing the
+  page 4 pixels wide. `safeguarding-queue.test.ts` used to look
   for the safeguarding notice typed into the page; it now looks for the
   catalogue's sentence and for the page putting it where everybody the
   page is drawn for reads it.
@@ -11443,6 +11459,10 @@ started: recitation correction, native apps, push notifications.
   because the console is", which is now half true). It is drawn by a
   client component, so its word has to be in the part every page
   carries, not in `staff.`.
+  With the reading-ease cookie set, React logs "a tree hydrated but
+  some attributes … didn't match" for the layout on this page as on the
+  others (the loose end already written down for `/review`); it is not
+  this page's and was not looked into.
   **Not done:** seen under a real staff session; looked at by anybody
   who reads Arabic or Tamil (the builders can see that it is drawn, not
   whether it reads well); Firefox and WebKit;

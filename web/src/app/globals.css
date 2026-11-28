@@ -1169,7 +1169,10 @@ footer a { color: var(--text-soft); }
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.setup-body { display: grid; gap: 0.15rem; min-width: 0; }
+/* One column that may be narrower than its longest word: a grid's own column
+   is as wide as that word unless told otherwise, and a Tamil word in the
+   largest text is wider than a phone (2026-11-28). */
+.setup-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.15rem; min-width: 0; overflow-wrap: anywhere; }
 .setup-body > a { font-weight: 650; }
 .setup-body > span { font-size: 0.92rem; }
 
@@ -2847,5 +2850,21 @@ p.support-small { margin: 0; }
    sentence beside each link and the owner's switchboard are still English
    and are marked so. A screen's name, a queue's name and a flag's key wrap
    instead of widening the page at 320 pixels. */
+/* The heading is one word in several languages, and in Tamil with the
+   largest text that word is wider than a phone; it breaks rather than
+   pushing the page sideways. */
+.staff-page > h1, .staff-page h2, .staff-page h3 { overflow-wrap: anywhere; }
 .staff-page [data-staff-link] { overflow-wrap: anywhere; }
 .staff-page [data-staff-queue] { overflow-wrap: anywhere; }
+/* A row of the flag register is a key, the kind of gate and a switch. On a
+   phone the three did not fit side by side: a key has no place to break, the
+   gate's words do not wrap, and the row was 482 pixels wide on a screen of
+   320 (found by the drawn check on 2026-11-28). So the key may break
+   anywhere, and when there is no room the gate and the switch go under it. */
+.staff-page .lessons li { flex-wrap: wrap; }
+.staff-page .lessons .t { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+/* With the largest text in the dyslexia font, "On, uses outside setup" alone
+   is wider than the card; there it takes two lines. A heading and the words
+   beside it ("Teacher revenue share", "30% to teachers") part the same way. */
+.staff-page .badge { max-width: 100%; white-space: normal; }
+.staff-page .outline-h { flex-wrap: wrap; }
