@@ -484,7 +484,7 @@ It adds no table or column and changes no row. Its one-time job is
 `scripts/hosted-migration-371.mjs`, run by the workflow "Apply Supabase test
 migration 371" on a commit that begins with that workflow's trigger words,
 behind the same environment and approval as the ten before it (the owner
-asked for it on 2026-11-27: "Prepare 371"). Before it applies anything it
+asked for it on 2026-11-28: "Prepare 371"). Before it applies anything it
 asks the hosted database, with a signed-in person's claims set, to move a
 course version that does not exist in somebody else's name: that must NOT be
 refused before the migration, must be refused inside the rehearsal and

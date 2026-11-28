@@ -8,7 +8,7 @@
 # the hosted database shows the hole shut and every assignment and decision
 # as it was.
 #
-# The owner asked for this step on 2026-11-27 ("Prepare 371"). It starts only
+# The owner asked for this step on 2026-11-28 ("Prepare 371"). It starts only
 # on a commit whose message begins with the words in the `if` below; the
 # environment then still requires the owner's approval before the job, and so
 # before any secret, is released. One-time: once it has run, never push those
@@ -17,7 +17,7 @@
 # Like the step before it, this one does not refuse a project that holds
 # accounts: the site is deployed.
 #
-# The job checks out the commit this step was reviewed at (6a3028f, which
+# The job checks out the commit this step was reviewed at (2ee9b47, which
 # holds exactly the 371) and runs that tree's script, test and migrations, so
 # a migration added later cannot reach the hosted project through it.
 name: Apply Supabase test migration 371
@@ -45,12 +45,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # The tree with exactly the 371 migrations this step was reviewed for.
-          ref: 6a3028feb5a308f84334d728daeea94d58da3fcc
+          ref: 2ee9b47a8ea524eab77db9ea249c9129c40a6fe8
           persist-credentials: false
       - name: The tree is the one reviewed, with 371 migrations and no more
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = '6a3028feb5a308f84334d728daeea94d58da3fcc'
+          test "$(git rev-parse HEAD)" = '2ee9b47a8ea524eab77db9ea249c9129c40a6fe8'
           test "$(ls supabase/migrations/*.sql | wc -l)" = '371'
           test "$(ls supabase/migrations/*.sql | tail -1)" = 'supabase/migrations/20261281164000_review_decided_in_own_name.sql'
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
