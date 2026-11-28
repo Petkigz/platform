@@ -1,0 +1,77 @@
+# The one migration after the 370, on the AyahSpring test project only:
+# 20261281164000_review_decided_in_own_name.sql (a signed-in person changes a
+# course version or an enrolment only in their own name; a reviewer cannot
+# rewrite their assignment or decide a review that is not open). It replaces
+# three functions and adds two triggers; no table, column or row changes.
+# One-time: scripts/hosted-migration-371.mjs refuses unless the hosted history
+# is exactly the 370, nothing of the migration is there, and a rehearsal on
+# the hosted database shows the hole shut and every assignment and decision
+# as it was.
+#
+# The owner asked for this step on 2026-11-27 ("Prepare 371"). It starts only
+# on a commit whose message begins with the words in the `if` below; the
+# environment then still requires the owner's approval before the job, and so
+# before any secret, is released. One-time: once it has run, never push those
+# words again.
+#
+# Like the step before it, this one does not refuse a project that holds
+# accounts: the site is deployed.
+#
+# The job checks out the commit this step was reviewed at (6a3028f, which
+# holds exactly the 371) and runs that tree's script, test and migrations, so
+# a migration added later cannot reach the hosted project through it.
+name: Apply Supabase test migration 371
+on:
+  push:
+    branches:
+      - arena/4f30fd1d-platform
+permissions:
+  contents: read
+# A group of its own, as the ones before it had: every push starts every one
+# of these workflows (each then skips), and GitHub keeps one run waiting in a
+# group and cancels the rest. The script refuses unless the hosted history is
+# exactly the 370.
+concurrency:
+  group: ayahspring-supabase-test-migration-371
+  cancel-in-progress: false
+jobs:
+  apply-371:
+    if: >-
+      github.repository == 'Petkigz/platform' && github.ref == 'refs/heads/arena/4f30fd1d-platform' && startsWith(github.event.head_commit.message, 'test: apply ayahspring test migration 371')
+    runs-on: ubuntu-latest
+    environment: ayahspring-test-migration-apply
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The tree with exactly the 371 migrations this step was reviewed for.
+          ref: 6a3028feb5a308f84334d728daeea94d58da3fcc
+          persist-credentials: false
+      - name: The tree is the one reviewed, with 371 migrations and no more
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '6a3028feb5a308f84334d728daeea94d58da3fcc'
+          test "$(ls supabase/migrations/*.sql | wc -l)" = '371'
+          test "$(ls supabase/migrations/*.sql | tail -1)" = 'supabase/migrations/20261281164000_review_decided_in_own_name.sql'
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: '22.22.3'
+      # Everything below this comment and above the last step runs without the
+      # database secret.
+      - name: Install reviewed dependencies and CLI
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/ayahspring-cli" --no-save --no-audit --no-fund supabase@3.1.0
+          test "$("$RUNNER_TEMP/ayahspring-cli/node_modules/.bin/supabase" --version)" = '3.1.0'
+      - name: The plan, against the real migrations in a local engine
+        run: node --test scripts/hosted-migration-371.test.mjs
+      - name: What the tested database gives anon and authenticated
+        run: node scripts/api-role-privileges.mjs --write "$RUNNER_TEMP/expected-privileges.json"
+      - name: Check, rehearse on the test project, apply the one, compare
+        run: node scripts/hosted-migration-371.mjs
+        env:
+          SUPABASE_CLI_BIN: ${{ runner.temp }}/ayahspring-cli/node_modules/.bin/supabase
+          AYAHSPRING_EXPECTED_PRIVILEGES: ${{ runner.temp }}/expected-privileges.json
+          AYAHSPRING_TEST_DATABASE_URL: ${{ secrets.AYAHSPRING_TEST_DATABASE_URL }}
+          AYAHSPRING_TEST_DATABASE_PASSWORD: ${{ secrets.AYAHSPRING_TEST_DATABASE_PASSWORD }}
+          AYAHSPRING_TEST_APPLY_READY: ${{ vars.AYAHSPRING_TEST_APPLY_READY }}

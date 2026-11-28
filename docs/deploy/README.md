@@ -480,9 +480,16 @@ built from the 370, signed in as an ordinary account through the API:
   publication.
 - A reviewer who had declared a conflict about a course could still decide it.
 
-It adds no table or column and changes no row. It needs a one-time job of
-its own (as the 370th had), which is not written: the owner has not asked for
-it. Read through the read-only connector on 2026-11-27: the hosted project
+It adds no table or column and changes no row. Its one-time job is
+`scripts/hosted-migration-371.mjs`, run by the workflow "Apply Supabase test
+migration 371" on a commit that begins with that workflow's trigger words,
+behind the same environment and approval as the ten before it (the owner
+asked for it on 2026-11-27: "Prepare 371"). Before it applies anything it
+asks the hosted database, with a signed-in person's claims set, to move a
+course version that does not exist in somebody else's name: that must NOT be
+refused before the migration, must be refused inside the rehearsal and
+again after the apply, and every assignment and decision must be exactly as
+it was. Read through the read-only connector on 2026-11-27: the hosted project
 is at 370, its `set_course_version_status()` does not check the caller and
 the guard trigger is absent, so the holes are there; and it holds one
 account, no course version, no enrolment, no reviewer, no assignment, no
