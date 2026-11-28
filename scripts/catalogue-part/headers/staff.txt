@@ -1,0 +1,31 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The staff console (`/admin`): what is waiting, the queues, what a new
+ * platform still needs before anybody can study, the headings, and the
+ * name of every staff screen.
+ *
+ * Written on 2026-11-28, in the same twenty-seven languages as the
+ * dashboard. **Written by the people who built the site and read by no
+ * speaker.** These are the words a member of staff reads before deciding
+ * what to open, so a wrong one sends somebody to the wrong queue; nothing
+ * here records a decision.
+ *
+ * A reviewer, the register, a board, a refund, a payout, a guardian and a
+ * support case are named with the words the older parts use in each
+ * language. An appeal is kept apart from a report of a post or of content
+ * (in several of these languages one word, "complaint", would serve both).
+ * A learner's review of a course ("Reviews awaiting moderation", "Course
+ * review queue") is not a reviewer's review of a version, and is given the
+ * word for an opinion or rating where the language has two.
+ * A count follows a colon and is already in the reader's digits, so that no
+ * word has to agree with it. French puts a no-break space before `:`, `;`
+ * and `?`.
+ *
+ * Not here: the sentence beside each link, and the owner's switchboard.
+ * The page says those in English and marks them as English.
+ *
+ * Made by `scripts/catalogue-part/gen.py` from
+ * `scripts/catalogue-part/data/staff.txt`.
+ */

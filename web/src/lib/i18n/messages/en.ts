@@ -3940,6 +3940,117 @@ export const en = {
   'ra.declareOpen': 'Declare a conflict about this course',
   'ra.declareNote':
     'Declaring bars you from deciding this review at once, and keeps barring you until platform staff have heard it. It does not close the review: if it is still an offer, decline it as well; otherwise staff close it.',
+
+  // The staff console (`/admin`): what is waiting, the queues, what a new
+  // platform still needs, and the names of the staff screens. Written on
+  // 2026-11-28. A count follows a colon so that no word has to agree with
+  // it. The sentence beside each link and the owner's switchboard are not
+  // here yet; the page says them in English, marked as English.
+  // The words of a queue are chosen here by its code; `staff_attention()`
+  // still sends its own English, which is shown for a code this list lacks.
+  'staff.eyebrow': 'Administration',
+  'staff.title': 'What is waiting',
+  'staff.unread': 'The staff queues could not be read. Do not take them to be empty.',
+  'staff.zero': 'Every staff queue listed here is empty.',
+  'staff.waiting': 'Waiting: {count}. Queues with something in them: {queues}.',
+  'staff.zeroSetup':
+    'The staff queues listed here are empty. Things still needed before anybody can study: {count}.',
+  'staff.safeguarding':
+    'Safeguarding concerns are not in these counts. The safeguarding owner must look at the private queue on the page named here. Email alerts need a provider and a scheduler to be set up, and do not prove that anybody received them.',
+  'staff.handedIn': 'Handed-in files',
+  'staff.setupHead': 'Before anyone can study here',
+  'staff.subjectsSome': 'Subject areas a course can be filed under: {count}.',
+  'staff.subjectsNone': 'There are no subject areas yet, so no course can be filed under one.',
+  'staff.stepSubjects': 'A subject to file courses under',
+  'staff.stepSubjectsWhy':
+    'The usual ones come with the database. This one has none, so no course can be filed under a subject yet.',
+  'staff.stepReviewers': 'A reviewer who is verified',
+  'staff.stepReviewersWhy':
+    'Nothing can be published until at least one reviewer has been recorded and verified for the subject it will judge.',
+  'staff.stepCourses': 'A course to review',
+  'staff.stepCoursesWhy':
+    'A course is written by an appointed teacher, not by the platform. This is where you see what they have sent.',
+  'staff.stepPublished': 'Something a visitor can find',
+  'staff.stepPublishedWhy':
+    'The catalogue is empty until a version is published. Until then a visitor finds nothing to study.',
+  'staff.paused': 'Paused',
+  'staff.pausedWhy':
+    'Its feature is switched off, so nothing new is arriving. What is already here still needs a person.',
+  'staff.allEmpty': 'No queue has anything in it. Nothing on this page is asking for you today.',
+  'staff.alsoEmpty': 'Also looked at, and empty:',
+  'staff.dormantHead': 'Queues paused by a feature switch: {count}',
+  'staff.dormantBody':
+    'Switching a feature off stops new work arriving. It does not empty what is already there, so anything in one of these still needs a person.',
+  'staff.notOwner':
+    'The feature switches and the revenue share belong to the platform admin. The queues above and the links below are yours, and nothing on this page waits for a decision you cannot make.',
+  'staff.moneyLede':
+    'What was charged, what goes back, what is owed to a teacher, and the rates every converted figure rests on. Every change here needs a written reason.',
+  'staff.publication': 'Publication',
+  'staff.everyone': 'Everyone’s work',
+  'staff.everyoneLede':
+    'Any member of staff may work these. They are listed for every role because none of them is one role’s private queue.',
+  'staff.qReconciliation': 'Reconciliation runs',
+  'staff.qSupport': 'Support cases',
+  'staff.qAppeals': 'Governance appeals',
+  'staff.qCredentials': 'Qualifications to check',
+  'staff.qGuardians': 'Guardian verifications',
+  'staff.qBoardStudents': 'Reported posts, students’ board',
+  'staff.qBoardTeachers': 'Reported posts, teachers’ board',
+  'staff.qReports': 'Reported content',
+  'staff.qReviews': 'Reviews awaiting moderation',
+  'staff.qMedia': 'Media needing a look',
+  'staff.dRefunds': 'Money waiting to go back to a customer.',
+  'staff.dDisputes': 'A chargeback has a deadline; the provider decides what happens if it passes.',
+  'staff.dReconciliation':
+    'An open run has rows that do not yet agree with the provider statement.',
+  'staff.dPayouts': 'A teacher has asked to be paid. Recording one is not sending one.',
+  'staff.dSupport': 'Open or assigned, and not yet resolved.',
+  'staff.dAppeals': 'Somebody is contesting a decision, and silence is itself a decision.',
+  'staff.dCredentials':
+    'A reviewer cannot be authorised in a subject until their credential is checked.',
+  'staff.dGuardians': 'An adult asking to be recognised as a child’s parent.',
+  'staff.dBoards':
+    'A post is shown at once and stays up until somebody takes it down. Only the owner is told.',
+  'staff.dReports': 'A reader flagged something. Closing one needs a written note.',
+  'staff.dReviews': 'Words are held until somebody reads them; a rating alone is already counted.',
+  'staff.dMedia': 'An upload that has not been confirmed, or one held back for review.',
+  'staff.lOrders': 'Orders awaiting payment',
+  'staff.lRefunds': 'Refund requests',
+  'staff.lAdjustments': 'Financial adjustments',
+  'staff.lReconciliation': 'Payment reconciliation',
+  'staff.lDisputes': 'Payment disputes',
+  'staff.lTax': 'Tax and transfer fees',
+  'staff.lRates': 'Exchange rates',
+  'staff.lRevenue': 'Revenue analytics',
+  'staff.lMoneyReport': 'Money report',
+  'staff.lRenewals': 'Renewals',
+  'staff.lPayouts': 'Teacher payouts',
+  'staff.lAssign': 'Assign reviews',
+  'staff.lSubjects': 'Subject areas',
+  'staff.lReviewers': 'Reviewer register',
+  'staff.lScreenings': 'Teacher screening',
+  'staff.lIjazah': 'Ijazahs',
+  'staff.lTranslations': 'Translations',
+  'staff.lInvitations': 'Invitations',
+  'staff.lSupport': 'Support queue',
+  'staff.lUsers': 'Users',
+  'staff.lControls': 'Controls',
+  'staff.lReports': 'Content reports',
+  'staff.lMedia': 'Uploaded media',
+  'staff.lCourseReviews': 'Course review queue',
+  'staff.lDiscussion': 'Discussion queue',
+  'staff.lBoards': 'Discussion board reports',
+  'staff.lAssistant': 'Study assistant',
+  'staff.lConnections': 'Connections',
+  'staff.lMessages': 'Messages',
+  'staff.lPlans': 'Subscription plans',
+  'staff.lPanels': 'Scholarly panels',
+  'staff.lTakedowns': 'Copyright and takedowns',
+  'staff.lIncidents': 'Incidents',
+  'staff.lPolicies': 'Policies and terms',
+  'staff.lAnalytics': 'Analytics',
+  'staff.lGuardians': 'Guardian verification',
+  'staff.lAppeals': 'Appeals',
 } as const;
 
 export type MessageKey = keyof typeof en;

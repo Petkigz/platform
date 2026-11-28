@@ -502,15 +502,22 @@ been used on. Suite:
 `supabase/tests/review_own_name.test.mjs`.
 
 The 372nd, `20261281165000_role_questions_about_oneself.sql`, was written on
-2026-11-28 and **is not applied: the hosted project is at 371.** Until it
-is, anybody, signed
-in or not, can ask the hosted database whether any account id belongs to
-staff and which role it holds: `has_role(uuid, text)` and
-`is_privileged(uuid)` answer about any id to `anon` and `authenticated`, and
+2026-11-28 and **was applied the same day**: trigger commit `e621a58`, run
+`46120599322`, job `apply-372`, approved by the owner, success at 07:32 UTC.
+Read back through the read-only connector afterwards: 372 entries ending at
+`20261281165000`, the five functions in place, the nine running with the
+caller's rights, `anon` and `authenticated` without execute on
+`account_has_role` and `account_is_privileged`, the teacher-page policy
+using `teaches_in_public`, and one account, one role assignment and no
+teacher page as before. The job is spent: never run it again and never push
+its trigger words again. Until it was applied, anybody, signed
+in or not, could ask the hosted database whether any account id belonged to
+staff and which role it held: `has_role(uuid, text)` and
+`is_privileged(uuid)` answered about any id to `anon` and `authenticated`, and
 seven functions built on them (`can_appoint_teacher`,
 `can_decide_guardian_consent`, `can_decide_sponsorship`,
 `can_moderate_boards`, `can_work_incidents`, `may_change_control`,
-`may_write_setting`) to anybody signed in. Nothing can be written that way.
+`may_write_setting`) to anybody signed in. Nothing could be written that way.
 The migration answers a caller about itself, which is all the application
 asks, and refuses `anon` and `authenticated` about anybody else (42501);
 functions that run with the owner's rights and the server's key ask as
@@ -521,9 +528,9 @@ twice what it did (measured in the test engine, not on a server).
 Its one-time job is `scripts/hosted-migration-372.mjs`, run by the workflow
 "Apply Supabase test migration 372" on a commit that begins with that
 workflow's trigger words, behind the same environment and approval as the
-eleven before it. **It was started on 2026-11-28**, after the 371st had run
-and the owner wrote "done . continue as planned", and applies nothing until
-the owner approves the run. It refuses unless the hosted history is exactly
+eleven before it. It was started on 2026-11-28, after the 371st had run
+and the owner wrote "done . continue as planned", and waited for the owner's
+approval. It refuses unless the hosted history is exactly
 the 371. Before it applies anything it asks the hosted
 database, as `authenticated` and as `anon`, about an account id that belongs
 to nobody: that must be answered before the migration, refused inside the

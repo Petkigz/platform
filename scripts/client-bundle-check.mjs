@@ -293,6 +293,12 @@ for (const [file, key] of [
   ['review-assignment.ts', 'ra.approveNote'],
   ['review-assignment.ts', 'ra.notMoved'],
   ['review-assignment.ts', 'ra.declareNote'],
+  // The staff console (2026-11-28) is drawn on the server and nothing on it
+  // is a script handed words: whose the switches are, and what a paused
+  // queue still needs, must be in nothing a browser downloads.
+  ['staff.ts', 'staff.notOwner'],
+  ['staff.ts', 'staff.dormantBody'],
+  ['staff.ts', 'staff.safeguarding'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

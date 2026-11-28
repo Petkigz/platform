@@ -10,7 +10,9 @@
 # caller still answered about itself, and every role assignment and teacher
 # page as it was.
 #
-# Started on 2026-11-28, after the step before it (371) had run and the owner
+# SPENT: run 46120599322 applied it on 2026-11-28 (trigger commit e621a58,
+# approved by the owner). Never run it again and never push its trigger words
+# again. It was started after the step before it (371) had run and the owner
 # wrote "done . continue as planned". It
 # starts only on a commit whose message begins with the words in the `if`
 # below; the environment then still requires the owner's approval before the

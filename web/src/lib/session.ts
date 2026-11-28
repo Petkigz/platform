@@ -127,7 +127,10 @@ export type CallToAction = { label: string; href: string };
  * not say so, and a way back that has to be guessed is not one.
  *
  * So staff get a link that names the place, on every page, and nobody else is
- * shown it. The word is English because the console is.
+ * shown it. The word is English because the console was; since 2026-11-28
+ * the top of the console is in the reader's language and this word is the
+ * one left behind. It is drawn by a client component, so its translation has
+ * to live in the part every page carries, not under `staff.`.
  */
 export function staffNavLink(session: SessionSummary): CallToAction | null {
   if (!session.signedIn || session.staff !== true) return null;

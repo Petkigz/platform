@@ -87,6 +87,7 @@ import { ASIA_MY } from './asia-my.ts';
 import { PANEL } from './panel.ts';
 import { REVIEW } from './review.ts';
 import { REVIEW_ASSIGNMENT } from './review-assignment.ts';
+import { STAFF } from './staff.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -948,6 +949,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   REVIEW,
   // One assignment on the review queue, on the same rule.
   REVIEW_ASSIGNMENT,
+  // The staff console (`/admin`), on the same rule.
+  STAFF,
 );
 
 /**

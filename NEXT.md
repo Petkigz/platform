@@ -11285,8 +11285,8 @@ started: recitation correction, native apps, push notifications.
   reads those lines of `scripts/companion-browser-smoke.mjs`, so the
   number fails in `npm test` before a push instead of after one.
 - **Whether an account is staff is a question a caller may ask about
-  itself (migration 372, written 2026-11-28, NOT applied to the hosted
-  project, which is at 371 since 07:13 UTC that day).** Measured first on a database built
+  itself (migration 372, written 2026-11-28 and applied to the hosted
+  project the same day, 07:32 UTC).** Measured first on a database built
   from the 371: every stable function the API roles may call with a uuid
   was asked about an account holding the four staff roles and about an
   ordinary one, as `authenticated` and as `anon`. Nine told them apart:
@@ -11341,18 +11341,26 @@ started: recitation correction, native apps, push notifications.
   policy, and no function that runs with the caller's rights, asks these
   questions about anybody but the caller (either would now be refused
   for every reader who is not staff).
-  **Not done.** The hosted project has the hole until 372 is applied.
-  Its step (`scripts/hosted-migration-372.mjs`,
-  `.github/workflows/supabase-test-372.yml`) was started on 2026-11-28
-  by the commit that follows this paragraph, after 371 had run and the
-  owner wrote "done . continue as planned"; **it applies nothing until
-  the owner approves the run** in the environment
-  `ayahspring-test-migration-apply`. Read through the connector just
-  before: the project is at exactly 371, none of the five functions is
-  there, the nine still run with the owner's rights, the hosted
-  `postgres` may become `anon` and `authenticated` (which the job needs
-  in order to ask), and there is one account, one role assignment and no
-  teacher page. Push those trigger words once and never again.
+  **Applied to the hosted project on 2026-11-28**: trigger commit
+  `e621a58`, run `46120599322`, job `apply-372`, approved by the owner,
+  success at 07:32 UTC (`scripts/hosted-migration-372.mjs`,
+  `.github/workflows/supabase-test-372.yml`; started after 371 had run
+  and the owner wrote "done . continue as planned"). Read through the
+  read-only connector just before it: exactly 371, none of the five
+  functions, the nine running with the owner's rights, `postgres` able
+  to become `anon` and `authenticated`. Read back afterwards, one
+  SELECT: 372 entries ending at `20261281165000`; the five functions
+  there; the nine run with the caller's rights; `anon` and
+  `authenticated` may not execute `account_has_role` or
+  `account_is_privileged`, `authenticated` may execute
+  `own_account_is_privileged`, `service_role` may execute
+  `account_has_role`; the teacher-page policy uses `teaches_in_public`;
+  one account, one role assignment, no teacher page, as before. The job
+  is spent: never run it again and never push its trigger words again.
+  **Not done:** the job's own log could not be read from here, so that
+  its rehearsal refused the two roles is known from the step being
+  marked successful, not from its output; the read-back asks what the
+  roles are granted, and did not ask the question as either role.
   The sweep hands made-up ids to a function's other arguments, so one
   that tells staff apart only for a real lesson or institution would
   pass it; the functions were also read for calls that hand a parameter
@@ -11371,3 +11379,74 @@ started: recitation correction, native apps, push notifications.
   this one got. Nothing here was tried through PostgREST or with a real
   session: that PostgREST answers 403 (401 to a visitor) for 42501 is
   its documented behaviour, not something seen.
+- **The top of the staff console is in the reader's language (`/admin`,
+  2026-11-28; the rest of it, and every other staff page, is not).**
+  The first of the staff areas. `/admin` is where every member of staff
+  lands on signing in, and all of it was English typed into the page.
+  *Now from the catalogue* (`staff.`, 89 sentences, the twenty-seven
+  languages, **read by no speaker**): the sentence about what is waiting,
+  the safeguarding notice, the first-run panel, each queue's name and
+  sentence, "paused", the sentence a non-owner reads where the switches
+  would be, the five headings, and the name of all 43 screens (six of
+  them, and three headings, are sentences older parts already had).
+  *How a queue gets its words:* `staff_attention()` still sends English
+  with each queue. The page chooses the catalogue's words by the queue's
+  code (`QUEUE_WORDS` in `web/src/lib/admin-console.ts`); for a code it
+  does not know it shows the database's English, marked `lang="en"`, so a
+  queue added by a migration is never nameless. A test reads the
+  migrations and fails if the database sends a code the table lacks, or
+  if the English of the catalogue stops being the database's.
+  *Three sentences changed in English*, because they could not be handed
+  to another language in pieces: "3 things are waiting across 2 queues"
+  is now "Waiting: 3. Queues with something in them: 2."; the first-run
+  sentences count after a colon; and the non-owner's sentence no longer
+  lists their work ("money and publication"), which the headings below
+  it already do. "The switches below are the reason this page exists"
+  was said to people who are shown no switches, and is gone.
+  **Still English, and marked as English wherever the rest is not:** the
+  sentence beside each of the 43 links (about 5,900 characters, the next
+  unit), and the owner's switchboard: the revenue share form, the
+  translation line, the four counts, the retention clock and the flag
+  register, whose descriptions and preconditions are rows of the
+  database.
+  *Checked by:* `web/src/lib/admin-page.test.ts` (every language holds
+  the 89; every screen and every queue has a name of its own in each
+  language; an appeal is not a report; the two boards carry the names
+  `/discuss` gives them, which found two that did not, in Indonesian and
+  Dari); `scripts/admin-route-smoke.mjs`, the real page against a
+  stand-in API (in CI): who is sent away before the queues are asked
+  for, the owner's page in English and Arabic, Persian digits, French
+  spacing, a held language in a marked English frame, a support agent
+  shown 21 links and no register read. Three changes to the page were
+  made on purpose to see it fail, and it did each time. With a browser
+  (the responsive workflow) the same script draws the owner's page and a
+  support agent's in English, Arabic and Tamil at 320, 390 and 1440
+  pixels: nothing scrolls sideways, and in Arabic the English sentence
+  beside a link starts after the link (on its left, or on the line
+  below). Two changes to the stylesheet were made on purpose to see
+  those fail, and they did. `safeguarding-queue.test.ts` used to look
+  for the safeguarding notice typed into the page; it now looks for the
+  catalogue's sentence and for the page putting it where everybody the
+  page is drawn for reads it.
+  *Looked at, drawn (2026-11-28, Chromium in the sandbox, with Noto Sans
+  Arabic and Tamil put in by hand because the sandbox has no such
+  fonts):* the Arabic page reads from the right; the first-run panel,
+  the cards and the notices are whole; an English sentence that wraps
+  beside an Arabic link is ragged on the left, which is how one language
+  inside another's paragraph is drawn, and goes away when the 43
+  sentences are translated. Counts on the Arabic page are in Western
+  digits ("1,239"), which is what `Intl` gives for `ar` and what every
+  other page of the site shows; Persian has its own.
+  *Found and left:* the link to this page in the main navigation still
+  says "Admin" in every language, unmarked (`staffNavLink()` in
+  `web/src/lib/session.ts`, whose comment says "the word is English
+  because the console is", which is now half true). It is drawn by a
+  client component, so its word has to be in the part every page
+  carries, not in `staff.`.
+  **Not done:** seen under a real staff session; looked at by anybody
+  who reads Arabic or Tamil (the builders can see that it is drawn, not
+  whether it reads well); Firefox and WebKit;
+  `/teach`, `/institution`, `/admin/panels`, `/admin/reviewers`,
+  `/admin/course-reviews` and the other 40 staff screens; the flag
+  descriptions. An "appeal" was given a word of its own in Uzbek, Kazakh
+  and Tajik without looking up what the older parts call one.

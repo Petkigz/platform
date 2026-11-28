@@ -1,12 +1,22 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { fetchFlags, groupFlags } from '@/lib/flags';
+import { LOCALE_COOKIE, chooseLocale, formatNumber, languageShownFor, translator } from '@/lib/i18n';
 import { FlagToggle } from './flag-toggle';
 import { RevenueShareForm } from './revenue-share-form';
-import { consoleSections, switchboardNotice, type StaffFacts } from '@/lib/admin-console';
-import { emptyQueueLede, outstandingSteps } from '@/lib/setup';
+import {
+  CONSOLE_LINKS,
+  QUEUE_WORDS,
+  consoleSections,
+  switchboardNotice,
+  type ConsoleLink,
+  type StaffFacts,
+} from '@/lib/admin-console';
+import { emptyQueueLede, outstandingSteps, subjectsNote } from '@/lib/setup';
 import { fetchSetupFacts } from './setup-query';
 import { SetupPanel } from './setup-panel';
 import { parseTranslationMonth, translationMonthLines } from '@/lib/translate';
@@ -25,83 +35,21 @@ type AttentionQueue = {
   dormant: boolean;
 };
 
-type ConsoleLink = { href: string; label: string; note: string };
+/** The language this page is written in for this reader, and whether that is the one they chose. */
+async function readerLanguage() {
+  const jar = await cookies();
+  const hdrs = await headers();
+  const { code: locale } = chooseLocale({
+    chosen: jar.get(LOCALE_COOKIE)?.value ?? null,
+    acceptLanguage: hdrs.get('accept-language'),
+  });
+  return { locale, shown: languageShownFor(locale, 'staff') };
+}
 
-/**
- * The screens below the queues, grouped by who may open them.
- *
- * Each group matches the gate its page actually enforces — the money screens
- * redirect anybody without `finance_admin` or `platform_admin`, so a support
- * agent is not shown them here. A link that refuses is worse than no link: it
- * teaches the reader that this page cannot be trusted to know what they may do.
- *
- * A screen whose page gate is `is_privileged` is in `sharedLinks`, whoever it
- * belongs to conceptually. Being honest about the gate beats being tidy about
- * the filing.
- */
-const moneyLinks: ConsoleLink[] = [
-  { href: '/admin/orders', label: 'Orders awaiting payment', note: 'the only orders whose total can still change: record a discount, tax, fee or rounding against one, or withdraw one' },
-  { href: '/admin/refunds', label: 'Refund requests', note: 'money going back out. Approving is an agreement, not a transfer' },
-  { href: '/admin/financial-adjustments', label: 'Financial adjustments', note: 'append-only accounting corrections and earnings clawbacks' },
-  { href: '/admin/reconciliation', label: 'Payment reconciliation', note: 'signed statement rows against the internal ledger' },
-  { href: '/admin/disputes', label: 'Payment disputes', note: 'a chargeback has a deadline; the provider decides what happens if it passes' },
-  { href: '/admin/tax', label: 'Tax and transfer fees', note: 'what a buyer is charged on top of the price, by the country they buy from' },
-  { href: '/admin/exchange-rates', label: 'Exchange rates', note: 'what one currency was worth in another, when, and who said so' },
-  { href: '/admin/revenue', label: 'Revenue analytics', note: 'what sold in a period by currency, course, plan and teacher, with refunds beside the sale and never netted out of sight' },
-  { href: '/admin/money-report', label: 'Money report', note: 'what moved in a period, in the one currency the platform is read in, with the rate beside every figure' },
-  { href: '/admin/renewals', label: 'Renewals', note: 'every live subscription expanded forward at the price it was sold at. Committed, not arrived — nothing charges a renewal yet' },
-  { href: '/admin/payouts', label: 'Teacher payouts', note: 'what teachers have asked to be paid, and the refund hold that keeps a sale from leaving before it can be reversed' },
-];
-
-const publicationLinks: ConsoleLink[] = [
-  { href: '/admin/courses', label: 'Courses', note: 'every course, which door it stands behind and how many learners it holds. Changing an audience is recorded against your name, with both sides of the change' },
-  { href: '/admin/teachers', label: 'Teachers', note: 'the people asking to teach, and everyone who may teach here with what each has published and how many learners their courses hold. Approving an application is the appointment: it grants the role, with your reason against the applicant' },
-  { href: '/admin/reviews', label: 'Assign reviews', note: 'courses waiting for a reviewer' },
-  { href: '/admin/subjects', label: 'Subject areas', note: 'the vocabulary of the catalogue: what a learner can filter by, and what a badge on a course card may say. A subject in use by a live course cannot be retired' },
-  { href: '/admin/reviewers', label: 'Reviewer register', note: 'who applied to review, who has been checked, and what each may judge. Nothing publishes until somebody here is verified' },
-  { href: '/admin/screenings', label: 'Teacher screening', note: 'every appointed teacher and whether a check is on file: what kind, when, when it lapses, who recorded it. The reference to the document is stored and never shown again, and a record cannot be edited — a new check supersedes it. While `platform.safeguarding` is on, a course a child may be shown cannot be published unless its author holds a passed, unexpired check and has acknowledged the conduct policy' },
-  { href: '/admin/ijazah', label: 'Ijazahs', note: 'who authorised whom, for what, and what you were shown. Yours alone to record: a chain of transmission is not something this platform has the standing to check, so the register says “recorded”, never “verified”, and nothing here is visible to a learner' },
-  { href: '/admin/translations', label: 'Translations', note: 'corrections sent by people who speak the language, each shown against the line it replaces and against the catalogue that is actually built. Yours alone to decide: accepting a line does not change the site — the paste block does that — and a language is only described as read when every part of it has a published read — or when one person has published a whole-catalogue read — with every correction decided' },
-];
-
-const institutionLinks: ConsoleLink[] = [
-  { href: '/admin/institutions', label: 'Institutions', note: 'madrasahs, schools and organisations with their own page: open one, check the DNS record behind a domain claim, and change who administers it. An institution sees counts of its own members and never a learner’s name, and it cannot buy seats — invoicing needs terms and a provider nobody has' },
-];
-
-const sponsorshipLinks: ConsoleLink[] = [
-  { href: '/admin/sponsorships', label: 'Sponsored seats', note: 'learners asking for a course, and donors paying for one. Deciding needs a written reason and recording a payment needs a reference; a sponsored seat is not an order, so it carries no tax and no teacher earning' },
-];
-
-const referralLinks: ConsoleLink[] = [
-  { href: '/admin/referrals', label: 'Invitations', note: 'who invited whom, what it earned and what the yearly cap or a refund stopped. Both rewards are discounts on a course — nothing is paid out, so there is no balance here' },
-];
-
-const supportLinks: ConsoleLink[] = [
-  { href: '/admin/support', label: 'Support queue', note: 'requests people opened from Help. Turning the feature off stops new ones; it does not close what is in flight' },
-];
-
-const sharedLinks: ConsoleLink[] = [
-  { href: '/admin/users', label: 'Users', note: 'every account on the platform, searchable by name or email — accounts, not children' },
-  { href: '/admin/settings', label: 'Controls', note: 'the numbers behind features that are already on. Only the ones your role owns are shown, and each change needs a reason' },
-  { href: '/admin/reports', label: 'Content reports', note: 'problems readers flagged in a lesson or an answer. Closing one needs a written note' },
-  { href: '/admin/media', label: 'Uploaded media', note: 'every master anybody has uploaded. Quarantine and withdrawal both need a written reason' },
-  { href: '/admin/course-reviews', label: 'Course review queue', note: 'learner ratings that include words, held until someone reads them' },
-  { href: '/admin/discussion', label: 'Discussion queue', note: 'learner questions and peer answers held for review' },
-  { href: '/admin/boards', label: 'Discussion board reports', note: 'posts on the students’ and the teachers’ boards that somebody reported. A post there is shown at once, so this is where one is taken down. Seeing who is behind a username needs a reason and is recorded' },
-  { href: '/admin/ai-support', label: 'Study assistant', note: 'what it was asked and what the boundary did: answers that cited a lesson, questions sent to a teacher, and the phrases doing the refusing' },
-  { href: '/admin/connections', label: 'Connections', note: 'the outside accounts this site uses (database, email, scheduler, storage, payments) and which are still to be connected. The owner only; names of missing settings, never a value' },
-  { href: '/admin/messages', label: 'Messages', note: 'what the platform would send, rendered and recorded. Nothing leaves the building until a provider is configured' },
-  { href: '/admin/plans', label: 'Subscription plans', note: 'versioned terms, entitlements and recurring prices' },
-  { href: '/admin/panels', label: 'Scholarly panels', note: 'the owner convenes a panel and sets its quorum; staff open a case against an unpublished version; seated members vote and the chair records the decision. A case cannot close below quorum, and with governance.panel_required off nothing waits on it' },
-  { href: '/admin/takedowns', label: 'Copyright and takedowns', note: 'a notice holds the version it names out of distribution the moment it is entered — nothing is deleted, so the decision still has its evidence. The teacher answers on their own page, somebody other than the person who took the notice decides it, and a hold changes no money' },
-  { href: '/admin/incidents', label: 'Incidents', note: 'what happened, who has to be told and by when, and the timeline as it happens. Counts, never a list of names; every deadline is typed by a person because the rule differs by market. Nothing here detects a breach and nothing sends a notification' },
-  { href: '/admin/policies', label: 'Policies and terms', note: 'every document with the versions that have been in force and the draft waiting now. Publishing needs a date and a written reason, and is refused while a question only you can answer is still marked in the text' },
-  { href: '/admin/certificates', label: 'Certificates', note: 'issue completion certificates and record revocations with a reason' },
-  { href: '/admin/analytics', label: 'Analytics', note: 'what people do, kept forever, by event and by day. Aggregates only' },
-  { href: '/admin/guardians', label: 'Guardian verification', note: 'adults asking to be recognised as a child’s parent' },
-  { href: '/admin/appeals', label: 'Appeals', note: 'teachers contesting a rejection. You cannot decide an appeal against your own decision' },
-  { href: '/admin/roles', label: 'Roles', note: 'who may do what. Every check in the database reads these' },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const { shown } = await readerLanguage();
+  return { title: translator(shown.code)('staff.eyebrow') };
+}
 
 type Attention = {
   generatedAt: string;
@@ -148,6 +96,14 @@ type Attention = {
  *     already there.
  *   - Nothing is counted twice. The total is the sum of the cards, not a
  *     separate query that could disagree with them.
+ *
+ * **In the reader's language since 2026-11-28, in part.** What is waiting, the
+ * queues, what a new platform still needs, the headings and the name of every
+ * screen are sentences of the catalogue (`staff.`). Two things are not, and
+ * are marked as English (`lang="en"`) wherever the rest is in another
+ * language: the sentence beside each link, and the owner's switchboard (the
+ * revenue share, the translation line, the four counts, the retention clock
+ * and the flag register, whose preconditions are rows of the database).
  */
 export default async function AdminPage() {
   if (!isSupabaseConfigured()) redirect('/');
@@ -161,6 +117,18 @@ export default async function AdminPage() {
 
   const { data: privileged } = await supabase.rpc('is_privileged', { p_user_id: user.id });
   if (privileged !== true) redirect('/');
+
+  const { locale, shown } = await readerLanguage();
+  const t = translator(shown.code);
+  const frame = shown.code !== locale ? { lang: shown.code, dir: shown.dir } : {};
+  const n = (value: number) => formatNumber(shown.code, value);
+  // What is still said in English, on a page otherwise in another language.
+  const english = shown.code === 'en' ? {} : ({ lang: 'en', dir: 'ltr' } as const);
+  const linkLine = (link: ConsoleLink) => (
+    <p key={link.href} data-staff-link={link.href}>
+      <Link href={link.href}>{t(link.label)}</Link> — <span {...english}>{link.note}</span>
+    </p>
+  );
 
   const { data: attentionData, error: attentionError } = await supabase.rpc('staff_attention');
   if (attentionError) throw new Error(attentionError.message);
@@ -222,93 +190,118 @@ export default async function AdminPage() {
   // Only the ones still off: one that is on needs nothing more.
   const setupGated = flags.filter((f) => f.gateType === 'admin_setup' && !f.enabled).length;
 
+  const emptyLede = setupFacts ? emptyQueueLede(setupFacts) : null;
+  const notOwner = switchboardNotice(facts);
+  /** A queue's name and sentence: the catalogue's by its code, else the database's own English. */
+  const queueWords = (q: AttentionQueue) => {
+    const known = Object.hasOwn(QUEUE_WORDS, q.code) ? QUEUE_WORDS[q.code]! : null;
+    return known
+      ? { label: t(known.label), detail: t(known.detail), mark: {} }
+      : { label: q.label, detail: q.detail, mark: english };
+  };
+
   return (
-    <div className="container section">
-      <p className="eyebrow">Administration</p>
-      <h1>What is waiting</h1>
-      <p className="lede">
+    <div className="container section staff-page" {...frame}>
+      <p className="eyebrow">{t('staff.eyebrow')}</p>
+      <h1>{t('staff.title')}</h1>
+      <p className="lede" data-staff-lede>
         {!attention
-          ? 'Staff queues could not be loaded. Do not assume they are empty.'
+          ? t('staff.unread')
           : waiting === 0
-          ? (setupFacts && emptyQueueLede(setupFacts))
-            ?? 'The listed staff queues show zero items.'
-          : `${waiting} ${waiting === 1 ? 'thing is' : 'things are'} waiting across ${
-              busy.length === 1 ? 'one queue' : `${busy.length} queues`
-            }.`}
+          ? emptyLede
+            ? t(emptyLede.key, { count: n(emptyLede.vars?.count ?? 0) })
+            : t('staff.zero')
+          : t('staff.waiting', { count: n(waiting), queues: n(busy.length) })}
       </p>
 
       <p className="notice warn">
-        Safeguarding concerns are not included in these counts. The configured safeguarding owner must check the private queue in <Link href="/admin/coursework">Handed-in files</Link>; email alerts require provider and scheduler setup and do not prove receipt.
+        {t('staff.safeguarding')}{' '}
+        <Link href="/admin/coursework">{t('staff.handedIn')}</Link>
       </p>
 
       {setupFacts && (
-        <SetupPanel facts={setupFacts} steps={setupSteps} />
+        <SetupPanel
+          heading={t('staff.setupHead')}
+          note={(() => {
+            const note = subjectsNote(setupFacts);
+            return t(note.key, note.vars ? { count: n(note.vars.count ?? 0) } : undefined);
+          })()}
+          steps={setupSteps.map((step, i) => ({
+            key: step.key,
+            number: n(i + 1),
+            href: step.href,
+            title: t(step.title),
+            why: t(step.why),
+          }))}
+        />
       )}
 
       {busy.length > 0 ? (
         <div className="grid cols-3" style={{ marginTop: '1.5rem' }}>
-          {busy.map((q) => (
-          <Link
-            key={q.code}
-            href={q.href}
-            className="card"
-            style={{ display: 'block', padding: '1.1rem 1.25rem' }}
-          >
-            <div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, color: 'var(--green-800)' }}>
-              {q.count}
-            </div>
-            <div style={{ fontWeight: 600, marginTop: '0.15rem' }}>{q.label}</div>
-            <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }}>
-              {q.detail}
-            </p>
-            {q.dormant ? (
-              <p style={{ margin: '0.5rem 0 0' }}>
-                <span className="badge neutral">Paused</span>{' '}
-                <span className="muted" style={{ fontSize: '0.8rem' }}>
-                  <code>{q.feature}</code> is off, so nothing new is arriving. What is
-                  already here still needs a person.
-                </span>
-              </p>
-            ) : null}
-            </Link>
-          ))}
+          {busy.map((q) => {
+            const words = queueWords(q);
+            return (
+              <Link
+                key={q.code}
+                href={q.href}
+                className="card"
+                data-staff-queue={q.code}
+                style={{ display: 'block', padding: '1.1rem 1.25rem' }}
+              >
+                <div style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: 1.1, color: 'var(--green-800)' }}>
+                  {n(q.count)}
+                </div>
+                <div style={{ fontWeight: 600, marginTop: '0.15rem' }} {...words.mark}>{words.label}</div>
+                <p className="muted" style={{ fontSize: '0.85rem', margin: '0.35rem 0 0' }} {...words.mark}>
+                  {words.detail}
+                </p>
+                {q.dormant ? (
+                  <p style={{ margin: '0.5rem 0 0' }}>
+                    <span className="badge neutral">{t('staff.paused')}</span>{' '}
+                    <span className="muted" style={{ fontSize: '0.8rem' }}>
+                      {t('staff.pausedWhy')}
+                      {q.feature ? <> (<code dir="ltr">{q.feature}</code>)</> : null}
+                    </span>
+                  </p>
+                ) : null}
+              </Link>
+            );
+          })}
         </div>
       ) : null}
 
-      {busy.length === 0 ? (
-        <p className="empty">
-          No queue has anything in it. The switches below are the reason this page
-          exists; nothing on it is asking for you today.
-        </p>
-      ) : null}
+      {attention && busy.length === 0 ? <p className="empty">{t('staff.allEmpty')}</p> : null}
 
       {quiet.length > 0 ? (
-        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '1rem' }}>
-          Also checked and empty:{' '}
-          {quiet.map((q, i) => (
-            <span key={q.code}>
-              {i > 0 ? ', ' : ''}
-              <Link href={q.href}>{q.label}</Link> ({q.count})
-            </span>
-          ))}
-          .
+        <p className="muted" style={{ fontSize: '0.85rem', marginTop: '1rem' }} data-staff-quiet>
+          {t('staff.alsoEmpty')}{' '}
+          {quiet.map((q, i) => {
+            const words = queueWords(q);
+            return (
+              <span key={q.code}>
+                {i > 0 ? ' · ' : ''}
+                <Link href={q.href} {...words.mark}>{words.label}</Link>
+              </span>
+            );
+          })}
         </p>
       ) : null}
 
       {dormant.length > 0 ? (
-        <div className="notice" style={{ marginTop: '1.25rem' }}>
-          <strong>
-            {dormant.length === 1 ? 'One queue is' : `${dormant.length} queues are`} paused
-            by a feature switch
-          </strong>
-          : {dormant.map((q) => q.label).join(', ')}. Turning a feature off stops new work
-          arriving; it does not empty what is already there, so anything in one of these
-          still needs a person.
+        <div className="notice" style={{ marginTop: '1.25rem' }} data-staff-dormant>
+          <strong>{t('staff.dormantHead', { count: n(dormant.length) })}</strong>
+          <ul style={{ margin: '0.35rem 0' }}>
+            {dormant.map((q) => {
+              const words = queueWords(q);
+              return <li key={q.code} {...words.mark}>{words.label}</li>;
+            })}
+          </ul>
+          {t('staff.dormantBody')}
         </div>
       ) : null}
 
       {sections.switchboard ? (
-        <>
+        <div {...english} data-staff-switchboard>
           <h2 style={{ marginTop: '2.5rem' }}>Feature flags</h2>
           <p className="lede">
             Everything is built and shipped off. Turn features on here as their
@@ -385,74 +378,47 @@ export default async function AdminPage() {
               </div>
             ))
           )}
-        </>
+        </div>
       ) : (
-        <div className="notice" style={{ marginTop: '2.5rem' }}>
-          {switchboardNotice(facts)}
+        <div className="notice" style={{ marginTop: '2.5rem' }} data-staff-not-owner>
+          {notOwner ? t(notOwner) : null}
         </div>
       )}
 
       {sections.money ? (
         <>
-          <h2 style={{ marginTop: '2.5rem' }}>Money</h2>
-          <p className="lede">
-            What was charged, what goes back, what is owed to a teacher, and the
-            rates every converted figure rests on. Every writer here needs a
-            written reason.
-          </p>
-          {[...moneyLinks, ...sponsorshipLinks, ...referralLinks].map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link> — {link.note}
-            </p>
-          ))}
+          <h2 style={{ marginTop: '2.5rem' }}>{t('export.inMoney')}</h2>
+          <p className="lede">{t('staff.moneyLede')}</p>
+          {[...CONSOLE_LINKS.money, ...CONSOLE_LINKS.sponsorship, ...CONSOLE_LINKS.referral].map(linkLine)}
         </>
       ) : null}
 
       {sections.publication ? (
         <>
-          <h2 style={{ marginTop: '2.5rem' }}>Publication</h2>
-          {publicationLinks.map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link> — {link.note}
-            </p>
-          ))}
-          <h3 style={{ marginTop: '1.5rem' }}>Institutions</h3>
-          {institutionLinks.map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link> — {link.note}
-            </p>
-          ))}
+          <h2 style={{ marginTop: '2.5rem' }}>{t('staff.publication')}</h2>
+          {CONSOLE_LINKS.publication.map(linkLine)}
+          <h3 style={{ marginTop: '1.5rem' }}>{t('inst.title')}</h3>
+          {CONSOLE_LINKS.institution.map(linkLine)}
         </>
       ) : null}
 
       {sections.support ? (
         <>
-          <h2 style={{ marginTop: '2.5rem' }}>Support</h2>
-          {supportLinks.map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link> — {link.note}
-            </p>
-          ))}
+          <h2 style={{ marginTop: '2.5rem' }}>{t('support.eyebrow')}</h2>
+          {CONSOLE_LINKS.support.map(linkLine)}
         </>
       ) : null}
 
       {sections.moderation ? (
         <>
-          <h2 style={{ marginTop: '2.5rem' }}>Everyone&rsquo;s work</h2>
-          <p className="lede">
-            Any member of staff may work these. They are listed for every role
-            because none of them is one role&rsquo;s private queue.
-          </p>
-          {sharedLinks.map((link) => (
-            <p key={link.href}>
-              <Link href={link.href}>{link.label}</Link> — {link.note}
-            </p>
-          ))}
+          <h2 style={{ marginTop: '2.5rem' }}>{t('staff.everyone')}</h2>
+          <p className="lede">{t('staff.everyoneLede')}</p>
+          {CONSOLE_LINKS.shared.map(linkLine)}
         </>
       ) : null}
 
       <p style={{ marginTop: '1.5rem' }}>
-        <Link href="/learn">Back to my learning</Link>
+        <Link href="/learn">{t('ask.back')}</Link>
       </p>
     </div>
   );

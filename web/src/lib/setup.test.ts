@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { en } from './i18n/messages/en.ts';
 import { emptyQueueLede, outstandingSteps, setupSteps, subjectsNote, type SetupFacts } from './setup.ts';
 
 const fresh: SetupFacts = { subjects: 0, courses: 0, published: 0, reviewers: 0 };
@@ -33,20 +34,21 @@ test('every step points at a screen', () => {
   }
 });
 
-test('each sentence describes today rather than giving advice', () => {
+test('each step carries today’s count and two sentences of the catalogue', () => {
   const done = setupSteps(working);
-  assert.match(done[0]!.detail, /1 reviewer is active/);
-  assert.match(done[1]!.detail, /3 courses exist/);
-  assert.match(done[2]!.detail, /2 versions are published/);
+  assert.deepEqual(done.map((step) => [step.key, step.count, step.done]), [
+    ['reviewers', 1, true], ['courses', 3, true], ['published', 2, true],
+  ]);
 
   const empty = setupSteps(fresh);
-  assert.doesNotMatch(empty[0]!.detail, /reviewer is active/);
-});
-
-test('singular and plural are not the same sentence', () => {
-  const one = setupSteps({ subjects: 1, courses: 1, published: 1, reviewers: 1 });
-  assert.match(one[0]!.detail, /1 reviewer is active/);
-  assert.match(one[2]!.detail, /1 version is published/);
+  assert.deepEqual(empty.map((step) => step.done), [false, false, false, false]);
+  for (const step of empty) {
+    assert.ok(en[step.title].length > 0 && en[step.why].length > 0, step.key);
+    // The name is a thing to have, the sentence is what its absence stops.
+    assert.doesNotMatch(en[step.title], /\./u, step.key);
+    assert.match(en[step.why], /\.$/u, step.key);
+  }
+  assert.equal(new Set(empty.flatMap((step) => [step.title, step.why])).size, 8);
 });
 
 test('subjects are a step only when there are none, and it points at a screen', () => {
@@ -60,22 +62,27 @@ test('subjects are a step only when there are none, and it points at a screen', 
 });
 
 test('the subject line reports a count, and says what its absence stops', () => {
-  assert.match(subjectsNote({ ...fresh, subjects: 6 }), /6 subject areas/);
-  assert.match(subjectsNote({ ...fresh, subjects: 1 }), /1 subject area\./);
-  assert.match(subjectsNote(fresh), /nothing can be tagged/);
+  assert.deepEqual(subjectsNote({ ...fresh, subjects: 6 }), { key: 'staff.subjectsSome', vars: { count: 6 } });
+  assert.deepEqual(subjectsNote(fresh), { key: 'staff.subjectsNone' });
+  assert.match(en['staff.subjectsNone'], /no course can be filed/);
 });
 
 test('an empty queue line does not claim the work is done', () => {
   const line = emptyQueueLede(fresh);
 
   assert.ok(line);
-  assert.match(line, /listed staff queues are empty/);
-  assert.doesNotMatch(line, /Every queue you can work was checked/);
+  assert.equal(line.key, 'staff.zeroSetup');
+  assert.match(en[line.key], /queues listed here are empty/);
+  assert.match(en[line.key], /still needed before anybody can study/);
 });
 
-test('with work outstanding the number is singular or plural, not "1 things"', () => {
-  assert.match(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1, courses: 1 }) ?? '', /one thing/);
-  assert.match(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1 }) ?? '', /2 things/);
+test('the count is handed over as a number and follows a colon, so no word has to agree with it', () => {
+  assert.deepEqual(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1, courses: 1 })?.vars, { count: 1 });
+  assert.deepEqual(emptyQueueLede({ ...fresh, subjects: 6, reviewers: 1 })?.vars, { count: 2 });
+  for (const key of ['staff.zeroSetup', 'staff.subjectsSome', 'staff.waiting', 'staff.dormantHead'] as const) {
+    assert.match(en[key], /: \{count\}/u, key);
+    assert.doesNotMatch(en[key], /\{count\} [a-z]/u, key);
+  }
 });
 
 test('a set-up platform with empty queues keeps the page’s own sentence', () => {

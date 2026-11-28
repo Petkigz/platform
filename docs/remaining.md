@@ -679,8 +679,16 @@ written: not a held draft, nothing.
   (`review.`, 96 sentences, unreviewed), and on 2026-11-28 the page of
   one assignment, `/review/[assignmentId]` (`ra.`, 53 sentences,
   unreviewed), except the two panels it shares with the staff pages,
-  which are marked as English there. Every staff page is still
-  English.)* The teacher's class
+  which are marked as English there. Also on 2026-11-28, the top of
+  the staff console, `/admin`: what is waiting, the queues, what a new
+  platform still needs, the headings and the name of every staff screen
+  (`staff.`, 89 sentences, unreviewed). **Still English there, and
+  marked as English:** the sentence beside each of the 43 links, and
+  the owner's switchboard (revenue share, translation line, counts,
+  retention clock, the flag register and its preconditions, which are
+  rows of the database), and the word "Admin" in the main navigation,
+  which is not marked. Every other staff page is still English, with
+  no mark.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

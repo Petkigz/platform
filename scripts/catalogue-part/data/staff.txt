@@ -1,0 +1,2456 @@
+### ar
+الإدارة
+ما ينتظر
+تعذّرت قراءة قوائم عمل الطاقم. لا تفترض أنها فارغة.
+كل قوائم عمل الطاقم المذكورة هنا فارغة.
+في الانتظار: {count}. القوائم التي فيها شيء: {queues}.
+قوائم عمل الطاقم المذكورة هنا فارغة. ما لا يزال لازمًا قبل أن يتمكّن أحد من الدراسة: {count}.
+بلاغات حماية الأطفال ليست ضمن هذه الأعداد. على المسؤول عن الحماية أن ينظر في القائمة الخاصة في الصفحة المذكورة هنا. تنبيهات البريد الإلكتروني تحتاج إلى إعداد مزوّد ومُجدوِل، ولا تثبت أن أحدًا استلمها.
+الملفات المُسلَّمة
+قبل أن يتمكّن أحد من الدراسة هنا
+المواد التي يمكن إدراج دورة تحتها: {count}.
+لا توجد مواد بعد، فلا يمكن إدراج أي دورة تحت مادة.
+مادة تُدرَج الدورات تحتها
+المواد المعتادة تأتي مع قاعدة البيانات. هذه القاعدة ليس فيها أي مادة، فلا يمكن بعدُ إدراج أي دورة تحت مادة.
+مراجع موثَّق
+لا يمكن نشر شيء حتى يُسجَّل مراجع واحد على الأقل ويُوثَّق في المادة التي سيحكم فيها.
+دورة للمراجعة
+الدورة يكتبها معلم معيَّن، لا المنصة. هنا ترى ما أرسله المعلمون.
+شيء يجده الزائر
+القائمة فارغة إلى أن تُنشر نسخة. وإلى ذلك الحين لا يجد الزائر ما يدرسه.
+متوقفة
+ميزتها مُطفأة، فلا يصل شيء جديد. وما هو هنا بالفعل ما زال يحتاج إلى شخص.
+لا شيء في أي قائمة. لا شيء في هذه الصفحة يطلبك اليوم.
+فُحصت أيضًا وهي فارغة:
+قوائم أوقفها مفتاح ميزة: {count}
+إطفاء ميزة يوقف وصول عمل جديد. لا يُفرغ ما هو موجود، فكل ما في إحدى هذه القوائم ما زال يحتاج إلى شخص.
+مفاتيح الميزات وحصة الإيرادات تعود إلى مدير المنصة. القوائم أعلاه والروابط أدناه لك، ولا شيء في هذه الصفحة ينتظر قرارًا لا تستطيع اتخاذه.
+ما حُصِّل، وما يُعاد، وما يُستحق لمعلم، والأسعار التي يستند إليها كل رقم محوَّل. كل تغيير هنا يحتاج إلى سبب مكتوب.
+النشر
+عمل الجميع
+يجوز لأي عضو في الطاقم أن يعمل في هذه. وهي مذكورة لكل دور لأن أيًّا منها ليس قائمة خاصة بدور واحد.
+عمليات المطابقة
+طلبات الدعم
+تظلّمات الحوكمة
+مؤهلات تنتظر التحقق
+طلبات توثيق أولياء الأمور
+منشورات مبلَّغ عنها، نقاش الطلاب
+منشورات مبلَّغ عنها، نقاش المعلمين
+محتوى مبلَّغ عنه
+تقييمات تنتظر الإشراف
+وسائط تحتاج إلى نظرة
+مال ينتظر أن يعود إلى عميل.
+للاعتراض على الدفع مهلة؛ ومزوّد الدفع هو من يقرر ما يحدث إن انقضت.
+في العملية المفتوحة صفوف لا تطابق بعدُ كشف المزوّد.
+طلب معلم أن يُدفع له. تسجيل الدفعة ليس إرسالها.
+مفتوحة أو مُسنَدة، ولم تُحلّ بعد.
+أحدهم يعترض على قرار، والصمت نفسه قرار.
+لا يمكن اعتماد مراجع في مادة حتى يُتحقق من مؤهله.
+شخص بالغ يطلب الاعتراف به وليَّ أمر لطفل.
+المنشور يظهر فورًا ويبقى حتى يزيله أحد. المالك وحده يُبلَّغ.
+قارئ أبلغ عن شيء. إغلاق البلاغ يحتاج إلى ملاحظة مكتوبة.
+الكلمات تُحجز حتى يقرأها أحد؛ أما الدرجة وحدها فقد احتُسبت.
+ملف مرفوع لم يُؤكَّد، أو ملف محجوز للمراجعة.
+طلبات شراء تنتظر الدفع
+طلبات الاسترداد
+تسويات مالية
+مطابقة المدفوعات
+الاعتراضات على المدفوعات
+الضريبة ورسوم التحويل
+أسعار الصرف
+تحليل الإيرادات
+تقرير المال
+التجديدات
+مدفوعات المعلمين
+إسناد المراجعات
+المواد
+سجلّ المراجعين
+التحقق من المعلمين
+الإجازات
+الترجمات
+الدعوات
+قائمة الدعم
+المستخدمون
+الضوابط
+بلاغات المحتوى
+الوسائط المرفوعة
+قائمة تقييمات الدورات
+قائمة النقاش
+بلاغات منتديات النقاش
+مساعد الدراسة
+الحسابات الخارجية
+الرسائل
+خطط الاشتراك
+الهيئات العلمية
+حقوق النشر وطلبات الإزالة
+الحوادث
+السياسات والشروط
+التحليلات
+توثيق أولياء الأمور
+التظلّمات
+
+### ur
+انتظامیہ
+کیا منتظر ہے
+عملے کی قطاریں پڑھی نہ جا سکیں۔ انہیں خالی نہ سمجھیں۔
+یہاں درج عملے کی ہر قطار خالی ہے۔
+منتظر: {count}۔ وہ قطاریں جن میں کچھ ہے: {queues}۔
+یہاں درج عملے کی قطاریں خالی ہیں۔ کسی کے پڑھ سکنے سے پہلے جو چیزیں ابھی درکار ہیں: {count}۔
+بچوں کے تحفظ کے خدشات ان گنتیوں میں شامل نہیں۔ تحفظ کے ذمہ دار کو یہاں نامزد صفحے پر نجی قطار دیکھنی ہوگی۔ ای میل اطلاعات کے لیے فراہم کنندہ اور شیڈولر کا ترتیب دیا جانا ضروری ہے، اور وہ یہ ثابت نہیں کرتیں کہ کسی کو ملی ہیں۔
+جمع کرائی گئی فائلیں
+اس سے پہلے کہ کوئی یہاں پڑھ سکے
+وہ مضامین جن کے تحت کورس رکھا جا سکتا ہے: {count}۔
+ابھی کوئی مضمون موجود نہیں، اس لیے کوئی کورس کسی مضمون کے تحت نہیں رکھا جا سکتا۔
+ایک مضمون جس کے تحت کورس رکھے جائیں
+عام مضامین ڈیٹابیس کے ساتھ آتے ہیں۔ اس ڈیٹابیس میں کوئی نہیں، اس لیے ابھی کوئی کورس کسی مضمون کے تحت نہیں رکھا جا سکتا۔
+ایک تصدیق شدہ جائزہ لینے والا
+کچھ بھی شائع نہیں ہو سکتا جب تک کم از کم ایک جائزہ لینے والا درج نہ ہو اور اس مضمون کے لیے اس کی تصدیق نہ ہو جس کا وہ فیصلہ کرے گا۔
+جائزے کے لیے ایک کورس
+کورس مقرر کردہ استاد لکھتا ہے، پلیٹ فارم نہیں۔ یہاں آپ دیکھتے ہیں کہ اساتذہ نے کیا بھیجا ہے۔
+کچھ ایسا جو آنے والے کو مل سکے
+جب تک کوئی ورژن شائع نہ ہو کیٹلاگ خالی رہتا ہے۔ تب تک آنے والے کو پڑھنے کے لیے کچھ نہیں ملتا۔
+موقوف
+اس کی سہولت بند ہے، اس لیے کچھ نیا نہیں آ رہا۔ جو پہلے سے یہاں ہے اسے اب بھی کسی شخص کی ضرورت ہے۔
+کسی قطار میں کچھ نہیں۔ اس صفحے پر آج کوئی چیز آپ کی منتظر نہیں۔
+یہ بھی دیکھی گئیں اور خالی ہیں:
+سہولت کے سوئچ سے موقوف قطاریں: {count}
+کسی سہولت کو بند کرنے سے نیا کام آنا رک جاتا ہے۔ جو پہلے سے موجود ہے وہ خالی نہیں ہوتا، اس لیے ان میں سے کسی میں جو کچھ ہے اسے اب بھی کسی شخص کی ضرورت ہے۔
+سہولتوں کے سوئچ اور آمدنی کا حصہ پلیٹ فارم کے منتظم کے ہیں۔ اوپر کی قطاریں اور نیچے کے روابط آپ کے ہیں، اور اس صفحے پر کوئی چیز ایسے فیصلے کی منتظر نہیں جو آپ نہ کر سکیں۔
+کیا وصول کیا گیا، کیا واپس جاتا ہے، استاد کا کیا واجب الادا ہے، اور وہ شرحیں جن پر ہر تبدیل شدہ رقم قائم ہے۔ یہاں ہر تبدیلی کے لیے تحریری وجہ درکار ہے۔
+اشاعت
+سب کا کام
+عملے کا کوئی بھی رکن ان پر کام کر سکتا ہے۔ یہ ہر کردار کے لیے درج ہیں کیونکہ ان میں سے کوئی کسی ایک کردار کی نجی قطار نہیں۔
+مطابقت کے عمل
+مدد کے معاملات
+گورننس کی اپیلیں
+جانچ کی منتظر اہلیتیں
+سرپرست کی تصدیق کی درخواستیں
+رپورٹ شدہ پوسٹیں، طلبہ کی گفتگو
+رپورٹ شدہ پوسٹیں، اساتذہ کی گفتگو
+رپورٹ شدہ مواد
+نگرانی کے منتظر تبصرے
+میڈیا جسے دیکھنا ہے
+رقم جو گاہک کو واپس جانے کی منتظر ہے۔
+چارج بیک کی ایک آخری تاریخ ہوتی ہے؛ وہ گزر جائے تو کیا ہوگا، یہ فراہم کنندہ طے کرتا ہے۔
+کھلے عمل میں ایسی سطریں ہیں جو ابھی فراہم کنندہ کے گوشوارے سے نہیں ملتیں۔
+ایک استاد نے ادائیگی مانگی ہے۔ ادائیگی درج کرنا اسے بھیجنا نہیں۔
+کھلے یا کسی کے سپرد، اور ابھی حل نہیں ہوئے۔
+کوئی کسی فیصلے کو چیلنج کر رہا ہے، اور خاموشی خود ایک فیصلہ ہے۔
+جب تک جائزہ لینے والے کی سند کی جانچ نہ ہو، اسے کسی مضمون میں مجاز نہیں کیا جا سکتا۔
+ایک بالغ جو کسی بچے کے والدین کے طور پر تسلیم کیے جانے کی درخواست کر رہا ہے۔
+پوسٹ فوراً دکھائی جاتی ہے اور تب تک رہتی ہے جب تک کوئی اسے ہٹا نہ دے۔ صرف مالک کو بتایا جاتا ہے۔
+کسی قاری نے کسی چیز کی نشاندہی کی۔ اسے بند کرنے کے لیے تحریری نوٹ درکار ہے۔
+الفاظ تب تک روکے جاتے ہیں جب تک کوئی انہیں پڑھ نہ لے؛ صرف درجہ بندی پہلے ہی شمار ہو چکی ہے۔
+ایسا اپ لوڈ جس کی تصدیق نہیں ہوئی، یا جو جائزے کے لیے روکا گیا ہے۔
+ادائیگی کے منتظر آرڈر
+رقم واپسی کی درخواستیں
+مالی تصحیحات
+ادائیگیوں کی مطابقت
+ادائیگی کے تنازعات
+ٹیکس اور منتقلی کی فیس
+شرحِ مبادلہ
+آمدنی کا تجزیہ
+رقم کی رپورٹ
+تجدیدیں
+اساتذہ کی ادائیگیاں
+جائزے تفویض کریں
+مضامین
+جائزہ لینے والوں کا رجسٹر
+اساتذہ کی جانچ
+اجازے
+ترجمے
+دعوتیں
+مدد کی قطار
+صارفین
+ضوابط
+مواد کی رپورٹیں
+اپ لوڈ شدہ میڈیا
+کورس کے تبصروں کی قطار
+گفتگو کی قطار
+گفتگو کے بورڈ کی رپورٹیں
+مطالعے کا معاون
+بیرونی اکاؤنٹ
+پیغامات
+سبسکرپشن پلان
+علمی بورڈز
+حقوقِ اشاعت اور ہٹانے کی درخواستیں
+واقعات
+پالیسیاں اور شرائط
+تجزیات
+سرپرست کی تصدیق
+اپیلیں
+
+### fa
+مدیریت
+چه چیزی در انتظار است
+صف‌های کارکنان خوانده نشد. آن‌ها را خالی فرض نکنید.
+همهٔ صف‌های کارکنان که اینجا آمده خالی است.
+در انتظار: {count}. صف‌هایی که چیزی در آن‌هاست: {queues}.
+صف‌های کارکنان که اینجا آمده خالی است. چیزهایی که پیش از آنکه کسی بتواند درس بخواند هنوز لازم است: {count}.
+نگرانی‌های حفاظت از کودکان در این شمارش‌ها نیست. مسئول حفاظت باید صف خصوصی را در صفحه‌ای که اینجا نام برده شده ببیند. هشدارهای ایمیلی به راه‌اندازی یک ارائه‌دهنده و یک زمان‌بند نیاز دارد و ثابت نمی‌کند که کسی آن‌ها را دریافت کرده است.
+فایل‌های ارسال‌شده
+پیش از آنکه کسی بتواند اینجا درس بخواند
+موضوع‌هایی که دوره را می‌توان زیر آن‌ها گذاشت: {count}.
+هنوز هیچ موضوعی وجود ندارد، پس هیچ دوره‌ای را نمی‌توان زیر موضوعی گذاشت.
+موضوعی که دوره‌ها زیر آن قرار گیرند
+موضوع‌های معمول همراه پایگاه داده می‌آیند. این پایگاه هیچ‌کدام را ندارد، پس هنوز هیچ دوره‌ای را نمی‌توان زیر موضوعی گذاشت.
+بازبینی که تأیید شده باشد
+تا وقتی دست‌کم یک بازبین ثبت و برای موضوعی که دربارهٔ آن داوری می‌کند تأیید نشده باشد، هیچ چیزی منتشر نمی‌شود.
+دوره‌ای برای بازبینی
+دوره را معلمِ منصوب می‌نویسد، نه سکو. اینجا می‌بینید معلمان چه فرستاده‌اند.
+چیزی که بازدیدکننده پیدا کند
+تا وقتی نسخه‌ای منتشر نشود فهرست خالی است. تا آن زمان بازدیدکننده چیزی برای خواندن پیدا نمی‌کند.
+متوقف
+قابلیت آن خاموش است، پس چیز تازه‌ای نمی‌رسد. آنچه از پیش اینجاست هنوز به یک نفر نیاز دارد.
+در هیچ صفی چیزی نیست. امروز هیچ چیز در این صفحه منتظر شما نیست.
+این‌ها هم بررسی شد و خالی است:
+صف‌هایی که کلید یک قابلیت متوقفشان کرده: {count}
+خاموش کردن یک قابلیت رسیدن کار تازه را متوقف می‌کند. آنچه از پیش هست خالی نمی‌شود، پس هر چه در یکی از این صف‌هاست هنوز به یک نفر نیاز دارد.
+کلیدهای قابلیت‌ها و سهم درآمد از آنِ مدیر سکو است. صف‌های بالا و پیوندهای پایین از آنِ شماست و هیچ چیز در این صفحه منتظر تصمیمی نیست که شما نتوانید بگیرید.
+آنچه دریافت شده، آنچه برمی‌گردد، آنچه به معلم بدهکاریم، و نرخ‌هایی که هر رقم تبدیل‌شده بر آن‌ها استوار است. هر تغییر در اینجا دلیل نوشته می‌خواهد.
+انتشار
+کار همه
+هر یک از کارکنان می‌تواند روی این‌ها کار کند. برای هر نقش آمده‌اند چون هیچ‌کدام صف خصوصی یک نقش نیست.
+دورهای تطبیق
+پرونده‌های پشتیبانی
+اعتراض‌های حاکمیتی
+صلاحیت‌های در انتظار بررسی
+درخواست‌های تأیید سرپرست
+نوشته‌های گزارش‌شده، گفت‌وگوی دانش‌آموزان
+نوشته‌های گزارش‌شده، گفت‌وگوی معلمان
+محتوای گزارش‌شده
+نظرهای در انتظار نظارت
+رسانه‌هایی که باید دیده شوند
+پولی که منتظر بازگشت به مشتری است.
+برگشت وجه مهلت دارد؛ اگر بگذرد، ارائه‌دهنده تصمیم می‌گیرد چه شود.
+دورِ باز ردیف‌هایی دارد که هنوز با صورت‌حساب ارائه‌دهنده نمی‌خواند.
+معلمی خواسته است پولش پرداخت شود. ثبت کردن پرداخت، فرستادن آن نیست.
+باز یا واگذارشده، و هنوز حل‌نشده.
+کسی به تصمیمی اعتراض دارد، و سکوت خودش یک تصمیم است.
+تا مدرک بازبین بررسی نشود، نمی‌توان او را در موضوعی مجاز کرد.
+بزرگسالی که می‌خواهد به‌عنوان والد یک کودک شناخته شود.
+نوشته بی‌درنگ نشان داده می‌شود و می‌ماند تا کسی آن را بردارد. فقط به مالک خبر داده می‌شود.
+خواننده‌ای چیزی را گزارش کرده است. بستن آن یادداشت نوشته می‌خواهد.
+نوشته‌ها نگه داشته می‌شود تا کسی آن‌ها را بخواند؛ امتیازِ تنها از پیش شمرده شده است.
+بارگذاری‌ای که تأیید نشده، یا برای بازبینی نگه داشته شده است.
+سفارش‌های در انتظار پرداخت
+درخواست‌های بازپرداخت
+اصلاحات مالی
+تطبیق پرداخت‌ها
+اختلاف‌های پرداخت
+مالیات و کارمزد انتقال
+نرخ‌های ارز
+تحلیل درآمد
+گزارش پول
+تمدیدها
+پرداخت‌ها به معلمان
+واگذاری بازبینی‌ها
+موضوع‌ها
+فهرست بازبینان
+بررسی پیشینهٔ معلمان
+اجازه‌ها
+ترجمه‌ها
+دعوت‌ها
+صف پشتیبانی
+کاربران
+تنظیم‌های کنترلی
+گزارش‌های محتوا
+رسانه‌های بارگذاری‌شده
+صف نظرهای دوره
+صف گفت‌وگو
+گزارش‌های تالار گفت‌وگو
+دستیار مطالعه
+حساب‌های بیرونی
+پیام‌ها
+طرح‌های اشتراک
+هیئت‌های علمی
+حق نشر و درخواست‌های حذف
+رخدادها
+سیاست‌ها و شرایط
+تحلیل‌ها
+تأیید سرپرست
+اعتراض‌ها
+
+### fa-af
+اداره
+چه چیزی در انتظار است
+صف‌های کارمندان خوانده نشد. آن‌ها را خالی فرض نکنید.
+همهٔ صف‌های کارمندان که این‌جا آمده خالی است.
+در انتظار: {count}. صف‌هایی که چیزی در آن‌هاست: {queues}.
+صف‌های کارمندان که این‌جا آمده خالی است. چیزهایی که پیش از آن‌که کسی بتواند درس بخواند هنوز لازم است: {count}.
+نگرانی‌های حفاظت از اطفال در این شمارش‌ها نیست. مسئول حفاظت باید صف خصوصی را در صفحه‌ای که این‌جا نام برده شده ببیند. هشدارهای ایمیلی به تنظیم یک ارائه‌کننده و یک زمان‌بند نیاز دارد و ثابت نمی‌کند که کسی آن‌ها را گرفته است.
+فایل‌های فرستاده‌شده
+پیش از آن‌که کسی بتواند این‌جا درس بخواند
+مضمون‌هایی که کورس را می‌توان زیر آن‌ها گذاشت: {count}.
+هنوز هیچ مضمونی وجود ندارد، پس هیچ کورسی را نمی‌توان زیر مضمونی گذاشت.
+مضمونی که کورس‌ها زیر آن قرار گیرند
+مضمون‌های معمول همراه دیتابیس می‌آیند. این دیتابیس هیچ‌کدام را ندارد، پس هنوز هیچ کورسی را نمی‌توان زیر مضمونی گذاشت.
+بازبینی که تأیید شده باشد
+تا وقتی کم‌ازکم یک بازبین ثبت و برای مضمونی که دربارهٔ آن داوری می‌کند تأیید نشده باشد، هیچ چیزی نشر نمی‌شود.
+کورسی برای بازبینی
+کورس را آموزگارِ تعیین‌شده می‌نویسد، نه پلتفرم. این‌جا می‌بینید آموزگاران چه فرستاده‌اند.
+چیزی که بازدیدکننده پیدا کند
+تا وقتی نسخه‌ای نشر نشود فهرست خالی است. تا آن زمان بازدیدکننده چیزی برای خواندن پیدا نمی‌کند.
+متوقف
+قابلیت آن خاموش است، پس چیز تازه‌ای نمی‌رسد. آنچه از پیش این‌جاست هنوز به یک نفر نیاز دارد.
+در هیچ صفی چیزی نیست. امروز هیچ چیز در این صفحه منتظر شما نیست.
+این‌ها هم بررسی شد و خالی است:
+صف‌هایی که کلید یک قابلیت متوقف‌شان کرده: {count}
+خاموش کردن یک قابلیت رسیدن کار تازه را متوقف می‌کند. آنچه از پیش هست خالی نمی‌شود، پس هر چه در یکی از این صف‌هاست هنوز به یک نفر نیاز دارد.
+کلیدهای قابلیت‌ها و سهم عاید از آنِ مدیر پلتفرم است. صف‌های بالا و پیوندهای پایین از آنِ شماست و هیچ چیز در این صفحه منتظر تصمیمی نیست که شما نتوانید بگیرید.
+آنچه گرفته شده، آنچه برمی‌گردد، آنچه به آموزگار بدهکاریم، و نرخ‌هایی که هر رقم تبدیل‌شده بر آن‌ها استوار است. هر تغییر در این‌جا دلیل نوشته می‌خواهد.
+نشر
+کار همه
+هر یک از کارمندان می‌تواند روی این‌ها کار کند. برای هر نقش آمده‌اند چون هیچ‌کدام صف خصوصی یک نقش نیست.
+دورهای تطبیق
+دوسیه‌های پشتیبانی
+اعتراض‌های حکومت‌داری
+صلاحیت‌های در انتظار بررسی
+درخواست‌های تأیید سرپرست
+نوشته‌های گزارش‌شده، گفت‌وگوی شاگردان
+نوشته‌های گزارش‌شده، گفت‌وگوی استادان
+محتوای گزارش‌شده
+نظرهای در انتظار نظارت
+رسانه‌هایی که باید دیده شوند
+پولی که منتظر برگشت به مشتری است.
+برگشت پول مهلت دارد؛ اگر بگذرد، ارائه‌کننده تصمیم می‌گیرد چه شود.
+دورِ باز ردیف‌هایی دارد که هنوز با صورت‌حساب ارائه‌کننده نمی‌خواند.
+آموزگاری خواسته است پولش پرداخت شود. ثبت کردن پرداخت، فرستادن آن نیست.
+باز یا سپرده‌شده، و هنوز حل‌نشده.
+کسی به تصمیمی اعتراض دارد، و خاموشی خودش یک تصمیم است.
+تا سند بازبین بررسی نشود، نمی‌توان او را در مضمونی مجاز کرد.
+بزرگسالی که می‌خواهد به‌حیث والد یک طفل شناخته شود.
+نوشته فوراً نشان داده می‌شود و می‌ماند تا کسی آن را بردارد. تنها به مالک خبر داده می‌شود.
+خواننده‌ای چیزی را گزارش کرده است. بستن آن یادداشت نوشته می‌خواهد.
+نوشته‌ها نگه داشته می‌شود تا کسی آن‌ها را بخواند؛ نمرهٔ تنها از پیش شمرده شده است.
+بارگذاری‌ای که تأیید نشده، یا برای بازبینی نگه داشته شده است.
+فرمایش‌های در انتظار پرداخت
+درخواست‌های بازپرداخت
+اصلاحات مالی
+تطبیق پرداخت‌ها
+اختلاف‌های پرداخت
+مالیه و فیس انتقال
+نرخ‌های اسعار
+تحلیل عاید
+گزارش پول
+تمدیدها
+پرداخت‌ها به آموزگاران
+سپردن بازبینی‌ها
+مضمون‌ها
+فهرست بازبین‌ها
+بررسی پیشینهٔ آموزگاران
+اجازه‌ها
+ترجمه‌ها
+دعوت‌ها
+صف پشتیبانی
+کاربران
+تنظیم‌های کنترولی
+گزارش‌های محتوا
+رسانه‌های بارگذاری‌شده
+صف نظرهای کورس
+صف گفت‌وگو
+گزارش‌های تالار گفت‌وگو
+دستیار مطالعه
+حساب‌های بیرونی
+پیام‌ها
+پلان‌های اشتراک
+هیئت‌های علمی
+حق نشر و درخواست‌های حذف
+رویدادها
+پالیسی‌ها و شرایط
+تحلیل‌ها
+تأیید سرپرست
+اعتراض‌ها
+
+### tr
+Yönetim
+Bekleyenler
+Personel sıraları okunamadı. Boş olduklarını varsaymayın.
+Burada listelenen personel sıralarının hepsi boş.
+Bekleyen: {count}. İçinde bir şey olan sıralar: {queues}.
+Burada listelenen personel sıraları boş. Kimse ders çalışmadan önce hâlâ gereken şeyler: {count}.
+Çocuk koruma kaygıları bu sayılara dahil değildir. Koruma sorumlusu, burada adı geçen sayfadaki özel sıraya bakmalıdır. E-posta uyarıları için bir sağlayıcının ve bir zamanlayıcının kurulması gerekir; uyarılar kimsenin onları aldığını kanıtlamaz.
+Teslim edilen dosyalar
+Burada kimse ders çalışmadan önce
+Bir kursun altına konabileceği konu alanları: {count}.
+Henüz hiç konu alanı yok, bu yüzden hiçbir kurs bir konunun altına konamaz.
+Kursların altına konacağı bir konu
+Alışılmış konular veritabanıyla birlikte gelir. Bu veritabanında hiç yok, bu yüzden henüz hiçbir kurs bir konunun altına konamaz.
+Doğrulanmış bir değerlendirici
+Karar vereceği konu için en az bir değerlendirici kaydedilip doğrulanmadan hiçbir şey yayımlanamaz.
+Değerlendirilecek bir kurs
+Kursu platform değil, atanmış bir öğretmen yazar. Öğretmenlerin gönderdiklerini burada görürsünüz.
+Ziyaretçinin bulabileceği bir şey
+Bir sürüm yayımlanana kadar katalog boştur. O zamana kadar ziyaretçi çalışacak bir şey bulamaz.
+Duraklatıldı
+Özelliği kapalı, bu yüzden yeni bir şey gelmiyor. Zaten burada olanlar için hâlâ bir kişi gerekiyor.
+Hiçbir sırada bir şey yok. Bu sayfada bugün sizi bekleyen bir şey yok.
+Bunlara da bakıldı ve boşlar:
+Bir özellik anahtarıyla duraklatılan sıralar: {count}
+Bir özelliği kapatmak yeni işin gelmesini durdurur. Zaten orada olanı boşaltmaz; bu yüzden bu sıralardan birindeki her şey için hâlâ bir kişi gerekir.
+Özellik anahtarları ve gelir payı platform yöneticisine aittir. Yukarıdaki sıralar ve aşağıdaki bağlantılar sizindir; bu sayfada veremeyeceğiniz bir kararı bekleyen hiçbir şey yok.
+Ne tahsil edildi, ne geri gidiyor, bir öğretmene ne borçlu olunuyor ve çevrilmiş her rakamın dayandığı kurlar. Buradaki her değişiklik yazılı bir gerekçe ister.
+Yayımlama
+Herkesin işi
+Personelin her üyesi bunlar üzerinde çalışabilir. Her rol için listelenirler, çünkü hiçbiri tek bir rolün özel sırası değildir.
+Mutabakat çalışmaları
+Destek talepleri
+Yönetişim itirazları
+Kontrol edilecek yeterlilikler
+Veli doğrulama başvuruları
+Bildirilen gönderiler, öğrenci tartışması
+Bildirilen gönderiler, öğretmen tartışması
+Bildirilen içerik
+Denetim bekleyen yorumlar
+Bakılması gereken medya
+Bir müşteriye geri dönmeyi bekleyen para.
+Ters ibrazın bir son tarihi vardır; geçerse ne olacağına sağlayıcı karar verir.
+Açık bir çalışmada, sağlayıcının ekstresiyle henüz uyuşmayan satırlar vardır.
+Bir öğretmen ödeme istedi. Ödemeyi kaydetmek onu göndermek değildir.
+Açık veya atanmış, henüz çözülmemiş.
+Biri bir karara itiraz ediyor; sessizlik de bir karardır.
+Belgesi kontrol edilmeden bir değerlendirici bir konuda yetkilendirilemez.
+Bir çocuğun ebeveyni olarak tanınmak isteyen bir yetişkin.
+Gönderi hemen gösterilir ve biri kaldırana kadar durur. Yalnızca sahibe haber verilir.
+Bir okur bir şeyi bildirdi. Kapatmak için yazılı bir not gerekir.
+Sözler biri okuyana kadar bekletilir; yalnızca puan ise zaten sayılmıştır.
+Onaylanmamış veya inceleme için bekletilen bir yükleme.
+Ödeme bekleyen siparişler
+İade talepleri
+Mali düzeltmeler
+Ödeme mutabakatı
+Ödeme itirazları
+Vergi ve transfer ücretleri
+Döviz kurları
+Gelir analizi
+Para raporu
+Yenilemeler
+Öğretmen ödemeleri
+Değerlendirme ata
+Konu alanları
+Değerlendirici kütüğü
+Öğretmen taraması
+İcazetler
+Çeviriler
+Davetler
+Destek sırası
+Kullanıcılar
+Denetim ayarları
+İçerik bildirimleri
+Yüklenen medya
+Kurs yorumları sırası
+Tartışma sırası
+Tartışma panosu bildirimleri
+Çalışma yardımcısı
+Dış hesaplar
+İletiler
+Abonelik planları
+İlim kurulları
+Telif hakkı ve kaldırma talepleri
+Olaylar
+Politikalar ve koşullar
+Analiz
+Veli doğrulaması
+İtirazlar
+
+### id
+Administrasi
+Yang sedang menunggu
+Antrean staf tidak dapat dibaca. Jangan anggap antrean itu kosong.
+Semua antrean staf yang tercantum di sini kosong.
+Menunggu: {count}. Antrean yang ada isinya: {queues}.
+Antrean staf yang tercantum di sini kosong. Hal yang masih diperlukan sebelum siapa pun dapat belajar: {count}.
+Kekhawatiran perlindungan anak tidak termasuk dalam hitungan ini. Penanggung jawab perlindungan harus melihat antrean tertutup di halaman yang disebut di sini. Peringatan email memerlukan penyedia dan penjadwal yang sudah disiapkan, dan tidak membuktikan bahwa ada yang menerimanya.
+Berkas yang dikumpulkan
+Sebelum siapa pun dapat belajar di sini
+Bidang yang dapat menjadi tempat kursus: {count}.
+Belum ada bidang, jadi tidak ada kursus yang dapat ditempatkan dalam suatu bidang.
+Bidang untuk menempatkan kursus
+Bidang yang lazim datang bersama basis data. Basis data ini tidak memilikinya, jadi belum ada kursus yang dapat ditempatkan dalam suatu bidang.
+Peninjau yang terverifikasi
+Tidak ada yang dapat diterbitkan sampai setidaknya satu peninjau dicatat dan diverifikasi untuk bidang yang akan dinilainya.
+Kursus untuk ditinjau
+Kursus ditulis oleh pengajar yang ditunjuk, bukan oleh platform. Di sini Anda melihat apa yang telah dikirim para pengajar.
+Sesuatu yang dapat ditemukan pengunjung
+Katalog kosong sampai ada versi yang diterbitkan. Sampai saat itu pengunjung tidak menemukan apa pun untuk dipelajari.
+Dijeda
+Fiturnya dimatikan, jadi tidak ada yang baru masuk. Yang sudah ada di sini tetap memerlukan seseorang.
+Tidak ada antrean yang berisi. Tidak ada apa pun di halaman ini yang menunggu Anda hari ini.
+Juga diperiksa dan kosong:
+Antrean yang dijeda oleh sakelar fitur: {count}
+Mematikan fitur menghentikan pekerjaan baru masuk. Itu tidak mengosongkan yang sudah ada, jadi apa pun di salah satu antrean ini tetap memerlukan seseorang.
+Sakelar fitur dan bagi hasil pendapatan adalah milik admin platform. Antrean di atas dan tautan di bawah adalah milik Anda, dan tidak ada apa pun di halaman ini yang menunggu keputusan yang tidak dapat Anda ambil.
+Apa yang ditagih, apa yang dikembalikan, apa yang terutang kepada pengajar, dan kurs yang menjadi dasar setiap angka yang dikonversi. Setiap perubahan di sini memerlukan alasan tertulis.
+Penerbitan
+Pekerjaan semua orang
+Setiap anggota staf boleh mengerjakan ini. Semuanya dicantumkan untuk setiap peran karena tidak satu pun merupakan antrean khusus satu peran.
+Proses rekonsiliasi
+Kasus dukungan
+Banding tata kelola
+Kualifikasi yang perlu diperiksa
+Permohonan verifikasi wali
+Kiriman yang dilaporkan, diskusi siswa
+Kiriman yang dilaporkan, diskusi guru
+Konten yang dilaporkan
+Ulasan yang menunggu moderasi
+Media yang perlu dilihat
+Uang yang menunggu untuk kembali kepada pelanggan.
+Tolak bayar punya tenggat; penyedia yang menentukan apa yang terjadi bila tenggat lewat.
+Proses yang terbuka memiliki baris yang belum cocok dengan laporan penyedia.
+Seorang pengajar meminta dibayar. Mencatat pembayaran bukan berarti mengirimnya.
+Terbuka atau sudah ditugaskan, dan belum selesai.
+Seseorang menggugat sebuah keputusan, dan diam pun adalah keputusan.
+Peninjau tidak dapat diberi wewenang dalam suatu bidang sebelum kredensialnya diperiksa.
+Orang dewasa yang meminta diakui sebagai orang tua seorang anak.
+Kiriman langsung ditampilkan dan tetap ada sampai seseorang menurunkannya. Hanya pemilik yang diberi tahu.
+Seorang pembaca menandai sesuatu. Menutupnya memerlukan catatan tertulis.
+Kata-kata ditahan sampai seseorang membacanya; penilaian saja sudah dihitung.
+Unggahan yang belum dikonfirmasi, atau yang ditahan untuk ditinjau.
+Pesanan yang menunggu pembayaran
+Permintaan pengembalian dana
+Penyesuaian keuangan
+Rekonsiliasi pembayaran
+Sengketa pembayaran
+Pajak dan biaya transfer
+Kurs mata uang
+Analisis pendapatan
+Laporan uang
+Perpanjangan
+Pembayaran pengajar
+Tugaskan tinjauan
+Bidang
+Daftar peninjau
+Pemeriksaan latar belakang pengajar
+Ijazah sanad
+Terjemahan
+Undangan
+Antrean dukungan
+Pengguna
+Pengaturan kendali
+Laporan konten
+Media yang diunggah
+Antrean ulasan kursus
+Antrean diskusi
+Laporan papan diskusi
+Asisten belajar
+Akun luar
+Pesan
+Paket langganan
+Dewan keilmuan
+Hak cipta dan permintaan penurunan
+Insiden
+Kebijakan dan ketentuan
+Analitik
+Verifikasi wali
+Banding
+
+### ms
+Pentadbiran
+Apa yang sedang menunggu
+Barisan kakitangan tidak dapat dibaca. Jangan anggap barisan itu kosong.
+Semua barisan kakitangan yang disenaraikan di sini kosong.
+Menunggu: {count}. Barisan yang ada isinya: {queues}.
+Barisan kakitangan yang disenaraikan di sini kosong. Perkara yang masih diperlukan sebelum sesiapa dapat belajar: {count}.
+Kebimbangan perlindungan kanak-kanak tidak termasuk dalam kiraan ini. Pegawai perlindungan mesti melihat barisan tertutup di halaman yang dinamakan di sini. Amaran e-mel memerlukan penyedia dan penjadual yang telah disediakan, dan tidak membuktikan bahawa sesiapa menerimanya.
+Fail yang dihantar
+Sebelum sesiapa dapat belajar di sini
+Subjek yang boleh menempatkan kursus: {count}.
+Belum ada subjek, jadi tiada kursus yang boleh ditempatkan di bawah mana-mana subjek.
+Satu subjek untuk menempatkan kursus
+Subjek yang biasa datang bersama pangkalan data. Pangkalan data ini tidak mempunyainya, jadi belum ada kursus yang boleh ditempatkan di bawah subjek.
+Penyemak yang disahkan
+Tiada apa yang boleh diterbitkan sehingga sekurang-kurangnya seorang penyemak direkodkan dan disahkan untuk subjek yang akan dinilainya.
+Satu kursus untuk disemak
+Kursus ditulis oleh guru yang dilantik, bukan oleh platform. Di sini anda melihat apa yang telah dihantar oleh guru.
+Sesuatu yang boleh ditemui pelawat
+Katalog kosong sehingga satu versi diterbitkan. Sehingga itu pelawat tidak menemui apa-apa untuk dipelajari.
+Dijeda
+Cirinya dimatikan, jadi tiada yang baharu masuk. Apa yang sudah ada di sini masih memerlukan seseorang.
+Tiada barisan yang berisi. Tiada apa-apa di halaman ini yang menunggu anda hari ini.
+Juga diperiksa dan kosong:
+Barisan yang dijeda oleh suis ciri: {count}
+Mematikan sesuatu ciri menghentikan kerja baharu masuk. Ia tidak mengosongkan apa yang sudah ada, jadi apa-apa dalam salah satu barisan ini masih memerlukan seseorang.
+Suis ciri dan bahagian hasil adalah milik pentadbir platform. Barisan di atas dan pautan di bawah adalah milik anda, dan tiada apa-apa di halaman ini yang menunggu keputusan yang tidak dapat anda buat.
+Apa yang dicaj, apa yang dipulangkan, apa yang terhutang kepada guru, dan kadar yang menjadi asas setiap angka yang ditukar. Setiap perubahan di sini memerlukan sebab bertulis.
+Penerbitan
+Kerja semua orang
+Mana-mana kakitangan boleh mengerjakan ini. Semuanya disenaraikan untuk setiap peranan kerana tiada satu pun barisan khas bagi satu peranan.
+Proses penyesuaian akaun
+Kes sokongan
+Rayuan tadbir urus
+Kelayakan untuk diperiksa
+Permohonan pengesahan penjaga
+Kiriman yang dilaporkan, perbincangan pelajar
+Kiriman yang dilaporkan, perbincangan guru
+Kandungan yang dilaporkan
+Ulasan yang menunggu penyederhanaan
+Media yang perlu dilihat
+Wang yang menunggu untuk dipulangkan kepada pelanggan.
+Caj balik ada tarikh akhir; penyedia yang menentukan apa yang berlaku jika tarikh itu berlalu.
+Proses yang terbuka mempunyai baris yang belum sepadan dengan penyata penyedia.
+Seorang guru meminta dibayar. Merekodkan bayaran bukan bermakna menghantarnya.
+Terbuka atau telah ditugaskan, dan belum selesai.
+Seseorang mempertikaikan satu keputusan, dan berdiam diri juga satu keputusan.
+Penyemak tidak boleh diberi kuasa dalam sesuatu subjek sehingga kelayakannya diperiksa.
+Orang dewasa yang meminta diiktiraf sebagai ibu atau bapa seorang kanak-kanak.
+Kiriman dipaparkan serta-merta dan kekal sehingga seseorang menurunkannya. Hanya pemilik yang diberitahu.
+Seorang pembaca menandakan sesuatu. Menutupnya memerlukan catatan bertulis.
+Kata-kata ditahan sehingga seseorang membacanya; penilaian sahaja sudah dikira.
+Muat naik yang belum disahkan, atau yang ditahan untuk semakan.
+Pesanan yang menunggu bayaran
+Permintaan bayaran balik
+Pelarasan kewangan
+Penyesuaian bayaran
+Pertikaian bayaran
+Cukai dan yuran pemindahan
+Kadar pertukaran
+Analisis hasil
+Laporan wang
+Pembaharuan
+Bayaran kepada guru
+Tugaskan semakan
+Subjek
+Daftar penyemak
+Saringan guru
+Ijazah sanad
+Terjemahan
+Jemputan
+Barisan sokongan
+Pengguna
+Tetapan kawalan
+Laporan kandungan
+Media yang dimuat naik
+Barisan ulasan kursus
+Barisan perbincangan
+Laporan papan perbincangan
+Pembantu belajar
+Akaun luar
+Mesej
+Pelan langganan
+Lembaga keilmuan
+Hak cipta dan permintaan penurunan
+Insiden
+Dasar dan terma
+Analitik
+Pengesahan penjaga
+Rayuan
+
+### bn
+প্রশাসন
+যা অপেক্ষায় আছে
+কর্মীদের সারিগুলো পড়া যায়নি। এগুলো খালি বলে ধরে নেবেন না।
+এখানে তালিকাভুক্ত কর্মীদের প্রতিটি সারি খালি।
+অপেক্ষায়: {count}। যে সারিগুলোতে কিছু আছে: {queues}।
+এখানে তালিকাভুক্ত কর্মীদের সারিগুলো খালি। কেউ পড়তে পারার আগে যা এখনও দরকার: {count}।
+শিশু সুরক্ষার উদ্বেগ এই গণনায় নেই। সুরক্ষার দায়িত্বপ্রাপ্ত ব্যক্তিকে এখানে উল্লিখিত পাতায় ব্যক্তিগত সারিটি দেখতে হবে। ইমেইল সতর্কবার্তার জন্য একটি প্রদানকারী ও একটি সময়সূচক ঠিক করা দরকার, এবং সেগুলো প্রমাণ করে না যে কেউ তা পেয়েছে।
+জমা দেওয়া ফাইল
+কেউ এখানে পড়তে পারার আগে
+যে বিষয়গুলোর অধীনে কোর্স রাখা যায়: {count}।
+এখনও কোনো বিষয় নেই, তাই কোনো কোর্স কোনো বিষয়ের অধীনে রাখা যাবে না।
+কোর্স রাখার জন্য একটি বিষয়
+প্রচলিত বিষয়গুলো ডেটাবেসের সঙ্গে আসে। এই ডেটাবেসে একটিও নেই, তাই এখনও কোনো কোর্স কোনো বিষয়ের অধীনে রাখা যাবে না।
+একজন যাচাইকৃত পর্যালোচক
+যে বিষয়ে তিনি রায় দেবেন তার জন্য অন্তত একজন পর্যালোচক নথিভুক্ত ও যাচাই না হওয়া পর্যন্ত কিছুই প্রকাশ করা যাবে না।
+পর্যালোচনার জন্য একটি কোর্স
+কোর্স লেখেন নিযুক্ত শিক্ষক, প্ল্যাটফর্ম নয়। শিক্ষকেরা কী পাঠিয়েছেন তা এখানে দেখবেন।
+এমন কিছু যা একজন দর্শনার্থী খুঁজে পাবেন
+কোনো সংস্করণ প্রকাশ না হওয়া পর্যন্ত কোর্স তালিকা খালি। ততদিন দর্শনার্থী পড়ার মতো কিছু পান না।
+স্থগিত
+এর ফিচার বন্ধ, তাই নতুন কিছু আসছে না। যা আগে থেকেই এখানে আছে তার জন্য এখনও একজন মানুষ দরকার।
+কোনো সারিতে কিছু নেই। এই পাতায় আজ কিছুই আপনার অপেক্ষায় নেই।
+এগুলোও দেখা হয়েছে এবং খালি:
+ফিচারের সুইচে স্থগিত সারি: {count}
+কোনো ফিচার বন্ধ করলে নতুন কাজ আসা থামে। যা আগে থেকে আছে তা খালি হয় না, তাই এগুলোর কোনোটিতে যা আছে তার জন্য এখনও একজন মানুষ দরকার।
+ফিচারের সুইচ ও আয়ের ভাগ প্ল্যাটফর্ম অ্যাডমিনের। উপরের সারি ও নিচের লিংকগুলো আপনার, এবং এই পাতায় এমন কোনো সিদ্ধান্তের অপেক্ষা নেই যা আপনি নিতে পারেন না।
+কী আদায় করা হয়েছে, কী ফেরত যায়, শিক্ষকের কী পাওনা, এবং যে হারের ওপর প্রতিটি রূপান্তরিত অঙ্ক দাঁড়িয়ে আছে। এখানে প্রতিটি পরিবর্তনের জন্য লিখিত কারণ দরকার।
+প্রকাশনা
+সবার কাজ
+কর্মীদের যে কেউ এগুলোতে কাজ করতে পারেন। প্রতিটি ভূমিকার জন্য এগুলো তালিকাভুক্ত, কারণ এর কোনোটিই একটি ভূমিকার নিজস্ব সারি নয়।
+হিসাব মেলানোর কাজ
+সহায়তার বিষয়
+পরিচালন সংক্রান্ত আপিল
+যাচাইয়ের অপেক্ষায় যোগ্যতা
+অভিভাবক যাচাইয়ের আবেদন
+রিপোর্ট করা পোস্ট, শিক্ষার্থীদের আলোচনা
+রিপোর্ট করা পোস্ট, শিক্ষকদের আলোচনা
+রিপোর্ট করা বিষয়বস্তু
+তদারকির অপেক্ষায় মতামত
+যে মিডিয়া দেখা দরকার
+গ্রাহকের কাছে ফেরত যাওয়ার অপেক্ষায় থাকা অর্থ।
+চার্জব্যাকের একটি সময়সীমা আছে; তা পেরিয়ে গেলে কী হবে তা প্রদানকারী ঠিক করে।
+খোলা কাজে এমন সারি আছে যা এখনও প্রদানকারীর বিবরণীর সঙ্গে মেলে না।
+একজন শিক্ষক পরিশোধ চেয়েছেন। পরিশোধ নথিভুক্ত করা মানে তা পাঠানো নয়।
+খোলা বা কাউকে দেওয়া হয়েছে, এবং এখনও মীমাংসা হয়নি।
+কেউ একটি সিদ্ধান্তের বিরোধিতা করছেন, আর নীরবতা নিজেই একটি সিদ্ধান্ত।
+পর্যালোচকের সনদ যাচাই না হওয়া পর্যন্ত তাঁকে কোনো বিষয়ে অনুমোদন দেওয়া যায় না।
+একজন প্রাপ্তবয়স্ক, যিনি একটি শিশুর অভিভাবক হিসেবে স্বীকৃতি চাইছেন।
+পোস্ট সঙ্গে সঙ্গে দেখানো হয় এবং কেউ সরিয়ে না নেওয়া পর্যন্ত থাকে। শুধু মালিককে জানানো হয়।
+একজন পাঠক কিছু চিহ্নিত করেছেন। এটি বন্ধ করতে লিখিত নোট দরকার।
+কেউ না পড়া পর্যন্ত লেখা আটকে রাখা হয়; শুধু রেটিং আগেই গণনা হয়েছে।
+এমন আপলোড যা নিশ্চিত করা হয়নি, অথবা পর্যালোচনার জন্য আটকে রাখা হয়েছে।
+পরিশোধের অপেক্ষায় থাকা অর্ডার
+অর্থ ফেরতের অনুরোধ
+আর্থিক সমন্বয়
+পরিশোধ মেলানো
+পরিশোধ নিয়ে বিরোধ
+কর ও স্থানান্তর ফি
+বিনিময় হার
+আয়ের বিশ্লেষণ
+অর্থের প্রতিবেদন
+নবায়ন
+শিক্ষকদের পরিশোধ
+পর্যালোচনা বরাদ্দ করুন
+বিষয়সমূহ
+পর্যালোচকদের তালিকা
+শিক্ষক যাচাই-বাছাই
+ইজাজা
+অনুবাদ
+আমন্ত্রণ
+সহায়তার সারি
+ব্যবহারকারী
+নিয়ন্ত্রণ
+বিষয়বস্তুর রিপোর্ট
+আপলোড করা মিডিয়া
+কোর্সের মতামতের সারি
+আলোচনার সারি
+আলোচনা বোর্ডের রিপোর্ট
+পড়াশোনার সহকারী
+বাইরের অ্যাকাউন্ট
+বার্তা
+সাবস্ক্রিপশন প্ল্যান
+আলেম বোর্ডসমূহ
+কপিরাইট ও সরিয়ে নেওয়ার অনুরোধ
+ঘটনা
+নীতিমালা ও শর্তাবলি
+বিশ্লেষণ
+অভিভাবক যাচাই
+আপিল
+
+### hi
+प्रशासन
+क्या प्रतीक्षा में है
+कर्मचारियों की कतारें पढ़ी नहीं जा सकीं। इन्हें खाली न मानें।
+यहाँ सूचीबद्ध कर्मचारियों की हर कतार खाली है।
+प्रतीक्षा में: {count}। जिन कतारों में कुछ है: {queues}।
+यहाँ सूचीबद्ध कर्मचारियों की कतारें खाली हैं। किसी के पढ़ पाने से पहले जो चीज़ें अभी चाहिए: {count}।
+बाल-सुरक्षा की चिंताएँ इन गिनतियों में शामिल नहीं हैं। सुरक्षा के ज़िम्मेदार व्यक्ति को यहाँ बताए गए पृष्ठ पर निजी कतार देखनी होगी। ईमेल चेतावनियों के लिए एक प्रदाता और एक शेड्यूलर का सेट होना ज़रूरी है, और वे यह साबित नहीं करतीं कि किसी को मिलीं।
+जमा की गई फ़ाइलें
+इससे पहले कि कोई यहाँ पढ़ सके
+वे विषय जिनके अंतर्गत पाठ्यक्रम रखा जा सकता है: {count}।
+अभी कोई विषय नहीं है, इसलिए कोई पाठ्यक्रम किसी विषय के अंतर्गत नहीं रखा जा सकता।
+एक विषय जिसके अंतर्गत पाठ्यक्रम रखे जाएँ
+सामान्य विषय डेटाबेस के साथ आते हैं। इस डेटाबेस में एक भी नहीं है, इसलिए अभी कोई पाठ्यक्रम किसी विषय के अंतर्गत नहीं रखा जा सकता।
+एक सत्यापित समीक्षक
+जब तक कम से कम एक समीक्षक दर्ज न हो और उस विषय के लिए सत्यापित न हो जिस पर वह निर्णय देगा, कुछ भी प्रकाशित नहीं हो सकता।
+समीक्षा के लिए एक पाठ्यक्रम
+पाठ्यक्रम नियुक्त शिक्षक लिखता है, मंच नहीं। यहाँ आप देखते हैं कि शिक्षकों ने क्या भेजा है।
+कुछ ऐसा जो आगंतुक को मिल सके
+जब तक कोई संस्करण प्रकाशित न हो, कैटलॉग खाली रहता है। तब तक आगंतुक को पढ़ने के लिए कुछ नहीं मिलता।
+रुकी हुई
+इसकी सुविधा बंद है, इसलिए कुछ नया नहीं आ रहा। जो पहले से यहाँ है उसे अब भी किसी व्यक्ति की ज़रूरत है।
+किसी कतार में कुछ नहीं है। इस पृष्ठ पर आज कुछ भी आपकी प्रतीक्षा में नहीं है।
+ये भी देखी गईं और खाली हैं:
+सुविधा के स्विच से रुकी कतारें: {count}
+किसी सुविधा को बंद करने से नया काम आना रुकता है। जो पहले से मौजूद है वह खाली नहीं होता, इसलिए इनमें से किसी में जो कुछ है उसे अब भी किसी व्यक्ति की ज़रूरत है।
+सुविधाओं के स्विच और आय का हिस्सा मंच के व्यवस्थापक के हैं। ऊपर की कतारें और नीचे के लिंक आपके हैं, और इस पृष्ठ पर कुछ भी ऐसे निर्णय की प्रतीक्षा में नहीं है जो आप न ले सकें।
+क्या वसूला गया, क्या लौटता है, शिक्षक का क्या बकाया है, और वे दरें जिन पर हर परिवर्तित राशि टिकी है। यहाँ हर बदलाव के लिए लिखित कारण चाहिए।
+प्रकाशन
+सबका काम
+कर्मचारियों का कोई भी सदस्य इन पर काम कर सकता है। ये हर भूमिका के लिए सूचीबद्ध हैं क्योंकि इनमें से कोई भी किसी एक भूमिका की निजी कतार नहीं है।
+मिलान की प्रक्रियाएँ
+सहायता के मामले
+शासन संबंधी अपीलें
+जाँच के लिए योग्यताएँ
+अभिभावक सत्यापन के आवेदन
+रिपोर्ट की गई पोस्ट, विद्यार्थियों की चर्चा
+रिपोर्ट की गई पोस्ट, शिक्षकों की चर्चा
+रिपोर्ट की गई सामग्री
+मॉडरेशन की प्रतीक्षा में राय
+मीडिया जिसे देखना है
+पैसा जो ग्राहक को लौटने की प्रतीक्षा में है।
+चार्जबैक की एक समय-सीमा होती है; वह बीत जाए तो क्या होगा, यह प्रदाता तय करता है।
+खुली प्रक्रिया में ऐसी पंक्तियाँ हैं जो अभी प्रदाता के विवरण से मेल नहीं खातीं।
+एक शिक्षक ने भुगतान माँगा है। भुगतान दर्ज करना उसे भेजना नहीं है।
+खुले या किसी को सौंपे गए, और अभी हल नहीं हुए।
+कोई किसी निर्णय को चुनौती दे रहा है, और चुप्पी खुद एक निर्णय है।
+जब तक समीक्षक के प्रमाण की जाँच न हो, उसे किसी विषय में अधिकृत नहीं किया जा सकता।
+एक वयस्क जो किसी बच्चे के माता-पिता के रूप में मान्यता माँग रहा है।
+पोस्ट तुरंत दिखाई जाती है और तब तक रहती है जब तक कोई उसे हटा न दे। केवल स्वामी को बताया जाता है।
+किसी पाठक ने किसी चीज़ की ओर ध्यान दिलाया। इसे बंद करने के लिए लिखित टिप्पणी चाहिए।
+शब्द तब तक रोके जाते हैं जब तक कोई उन्हें पढ़ न ले; केवल रेटिंग पहले ही गिनी जा चुकी है।
+ऐसा अपलोड जिसकी पुष्टि नहीं हुई, या जो समीक्षा के लिए रोका गया है।
+भुगतान की प्रतीक्षा में ऑर्डर
+रिफ़ंड के अनुरोध
+वित्तीय समायोजन
+भुगतानों का मिलान
+भुगतान विवाद
+कर और अंतरण शुल्क
+विनिमय दरें
+आय का विश्लेषण
+पैसे की रिपोर्ट
+नवीनीकरण
+शिक्षकों के भुगतान
+समीक्षाएँ सौंपें
+विषय
+समीक्षकों की पंजी
+शिक्षकों की जाँच
+इजाज़े
+अनुवाद
+आमंत्रण
+सहायता की कतार
+उपयोगकर्ता
+नियंत्रण
+सामग्री की रिपोर्टें
+अपलोड किया गया मीडिया
+पाठ्यक्रम की राय की कतार
+चर्चा की कतार
+चर्चा बोर्ड की रिपोर्टें
+अध्ययन सहायक
+बाहरी खाते
+संदेश
+सदस्यता योजनाएँ
+विद्वत् बोर्ड
+प्रतिलिप्यधिकार और हटाने के अनुरोध
+घटनाएँ
+नीतियाँ और शर्तें
+विश्लेषण
+अभिभावक सत्यापन
+अपीलें
+
+### fr
+Administration
+Ce qui attend
+Les files de l’équipe n’ont pas pu être lues. Ne les tenez pas pour vides.
+Toutes les files de l’équipe indiquées ici sont vides.
+En attente : {count}. Files qui contiennent quelque chose : {queues}.
+Les files de l’équipe indiquées ici sont vides. Ce qu’il faut encore avant que quiconque puisse étudier : {count}.
+Les signalements de protection de l’enfance ne sont pas dans ces chiffres. Le responsable de la protection doit regarder la file privée sur la page nommée ici. Les alertes par e-mail exigent qu’un fournisseur et un planificateur soient configurés, et ne prouvent pas que quelqu’un les a reçues.
+Fichiers remis
+Avant que quiconque puisse étudier ici
+Matières sous lesquelles un cours peut être classé : {count}.
+Il n’y a encore aucune matière ; aucun cours ne peut donc être classé sous une matière.
+Une matière sous laquelle classer les cours
+Les matières habituelles arrivent avec la base de données. Celle-ci n’en a aucune ; aucun cours ne peut donc encore être classé sous une matière.
+Un relecteur vérifié
+Rien ne peut être publié tant qu’au moins un relecteur n’a pas été enregistré et vérifié pour la matière qu’il jugera.
+Un cours à relire
+Un cours est écrit par un enseignant nommé, pas par la plateforme. C’est ici que vous voyez ce que les enseignants ont envoyé.
+Quelque chose qu’un visiteur peut trouver
+Le catalogue est vide tant qu’aucune version n’est publiée. Jusque-là, un visiteur ne trouve rien à étudier.
+En pause
+Sa fonction est désactivée ; rien de nouveau n’arrive donc. Ce qui est déjà là a encore besoin de quelqu’un.
+Aucune file ne contient quoi que ce soit. Rien sur cette page ne vous réclame aujourd’hui.
+Également vérifiées, et vides :
+Files mises en pause par l’interrupteur d’une fonction : {count}
+Désactiver une fonction arrête l’arrivée de nouveau travail. Cela ne vide pas ce qui s’y trouve déjà : tout ce qui est dans l’une de ces files a encore besoin de quelqu’un.
+Les interrupteurs des fonctions et la part des recettes appartiennent à l’administrateur de la plateforme. Les files ci-dessus et les liens ci-dessous sont les vôtres, et rien sur cette page n’attend une décision que vous ne pouvez pas prendre.
+Ce qui a été facturé, ce qui repart, ce qui est dû à un enseignant, et les taux sur lesquels repose chaque montant converti. Chaque modification faite ici exige un motif écrit.
+Publication
+Le travail de tous
+Tout membre de l’équipe peut s’en occuper. Elles sont indiquées pour chaque rôle parce qu’aucune n’est la file réservée d’un seul rôle.
+Rapprochements en cours
+Dossiers d’assistance
+Recours de gouvernance
+Qualifications à vérifier
+Demandes de vérification de tuteur
+Messages signalés, discussion des élèves
+Messages signalés, discussion des enseignants
+Contenu signalé
+Avis en attente de modération
+Médias à regarder
+De l’argent qui attend de revenir à un client.
+Une rétrofacturation a une échéance ; si elle passe, c’est le prestataire qui décide de la suite.
+Un rapprochement ouvert a des lignes qui ne concordent pas encore avec le relevé du prestataire.
+Un enseignant a demandé à être payé. Enregistrer un versement n’est pas l’envoyer.
+Ouverts ou attribués, et pas encore résolus.
+Quelqu’un conteste une décision, et le silence est lui-même une décision.
+Un relecteur ne peut être habilité dans une matière tant que son titre n’a pas été vérifié.
+Un adulte qui demande à être reconnu comme parent d’un enfant.
+Un message est affiché aussitôt et reste en ligne jusqu’à ce que quelqu’un le retire. Seul le propriétaire est prévenu.
+Un lecteur a signalé quelque chose. Clore un signalement exige une note écrite.
+Les mots sont retenus jusqu’à ce que quelqu’un les lise ; une note seule est déjà comptée.
+Un envoi qui n’a pas été confirmé, ou retenu pour examen.
+Commandes en attente de paiement
+Demandes de remboursement
+Ajustements financiers
+Rapprochement des paiements
+Litiges de paiement
+Taxes et frais de transfert
+Taux de change
+Analyse des recettes
+Rapport sur l’argent
+Renouvellements
+Versements aux enseignants
+Attribuer les relectures
+Matières
+Registre des relecteurs
+Vérification des enseignants
+Ijazas
+Traductions
+Invitations
+File d’assistance
+Utilisateurs
+Réglages de contrôle
+Signalements de contenu
+Médias envoyés
+File des avis sur les cours
+File de discussion
+Signalements des forums de discussion
+Assistant d’étude
+Comptes extérieurs
+Messages
+Formules d’abonnement
+Conseils savants
+Droit d’auteur et demandes de retrait
+Incidents
+Politiques et conditions
+Statistiques d’usage
+Vérification des tuteurs
+Recours
+
+### es
+Administración
+Lo que está esperando
+No se pudieron leer las colas del personal. No dé por hecho que están vacías.
+Todas las colas del personal que aquí se indican están vacías.
+En espera: {count}. Colas que tienen algo: {queues}.
+Las colas del personal que aquí se indican están vacías. Cosas que aún hacen falta antes de que alguien pueda estudiar: {count}.
+Las alertas de protección infantil no están en estas cifras. El responsable de protección debe mirar la cola privada en la página que aquí se nombra. Los avisos por correo necesitan que se configuren un proveedor y un programador, y no prueban que alguien los haya recibido.
+Archivos entregados
+Antes de que alguien pueda estudiar aquí
+Materias bajo las que se puede clasificar un curso: {count}.
+Todavía no hay materias, así que ningún curso puede clasificarse bajo una.
+Una materia bajo la que clasificar cursos
+Las materias habituales vienen con la base de datos. Esta no tiene ninguna, así que todavía ningún curso puede clasificarse bajo una materia.
+Un revisor verificado
+Nada puede publicarse hasta que al menos un revisor haya sido registrado y verificado para la materia que va a juzgar.
+Un curso para revisar
+Un curso lo escribe un docente nombrado, no la plataforma. Aquí se ve lo que los docentes han enviado.
+Algo que un visitante pueda encontrar
+El catálogo está vacío hasta que se publica una versión. Hasta entonces un visitante no encuentra nada que estudiar.
+En pausa
+Su función está desactivada, así que no llega nada nuevo. Lo que ya está aquí sigue necesitando a una persona.
+Ninguna cola tiene nada. Nada en esta página le reclama hoy.
+También revisadas, y vacías:
+Colas en pausa por el interruptor de una función: {count}
+Desactivar una función detiene la llegada de trabajo nuevo. No vacía lo que ya hay, así que todo lo que esté en una de estas colas sigue necesitando a una persona.
+Los interruptores de funciones y el reparto de ingresos pertenecen al administrador de la plataforma. Las colas de arriba y los enlaces de abajo son suyos, y nada en esta página espera una decisión que usted no pueda tomar.
+Lo que se cobró, lo que se devuelve, lo que se debe a un docente y los tipos de cambio en los que se apoya cada cifra convertida. Cada cambio hecho aquí necesita un motivo por escrito.
+Publicación
+Trabajo de todos
+Cualquier miembro del personal puede ocuparse de estas. Se indican para todos los roles porque ninguna es la cola privada de un solo rol.
+Conciliaciones en curso
+Casos de asistencia
+Recursos de gobernanza
+Cualificaciones por comprobar
+Solicitudes de verificación de tutor
+Mensajes denunciados, debate de estudiantes
+Mensajes denunciados, debate de docentes
+Contenido denunciado
+Reseñas en espera de moderación
+Archivos multimedia por mirar
+Dinero que espera volver a un cliente.
+Una devolución de cargo tiene un plazo; si vence, el proveedor decide lo que ocurre.
+Una conciliación abierta tiene filas que todavía no coinciden con el extracto del proveedor.
+Un docente ha pedido que se le pague. Registrar un pago no es enviarlo.
+Abiertos o asignados, y todavía sin resolver.
+Alguien impugna una decisión, y el silencio es en sí una decisión.
+No se puede autorizar a un revisor en una materia hasta que se compruebe su credencial.
+Un adulto que pide ser reconocido como progenitor de un menor.
+Un mensaje se muestra de inmediato y sigue visible hasta que alguien lo retira. Solo se avisa al propietario.
+Un lector marcó algo. Cerrar una denuncia necesita una nota escrita.
+Las palabras se retienen hasta que alguien las lee; una puntuación sola ya está contada.
+Una subida que no se ha confirmado, o retenida para revisión.
+Pedidos en espera de pago
+Solicitudes de reembolso
+Ajustes financieros
+Conciliación de pagos
+Disputas de pago
+Impuestos y comisiones de transferencia
+Tipos de cambio
+Análisis de ingresos
+Informe de dinero
+Renovaciones
+Pagos a docentes
+Asignar revisiones
+Materias
+Registro de revisores
+Comprobación de antecedentes de docentes
+Ijazas
+Traducciones
+Invitaciones
+Cola de asistencia
+Usuarios
+Ajustes de control
+Denuncias de contenido
+Archivos multimedia subidos
+Cola de reseñas de cursos
+Cola de debate
+Denuncias de los foros de debate
+Asistente de estudio
+Cuentas externas
+Mensajes
+Planes de suscripción
+Consejos de eruditos
+Derechos de autor y solicitudes de retirada
+Incidentes
+Políticas y condiciones
+Analítica
+Verificación de tutores
+Recursos
+
+### pt
+Administração
+O que está à espera
+Não foi possível ler as filas da equipa. Não parta do princípio de que estão vazias.
+Todas as filas da equipa aqui indicadas estão vazias.
+À espera: {count}. Filas que têm alguma coisa: {queues}.
+As filas da equipa aqui indicadas estão vazias. Coisas ainda necessárias antes de alguém poder estudar: {count}.
+As preocupações de proteção de crianças não estão nestes números. O responsável pela proteção tem de ver a fila privada na página aqui indicada. Os alertas por e-mail precisam de um fornecedor e de um agendador configurados, e não provam que alguém os recebeu.
+Ficheiros entregues
+Antes de alguém poder estudar aqui
+Matérias sob as quais um curso pode ser arrumado: {count}.
+Ainda não há matérias, por isso nenhum curso pode ser arrumado sob uma.
+Uma matéria sob a qual arrumar cursos
+As matérias habituais vêm com a base de dados. Esta não tem nenhuma, por isso ainda nenhum curso pode ser arrumado sob uma matéria.
+Um revisor verificado
+Nada pode ser publicado até que pelo menos um revisor tenha sido registado e verificado para a matéria que vai julgar.
+Um curso para rever
+Um curso é escrito por um professor nomeado, não pela plataforma. É aqui que se vê o que os professores enviaram.
+Algo que um visitante possa encontrar
+O catálogo está vazio até que uma versão seja publicada. Até lá, um visitante não encontra nada para estudar.
+Em pausa
+A sua funcionalidade está desligada, por isso não chega nada de novo. O que já aqui está continua a precisar de uma pessoa.
+Nenhuma fila tem nada. Nada nesta página está hoje à sua espera.
+Também verificadas, e vazias:
+Filas em pausa pelo interruptor de uma funcionalidade: {count}
+Desligar uma funcionalidade impede que chegue trabalho novo. Não esvazia o que já lá está, por isso tudo o que estiver numa destas filas continua a precisar de uma pessoa.
+Os interruptores das funcionalidades e a partilha de receitas pertencem ao administrador da plataforma. As filas acima e as ligações abaixo são suas, e nada nesta página espera uma decisão que não possa tomar.
+O que foi cobrado, o que volta, o que é devido a um professor e as taxas em que assenta cada valor convertido. Cada alteração feita aqui precisa de um motivo escrito.
+Publicação
+Trabalho de todos
+Qualquer membro da equipa pode tratar destas. Estão indicadas para todas as funções porque nenhuma é a fila privada de uma só função.
+Reconciliações em curso
+Casos de apoio
+Recursos de governação
+Qualificações por verificar
+Pedidos de verificação de tutor
+Publicações denunciadas, discussão dos alunos
+Publicações denunciadas, discussão dos professores
+Conteúdo denunciado
+Avaliações à espera de moderação
+Ficheiros multimédia por ver
+Dinheiro à espera de voltar para um cliente.
+Um estorno tem um prazo; se passar, é o fornecedor que decide o que acontece.
+Uma reconciliação aberta tem linhas que ainda não coincidem com o extrato do fornecedor.
+Um professor pediu para ser pago. Registar um pagamento não é enviá-lo.
+Abertos ou atribuídos, e ainda por resolver.
+Alguém contesta uma decisão, e o silêncio é em si uma decisão.
+Um revisor não pode ser autorizado numa matéria até a sua credencial ser verificada.
+Um adulto que pede para ser reconhecido como progenitor de uma criança.
+Uma publicação é mostrada de imediato e fica visível até alguém a retirar. Só o proprietário é avisado.
+Um leitor assinalou alguma coisa. Fechar uma denúncia precisa de uma nota escrita.
+As palavras ficam retidas até alguém as ler; uma classificação sozinha já foi contada.
+Um carregamento que não foi confirmado, ou retido para análise.
+Encomendas à espera de pagamento
+Pedidos de reembolso
+Ajustes financeiros
+Reconciliação de pagamentos
+Disputas de pagamento
+Impostos e taxas de transferência
+Taxas de câmbio
+Análise de receitas
+Relatório de dinheiro
+Renovações
+Pagamentos a professores
+Atribuir revisões
+Matérias
+Registo de revisores
+Verificação de antecedentes dos professores
+Ijazas
+Traduções
+Convites
+Fila de apoio
+Utilizadores
+Definições de controlo
+Denúncias de conteúdo
+Ficheiros multimédia carregados
+Fila de avaliações de cursos
+Fila de discussão
+Denúncias dos fóruns de discussão
+Assistente de estudo
+Contas externas
+Mensagens
+Planos de subscrição
+Conselhos de estudiosos
+Direitos de autor e pedidos de remoção
+Incidentes
+Políticas e termos
+Estatísticas de utilização
+Verificação de tutores
+Recursos
+
+### sw
+Usimamizi
+Kinachosubiri
+Foleni za wafanyakazi hazikuweza kusomwa. Usidhani kuwa ziko tupu.
+Kila foleni ya wafanyakazi iliyoorodheshwa hapa iko tupu.
+Vinavyosubiri: {count}. Foleni zenye kitu ndani: {queues}.
+Foleni za wafanyakazi zilizoorodheshwa hapa ziko tupu. Mambo ambayo bado yanahitajika kabla mtu yeyote hajaweza kusoma: {count}.
+Masuala ya ulinzi wa watoto hayamo katika hesabu hizi. Msimamizi wa ulinzi lazima aangalie foleni ya faragha katika ukurasa uliotajwa hapa. Tahadhari za barua pepe zinahitaji mtoa huduma na kipanga ratiba viwe vimewekwa, na hazithibitishi kuwa mtu yeyote alizipokea.
+Faili zilizowasilishwa
+Kabla mtu yeyote hajaweza kusoma hapa
+Masomo ambayo kozi inaweza kuwekwa chini yake: {count}.
+Bado hakuna masomo, kwa hiyo hakuna kozi inayoweza kuwekwa chini ya somo.
+Somo la kuweka kozi chini yake
+Masomo ya kawaida huja pamoja na hifadhidata. Hii haina hata moja, kwa hiyo bado hakuna kozi inayoweza kuwekwa chini ya somo.
+Mkaguzi aliyethibitishwa
+Hakuna kinachoweza kuchapishwa hadi angalau mkaguzi mmoja awe amesajiliwa na kuthibitishwa kwa somo atakalolihukumu.
+Kozi ya kukaguliwa
+Kozi huandikwa na mwalimu aliyeteuliwa, si na jukwaa. Hapa ndipo unapoona walichotuma walimu.
+Kitu ambacho mgeni anaweza kukipata
+Orodha ya kozi iko tupu hadi toleo lichapishwe. Hadi hapo mgeni hapati chochote cha kusoma.
+Imesitishwa
+Kipengele chake kimezimwa, kwa hiyo hakuna kipya kinachofika. Kilichopo hapa tayari bado kinahitaji mtu.
+Hakuna foleni yenye kitu. Hakuna chochote katika ukurasa huu kinachokuhitaji leo.
+Pia zimeangaliwa, na ziko tupu:
+Foleni zilizositishwa na swichi ya kipengele: {count}
+Kuzima kipengele husimamisha kazi mpya kufika. Hakuondoi kilichopo tayari, kwa hiyo chochote kilicho katika mojawapo ya foleni hizi bado kinahitaji mtu.
+Swichi za vipengele na mgao wa mapato ni vya msimamizi wa jukwaa. Foleni zilizo juu na viungo vilivyo chini ni vyako, na hakuna chochote katika ukurasa huu kinachosubiri uamuzi usioweza kuufanya.
+Kilichotozwa, kinachorudishwa, anachodaiwa mwalimu, na viwango ambavyo kila kiasi kilichobadilishwa kinategemea. Kila badiliko hapa linahitaji sababu iliyoandikwa.
+Uchapishaji
+Kazi ya kila mtu
+Mfanyakazi yeyote anaweza kuzishughulikia hizi. Zimeorodheshwa kwa kila jukumu kwa sababu hakuna hata moja iliyo foleni ya faragha ya jukumu moja.
+Kazi za ulinganisho wa hesabu
+Kesi za msaada
+Rufaa za utawala
+Sifa za kukaguliwa
+Maombi ya uthibitisho wa mlezi
+Machapisho yaliyoripotiwa, majadiliano ya wanafunzi
+Machapisho yaliyoripotiwa, majadiliano ya walimu
+Maudhui yaliyoripotiwa
+Maoni yanayosubiri usimamizi
+Midia inayohitaji kuangaliwa
+Pesa zinazosubiri kurudi kwa mteja.
+Dai la kurejeshewa malipo lina tarehe ya mwisho; ikipita, mtoa huduma ndiye anayeamua kinachotokea.
+Kazi iliyo wazi ina safu ambazo bado hazilingani na taarifa ya mtoa huduma.
+Mwalimu ameomba kulipwa. Kurekodi malipo si kuyatuma.
+Zimefunguliwa au zimepewa mtu, na bado hazijatatuliwa.
+Mtu anapinga uamuzi, na ukimya wenyewe ni uamuzi.
+Mkaguzi hawezi kuidhinishwa katika somo hadi cheti chake kikaguliwe.
+Mtu mzima anayeomba kutambuliwa kama mzazi wa mtoto.
+Chapisho huonyeshwa mara moja na hubaki hadi mtu aliondoe. Mmiliki pekee ndiye anayeambiwa.
+Msomaji ameashiria kitu. Kuifunga kunahitaji maelezo yaliyoandikwa.
+Maneno huzuiliwa hadi mtu ayasome; alama pekee tayari imehesabiwa.
+Kilichopakiwa ambacho hakijathibitishwa, au kilichozuiliwa kwa ukaguzi.
+Oda zinazosubiri malipo
+Maombi ya marejesho ya pesa
+Marekebisho ya kifedha
+Ulinganisho wa malipo
+Migogoro ya malipo
+Kodi na ada za uhamisho
+Viwango vya ubadilishaji
+Uchambuzi wa mapato
+Ripoti ya pesa
+Usasishaji wa usajili
+Malipo ya walimu
+Panga ukaguzi
+Masomo
+Rejista ya wakaguzi
+Uchunguzi wa walimu
+Ijaza
+Tafsiri
+Mialiko
+Foleni ya msaada
+Watumiaji
+Vidhibiti
+Ripoti za maudhui
+Midia iliyopakiwa
+Foleni ya maoni ya kozi
+Foleni ya majadiliano
+Ripoti za mabaraza ya majadiliano
+Msaidizi wa masomo
+Akaunti za nje
+Ujumbe
+Mipango ya usajili
+Bodi za wanazuoni
+Hakimiliki na maombi ya kuondoa
+Matukio
+Sera na masharti
+Takwimu za matumizi
+Uthibitisho wa walezi
+Rufaa
+
+### af
+Administrasie
+Wat wag
+Die personeel se toue kon nie gelees word nie. Moenie aanvaar dat hulle leeg is nie.
+Elke personeeltou wat hier gelys is, is leeg.
+Wag: {count}. Toue met iets daarin: {queues}.
+Die personeeltoue wat hier gelys is, is leeg. Dinge wat nog nodig is voordat enigiemand kan studeer: {count}.
+Kinderbeskermingskwessies is nie in hierdie tellings nie. Die beskermingsverantwoordelike moet na die private tou kyk op die bladsy wat hier genoem word. E-poswaarskuwings vereis dat ’n verskaffer en ’n skeduleerder opgestel is, en bewys nie dat iemand dit ontvang het nie.
+Ingediende lêers
+Voordat enigiemand hier kan studeer
+Vakke waaronder ’n kursus geplaas kan word: {count}.
+Daar is nog geen vakke nie, dus kan geen kursus onder een geplaas word nie.
+’n Vak om kursusse onder te plaas
+Die gewone vakke kom saam met die databasis. Hierdie een het geen nie, dus kan nog geen kursus onder ’n vak geplaas word nie.
+’n Beoordelaar wat geverifieer is
+Niks kan gepubliseer word voordat minstens een beoordelaar aangeteken en geverifieer is vir die vak wat hy of sy sal beoordeel nie.
+’n Kursus om te beoordeel
+’n Kursus word deur ’n aangestelde onderwyser geskryf, nie deur die platform nie. Hier sien jy wat die onderwysers gestuur het.
+Iets wat ’n besoeker kan vind
+Die katalogus is leeg totdat ’n weergawe gepubliseer word. Tot dan vind ’n besoeker niks om te studeer nie.
+Onderbreek
+Sy funksie is afgeskakel, dus kom niks nuuts in nie. Wat reeds hier is, het steeds ’n mens nodig.
+Geen tou het iets in nie. Niks op hierdie bladsy vra vandag na jou nie.
+Ook nagegaan, en leeg:
+Toue wat deur ’n funksieskakelaar onderbreek is: {count}
+Om ’n funksie af te skakel, keer dat nuwe werk inkom. Dit maak nie leeg wat reeds daar is nie, dus het enigiets in een van hierdie toue steeds ’n mens nodig.
+Die funksieskakelaars en die inkomstedeling behoort aan die platformadministrateur. Die toue hierbo en die skakels hieronder is joune, en niks op hierdie bladsy wag op ’n besluit wat jy nie kan neem nie.
+Wat gehef is, wat teruggaan, wat aan ’n onderwyser verskuldig is, en die koerse waarop elke omgerekende syfer berus. Elke verandering hier het ’n geskrewe rede nodig.
+Publikasie
+Almal se werk
+Enige personeellid mag aan hierdie werk. Hulle word vir elke rol gelys omdat geeneen een rol se private tou is nie.
+Rekonsiliasielopies
+Ondersteuningsake
+Bestuursappèlle
+Kwalifikasies om na te gaan
+Aansoeke om voogverifikasie
+Aangemelde plasings, studentebespreking
+Aangemelde plasings, onderwysersbespreking
+Aangemelde inhoud
+Resensies wat op moderering wag
+Media wat bekyk moet word
+Geld wat wag om na ’n kliënt terug te gaan.
+’n Terugvordering het ’n sperdatum; as dit verbygaan, besluit die verskaffer wat gebeur.
+’n Oop lopie het rye wat nog nie met die verskaffer se staat ooreenstem nie.
+’n Onderwyser het gevra om betaal te word. Om ’n betaling aan te teken, is nie om dit te stuur nie.
+Oop of toegewys, en nog nie opgelos nie.
+Iemand betwis ’n besluit, en stilte is self ’n besluit.
+’n Beoordelaar kan nie in ’n vak gemagtig word voordat sy of haar kwalifikasie nagegaan is nie.
+’n Volwassene wat vra om as ’n kind se ouer erken te word.
+’n Plasing word dadelik gewys en bly daar totdat iemand dit afhaal. Net die eienaar word ingelig.
+’n Leser het iets aangemeld. Om dit te sluit, verg ’n geskrewe nota.
+Woorde word teruggehou totdat iemand dit lees; ’n gradering alleen is reeds getel.
+’n Oplaai wat nie bevestig is nie, of een wat vir hersiening teruggehou word.
+Bestellings wat op betaling wag
+Terugbetalingsversoeke
+Finansiële aanpassings
+Betalingsrekonsiliasie
+Betalingsgeskille
+Belasting en oordragfooie
+Wisselkoerse
+Inkomste-ontleding
+Geldverslag
+Hernuwings
+Uitbetalings aan onderwysers
+Ken beoordelings toe
+Vakke
+Beoordelaarsregister
+Sifting van onderwysers
+Idjazas
+Vertalings
+Uitnodigings
+Ondersteuningstou
+Gebruikers
+Beheerinstellings
+Inhoudaanmeldings
+Opgelaaide media
+Tou van kursusresensies
+Besprekingstou
+Aanmeldings van besprekingsborde
+Studie-assistent
+Eksterne rekeninge
+Boodskappe
+Subskripsieplanne
+Rade van geleerdes
+Kopiereg en verwyderingsversoeke
+Voorvalle
+Beleide en voorwaardes
+Gebruikstatistiek
+Voogverifikasie
+Appèlle
+
+### zh-hans
+管理
+正在等待处理的事项
+无法读取工作人员的队列。不要当作它们是空的。
+这里列出的工作人员队列全部为空。
+等待处理：{count}。有内容的队列：{queues}。
+这里列出的工作人员队列为空。在任何人能够学习之前仍然需要的事项：{count}。
+儿童保护方面的问题不在这些数字之内。儿童保护负责人必须查看此处所指页面上的私密队列。电子邮件提醒需要先配置好服务商和定时任务，而且不能证明有人收到了。
+已提交的文件
+在任何人能够在这里学习之前
+课程可以归入的学科：{count}。
+还没有任何学科，所以任何课程都无法归入学科。
+一个可以归入课程的学科
+常用的学科随数据库一同提供。这个数据库里一个也没有，所以还没有课程可以归入学科。
+一位已核实的审阅者
+在至少一位审阅者被登记，并就其将要评判的学科通过核实之前，任何内容都无法发布。
+一门待审阅的课程
+课程由获任命的教师编写，而不是由平台编写。教师送来的内容在这里查看。
+访客能找到的内容
+在有版本发布之前，课程目录是空的。在那之前，访客找不到可以学习的内容。
+已暂停
+它的功能已关闭，所以没有新的内容进来。已经在这里的仍然需要有人处理。
+没有任何队列里有内容。今天这个页面上没有需要你处理的事。
+也已查看，并且为空：
+被功能开关暂停的队列：{count}
+关闭一项功能会让新的工作不再进来，但不会清空已有的内容，所以这些队列里的任何内容仍然需要有人处理。
+功能开关和收入分成归平台管理员所有。上面的队列和下面的链接归你处理，这个页面上没有任何事项在等一个你无法作出的决定。
+收取了什么、退回了什么、欠教师什么，以及每个换算金额所依据的汇率。这里的每一项更改都需要书面理由。
+发布
+所有人的工作
+任何工作人员都可以处理这些。它们对每个角色都列出，因为其中没有一个是某个角色的专属队列。
+对账批次
+支持个案
+治理申诉
+待核查的资历
+监护人核实申请
+被举报的帖子，学生讨论区
+被举报的帖子，教师讨论区
+被举报的内容
+等待审核的评价
+需要查看的媒体
+等待退还给顾客的款项。
+拒付有期限；如果过期，由支付服务商决定结果。
+未完成的批次中有尚未与服务商对账单相符的行。
+有教师申请付款。登记一笔付款并不等于把它汇出。
+未结或已分派，尚未解决。
+有人对一项决定提出异议，而沉默本身也是一种决定。
+在审阅者的资历证明经过核查之前，不能授权其审阅某个学科。
+一位成年人申请被认定为某个孩子的家长。
+帖子会立即显示，并一直保留到有人将其撤下。只通知所有者。
+有读者标记了某些内容。关闭一条举报需要书面说明。
+文字会被扣留，直到有人读过；单独的评分已经计入。
+尚未确认的上传，或被扣留待审的上传。
+等待付款的订单
+退款申请
+财务调整
+付款对账
+付款争议
+税费和转账手续费
+汇率
+收入分析
+款项报告
+续订
+教师付款
+分派审阅
+学科
+审阅者名册
+教师背景核查
+伊扎泽
+翻译
+邀请
+支持队列
+用户
+控制项
+内容举报
+已上传的媒体
+课程评价队列
+讨论队列
+讨论区举报
+学习助手
+外部账户
+消息
+订阅方案
+各学术委员会
+版权与下架请求
+事件
+政策与条款
+使用统计
+监护人核实
+申诉
+
+### zh-hant
+管理
+正在等待處理的事項
+無法讀取工作人員的佇列。不要當作它們是空的。
+這裡列出的工作人員佇列全部為空。
+等待處理：{count}。有內容的佇列：{queues}。
+這裡列出的工作人員佇列為空。在任何人能夠學習之前仍然需要的事項：{count}。
+兒童保護方面的問題不在這些數字之內。兒童保護負責人必須查看此處所指頁面上的私密佇列。電子郵件提醒需要先設定好服務商和排程工作，而且不能證明有人收到了。
+已提交的檔案
+在任何人能夠在這裡學習之前
+課程可以歸入的學科：{count}。
+還沒有任何學科，所以任何課程都無法歸入學科。
+一個可以歸入課程的學科
+常用的學科隨資料庫一同提供。這個資料庫裡一個也沒有，所以還沒有課程可以歸入學科。
+一位已核實的審閱者
+在至少一位審閱者被登記，並就其將要評判的學科通過核實之前，任何內容都無法發布。
+一門待審閱的課程
+課程由獲任命的教師編寫，而不是由平台編寫。教師送來的內容在這裡查看。
+訪客能找到的內容
+在有版本發布之前，課程目錄是空的。在那之前，訪客找不到可以學習的內容。
+已暫停
+它的功能已關閉，所以沒有新的內容進來。已經在這裡的仍然需要有人處理。
+沒有任何佇列裡有內容。今天這個頁面上沒有需要你處理的事。
+也已查看，並且為空：
+被功能開關暫停的佇列：{count}
+關閉一項功能會讓新的工作不再進來，但不會清空已有的內容，所以這些佇列裡的任何內容仍然需要有人處理。
+功能開關和收入分成歸平台管理員所有。上面的佇列和下面的連結歸你處理，這個頁面上沒有任何事項在等一個你無法作出的決定。
+收取了什麼、退回了什麼、欠教師什麼，以及每個換算金額所依據的匯率。這裡的每一項更改都需要書面理由。
+發布
+所有人的工作
+任何工作人員都可以處理這些。它們對每個角色都列出，因為其中沒有一個是某個角色的專屬佇列。
+對帳批次
+支援個案
+治理申訴
+待核查的資歷
+監護人核實申請
+被檢舉的貼文，學生討論區
+被檢舉的貼文，教師討論區
+被檢舉的內容
+等待審核的評價
+需要查看的媒體
+等待退還給顧客的款項。
+拒付有期限；如果過期，由支付服務商決定結果。
+未完成的批次中有尚未與服務商對帳單相符的列。
+有教師申請付款。登記一筆付款並不等於把它匯出。
+未結或已分派，尚未解決。
+有人對一項決定提出異議，而沉默本身也是一種決定。
+在審閱者的資歷證明經過核查之前，不能授權其審閱某個學科。
+一位成年人申請被認定為某個孩子的家長。
+貼文會立即顯示，並一直保留到有人將其撤下。只通知擁有者。
+有讀者標記了某些內容。關閉一則檢舉需要書面說明。
+文字會被扣留，直到有人讀過；單獨的評分已經計入。
+尚未確認的上傳，或被扣留待審的上傳。
+等待付款的訂單
+退款申請
+財務調整
+付款對帳
+付款爭議
+稅費和轉帳手續費
+匯率
+收入分析
+款項報告
+續訂
+教師付款
+分派審閱
+學科
+審閱者名冊
+教師背景核查
+伊扎澤
+翻譯
+邀請
+支援佇列
+使用者
+控制項
+內容檢舉
+已上傳的媒體
+課程評價佇列
+討論佇列
+討論區檢舉
+學習助理
+外部帳戶
+訊息
+訂閱方案
+各學術委員會
+版權與下架請求
+事件
+政策與條款
+使用統計
+監護人核實
+申訴
+
+### vi
+Quản trị
+Những việc đang chờ
+Không đọc được các hàng chờ của nhân viên. Đừng cho rằng chúng trống.
+Mọi hàng chờ của nhân viên nêu ở đây đều trống.
+Đang chờ: {count}. Hàng chờ có việc: {queues}.
+Các hàng chờ của nhân viên nêu ở đây đều trống. Những thứ còn cần trước khi có ai học được: {count}.
+Các lo ngại về bảo vệ trẻ em không nằm trong những con số này. Người phụ trách bảo vệ trẻ em phải xem hàng chờ riêng ở trang được nêu tại đây. Cảnh báo qua email cần một nhà cung cấp và một bộ lập lịch đã được thiết lập, và không chứng minh rằng có ai đã nhận được.
+Tệp đã nộp
+Trước khi có ai học được ở đây
+Môn học mà khóa học có thể được xếp vào: {count}.
+Chưa có môn học nào, nên chưa khóa học nào có thể được xếp vào một môn.
+Một môn học để xếp khóa học vào
+Các môn thông thường đi kèm cơ sở dữ liệu. Cơ sở dữ liệu này không có môn nào, nên chưa khóa học nào có thể được xếp vào một môn.
+Một người duyệt đã xác minh
+Không gì có thể được xuất bản cho đến khi ít nhất một người duyệt được ghi nhận và xác minh cho môn học mà người đó sẽ đánh giá.
+Một khóa học để duyệt
+Khóa học do giáo viên được bổ nhiệm viết, không phải do nền tảng. Đây là nơi bạn thấy những gì giáo viên đã gửi.
+Thứ mà khách ghé thăm có thể tìm thấy
+Danh mục trống cho đến khi một phiên bản được xuất bản. Cho đến lúc đó khách ghé thăm không tìm thấy gì để học.
+Tạm dừng
+Tính năng của nó đang tắt, nên không có gì mới đến. Những gì đã ở đây vẫn cần một người xử lý.
+Không hàng chờ nào có việc. Hôm nay không có gì trên trang này cần đến bạn.
+Cũng đã xem, và trống:
+Hàng chờ bị tạm dừng bởi công tắc tính năng: {count}
+Tắt một tính năng làm việc mới ngừng đến. Việc đó không làm trống những gì đã có, nên bất cứ thứ gì trong một trong các hàng chờ này vẫn cần một người xử lý.
+Các công tắc tính năng và phần chia doanh thu thuộc về quản trị viên nền tảng. Các hàng chờ ở trên và các liên kết ở dưới là của bạn, và không có gì trên trang này chờ một quyết định mà bạn không thể đưa ra.
+Những gì đã thu, những gì hoàn lại, những gì còn nợ giáo viên, và các tỷ giá mà mọi con số quy đổi dựa vào. Mọi thay đổi ở đây đều cần lý do bằng văn bản.
+Xuất bản
+Việc của mọi người
+Bất kỳ nhân viên nào cũng có thể xử lý những việc này. Chúng được nêu cho mọi vai trò vì không việc nào là hàng chờ riêng của một vai trò.
+Các đợt đối soát
+Yêu cầu hỗ trợ
+Khiếu nại về quản trị
+Trình độ cần kiểm tra
+Đơn xin xác minh người giám hộ
+Bài đăng bị báo cáo, thảo luận của học viên
+Bài đăng bị báo cáo, thảo luận của giáo viên
+Nội dung bị báo cáo
+Đánh giá chờ kiểm duyệt
+Tệp phương tiện cần xem
+Tiền đang chờ trả lại cho khách hàng.
+Yêu cầu bồi hoàn có thời hạn; nếu quá hạn, nhà cung cấp quyết định điều gì xảy ra.
+Một đợt đang mở có những dòng chưa khớp với sao kê của nhà cung cấp.
+Một giáo viên đã yêu cầu được trả tiền. Ghi nhận một khoản chi không phải là gửi nó đi.
+Đang mở hoặc đã giao, và chưa được giải quyết.
+Có người đang phản đối một quyết định, và im lặng cũng là một quyết định.
+Người duyệt không thể được cấp quyền trong một môn cho đến khi chứng chỉ của họ được kiểm tra.
+Một người lớn xin được công nhận là cha mẹ của một đứa trẻ.
+Bài đăng được hiển thị ngay và ở lại cho đến khi có người gỡ xuống. Chỉ chủ sở hữu được báo.
+Một người đọc đã gắn cờ điều gì đó. Đóng một báo cáo cần ghi chú bằng văn bản.
+Lời viết được giữ lại cho đến khi có người đọc; riêng điểm xếp hạng thì đã được tính.
+Một tệp tải lên chưa được xác nhận, hoặc bị giữ lại để xem xét.
+Đơn hàng chờ thanh toán
+Yêu cầu hoàn tiền
+Điều chỉnh tài chính
+Đối soát thanh toán
+Tranh chấp thanh toán
+Thuế và phí chuyển khoản
+Tỷ giá hối đoái
+Phân tích doanh thu
+Báo cáo tiền
+Gia hạn
+Chi trả cho giáo viên
+Giao việc duyệt
+Môn học
+Sổ đăng ký người duyệt
+Thẩm tra giáo viên
+Các ijazah
+Bản dịch
+Lời mời
+Hàng chờ hỗ trợ
+Người dùng
+Thiết lập kiểm soát
+Báo cáo nội dung
+Tệp phương tiện đã tải lên
+Hàng chờ đánh giá khóa học
+Hàng chờ thảo luận
+Báo cáo từ các bảng thảo luận
+Trợ lý học tập
+Tài khoản bên ngoài
+Tin nhắn
+Gói đăng ký
+Các hội đồng học giả
+Bản quyền và yêu cầu gỡ bỏ
+Sự cố
+Chính sách và điều khoản
+Số liệu sử dụng
+Xác minh người giám hộ
+Khiếu nại
+
+### th
+การดูแลระบบ
+สิ่งที่รออยู่
+อ่านคิวงานของเจ้าหน้าที่ไม่ได้ อย่าถือว่าคิวว่าง
+คิวงานของเจ้าหน้าที่ทุกคิวที่แสดงที่นี่ว่างอยู่
+รออยู่: {count} คิวที่มีงานอยู่: {queues}
+คิวงานของเจ้าหน้าที่ที่แสดงที่นี่ว่างอยู่ สิ่งที่ยังต้องมีก่อนที่ใครจะเรียนได้: {count}
+ข้อกังวลด้านการคุ้มครองเด็กไม่ได้รวมอยู่ในจำนวนเหล่านี้ ผู้รับผิดชอบด้านการคุ้มครองต้องดูคิวส่วนตัวในหน้าที่ระบุไว้ที่นี่ การแจ้งเตือนทางอีเมลต้องตั้งค่าผู้ให้บริการและตัวตั้งเวลาก่อน และไม่ได้พิสูจน์ว่ามีใครได้รับ
+ไฟล์ที่ส่งแล้ว
+ก่อนที่ใครจะเรียนที่นี่ได้
+วิชาที่จัดหลักสูตรไว้ได้: {count}
+ยังไม่มีวิชาใดเลย จึงจัดหลักสูตรไว้ใต้วิชาใดไม่ได้
+วิชาสำหรับจัดหลักสูตรไว้
+วิชาทั่วไปมาพร้อมกับฐานข้อมูล ฐานข้อมูลนี้ไม่มีเลย จึงยังจัดหลักสูตรไว้ใต้วิชาใดไม่ได้
+ผู้ตรวจทานที่ยืนยันแล้ว
+จะเผยแพร่อะไรไม่ได้จนกว่าจะมีผู้ตรวจทานอย่างน้อยหนึ่งคนถูกบันทึกและยืนยันสำหรับวิชาที่จะตัดสิน
+หลักสูตรสำหรับตรวจทาน
+หลักสูตรเขียนโดยครูที่ได้รับแต่งตั้ง ไม่ใช่โดยแพลตฟอร์ม ที่นี่คือที่ที่คุณเห็นสิ่งที่ครูส่งมา
+สิ่งที่ผู้เข้าชมหาเจอ
+รายการหลักสูตรว่างอยู่จนกว่าจะมีฉบับที่เผยแพร่ จนถึงตอนนั้นผู้เข้าชมจะไม่พบอะไรให้เรียน
+หยุดชั่วคราว
+ฟีเจอร์ของคิวนี้ปิดอยู่ จึงไม่มีงานใหม่เข้ามา สิ่งที่อยู่ที่นี่แล้วยังต้องมีคนดูแล
+ไม่มีคิวใดมีงาน วันนี้ไม่มีอะไรในหน้านี้ที่รอคุณอยู่
+ตรวจดูแล้วเช่นกัน และว่างอยู่:
+คิวที่หยุดชั่วคราวเพราะสวิตช์ฟีเจอร์: {count}
+การปิดฟีเจอร์ทำให้งานใหม่หยุดเข้ามา แต่ไม่ได้ล้างสิ่งที่มีอยู่แล้ว ดังนั้นสิ่งใดก็ตามในคิวเหล่านี้ยังต้องมีคนดูแล
+สวิตช์ฟีเจอร์และส่วนแบ่งรายได้เป็นของผู้ดูแลแพลตฟอร์ม คิวด้านบนและลิงก์ด้านล่างเป็นของคุณ และไม่มีอะไรในหน้านี้ที่รอการตัดสินใจที่คุณทำไม่ได้
+สิ่งที่เรียกเก็บ สิ่งที่คืนกลับ สิ่งที่ค้างจ่ายครู และอัตราที่ตัวเลขที่แปลงค่าทุกตัวอ้างอิง การเปลี่ยนแปลงทุกครั้งที่นี่ต้องมีเหตุผลเป็นลายลักษณ์อักษร
+การเผยแพร่
+งานของทุกคน
+เจ้าหน้าที่คนใดก็ทำงานเหล่านี้ได้ งานเหล่านี้แสดงให้ทุกบทบาทเพราะไม่มีงานใดเป็นคิวเฉพาะของบทบาทเดียว
+รอบการกระทบยอด
+เรื่องที่ขอความช่วยเหลือ
+คำอุทธรณ์ด้านการกำกับดูแล
+คุณวุฒิที่ต้องตรวจสอบ
+คำขอยืนยันผู้ปกครอง
+โพสต์ที่ถูกรายงาน การสนทนาของนักเรียน
+โพสต์ที่ถูกรายงาน การสนทนาของครู
+เนื้อหาที่ถูกรายงาน
+รีวิวที่รอการกลั่นกรอง
+สื่อที่ต้องดู
+เงินที่รอคืนให้ลูกค้า
+การปฏิเสธการชำระเงินมีกำหนดเวลา หากเลยกำหนด ผู้ให้บริการเป็นผู้ตัดสินว่าจะเกิดอะไรขึ้น
+รอบที่เปิดอยู่มีแถวที่ยังไม่ตรงกับใบแจ้งยอดของผู้ให้บริการ
+ครูคนหนึ่งขอรับเงิน การบันทึกการจ่ายไม่ใช่การส่งเงิน
+เปิดอยู่หรือมอบหมายแล้ว และยังไม่ได้รับการแก้ไข
+มีคนกำลังโต้แย้งคำตัดสิน และการนิ่งเฉยก็เป็นการตัดสินอย่างหนึ่ง
+จะให้อำนาจผู้ตรวจทานในวิชาใดไม่ได้จนกว่าจะตรวจสอบหลักฐานคุณวุฒิของเขา
+ผู้ใหญ่ที่ขอให้ยอมรับว่าเป็นพ่อแม่ของเด็กคนหนึ่ง
+โพสต์จะแสดงทันทีและอยู่ต่อไปจนกว่าจะมีคนนำออก มีเพียงเจ้าของที่ได้รับแจ้ง
+ผู้อ่านคนหนึ่งแจ้งบางอย่างไว้ การปิดเรื่องต้องมีบันทึกเป็นลายลักษณ์อักษร
+ข้อความจะถูกกักไว้จนกว่าจะมีคนอ่าน ส่วนคะแนนอย่างเดียวถูกนับแล้ว
+การอัปโหลดที่ยังไม่ได้ยืนยัน หรือที่ถูกกักไว้เพื่อตรวจสอบ
+คำสั่งซื้อที่รอการชำระเงิน
+คำขอคืนเงิน
+การปรับปรุงทางการเงิน
+การกระทบยอดการชำระเงิน
+ข้อโต้แย้งการชำระเงิน
+ภาษีและค่าธรรมเนียมการโอน
+อัตราแลกเปลี่ยน
+การวิเคราะห์รายได้
+รายงานเงิน
+การต่ออายุ
+การจ่ายเงินให้ครู
+มอบหมายงานตรวจทาน
+วิชา
+ทะเบียนผู้ตรวจทาน
+การตรวจสอบประวัติครู
+อิญาซะฮ์
+คำแปล
+คำเชิญ
+คิวฝ่ายช่วยเหลือ
+ผู้ใช้
+การตั้งค่าควบคุม
+รายงานเนื้อหา
+สื่อที่อัปโหลด
+คิวรีวิวหลักสูตร
+คิวการสนทนา
+รายงานจากกระดานสนทนา
+ผู้ช่วยการเรียน
+บัญชีภายนอก
+ข้อความ
+แพ็กเกจสมาชิก
+คณะกรรมการผู้ทรงความรู้
+ลิขสิทธิ์และคำขอให้นำออก
+เหตุการณ์
+นโยบายและข้อกำหนด
+สถิติการใช้งาน
+การยืนยันผู้ปกครอง
+คำอุทธรณ์
+
+### fil
+Pangangasiwa
+Ang mga naghihintay
+Hindi nabasa ang mga pila ng kawani. Huwag ipagpalagay na walang laman ang mga ito.
+Walang laman ang bawat pila ng kawani na nakalista rito.
+Naghihintay: {count}. Mga pilang may laman: {queues}.
+Walang laman ang mga pila ng kawani na nakalista rito. Mga bagay na kailangan pa bago makapag-aral ang sinuman: {count}.
+Hindi kasama sa mga bilang na ito ang mga alalahanin sa pangangalaga ng bata. Dapat tingnan ng tagapangasiwa ng pangangalaga ang pribadong pila sa pahinang binanggit dito. Kailangang nakaayos ang isang provider at isang scheduler para sa mga alerto sa email, at hindi pinatutunayan ng mga iyon na may nakatanggap.
+Mga ipinasang file
+Bago makapag-aral dito ang sinuman
+Mga paksang maaaring paglagyan ng kurso: {count}.
+Wala pang paksa, kaya walang kursong mailalagay sa ilalim ng isang paksa.
+Isang paksang paglalagyan ng mga kurso
+Kasama ng database ang mga karaniwang paksa. Wala ni isa ang database na ito, kaya wala pang kursong mailalagay sa ilalim ng isang paksa.
+Isang beripikadong tagasuri
+Walang mailalathala hangga’t walang kahit isang tagasuring naitala at naberipika para sa paksang hahatulan niya.
+Isang kursong susuriin
+Ang kurso ay isinusulat ng itinalagang guro, hindi ng platform. Dito mo makikita ang ipinadala ng mga guro.
+Isang bagay na mahahanap ng bisita
+Walang laman ang katalogo hangga’t walang bersiyong nailalathala. Hanggang doon, walang mahahanap na mapag-aaralan ang bisita.
+Nakahinto
+Naka-off ang feature nito, kaya walang bagong dumarating. Kailangan pa rin ng tao ang narito na.
+Walang pilang may laman. Walang anuman sa pahinang ito ang naghihintay sa iyo ngayon.
+Tiningnan din, at walang laman:
+Mga pilang inihinto ng switch ng isang feature: {count}
+Ang pag-off ng isang feature ay pumipigil sa pagdating ng bagong gawain. Hindi nito inaalis ang naroon na, kaya kailangan pa rin ng tao ang anumang nasa isa sa mga pilang ito.
+Sa admin ng platform ang mga switch ng feature at ang hatian ng kita. Sa iyo ang mga pila sa itaas at ang mga link sa ibaba, at walang anuman sa pahinang ito ang naghihintay ng pasyang hindi mo magagawa.
+Ang siningil, ang ibinabalik, ang utang sa isang guro, at ang mga palitang pinagbabatayan ng bawat halagang na-convert. Kailangan ng nakasulat na dahilan ang bawat pagbabago rito.
+Paglalathala
+Gawain ng lahat
+Maaaring gawin ang mga ito ng sinumang kawani. Nakalista ang mga ito para sa bawat tungkulin dahil wala sa mga ito ang pribadong pila ng iisang tungkulin.
+Mga pagtutugma ng tala
+Mga kaso ng suporta
+Mga apela sa pamamahala
+Mga kwalipikasyong susuriin
+Mga hiling sa beripikasyon ng tagapag-alaga
+Mga iniulat na post, talakayan ng mga mag-aaral
+Mga iniulat na post, talakayan ng mga guro
+Iniulat na nilalaman
+Mga rebyung naghihintay ng moderasyon
+Media na kailangang tingnan
+Perang naghihintay na maibalik sa isang customer.
+May takdang araw ang chargeback; kapag lumampas ito, ang provider ang magpapasya sa mangyayari.
+Ang bukas na pagtutugma ay may mga hanay na hindi pa tumutugma sa statement ng provider.
+Humiling ang isang guro na mabayaran. Ang pagtatala ng bayad ay hindi pagpapadala nito.
+Bukas o naitalaga na, at hindi pa nalulutas.
+May tumututol sa isang pasya, at ang pananahimik ay isa ring pasya.
+Hindi mabibigyan ng awtoridad ang isang tagasuri sa isang paksa hangga’t hindi nasusuri ang kredensiyal niya.
+Isang nasa hustong gulang na humihiling na kilalanin bilang magulang ng isang bata.
+Agad na ipinapakita ang post at nananatili hanggang may mag-alis nito. Ang may-ari lamang ang sinasabihan.
+May minarkahan ang isang mambabasa. Kailangan ng nakasulat na tala para isara ito.
+Pinipigil ang mga salita hanggang may makabasa; ang rating lamang ay nabilang na.
+Isang upload na hindi pa nakumpirma, o pinigil para suriin.
+Mga order na naghihintay ng bayad
+Mga hiling na refund
+Mga pagsasaayos sa pananalapi
+Pagtutugma ng mga bayad
+Mga alitan sa bayad
+Buwis at mga bayarin sa paglilipat
+Mga palitan ng pera
+Pagsusuri ng kita
+Ulat ng pera
+Mga pag-renew
+Mga bayad sa guro
+Magtalaga ng mga pagsusuri
+Mga paksa
+Talaan ng mga tagasuri
+Pagsisiyasat sa mga guro
+Mga ijazah
+Mga salin
+Mga imbitasyon
+Pila ng suporta
+Mga user
+Mga kontrol
+Mga ulat sa nilalaman
+In-upload na media
+Pila ng mga rebyu ng kurso
+Pila ng talakayan
+Mga ulat mula sa mga talakayan
+Katulong sa pag-aaral
+Mga panlabas na account
+Mga mensahe
+Mga plano ng subskripsyon
+Mga lupon ng mga iskolar
+Karapatang-ari at mga hiling na pag-aalis
+Mga insidente
+Mga patakaran at tuntunin
+Estadistika ng paggamit
+Beripikasyon ng tagapag-alaga
+Mga apela
+
+### uz
+Boshqaruv
+Nima kutmoqda
+Xodimlar navbatlarini oʻqib boʻlmadi. Ularni boʻsh deb hisoblamang.
+Bu yerda koʻrsatilgan xodimlar navbatlarining barchasi boʻsh.
+Kutmoqda: {count}. Ichida biror narsa bor navbatlar: {queues}.
+Bu yerda koʻrsatilgan xodimlar navbatlari boʻsh. Kimdir oʻqiy olishidan oldin hali kerak boʻlgan narsalar: {count}.
+Bolalarni himoya qilishga oid xavotirlar bu sonlarga kirmaydi. Himoya uchun masʼul shaxs bu yerda nomi aytilgan sahifadagi yopiq navbatni koʻrishi shart. Email ogohlantirishlari uchun provayder va rejalashtirgich sozlangan boʻlishi kerak, va ular kimdir ularni olganini isbotlamaydi.
+Topshirilgan fayllar
+Bu yerda kimdir oʻqiy olishidan oldin
+Kursni joylashtirish mumkin boʻlgan fanlar: {count}.
+Hali hech qanday fan yoʻq, shuning uchun hech bir kursni fan ostiga joylashtirib boʻlmaydi.
+Kurslar joylashtiriladigan fan
+Odatdagi fanlar maʼlumotlar bazasi bilan birga keladi. Bu bazada birortasi ham yoʻq, shuning uchun hali hech bir kursni fan ostiga joylashtirib boʻlmaydi.
+Tasdiqlangan taqrizchi
+Kamida bitta taqrizchi qayd etilib, oʻzi baholaydigan fan boʻyicha tasdiqlanmaguncha hech narsa nashr etilmaydi.
+Taqriz qilinadigan kurs
+Kursni platforma emas, tayinlangan oʻqituvchi yozadi. Oʻqituvchilar yuborgan narsalarni shu yerda koʻrasiz.
+Mehmon topa oladigan narsa
+Biror versiya nashr etilmaguncha katalog boʻsh. Ungacha mehmon oʻqish uchun hech narsa topmaydi.
+Toʻxtatilgan
+Uning funksiyasi oʻchirilgan, shuning uchun yangi narsa kelmayapti. Bu yerda allaqachon bor narsalar uchun hali ham odam kerak.
+Hech bir navbatda hech narsa yoʻq. Bugun bu sahifada sizni kutayotgan narsa yoʻq.
+Bular ham koʻrildi va boʻsh:
+Funksiya kaliti bilan toʻxtatilgan navbatlar: {count}
+Funksiyani oʻchirish yangi ish kelishini toʻxtatadi. U allaqachon bor narsani boʻshatmaydi, shuning uchun bu navbatlardan biridagi har qanday narsa uchun hali ham odam kerak.
+Funksiya kalitlari va daromad ulushi platforma administratoriga tegishli. Yuqoridagi navbatlar va quyidagi havolalar sizniki, va bu sahifada siz qabul qila olmaydigan qarorni kutayotgan hech narsa yoʻq.
+Nima undirilgani, nima qaytarilishi, oʻqituvchiga nima qarz ekani va har bir oʻgirilgan raqam tayanadigan kurslar. Bu yerdagi har bir oʻzgarish yozma sabab talab qiladi.
+Nashr
+Hammaning ishi
+Xodimlarning har biri bular ustida ishlashi mumkin. Ular har bir rol uchun koʻrsatilgan, chunki hech biri bitta rolning shaxsiy navbati emas.
+Solishtirish jarayonlari
+Yordam murojaatlari
+Boshqaruv boʻyicha apellyatsiyalar
+Tekshiriladigan malakalar
+Vasiyni tasdiqlash arizalari
+Shikoyat qilingan postlar, oʻquvchilar muhokamasi
+Shikoyat qilingan postlar, oʻqituvchilar muhokamasi
+Shikoyat qilingan kontent
+Moderatsiyani kutayotgan sharhlar
+Koʻrib chiqilishi kerak boʻlgan media
+Mijozga qaytishini kutayotgan pul.
+Toʻlovni qaytarib olish talabining muddati bor; u oʻtib ketsa, nima boʻlishini provayder hal qiladi.
+Ochiq jarayonda provayder hisoboti bilan hali mos kelmaydigan qatorlar bor.
+Oʻqituvchi toʻlov soʻradi. Toʻlovni qayd etish uni yuborish degani emas.
+Ochiq yoki biriktirilgan, va hali hal etilmagan.
+Kimdir qarorga eʼtiroz bildirmoqda, sukut esa oʻzi ham qarordir.
+Taqrizchining hujjati tekshirilmaguncha unga biror fan boʻyicha vakolat berib boʻlmaydi.
+Bolaning ota-onasi sifatida tan olinishini soʻrayotgan katta yoshli kishi.
+Post darhol koʻrsatiladi va kimdir olib tashlamaguncha turadi. Faqat egasiga xabar beriladi.
+Oʻquvchi biror narsani belgiladi. Uni yopish uchun yozma izoh kerak.
+Soʻzlar kimdir oʻqimaguncha ushlab turiladi; bahoning oʻzi esa allaqachon hisoblangan.
+Tasdiqlanmagan yoki koʻrib chiqish uchun ushlab turilgan yuklama.
+Toʻlovni kutayotgan buyurtmalar
+Pul qaytarish soʻrovlari
+Moliyaviy tuzatishlar
+Toʻlovlarni solishtirish
+Toʻlov boʻyicha nizolar
+Soliq va oʻtkazma toʻlovlari
+Valyuta kurslari
+Daromad tahlili
+Pul hisoboti
+Uzaytirishlar
+Oʻqituvchilarga toʻlovlar
+Taqrizlarni biriktirish
+Fanlar
+Taqrizchilar roʻyxati
+Oʻqituvchilarni tekshirish
+Ijozatlar
+Tarjimalar
+Taklifnomalar
+Yordam navbati
+Foydalanuvchilar
+Nazorat sozlamalari
+Kontent boʻyicha shikoyatlar
+Yuklangan media
+Kurs sharhlari navbati
+Muhokama navbati
+Muhokama taxtalari boʻyicha shikoyatlar
+Oʻqish yordamchisi
+Tashqi hisoblar
+Xabarlar
+Obuna tariflari
+Ilmiy kengashlar
+Mualliflik huquqi va olib tashlash soʻrovlari
+Hodisalar
+Siyosatlar va shartlar
+Foydalanish statistikasi
+Vasiyni tasdiqlash
+Apellyatsiyalar
+
+### kk
+Әкімшілік
+Не күтіп тұр
+Қызметкерлер кезектерін оқу мүмкін болмады. Оларды бос деп санамаңыз.
+Мұнда көрсетілген қызметкерлер кезектерінің бәрі бос.
+Күтіп тұр: {count}. Ішінде бірдеңе бар кезектер: {queues}.
+Мұнда көрсетілген қызметкерлер кезектері бос. Біреу оқи алмас бұрын әлі қажет нәрселер: {count}.
+Балаларды қорғауға қатысты алаңдаушылықтар бұл сандарға кірмейді. Қорғауға жауапты адам осында аталған беттегі жабық кезекті қарауы тиіс. Электрондық пошта ескертулері үшін провайдер мен жоспарлағыш бапталған болуы керек, және олар біреудің оларды алғанын дәлелдемейді.
+Тапсырылған файлдар
+Мұнда біреу оқи алмас бұрын
+Курсты орналастыруға болатын пәндер: {count}.
+Әзірге ешқандай пән жоқ, сондықтан ешбір курсты пәннің астына орналастыру мүмкін емес.
+Курстар орналастырылатын пән
+Әдеттегі пәндер дерекқормен бірге келеді. Бұл дерекқорда біреуі де жоқ, сондықтан әзірге ешбір курсты пәннің астына орналастыру мүмкін емес.
+Расталған рецензент
+Кемінде бір рецензент тіркеліп, өзі бағалайтын пән бойынша расталмайынша ештеңе жарияланбайды.
+Рецензияланатын курс
+Курсты платформа емес, тағайындалған мұғалім жазады. Мұғалімдердің жібергенін осы жерден көресіз.
+Келуші таба алатын нәрсе
+Бір нұсқа жарияланғанша каталог бос. Оған дейін келуші оқитын ештеңе таппайды.
+Тоқтатылған
+Оның функциясы өшірілген, сондықтан жаңа ештеңе келмейді. Мұнда бұрыннан бар нәрсеге әлі де адам керек.
+Ешбір кезекте ештеңе жоқ. Бүгін бұл бетте сізді күтіп тұрған ештеңе жоқ.
+Бұлар да қаралды және бос:
+Функция қосқышымен тоқтатылған кезектер: {count}
+Функцияны өшіру жаңа жұмыстың келуін тоқтатады. Ол бұрыннан бар нәрсені босатпайды, сондықтан осы кезектердің біріндегі кез келген нәрсеге әлі де адам керек.
+Функция қосқыштары мен табыс үлесі платформа әкімшісіне тиесілі. Жоғарыдағы кезектер мен төмендегі сілтемелер сіздікі, және бұл бетте сіз қабылдай алмайтын шешімді күтіп тұрған ештеңе жоқ.
+Не алынды, не қайтарылады, мұғалімге не тиесілі және әрбір айырбасталған сан сүйенетін бағамдар. Мұндағы әрбір өзгеріс жазбаша себепті талап етеді.
+Жариялау
+Барлығының жұмысы
+Қызметкерлердің кез келгені бұлармен жұмыс істей алады. Олар әр рөл үшін көрсетілген, өйткені ешқайсысы бір рөлдің жеке кезегі емес.
+Салыстырып тексеру жұмыстары
+Қолдау өтініштері
+Басқару жөніндегі апелляциялар
+Тексерілетін біліктіліктер
+Қамқоршыны растау өтінімдері
+Шағым түскен жазбалар, оқушылар талқылауы
+Шағым түскен жазбалар, мұғалімдер талқылауы
+Шағым түскен мазмұн
+Модерацияны күтіп тұрған пікірлер
+Қарауды қажет ететін медиа
+Клиентке қайтуын күтіп тұрған ақша.
+Төлемді кері қайтару талабының мерзімі бар; ол өтіп кетсе, не болатынын провайдер шешеді.
+Ашық жұмыста провайдердің үзіндісімен әлі сәйкес келмейтін жолдар бар.
+Мұғалім төлем сұрады. Төлемді тіркеу оны жіберу емес.
+Ашық немесе біреуге берілген, әлі шешілмеген.
+Біреу шешімге қарсылық білдіріп отыр, ал үнсіздіктің өзі де шешім.
+Рецензенттің құжаты тексерілмейінше оған пән бойынша өкілеттік беруге болмайды.
+Баланың ата-анасы ретінде танылуды сұрап отырған ересек адам.
+Жазба бірден көрсетіледі және біреу алып тастағанша тұрады. Тек иесіне хабарланады.
+Оқырман бір нәрсені белгіледі. Оны жабу үшін жазбаша ескертпе керек.
+Сөздер біреу оқығанша ұсталып тұрады; ал бағаның өзі әлдеқашан есептелген.
+Расталмаған немесе қарау үшін ұсталған жүктеме.
+Төлемді күтіп тұрған тапсырыстар
+Ақшаны қайтару сұраулары
+Қаржылық түзетулер
+Төлемдерді салыстырып тексеру
+Төлем даулары
+Салық және аударым алымдары
+Валюта бағамдары
+Табыс талдауы
+Ақша есебі
+Ұзартулар
+Мұғалімдерге төлемдер
+Рецензияларды тағайындау
+Пәндер
+Рецензенттер тізілімі
+Мұғалімдерді тексеру
+Ижазалар
+Аудармалар
+Шақырулар
+Қолдау кезегі
+Пайдаланушылар
+Бақылау баптаулары
+Мазмұн бойынша шағымдар
+Жүктелген медиа
+Курс пікірлерінің кезегі
+Талқылау кезегі
+Талқылау тақталары бойынша шағымдар
+Оқу көмекшісі
+Сыртқы аккаунттар
+Хабарлар
+Жазылым тарифтері
+Ғылыми кеңестер
+Авторлық құқық және алып тастау сұраулары
+Оқиғалар
+Саясаттар мен шарттар
+Пайдалану статистикасы
+Қамқоршыны растау
+Апелляциялар
+
+### az
+İdarəetmə
+Nə gözləyir
+İşçi növbələrini oxumaq mümkün olmadı. Onları boş saymayın.
+Burada göstərilən işçi növbələrinin hamısı boşdur.
+Gözləyir: {count}. İçində nəsə olan növbələr: {queues}.
+Burada göstərilən işçi növbələri boşdur. Kimsə oxuya bilməzdən əvvəl hələ lazım olanlar: {count}.
+Uşaqların qorunması ilə bağlı narahatlıqlar bu saylara daxil deyil. Qorunmaya cavabdeh şəxs burada adı çəkilən səhifədəki qapalı növbəyə baxmalıdır. E-poçt xəbərdarlıqları üçün provayder və planlaşdırıcı qurulmalıdır və onlar kiminsə onları aldığını sübut etmir.
+Təhvil verilmiş fayllar
+Burada kimsə oxuya bilməzdən əvvəl
+Kursun yerləşdirilə biləcəyi fənlər: {count}.
+Hələ heç bir fənn yoxdur, ona görə heç bir kursu fənnin altına yerləşdirmək olmaz.
+Kursların yerləşdiriləcəyi fənn
+Adi fənlər verilənlər bazası ilə birlikdə gəlir. Bu bazada heç biri yoxdur, ona görə hələ heç bir kursu fənnin altına yerləşdirmək olmaz.
+Təsdiqlənmiş rəyçi
+Ən azı bir rəyçi qeydə alınıb qiymətləndirəcəyi fənn üzrə təsdiqlənməyincə heç nə dərc oluna bilməz.
+Rəy veriləcək kurs
+Kursu platforma yox, təyin olunmuş müəllim yazır. Müəllimlərin göndərdiklərini burada görürsünüz.
+Qonağın tapa biləcəyi bir şey
+Bir versiya dərc olunana qədər kataloq boşdur. O vaxta qədər qonaq oxumağa heç nə tapmır.
+Dayandırılıb
+Onun funksiyası söndürülüb, ona görə yeni heç nə gəlmir. Artıq burada olanlar üçün hələ də bir nəfər lazımdır.
+Heç bir növbədə heç nə yoxdur. Bu gün bu səhifədə sizi gözləyən heç nə yoxdur.
+Bunlara da baxıldı və boşdur:
+Funksiya açarı ilə dayandırılmış növbələr: {count}
+Funksiyanı söndürmək yeni işin gəlməsini dayandırır. O, artıq orada olanı boşaltmır, ona görə bu növbələrdən birində olan hər şey üçün hələ də bir nəfər lazımdır.
+Funksiya açarları və gəlir payı platforma administratoruna məxsusdur. Yuxarıdakı növbələr və aşağıdakı keçidlər sizindir və bu səhifədə sizin verə bilməyəcəyiniz qərarı gözləyən heç nə yoxdur.
+Nə tutulub, nə geri qayıdır, müəllimə nə borcluyuq və çevrilmiş hər rəqəmin söykəndiyi məzənnələr. Buradakı hər dəyişiklik yazılı səbəb tələb edir.
+Dərc
+Hamının işi
+İşçilərin hər biri bunlar üzərində işləyə bilər. Onlar hər rol üçün göstərilir, çünki heç biri tək bir rolun xüsusi növbəsi deyil.
+Üzləşdirmə işləri
+Dəstək müraciətləri
+İdarəçilik üzrə apellyasiyalar
+Yoxlanılacaq ixtisaslar
+Qəyyumun təsdiqi üçün müraciətlər
+Şikayət edilmiş yazılar, tələbələrin müzakirəsi
+Şikayət edilmiş yazılar, müəllimlərin müzakirəsi
+Şikayət edilmiş məzmun
+Moderasiyanı gözləyən rəylər
+Baxılmalı media
+Müştəriyə qayıtmağı gözləyən pul.
+Ödənişin geri çağırılmasının son tarixi var; o keçərsə, nə olacağına provayder qərar verir.
+Açıq işdə provayderin çıxarışı ilə hələ uyğun gəlməyən sətirlər var.
+Müəllim ödəniş istəyib. Ödənişi qeydə almaq onu göndərmək deyil.
+Açıq və ya kiməsə verilmiş, hələ həll olunmamış.
+Kimsə qərara etiraz edir, susmaq isə özü bir qərardır.
+Rəyçinin sənədi yoxlanılmayınca ona hər hansı fənn üzrə səlahiyyət vermək olmaz.
+Uşağın valideyni kimi tanınmağı xahiş edən yetkin şəxs.
+Yazı dərhal göstərilir və kimsə onu götürənə qədər qalır. Yalnız sahibə xəbər verilir.
+Oxucu nəyisə qeyd edib. Onu bağlamaq üçün yazılı qeyd lazımdır.
+Sözlər kimsə oxuyana qədər saxlanılır; tək qiymət isə artıq sayılıb.
+Təsdiqlənməmiş və ya baxış üçün saxlanılmış yükləmə.
+Ödəniş gözləyən sifarişlər
+Pulun qaytarılması sorğuları
+Maliyyə düzəlişləri
+Ödənişlərin üzləşdirilməsi
+Ödəniş mübahisələri
+Vergi və köçürmə haqları
+Valyuta məzənnələri
+Gəlir təhlili
+Pul hesabatı
+Yenilənmələr
+Müəllimlərə ödənişlər
+Rəyləri təyin et
+Fənlər
+Rəyçilər reyestri
+Müəllimlərin yoxlanılması
+İcazələr
+Tərcümələr
+Dəvətlər
+Dəstək növbəsi
+İstifadəçilər
+Nəzarət ayarları
+Məzmun şikayətləri
+Yüklənmiş media
+Kurs rəyləri növbəsi
+Müzakirə növbəsi
+Müzakirə lövhələri üzrə şikayətlər
+Təhsil köməkçisi
+Xarici hesablar
+Mesajlar
+Abunə tarifləri
+Elmi şuralar
+Müəllif hüququ və götürülmə sorğuları
+Hadisələr
+Siyasətlər və şərtlər
+İstifadə statistikası
+Qəyyumun təsdiqi
+Apellyasiyalar
+
+### tg
+Маъмурият
+Чӣ интизор аст
+Навбатҳои кормандонро хондан муяссар нашуд. Онҳоро холӣ ҳисоб накунед.
+Ҳамаи навбатҳои кормандон, ки ин ҷо оварда шудаанд, холӣ мебошанд.
+Интизор: {count}. Навбатҳое, ки дар онҳо чизе ҳаст: {queues}.
+Навбатҳои кормандон, ки ин ҷо оварда шудаанд, холӣ мебошанд. Чизҳое, ки пеш аз он ки касе хонда тавонад, ҳанӯз лозиманд: {count}.
+Нигарониҳо оид ба ҳифзи кӯдакон ба ин шумораҳо дохил нестанд. Масъули ҳифз бояд навбати пӯшидаро дар саҳифае, ки ин ҷо ном бурда шудааст, бубинад. Огоҳиҳои почтаи электронӣ танзими провайдер ва нақшасозро талаб мекунанд ва исбот намекунанд, ки касе онҳоро гирифтааст.
+Файлҳои супоридашуда
+Пеш аз он ки касе ин ҷо хонда тавонад
+Фанҳое, ки курсро зери онҳо гузоштан мумкин аст: {count}.
+Ҳанӯз ягон фан нест, бинобар ин ягон курсро зери фан гузоштан мумкин нест.
+Фанне, ки курсҳо зери он гузошта мешаванд
+Фанҳои муқаррарӣ ҳамроҳи пойгоҳи додаҳо меоянд. Ин пойгоҳ ягонтоашро надорад, бинобар ин ҳанӯз ягон курсро зери фан гузоштан мумкин нест.
+Бознигари тасдиқшуда
+То даме ки ақаллан як бознигар сабт ва барои фанне, ки онро доварӣ мекунад, тасдиқ нашавад, ҳеҷ чиз нашр шуда наметавонад.
+Курс барои бознигарӣ
+Курсро муаллими таъиншуда менависад, на платформа. Он чиро, ки муаллимон фиристодаанд, ин ҷо мебинед.
+Чизе, ки меҳмон ёфта метавонад
+То нашр шудани як версия феҳрист холӣ аст. То он вақт меҳмон барои хондан чизе намеёбад.
+Боздошта
+Хусусияти он хомӯш аст, бинобар ин чизи нав намеояд. Он чи аллакай ин ҷост, ҳанӯз ба як нафар ниёз дорад.
+Дар ягон навбат чизе нест. Имрӯз дар ин саҳифа ҳеҷ чиз шуморо интизор нест.
+Инҳо низ дида шуданд ва холиянд:
+Навбатҳое, ки калиди хусусият боздоштааст: {count}
+Хомӯш кардани хусусият омадани кори навро қатъ мекунад. Он чизеро, ки аллакай ҳаст, холӣ намекунад, бинобар ин ҳар чизе, ки дар яке аз ин навбатҳост, ҳанӯз ба як нафар ниёз дорад.
+Калидҳои хусусиятҳо ва ҳиссаи даромад ба маъмури платформа тааллуқ доранд. Навбатҳои боло ва пайвандҳои поён аз они шумоянд ва дар ин саҳифа ҳеҷ чиз қарореро, ки шумо қабул карда наметавонед, интизор нест.
+Чӣ ситонида шуд, чӣ бармегардад, ба муаллим чӣ қарз аст ва қурбҳое, ки ҳар рақами табдилшуда ба онҳо такя мекунад. Ҳар тағйирот дар ин ҷо сабаби хаттӣ мехоҳад.
+Нашр
+Кори ҳама
+Ҳар як корманд метавонад бо инҳо кор кунад. Онҳо барои ҳар нақш оварда шудаанд, зеро ҳеҷ кадомаш навбати хоси як нақш нест.
+Корҳои муқоисаи ҳисобҳо
+Муроҷиатҳои дастгирӣ
+Эътирозҳо оид ба идоракунӣ
+Тахассусҳо барои санҷиш
+Дархостҳои тасдиқи сарпараст
+Навиштаҳои шикоятшуда, муҳокимаи донишомӯзон
+Навиштаҳои шикоятшуда, муҳокимаи муаллимон
+Муҳтавои шикоятшуда
+Тақризҳое, ки модератсияро интизоранд
+Медиае, ки бояд дида шавад
+Пуле, ки бозгашт ба муштариро интизор аст.
+Талаби бозпас гирифтани пардохт мӯҳлат дорад; агар он гузарад, провайдер ҳал мекунад, ки чӣ мешавад.
+Дар кори кушода сатрҳое ҳастанд, ки ҳанӯз бо ҳисоботи провайдер мувофиқ нестанд.
+Муаллим пардохт хостааст. Сабт кардани пардохт фиристодани он нест.
+Кушода ё ба касе супурдашуда, ва ҳанӯз ҳалнашуда.
+Касе ба қарор эътироз мекунад, ва хомӯшӣ худ як қарор аст.
+То санҷида шудани ҳуҷҷати бознигар ба ӯ дар ягон фан ваколат додан мумкин нест.
+Калонсоле, ки хоҳиш дорад ҳамчун волиди кӯдак шинохта шавад.
+Навишта дарҳол нишон дода мешавад ва то даме ки касе онро бардорад, мемонад. Танҳо ба соҳиб хабар дода мешавад.
+Хонанда чизеро қайд кардааст. Барои бастани он қайди хаттӣ лозим аст.
+Калимаҳо то хондани касе нигоҳ дошта мешаванд; баҳои танҳо аллакай ҳисоб шудааст.
+Боргузорие, ки тасдиқ нашудааст ё барои баррасӣ нигоҳ дошта шудааст.
+Фармоишҳое, ки пардохтро интизоранд
+Дархостҳои баргардонидани маблағ
+Ислоҳҳои молиявӣ
+Муқоисаи пардохтҳо
+Баҳсҳои пардохт
+Андоз ва ҳаққи интиқол
+Қурбҳои асъор
+Таҳлили даромад
+Ҳисоботи пул
+Тамдидҳо
+Пардохтҳо ба муаллимон
+Супурдани бознигариҳо
+Фанҳо
+Феҳристи бознигарон
+Санҷиши муаллимон
+Иҷозаҳо
+Тарҷумаҳо
+Даъватҳо
+Навбати дастгирӣ
+Корбарон
+Танзимоти назорат
+Шикоятҳо оид ба муҳтаво
+Медиаи боргузошташуда
+Навбати тақризҳои курс
+Навбати муҳокима
+Шикоятҳо аз тахтаҳои муҳокима
+Ёрдамчии таҳсил
+Ҳисобҳои берунӣ
+Паёмҳо
+Нақшаҳои обуна
+Шӯроҳои илмӣ
+Ҳуқуқи муаллиф ва дархостҳои бардоштан
+Ҳодисаҳо
+Сиёсатҳо ва шартҳо
+Омори истифода
+Тасдиқи сарпараст
+Эътирозҳо
+
+### ky
+Башкаруу
+Эмне күтүп турат
+Кызматкерлердин кезектерин окуу мүмкүн болгон жок. Аларды бош деп эсептебеңиз.
+Бул жерде көрсөтүлгөн кызматкерлердин кезектеринин баары бош.
+Күтүп турат: {count}. Ичинде бир нерсе бар кезектер: {queues}.
+Бул жерде көрсөтүлгөн кызматкерлердин кезектери бош. Кимдир бирөө окуй алганга чейин дагы керек болгон нерселер: {count}.
+Балдарды коргоого байланыштуу тынчсыздануулар бул сандарга кирбейт. Коргоо үчүн жооптуу адам бул жерде аталган барактагы жабык кезекти карашы керек. Электрондук почта эскертүүлөрү үчүн провайдер жана пландаштыргыч жөндөлүшү керек, жана алар кимдир бирөө аларды алганын далилдебейт.
+Тапшырылган файлдар
+Бул жерде кимдир бирөө окуй алганга чейин
+Курсту жайгаштырууга боло турган предметтер: {count}.
+Азырынча эч кандай предмет жок, ошондуктан эч бир курсту предметтин астына жайгаштырууга болбойт.
+Курстар жайгаштырыла турган предмет
+Кадимки предметтер маалымат базасы менен кошо келет. Бул базада бири да жок, ошондуктан азырынча эч бир курсту предметтин астына жайгаштырууга болбойт.
+Ырасталган рецензент
+Жок дегенде бир рецензент катталып, өзү баалай турган предмет боюнча ырасталмайынча эч нерсе жарыяланбайт.
+Рецензиялана турган курс
+Курсту платформа эмес, дайындалган мугалим жазат. Мугалимдер жөнөткөндөрдү ушул жерден көрөсүз.
+Конок таба ала турган нерсе
+Бир версия жарыяланмайынча каталог бош. Ага чейин конок окуй турган эч нерсе таппайт.
+Токтотулган
+Анын функциясы өчүрүлгөн, ошондуктан жаңы эч нерсе келбейт. Бул жерде мурунтан бар нерсеге дагы эле адам керек.
+Эч бир кезекте эч нерсе жок. Бүгүн бул баракта сизди күтүп турган эч нерсе жок.
+Булар да каралды жана бош:
+Функциянын которгучу менен токтотулган кезектер: {count}
+Функцияны өчүрүү жаңы иштин келишин токтотот. Ал мурунтан бар нерсени бошотпойт, ошондуктан бул кезектердин бириндеги ар бир нерсеге дагы эле адам керек.
+Функциялардын которгучтары жана кирешенин үлүшү платформанын администраторуна таандык. Жогорудагы кезектер жана төмөндөгү шилтемелер сиздики, жана бул баракта сиз кабыл ала албай турган чечимди күтүп турган эч нерсе жок.
+Эмне алынды, эмне кайтарылат, мугалимге эмне карыз жана ар бир которулган сан таянган курстар. Бул жердеги ар бир өзгөртүү жазуу жүзүндөгү себепти талап кылат.
+Жарыялоо
+Баарынын иши
+Кызматкерлердин ар бири булар менен иштей алат. Алар ар бир роль үчүн көрсөтүлгөн, анткени эч бири бир ролдун жеке кезеги эмес.
+Салыштырып текшерүү иштери
+Колдоо кайрылуулары
+Башкаруу боюнча апелляциялар
+Текшериле турган квалификациялар
+Камкорчуну ырастоо арыздары
+Арыз түшкөн жазуулар, окуучулардын талкуусу
+Арыз түшкөн жазуулар, мугалимдердин талкуусу
+Арыз түшкөн мазмун
+Модерацияны күтүп турган пикирлер
+Карап чыгуу керек болгон медиа
+Кардарга кайтууну күтүп турган акча.
+Төлөмдү кайра талап кылуунун мөөнөтү бар; ал өтүп кетсе, эмне болорун провайдер чечет.
+Ачык иште провайдердин көчүрмөсү менен азырынча дал келбеген саптар бар.
+Мугалим төлөм сурады. Төлөмдү каттоо аны жөнөтүү эмес.
+Ачык же бирөөгө берилген, азырынча чечиле элек.
+Кимдир бирөө чечимге каршы чыгып жатат, ал эми унчукпоо өзү да чечим.
+Рецензенттин документи текшерилмейинче ага предмет боюнча ыйгарым укук берүүгө болбойт.
+Баланын ата-энеси катары таанылууну сурап жаткан чоң киши.
+Жазуу дароо көрсөтүлөт жана кимдир бирөө алып салганга чейин турат. Ээсине гана кабарланат.
+Окурман бир нерсени белгиледи. Аны жабуу үчүн жазуу жүзүндөгү эскертме керек.
+Сөздөр кимдир бирөө окуганга чейин кармалып турат; ал эми баанын өзү эчак эсептелген.
+Ырасталбаган же кароо үчүн кармалган жүктөө.
+Төлөмдү күтүп турган буйрутмалар
+Акчаны кайтаруу сурамдары
+Каржылык түзөтүүлөр
+Төлөмдөрдү салыштырып текшерүү
+Төлөм боюнча талаштар
+Салык жана которуу акылары
+Валюта курстары
+Кирешени талдоо
+Акча боюнча отчёт
+Узартуулар
+Мугалимдерге төлөмдөр
+Рецензияларды дайындоо
+Предметтер
+Рецензенттер реестри
+Мугалимдерди текшерүү
+Ижазалар
+Котормолор
+Чакыруулар
+Колдоо кезеги
+Колдонуучулар
+Көзөмөл жөндөөлөрү
+Мазмун боюнча арыздар
+Жүктөлгөн медиа
+Курс пикирлеринин кезеги
+Талкуу кезеги
+Талкуу такталары боюнча арыздар
+Окуу жардамчысы
+Тышкы аккаунттар
+Билдирүүлөр
+Жазылуу тарифтери
+Илимий кеңештер
+Автордук укук жана алып салуу сурамдары
+Окуялар
+Саясаттар жана шарттар
+Колдонуу статистикасы
+Камкорчуну ырастоо
+Апелляциялар
+
+### tk
+Dolandyryş
+Näme garaşýar
+Işgärleriň nobatlaryny okap bolmady. Olary boş diýip hasaplamaň.
+Şu ýerde görkezilen işgär nobatlarynyň hemmesi boş.
+Garaşýar: {count}. Içinde bir zat bar nobatlar: {queues}.
+Şu ýerde görkezilen işgär nobatlary boş. Kimdir biri okap bilmezinden öň entek gerek zatlar: {count}.
+Çagalary goramak bilen bagly aladalar bu sanlara girmeýär. Goraga jogapkär adam şu ýerde ady agzalan sahypadaky ýapyk nobata seretmelidir. E-poçta duýduryşlary üçin üpjün ediji we meýilleşdiriji sazlanan bolmaly, we olar kimdir biriniň olary alandygyny subut etmeýär.
+Tabşyrylan faýllar
+Şu ýerde kimdir biri okap bilmezinden öň
+Kursy ýerleşdirip bolýan dersler: {count}.
+Entek hiç hili ders ýok, şonuň üçin hiç bir kursy dersiň aşagyna ýerleşdirip bolmaýar.
+Kurslaryň ýerleşdiriljek dersi
+Adaty dersler maglumat bazasy bilen bile gelýär. Bu bazada biri-de ýok, şonuň üçin entek hiç bir kursy dersiň aşagyna ýerleşdirip bolmaýar.
+Tassyklanan synçy
+Iň bolmanda bir synçy hasaba alnyp, özüniň baha berjek dersi boýunça tassyklanýança hiç zat çap edilip bilinmez.
+Syn edilmeli kurs
+Kursy platforma däl-de, bellenen mugallym ýazýar. Mugallymlaryň iberen zatlaryny şu ýerde görýärsiňiz.
+Myhmanyň tapyp biljek zady
+Bir wersiýa çap edilýänçä katalog boş. Şoňa çenli myhman okamaga hiç zat tapmaýar.
+Togtadylan
+Onuň aýratynlygy öçürilen, şonuň üçin täze zat gelmeýär. Eýýäm şu ýerde bar zatlara henizem adam gerek.
+Hiç bir nobatda hiç zat ýok. Şu gün bu sahypada size garaşýan zat ýok.
+Bulara-da seredildi we boş:
+Aýratynlyk açary bilen togtadylan nobatlar: {count}
+Aýratynlygy öçürmek täze işiň gelmegini togtadýar. Ol eýýäm bar zady boşatmaýar, şonuň üçin şu nobatlaryň birindäki islendik zada henizem adam gerek.
+Aýratynlyk açarlary we girdeji paýy platformanyň administratoryna degişlidir. Ýokardaky nobatlar we aşakdaky baglanyşyklar siziňki, we bu sahypada siziň kabul edip bilmejek kararyňyza garaşýan hiç zat ýok.
+Näme alyndy, näme yzyna gaýdýar, mugallyma näme bergi we her bir öwrülen sanyň daýanýan kurslary. Şu ýerdäki her bir üýtgetme ýazmaça sebäp talap edýär.
+Çap etmek
+Hemmeleriň işi
+Işgärleriň islendigi bular bilen işläp biler. Olar her rol üçin görkezilýär, sebäbi hiç biri bir roluň hususy nobaty däl.
+Deňeşdirip barlamak işleri
+Goldaw ýüztutmalary
+Dolandyryş boýunça şikaýatlar
+Barlanmaly hünär derejeleri
+Howandary tassyklamak üçin arzalar
+Habar berlen ýazgylar, okuwçylaryň maslahaty
+Habar berlen ýazgylar, mugallymlaryň maslahaty
+Habar berlen mazmun
+Gözegçilige garaşýan synlar
+Seredilmeli media
+Müşderä yzyna gaýtmagyna garaşýan pul.
+Tölegi yzyna talap etmegiň möhleti bar; ol geçse, näme boljagyny üpjün ediji çözýär.
+Açyk işde üpjün edijiniň hasabaty bilen entek gabat gelmeýän setirler bar.
+Mugallym töleg sorady. Tölegi hasaba almak ony ibermek däl.
+Açyk ýa-da birine berlen, entek çözülmedik.
+Kimdir biri karara garşy çykýar, dymmagyň özi-de karar.
+Synçynyň resminamasy barlanýança oňa haýsydyr bir ders boýunça ygtyýar berip bolmaýar.
+Çaganyň ene-atasy hökmünde ykrar edilmegini soraýan uly ýaşly adam.
+Ýazgy derrew görkezilýär we kimdir biri aýyrýança durýar. Diňe eýesine habar berilýär.
+Okyjy bir zady belledi. Ony ýapmak üçin ýazmaça bellik gerek.
+Sözler kimdir biri okaýança saklanýar; diňe bahanyň özi eýýäm hasaplanan.
+Tassyklanmadyk ýa-da gözden geçirmek üçin saklanan ýükleme.
+Tölege garaşýan sargytlar
+Puluň gaýtarylmagy üçin haýyşlar
+Maliýe düzedişleri
+Tölegleri deňeşdirip barlamak
+Töleg jedelleri
+Salgyt we geçirim tölegleri
+Walýuta kurslary
+Girdejiniň seljermesi
+Pul hasabaty
+Uzaltmalar
+Mugallymlara tölegler
+Synlary bellemek
+Dersler
+Synçylaryň sanawy
+Mugallymlary barlamak
+Yjazalar
+Terjimeler
+Çakylyklar
+Goldaw nobaty
+Ulanyjylar
+Gözegçilik sazlamalary
+Mazmun barada habarlar
+Ýüklenen media
+Kurs synlarynyň nobaty
+Maslahat nobaty
+Maslahat tagtalary barada habarlar
+Okuw kömekçisi
+Daşky hasaplar
+Habarlar
+Abuna meýilnamalary
+Ylmy geňeşler
+Awtorlyk hukugy we aýyrmak haýyşlary
+Wakalar
+Syýasatlar we şertler
+Ulanyş statistikasy
+Howandary tassyklamak
+Şikaýatlar
+
+### ta
+நிர்வாகம்
+காத்திருப்பவை
+பணியாளர் வரிசைகளைப் படிக்க முடியவில்லை. அவை காலியாக உள்ளன என்று கருத வேண்டாம்.
+இங்கே பட்டியலிடப்பட்ட பணியாளர் வரிசைகள் அனைத்தும் காலியாக உள்ளன.
+காத்திருப்பவை: {count}. ஏதேனும் உள்ள வரிசைகள்: {queues}.
+இங்கே பட்டியலிடப்பட்ட பணியாளர் வரிசைகள் காலியாக உள்ளன. யாரேனும் படிக்க முடிவதற்கு முன் இன்னும் தேவைப்படுபவை: {count}.
+குழந்தைப் பாதுகாப்புக் கவலைகள் இந்த எண்ணிக்கைகளில் இல்லை. பாதுகாப்புப் பொறுப்பாளர் இங்கே குறிப்பிடப்பட்ட பக்கத்தில் உள்ள தனிப்பட்ட வரிசையைப் பார்க்க வேண்டும். மின்னஞ்சல் எச்சரிக்கைகளுக்கு ஒரு சேவை வழங்குநரும் ஒரு நேர அட்டவணையாளரும் அமைக்கப்பட்டிருக்க வேண்டும்; அவற்றை யாரேனும் பெற்றார் என்பதை அவை நிரூபிக்காது.
+சமர்ப்பிக்கப்பட்ட கோப்புகள்
+இங்கே யாரேனும் படிக்க முடிவதற்கு முன்
+பாடநெறியை வைக்கக்கூடிய பாடப் பிரிவுகள்: {count}.
+இன்னும் பாடப் பிரிவுகள் எதுவும் இல்லை; எனவே எந்தப் பாடநெறியையும் ஒரு பிரிவின் கீழ் வைக்க முடியாது.
+பாடநெறிகளை வைப்பதற்கான ஒரு பாடப் பிரிவு
+வழக்கமான பாடப் பிரிவுகள் தரவுத்தளத்துடன் வருகின்றன. இந்தத் தரவுத்தளத்தில் ஒன்றும் இல்லை; எனவே இன்னும் எந்தப் பாடநெறியையும் ஒரு பிரிவின் கீழ் வைக்க முடியாது.
+சரிபார்க்கப்பட்ட ஒரு மதிப்பாய்வாளர்
+குறைந்தது ஒரு மதிப்பாய்வாளர் பதிவு செய்யப்பட்டு, அவர் மதிப்பிடும் பாடத்திற்காகச் சரிபார்க்கப்படும் வரை எதையும் வெளியிட முடியாது.
+மதிப்பாய்வு செய்ய ஒரு பாடநெறி
+பாடநெறியை எழுதுபவர் நியமிக்கப்பட்ட ஆசிரியர், தளம் அல்ல. ஆசிரியர்கள் அனுப்பியதை இங்கே பார்க்கலாம்.
+வருகையாளர் கண்டுபிடிக்கக்கூடிய ஒன்று
+ஒரு பதிப்பு வெளியிடப்படும் வரை பாடத்திட்டம் காலியாக இருக்கும். அதுவரை வருகையாளர் படிக்க எதையும் காணமாட்டார்.
+இடைநிறுத்தப்பட்டது
+இதன் அம்சம் அணைக்கப்பட்டுள்ளது; எனவே புதிதாக எதுவும் வரவில்லை. ஏற்கனவே இங்கே இருப்பவற்றுக்கு இன்னும் ஒரு நபர் தேவை.
+எந்த வரிசையிலும் எதுவும் இல்லை. இந்தப் பக்கத்தில் இன்று உங்களுக்காக எதுவும் காத்திருக்கவில்லை.
+இவையும் பார்க்கப்பட்டன, காலியாக உள்ளன:
+அம்சத்தின் சுவிட்சால் இடைநிறுத்தப்பட்ட வரிசைகள்: {count}
+ஓர் அம்சத்தை அணைப்பது புதிய வேலை வருவதை நிறுத்துகிறது. ஏற்கனவே இருப்பதை அது காலியாக்காது; எனவே இந்த வரிசைகளில் ஒன்றில் உள்ள எதற்கும் இன்னும் ஒரு நபர் தேவை.
+அம்சச் சுவிட்சுகளும் வருவாய்ப் பங்கும் தள நிர்வாகிக்கு உரியவை. மேலே உள்ள வரிசைகளும் கீழே உள்ள இணைப்புகளும் உங்களுடையவை; உங்களால் எடுக்க முடியாத முடிவுக்காக இந்தப் பக்கத்தில் எதுவும் காத்திருக்கவில்லை.
+என்ன வசூலிக்கப்பட்டது, என்ன திரும்பச் செல்கிறது, ஓர் ஆசிரியருக்கு என்ன செலுத்த வேண்டியுள்ளது, மாற்றப்பட்ட ஒவ்வொரு தொகையும் சார்ந்திருக்கும் விகிதங்கள். இங்கே ஒவ்வொரு மாற்றத்திற்கும் எழுத்துப்பூர்வக் காரணம் தேவை.
+வெளியீடு
+அனைவரின் வேலை
+பணியாளர்களில் எவரும் இவற்றில் வேலை செய்யலாம். இவற்றில் எதுவும் ஒரே ஒரு பொறுப்பின் தனிப்பட்ட வரிசை அல்ல என்பதால் ஒவ்வொரு பொறுப்புக்கும் இவை பட்டியலிடப்படுகின்றன.
+கணக்கு ஒப்பீட்டுப் பணிகள்
+உதவி வழக்குகள்
+நிர்வாக மேல்முறையீடுகள்
+சரிபார்க்க வேண்டிய தகுதிகள்
+பாதுகாவலர் சரிபார்ப்பு விண்ணப்பங்கள்
+புகாரளிக்கப்பட்ட பதிவுகள், மாணவர் கலந்துரையாடல்
+புகாரளிக்கப்பட்ட பதிவுகள், ஆசிரியர் கலந்துரையாடல்
+புகாரளிக்கப்பட்ட உள்ளடக்கம்
+மட்டுறுத்தலுக்காகக் காத்திருக்கும் கருத்துகள்
+பார்க்க வேண்டிய ஊடகம்
+ஒரு வாடிக்கையாளருக்குத் திரும்பச் செல்லக் காத்திருக்கும் பணம்.
+கட்டணத் திருப்பக் கோரிக்கைக்கு ஒரு கெடு உண்டு; அது கடந்தால் என்ன நடக்கும் என்பதைச் சேவை வழங்குநர் முடிவு செய்கிறார்.
+திறந்திருக்கும் பணியில் சேவை வழங்குநரின் அறிக்கையுடன் இன்னும் பொருந்தாத வரிகள் உள்ளன.
+ஓர் ஆசிரியர் பணம் செலுத்தக் கேட்டுள்ளார். பணம் வழங்கலைப் பதிவு செய்வது அதை அனுப்புவது அல்ல.
+திறந்தவை அல்லது ஒருவரிடம் ஒப்படைக்கப்பட்டவை, இன்னும் தீர்க்கப்படாதவை.
+யாரோ ஒரு முடிவை எதிர்க்கிறார்; மௌனமும் ஒரு முடிவே.
+மதிப்பாய்வாளரின் சான்று சரிபார்க்கப்படும் வரை அவருக்கு ஒரு பாடத்தில் அங்கீகாரம் அளிக்க முடியாது.
+ஒரு குழந்தையின் பெற்றோராக அங்கீகரிக்கப்பட வேண்டும் என்று கேட்கும் ஒரு வயது வந்தவர்.
+பதிவு உடனே காட்டப்படுகிறது; யாராவது அகற்றும் வரை இருக்கும். உரிமையாளருக்கு மட்டுமே தெரிவிக்கப்படுகிறது.
+ஒரு வாசகர் ஏதோ ஒன்றைக் குறித்துள்ளார். அதை மூட எழுத்துப்பூர்வக் குறிப்பு தேவை.
+யாராவது படிக்கும் வரை சொற்கள் நிறுத்தி வைக்கப்படுகின்றன; மதிப்பீடு மட்டும் ஏற்கனவே எண்ணப்பட்டுவிட்டது.
+உறுதிப்படுத்தப்படாத பதிவேற்றம், அல்லது மதிப்பாய்வுக்காக நிறுத்தி வைக்கப்பட்ட ஒன்று.
+கட்டணத்திற்காகக் காத்திருக்கும் ஆர்டர்கள்
+பணத்திருப்புக் கோரிக்கைகள்
+நிதிச் சரிசெய்தல்கள்
+கட்டணங்களின் கணக்கு ஒப்பீடு
+கட்டணத் தகராறுகள்
+வரி மற்றும் பரிமாற்றக் கட்டணங்கள்
+நாணய மாற்று விகிதங்கள்
+வருவாய்ப் பகுப்பாய்வு
+பண அறிக்கை
+புதுப்பித்தல்கள்
+ஆசிரியர்களுக்குப் பணம் வழங்கல்
+மதிப்பாய்வுகளை ஒப்படைக்க
+பாடப் பிரிவுகள்
+மதிப்பாய்வாளர் பதிவேடு
+ஆசிரியர் பின்னணிச் சரிபார்ப்பு
+இஜாஸாக்கள்
+மொழிபெயர்ப்புகள்
+அழைப்புகள்
+உதவி வரிசை
+பயனர்கள்
+கட்டுப்பாட்டு அமைப்புகள்
+உள்ளடக்கப் புகார்கள்
+பதிவேற்றப்பட்ட ஊடகம்
+பாடநெறிக் கருத்துகளின் வரிசை
+கலந்துரையாடல் வரிசை
+கலந்துரையாடல் பலகைப் புகார்கள்
+படிப்பு உதவியாளர்
+வெளிக் கணக்குகள்
+செய்திகள்
+சந்தாத் திட்டங்கள்
+அறிஞர் குழுக்கள்
+பதிப்புரிமை மற்றும் அகற்றல் கோரிக்கைகள்
+சம்பவங்கள்
+கொள்கைகள் மற்றும் விதிமுறைகள்
+பயன்பாட்டுப் புள்ளிவிவரங்கள்
+பாதுகாவலர் சரிபார்ப்பு
+மேல்முறையீடுகள்
+
+### ne
+प्रशासन
+के पर्खिरहेको छ
+कर्मचारीका लामहरू पढ्न सकिएन। तिनलाई खाली नठान्नुहोस्।
+यहाँ सूचीबद्ध कर्मचारीका सबै लाम खाली छन्।
+पर्खिरहेको: {count}। केही भएका लामहरू: {queues}।
+यहाँ सूचीबद्ध कर्मचारीका लामहरू खाली छन्। कसैले पढ्न सक्नुअघि अझै चाहिने कुराहरू: {count}।
+बाल संरक्षणसम्बन्धी चासोहरू यी गन्तीमा छैनन्। संरक्षणका जिम्मेवार व्यक्तिले यहाँ नाम लिइएको पृष्ठमा रहेको निजी लाम हेर्नुपर्छ। इमेल सूचनाका लागि एउटा प्रदायक र एउटा समय तालिका मिलाइएको हुनुपर्छ, र तिनले कसैले पाएको प्रमाणित गर्दैनन्।
+बुझाइएका फाइलहरू
+यहाँ कसैले पढ्न सक्नुअघि
+कोर्स राख्न सकिने विषयहरू: {count}।
+अहिलेसम्म कुनै विषय छैन, त्यसैले कुनै पनि कोर्स कुनै विषयअन्तर्गत राख्न सकिँदैन।
+कोर्सहरू राख्ने एउटा विषय
+सामान्य विषयहरू डाटाबेससँगै आउँछन्। यो डाटाबेसमा एउटा पनि छैन, त्यसैले अझै कुनै कोर्स कुनै विषयअन्तर्गत राख्न सकिँदैन।
+एक जना प्रमाणित समीक्षक
+कम्तीमा एक जना समीक्षक दर्ता भई आफूले मूल्याङ्कन गर्ने विषयका लागि प्रमाणित नभएसम्म केही पनि प्रकाशित हुन सक्दैन।
+समीक्षाका लागि एउटा कोर्स
+कोर्स नियुक्त शिक्षकले लेख्छन्, प्लेटफर्मले होइन। शिक्षकहरूले पठाएको कुरा यहीँ देखिन्छ।
+आगन्तुकले भेट्टाउन सक्ने कुरा
+कुनै संस्करण प्रकाशित नभएसम्म पाठ्यक्रम सूची खाली हुन्छ। त्यतिन्जेल आगन्तुकले पढ्ने केही भेट्टाउँदैनन्।
+रोकिएको
+यसको सुविधा बन्द छ, त्यसैले नयाँ केही आइरहेको छैन। पहिले नै यहाँ भएका कुरालाई अझै एक जना मानिस चाहिन्छ।
+कुनै लाममा केही छैन। आज यो पृष्ठमा तपाईंलाई पर्खिरहेको केही छैन।
+यी पनि हेरिए, र खाली छन्:
+सुविधाको स्विचले रोकेका लामहरू: {count}
+कुनै सुविधा बन्द गर्दा नयाँ काम आउन रोकिन्छ। पहिले नै भएको कुरा खाली हुँदैन, त्यसैले यी मध्ये कुनै लाममा भएको जे पनि कुरालाई अझै एक जना मानिस चाहिन्छ।
+सुविधाका स्विचहरू र आम्दानीको हिस्सा प्लेटफर्म प्रशासकका हुन्। माथिका लामहरू र तलका लिङ्कहरू तपाईंका हुन्, र यो पृष्ठमा तपाईंले गर्न नसक्ने निर्णय पर्खिरहेको केही छैन।
+के असुल गरियो, के फिर्ता जान्छ, शिक्षकलाई के तिर्न बाँकी छ, र रूपान्तरण गरिएको हरेक अङ्क अडिएका दरहरू। यहाँको हरेक परिवर्तनका लागि लिखित कारण चाहिन्छ।
+प्रकाशन
+सबैको काम
+कर्मचारीका जुनसुकै सदस्यले यिनमा काम गर्न सक्छन्। यी हरेक भूमिकाका लागि सूचीबद्ध छन् किनभने कुनै पनि एउटै भूमिकाको निजी लाम होइन।
+हिसाब भिडाउने कामहरू
+सहायताका मामिलाहरू
+सुशासनसम्बन्धी पुनरावेदनहरू
+जाँच्नुपर्ने योग्यताहरू
+अभिभावक प्रमाणीकरणका निवेदनहरू
+रिपोर्ट गरिएका पोस्टहरू, विद्यार्थीहरूको छलफल
+रिपोर्ट गरिएका पोस्टहरू, शिक्षकहरूको छलफल
+रिपोर्ट गरिएको सामग्री
+मोडरेसन पर्खिरहेका प्रतिक्रियाहरू
+हेर्नुपर्ने मिडिया
+ग्राहकलाई फिर्ता जान पर्खिरहेको पैसा।
+चार्जब्याकको म्याद हुन्छ; त्यो नाघेमा के हुन्छ भन्ने प्रदायकले निर्णय गर्छ।
+खुला काममा प्रदायकको विवरणसँग अझै नमिलेका पङ्क्तिहरू छन्।
+एक जना शिक्षकले भुक्तानी मागेका छन्। भुक्तानी दर्ता गर्नु भनेको पठाउनु होइन।
+खुला वा कसैलाई जिम्मा दिइएका, र अझै समाधान नभएका।
+कसैले एउटा निर्णयलाई चुनौती दिँदै छन्, र मौनता आफैँ एउटा निर्णय हो।
+समीक्षकको प्रमाणपत्र नजाँचिएसम्म उनलाई कुनै विषयमा अधिकार दिन सकिँदैन।
+एक जना वयस्क, जसले कुनै बालबालिकाको अभिभावकका रूपमा मान्यता मागेका छन्।
+पोस्ट तुरुन्तै देखाइन्छ र कसैले नहटाएसम्म रहन्छ। मालिकलाई मात्र जानकारी दिइन्छ।
+एक जना पाठकले केही कुरा औँल्याएका छन्। यसलाई बन्द गर्न लिखित टिप्पणी चाहिन्छ।
+कसैले नपढेसम्म शब्दहरू रोकिन्छन्; मूल्याङ्कन मात्र भने पहिले नै गनिसकिएको छ।
+पुष्टि नभएको अपलोड, वा समीक्षाका लागि रोकिएको अपलोड।
+भुक्तानी पर्खिरहेका अर्डरहरू
+रकम फिर्ताका अनुरोधहरू
+वित्तीय समायोजनहरू
+भुक्तानी भिडान
+भुक्तानी विवादहरू
+कर र स्थानान्तरण शुल्क
+विनिमय दरहरू
+आम्दानीको विश्लेषण
+पैसाको प्रतिवेदन
+नवीकरणहरू
+शिक्षकहरूलाई भुक्तानी
+समीक्षा जिम्मा लगाउनुहोस्
+विषयहरू
+समीक्षकहरूको दर्ता
+शिक्षकहरूको जाँच
+इजाजाहरू
+अनुवादहरू
+निम्तोहरू
+सहायताको लाम
+प्रयोगकर्ताहरू
+नियन्त्रण सेटिङहरू
+सामग्रीका रिपोर्टहरू
+अपलोड गरिएको मिडिया
+कोर्स प्रतिक्रियाको लाम
+छलफलको लाम
+छलफल बोर्डका रिपोर्टहरू
+अध्ययन सहायक
+बाहिरी खाताहरू
+सन्देशहरू
+सदस्यता योजनाहरू
+विद्वत् बोर्डहरू
+प्रतिलिपि अधिकार र हटाउने अनुरोधहरू
+घटनाहरू
+नीति र सर्तहरू
+प्रयोगको तथ्याङ्क
+अभिभावक प्रमाणीकरण
+पुनरावेदनहरू

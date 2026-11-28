@@ -22,6 +22,8 @@
  * queue page must be able to say it has nothing to do.
  */
 
+import type { MessageKey } from './i18n/messages/en.ts';
+
 export type SetupFacts = {
   /** Active subject areas — the shelves a course can be filed under. */
   subjects: number;
@@ -35,21 +37,17 @@ export type SetupFacts = {
 
 export type SetupStep = {
   key: 'subjects' | 'reviewers' | 'courses' | 'published';
-  title: string;
-  /** What is true today, in one sentence. */
-  detail: string;
+  /** The sentence that names it (a key of the message catalogue). */
+  title: MessageKey;
+  /** Why it is still outstanding, in one sentence. Said only while it is. */
+  why: MessageKey;
+  /** How many there are today. */
+  count: number;
   /** The screen that does it. */
   href: string;
   done: boolean;
 };
 
-/**
- * The steps, in the order they have to happen.
- *
- * The order is not cosmetic: a course cannot publish without a reviewer, so a
- * list that started with "publish something" would send the owner to a screen
- * that refuses. Each step's sentence says what it unlocks, not what it is.
- */
 export function setupSteps(facts: SetupFacts): SetupStep[] {
   return [
     // Only when there are none. A deployment with subjects has nothing to do
@@ -59,39 +57,33 @@ export function setupSteps(facts: SetupFacts): SetupStep[] {
       ? []
       : [{
           key: 'subjects' as const,
-          title: 'A subject to file courses under',
-          detail:
-            'The seed migration creates the usual ones. This deployment has none, so no course can be tagged yet.',
+          title: 'staff.stepSubjects' as const,
+          why: 'staff.stepSubjectsWhy' as const,
+          count: 0,
           href: '/admin/subjects',
           done: false,
         }]),
     {
       key: 'reviewers',
-      title: 'A reviewer who is verified',
-      detail:
-        facts.reviewers > 0
-          ? `${facts.reviewers} ${facts.reviewers === 1 ? 'reviewer is' : 'reviewers are'} active.`
-          : 'Nothing can be published until at least one reviewer has been recorded and verified for the subject it will judge.',
+      title: 'staff.stepReviewers',
+      why: 'staff.stepReviewersWhy',
+      count: facts.reviewers,
       href: '/admin/reviewers',
       done: facts.reviewers > 0,
     },
     {
       key: 'courses',
-      title: 'A course to review',
-      detail:
-        facts.courses > 0
-          ? `${facts.courses} ${facts.courses === 1 ? 'course exists' : 'courses exist'}, in draft, review or retirement.`
-          : 'A course is written by an appointed teacher, not by the platform. This is where you see what they have sent.',
+      title: 'staff.stepCourses',
+      why: 'staff.stepCoursesWhy',
+      count: facts.courses,
       href: '/admin/courses',
       done: facts.courses > 0,
     },
     {
       key: 'published',
-      title: 'Something a visitor can find',
-      detail:
-        facts.published > 0
-          ? `${facts.published} ${facts.published === 1 ? 'version is' : 'versions are'} published and on the shelf.`
-          : 'The catalogue is empty until a version is published. Until then the front door shows the shape of the product and nothing to study.',
+      title: 'staff.stepPublished',
+      why: 'staff.stepPublishedWhy',
+      count: facts.published,
       href: '/admin/courses',
       done: facts.published > 0,
     },
@@ -103,35 +95,34 @@ export function outstandingSteps(facts: SetupFacts): SetupStep[] {
   return setupSteps(facts).filter((step) => !step.done);
 }
 
+/** A sentence of the catalogue and what fills its gaps. The page says it. */
+export type Said = { key: MessageKey; vars?: Record<string, number> };
+
 /**
  * The subject line beside the panel.
  *
  * A fact rather than a step when there are subjects: they arrive with the seed
  * migration, and the panel is for what is missing. When there are none, the
  * panel carries the step — see `setupSteps()`.
+ *
+ * The count follows a colon, so that no word has to agree with it in any of
+ * the languages the page is written in.
  */
-export function subjectsNote(facts: SetupFacts): string {
-  if (facts.subjects > 0) {
-    return `Courses are filed under ${facts.subjects} subject ${facts.subjects === 1 ? 'area' : 'areas'}.`;
-  }
-  return 'No subject areas exist yet, so nothing can be tagged.';
+export function subjectsNote(facts: SetupFacts): Said {
+  if (facts.subjects > 0) return { key: 'staff.subjectsSome', vars: { count: facts.subjects } };
+  return { key: 'staff.subjectsNone' };
 }
 
 /**
  * What the admin home says when the queues are all empty.
  *
  * `null` means the page's own sentence — the count, and how many queues it
- * spans — is the right one, because there is work to describe. A string is the
- * replacement for the case the queue line cannot express: on a platform that is
- * not yet set up, "nothing is waiting" is accurate and reads as "the work is
- * done" when the work has not started.
+ * spans — is the right one, because there is work to describe. A sentence is
+ * the replacement for the case the queue line cannot express: on a platform
+ * that is not yet set up, "nothing is waiting" is accurate and reads as "the
+ * work is done" when the work has not started.
  */
-export function emptyQueueLede(facts: SetupFacts): string | null {
+export function emptyQueueLede(facts: SetupFacts): Said | null {
   const outstanding = outstandingSteps(facts).length;
-
-  if (outstanding > 0) {
-    return 'The listed staff queues are empty; the platform still needs '
-      + `${outstanding === 1 ? 'one thing' : `${outstanding} things`} before anybody can study.`;
-  }
-  return null;
+  return outstanding > 0 ? { key: 'staff.zeroSetup', vars: { count: outstanding } } : null;
 }

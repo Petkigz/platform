@@ -38,7 +38,11 @@ test('the page fetches the queue only for the configured owner and describes its
   assert.doesNotMatch(route, /result\s*[,}]/);
   assert.match(route, /checkScheduler/);
   const home = readFileSync('src/app/admin/page.tsx', 'utf8');
-  assert.match(home, /Safeguarding concerns are not included in these counts/);
+  // Since 2026-11-28 the home says it from the catalogue, in the reader's
+  // language: to everybody the page is drawn for, with the link beside it.
+  assert.match(home, /<p className="notice warn">\s*\{t\('staff\.safeguarding'\)\}\{' '\}\s*<Link href="\/admin\/coursework">\{t\('staff\.handedIn'\)\}<\/Link>\s*<\/p>/);
+  const messages = readFileSync('src/lib/i18n/messages/en.ts', 'utf8');
+  assert.match(messages, /'staff\.safeguarding':\s*'Safeguarding concerns are not in these counts\. The safeguarding owner must look at the private queue on the page named here\. Email alerts need a provider and a scheduler to be set up, and do not prove that anybody received them\.'/);
   assert.doesNotMatch(home, /Every queue you can work was checked/);
 });
 

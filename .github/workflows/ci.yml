@@ -141,6 +141,9 @@ jobs:
       - name: One review assignment and its route synthetic HTTP regression
         run: node scripts/review-assignment-smoke.mjs
 
+      - name: Staff console synthetic HTTP regression
+        run: node scripts/admin-route-smoke.mjs
+
       - name: Export pages and export route synthetic HTTP regression
         run: node scripts/export-route-smoke.mjs
 

@@ -2842,3 +2842,10 @@ p.support-small { margin: 0; }
 .assignment-declare > .meta { margin-block-start: 0; }
 .assignment-declare textarea { width: 100%; font-family: inherit; }
 .assignment-declare select { min-width: 0; }
+
+/* The staff console (`/admin`). Its top is in the reader's language; the
+   sentence beside each link and the owner's switchboard are still English
+   and are marked so. A screen's name, a queue's name and a flag's key wrap
+   instead of widening the page at 320 pixels. */
+.staff-page [data-staff-link] { overflow-wrap: anywhere; }
+.staff-page [data-staff-queue] { overflow-wrap: anywhere; }
