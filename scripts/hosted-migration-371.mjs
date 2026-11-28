@@ -1,7 +1,7 @@
 // The eleventh, separately approved step for the AyahSpring test project: the
 // one migration that follows the 370,
 // `20261281164000_review_decided_in_own_name.sql`. The owner asked for it on
-// 2026-11-27 ("Prepare 371"); the environment's reviewer still has to
+// 2026-11-28 ("Prepare 371"); the environment's reviewer still has to
 // approve the run itself.
 //
 // What that migration does: `set_course_version_status()` and
