@@ -793,6 +793,14 @@ test('the learner dashboard is written for the languages with nothing held, and 
     assert.equal(coverageOf(code).total, 2974);
     assert.equal(coverageOf(code).percent, 6, code);
   }
+  // The browser check of the language page types this number, and twice
+  // (2026-11-27 and 2026-11-28) it went stale and failed in CI after a push
+  // that this file had passed. It is read here so that it fails here first.
+  const browserCheck = readFileSync(new URL('../../../scripts/companion-browser-smoke.mjs', import.meta.url), 'utf8');
+  const hausa = coverageOf('ha').percent;
+  assert.ok(browserCheck.includes(`assert.ok(settings.includes('${hausa}%'),`), `scripts/companion-browser-smoke.mjs does not look for ${hausa}%`);
+  assert.ok(browserCheck.includes(`assert.ok(!settings.includes('${hausa}% of these interface strings'),`));
+  assert.ok(browserCheck.includes(`/language shows a Hausa reader ${hausa}% in Hausa.`));
   assert.equal(languageShownFor('ps', 'nav').dir, 'rtl');
   assert.equal(languageShownFor('en', 'learn').code, 'en');
   // A part that does not exist is English too, rather than a claim.

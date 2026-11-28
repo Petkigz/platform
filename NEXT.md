@@ -11273,3 +11273,9 @@ started: recitation correction, native apps, push notifications.
   here moves a course towards publication. Nothing was tried against
   the hosted project or with a real session; the hosted project has no
   reviewer and no assignment.
+  *After the push (`9c7350d`):* CI passed and the job `companion` of the
+  responsive workflow failed: its check of the language page typed "7%"
+  for a Hausa reader, and with 53 more sentences 192 of 2974 is 6%. The
+  same thing happened on 2026-11-27. `held-translations.test.ts` now
+  reads those lines of `scripts/companion-browser-smoke.mjs`, so the
+  number fails in `npm test` before a push instead of after one.

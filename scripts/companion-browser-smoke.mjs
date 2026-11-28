@@ -508,11 +508,15 @@ try {
     // looked for 8% until then and failed in CI on the first push that had
     // those pages; `held-translations.test.ts` knew the number and this
     // did not.)
-    assert.ok(settings.includes('7%'), 'the language page does not show the lower number');
-    assert.ok(!settings.includes('7% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
+    // (2026-11-28: 192 of 2974, which is 6% (6.46%), with the page of one
+    // review assignment. It failed in CI the same way a second time, so
+    // `held-translations.test.ts` now reads the two lines below and fails
+    // before a push when the number here is not the number it works out.)
+    assert.ok(settings.includes('6%'), 'the language page does not show the lower number');
+    assert.ok(!settings.includes('6% of these interface strings'), 'the coverage sentence is in English for a Hausa reader');
     assert.deepEqual(reader.pageErrors, []);
     await reader.context.close();
-    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 7% in Hausa.`);
+    console.log(`Held for review (ha): the correction sheet opens the ${boxes} companion lines with the draft ("${draft}") and a notice that readers cannot see it; served parts carry no notice; /language shows a Hausa reader 6% in Hausa.`);
   }
 
   // ------------------------------------------------------ 6. withheld whole
