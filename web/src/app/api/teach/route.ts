@@ -114,18 +114,16 @@ export async function POST(request: Request) {
 
   // ---------------------------------------------------------------------
   if (b.action === 'create_course') {
-    if (str(b.title).length === 0) {
-      return NextResponse.json(
-        { ok: false, code: 'rejected', message: 'A course title is required.' },
-        { status: 400 },
-      );
-    }
-
+    // A reason, never a sentence: `/teach` is written in the reader's language
+    // and says it. No answer from the database is 502, as on the switchboard:
+    // nobody can say whether the course is there.
     const outcome = await createCourse(supabase, {
       title: str(b.title),
       userId: user.id,
     });
-    return json(outcome);
+    if (outcome.ok) return NextResponse.json(outcome, { status: 200 });
+    const status = outcome.code === 'duplicate' ? 409 : outcome.code === 'unsure' ? 502 : 400;
+    return NextResponse.json(outcome, { status });
   }
 
   // ---------------------------------------------------------------------

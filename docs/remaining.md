@@ -693,7 +693,12 @@ written: not a held draft, nothing.
   decide). **Still English there, and marked as English:** what the
   database writes: what a flag still needs, a group or a queue the page
   has no words for, and the database's own sentence when it refuses.
-  Every other staff page is still English, with no mark.)* The teacher's class
+  Every other staff page is still English, with no mark. The same day,
+  the teacher's dashboard, `/teach` (`teach.`, 63 sentences, unreviewed):
+  everything but the takedown notice and its answer, the conduct card,
+  the authorisations and the agreement, which stand in one block marked
+  as English; the pages under `/teach` other than `/teach/apply` are
+  still English with no mark.)* The teacher's class
   manager and the saved-courses list still print the sentence a route
   sends.
 - *Numbers and dates in the languages a browser has no data for,

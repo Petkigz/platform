@@ -219,12 +219,14 @@ export function teacherSentence(notice: MyTakedown['notices'][number]): string {
 }
 
 /** What the teacher's page shows above everything else, when it shows anything. */
-export function teacherHeadline(mine: MyTakedown | null | undefined): string | null {
+export function teacherHeadline(
+  mine: MyTakedown | null | undefined,
+): { key: 'teach.tdDecided' | 'teach.tdHeldOne' } | { key: 'teach.tdHeldMany'; count: number } | null {
   if (!mine || mine.notices.length === 0) return null;
-  if (mine.held === 0) return 'A notice about one of your versions was decided.';
-  return mine.held === 1
-    ? 'One of your courses is held while a claim against it is looked at.'
-    : `${mine.held} of your courses are held while claims against them are looked at.`;
+  if (mine.held === 0) return { key: 'teach.tdDecided' };
+  // The count follows a colon in the catalogue, so that no language has to
+  // agree a noun with a number; the page writes it in the reader's digits.
+  return mine.held === 1 ? { key: 'teach.tdHeldOne' } : { key: 'teach.tdHeldMany', count: mine.held };
 }
 
 const TAKEDOWN_ERROR: Record<string, string> = {

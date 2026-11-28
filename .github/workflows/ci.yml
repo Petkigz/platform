@@ -201,6 +201,9 @@ jobs:
       - name: Teaching application synthetic HTTP regression
         run: node scripts/teach-apply-route-smoke.mjs
 
+      - name: Teacher's dashboard and a new course synthetic HTTP regression
+        run: node scripts/teach-route-smoke.mjs
+
       - name: Discussion boards synthetic HTTP regression
         run: node scripts/boards-route-smoke.mjs
 

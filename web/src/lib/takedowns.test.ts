@@ -110,14 +110,17 @@ test('a teacher with nothing on their record sees nothing at all', () => {
   const empty: MyTakedown = { notices: [], held: 0 };
   assert.equal(teacherHeadline(empty), null);
   assert.equal(teacherHeadline(null), null);
-  assert.match(
-    teacherHeadline({ notices: [{ ...notice({}), courseTitle: 'A course' }], held: 2 }) ?? '',
-    /2 of your courses are held/,
+  // Keys of the catalogue since 2026-11-28: `/teach` says them in the reader's
+  // language, and writes the count in the reader's digits after a colon.
+  assert.deepEqual(
+    teacherHeadline({ notices: [{ ...notice({}), courseTitle: 'A course' }], held: 2 }),
+    { key: 'teach.tdHeldMany', count: 2 },
   );
-  assert.match(
-    teacherHeadline({ notices: [{ ...notice({}) }], held: 0 }) ?? '',
-    /was decided/,
+  assert.deepEqual(
+    teacherHeadline({ notices: [{ ...notice({}), courseTitle: 'A course' }], held: 1 }),
+    { key: 'teach.tdHeldOne' },
   );
+  assert.deepEqual(teacherHeadline({ notices: [{ ...notice({}) }], held: 0 }), { key: 'teach.tdDecided' });
 });
 
 test('a refusal is a sentence, and an unknown code still says something true', () => {

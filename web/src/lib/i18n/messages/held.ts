@@ -142,6 +142,7 @@ export const UNWRITTEN_WHILE_HELD: readonly string[] = [
   'staff',
   'console',
   'switch',
+  'teach',
 ];
 
 /** Whether this sentence is deliberately absent from this language's file. */

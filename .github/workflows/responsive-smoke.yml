@@ -457,6 +457,19 @@ jobs:
             node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Teaching application responsive test::${s}`)' "$RUNNER_TEMP/teach-apply-responsive.log"
             exit 1
           fi
+      - name: Check the teacher's dashboard and the new-course form with synthetic data
+        env:
+          RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs
+        run: |
+          set -euo pipefail
+          export RESPONSIVE_CHROME="$(command -v google-chrome || command -v chromium)"
+          if node scripts/teach-route-smoke.mjs > "$RUNNER_TEMP/teach-responsive.log" 2>&1; then
+            cat "$RUNNER_TEMP/teach-responsive.log"
+          else
+            cat "$RUNNER_TEMP/teach-responsive.log"
+            node -e 'const s=require("fs").readFileSync(process.argv[1],"utf8").slice(-5000).replaceAll("%","%25").replaceAll("\r","%0D").replaceAll("\n","%0A");console.log(`::error title=Teacher dashboard responsive test::${s}`)' "$RUNNER_TEMP/teach-responsive.log"
+            exit 1
+          fi
       - name: Check the two discussion boards in three languages, and that a post is written, taken back and reported
         env:
           RESPONSIVE_PLAYWRIGHT: ${{ runner.temp }}/responsive/node_modules/playwright-core/index.mjs

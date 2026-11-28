@@ -52,6 +52,9 @@ export type MyScreening = {
   checkedAt?: string | null;
   validUntil?: string | null;
   expired?: boolean;
+  /** The day this record is deleted. */
+  retentionUntil?: string | null;
+  retentionBasis?: 'check' | 'birthday' | null;
   /** Whether the live safeguarding and conduct policy has been read and agreed to. */
   conductAcknowledged?: boolean;
   /** Whether this teacher may publish a course a child may be shown today. */
@@ -151,31 +154,94 @@ export const SCREENING_NOTHING_BLOCKED =
   + 'file. Turning that into a rule needs a standard the owner has not set — what a check is, '
   + 'who performs it, and how long it lasts.';
 
-/** What the teacher is told about their own record. */
-export function myScreeningSentence(mine: MyScreening | null | undefined): string {
+/** A sentence of the catalogue and what goes in its gaps. */
+export type ScreeningWords<K extends string> = { key: K; values?: Record<string, string> };
+
+export type MyScreeningWords = {
+  /** The two or three words that name the state. */
+  status: 'teach.scStNone' | 'teach.scStChecked' | 'teach.scStLapsed' | 'teach.scStFailed';
+  /** What is on the record, in one sentence. */
+  sentence: ScreeningWords<
+    | 'teach.scNone'
+    | 'teach.scFailedOn'
+    | 'teach.scFailed'
+    | 'teach.scLapsedOn'
+    | 'teach.scLapsed'
+    | 'teach.scHoldsFrom'
+    | 'teach.scHolds'
+    | 'teach.scNoExpiryFrom'
+    | 'teach.scNoExpiry'
+  >;
+  /**
+   * The kind of check, as a member of staff typed it. It is theirs, in
+   * whatever language they wrote, so the page prints it apart from the
+   * sentence and never inside one.
+   */
+  kind: string | null;
+  /**
+   * What the record stops, said only when it is known. `scBlocks` while the
+   * platform is asking and there is no current pass; `scNotAsked` while it is
+   * not asking; nothing for a current pass, and nothing when the answer did
+   * not say whether the platform is asking.
+   */
+  note: 'teach.scBlocks' | 'teach.scNotAsked' | null;
+  /** The day the record is deleted, when the record has one. */
+  kept: ScreeningWords<'teach.scKept'> | null;
+};
+
+/**
+ * What the teacher is told about their own record, as keys of the catalogue.
+ *
+ * `day` writes a date for the reader (the page passes `formatDay` for the
+ * language it is written in) and answers the empty string for a value that is
+ * not a day; a sentence with no date in it is chosen then, rather than one
+ * with a hole.
+ *
+ * The page used to say two things at once to a teacher with nothing on file:
+ * that a course for children could not be published, and that nothing here
+ * blocked their teaching. Which is true depends on `platform.safeguarding`,
+ * and the answer carries it as `required`, so the note is chosen from that.
+ */
+export function myScreeningWords(
+  mine: MyScreening | null | undefined,
+  day: (iso: string | null | undefined) => string,
+): MyScreeningWords {
+  const asked = typeof mine?.required === 'boolean' ? mine.required : null;
+  const stops = asked === null ? null : asked ? 'teach.scBlocks' : 'teach.scNotAsked';
   if (!mine || !mine.recorded) {
-    // The old sentence said the standard was still being decided. It is not: the
-    // owner settled it on 2026-10-30, so the honest version now explains what is
-    // missing rather than apologising for a gap that has closed.
-    return 'No check is on file for you yet. Whoever appoints teachers records one — the '
-      + 'kind of check, the date and whether it lapses — and until then a course you '
-      + 'write for children cannot be published.';
+    return { status: 'teach.scStNone', sentence: { key: 'teach.scNone' }, kind: null, note: stops, kept: null };
   }
   const when = day(mine.checkedAt);
   const until = day(mine.validUntil);
+  const keptUntil = day(mine.retentionUntil);
+  const kind = typeof mine.type === 'string' && mine.type.trim() !== '' ? mine.type.trim() : null;
+  const kept: MyScreeningWords['kept'] = keptUntil ? { key: 'teach.scKept', values: { date: keptUntil } } : null;
   if (mine.outcome === 'failed') {
-    return when
-      ? `A ${mine.type ?? 'check'} recorded on ${when} did not pass. Whoever recorded it can tell you what happens next.`
-      : 'A check recorded against your account did not pass. Whoever recorded it can tell you what happens next.';
+    return {
+      status: 'teach.scStFailed',
+      sentence: when ? { key: 'teach.scFailedOn', values: { date: when } } : { key: 'teach.scFailed' },
+      kind,
+      note: stops,
+      kept,
+    };
   }
   if (mine.expired) {
-    // It now stops something, and saying so is the point of the sentence.
-    return until
-      ? `Your last check lapsed on ${until}. A course written for children cannot be published until a current check is recorded.`
-      : 'Your last check has lapsed. A course written for children cannot be published until a current check is recorded.';
+    return {
+      status: 'teach.scStLapsed',
+      sentence: until ? { key: 'teach.scLapsedOn', values: { date: until } } : { key: 'teach.scLapsed' },
+      kind,
+      note: stops,
+      kept,
+    };
   }
-  if (until) return `A ${mine.type ?? 'check'} was recorded${when ? ` on ${when}` : ''} and holds until ${until}.`;
-  return `A ${mine.type ?? 'check'} was recorded${when ? ` on ${when}` : ''}, with no expiry stated.`;
+  const sentence: MyScreeningWords['sentence'] = until
+    ? when
+      ? { key: 'teach.scHoldsFrom', values: { date: when, until } }
+      : { key: 'teach.scHolds', values: { until } }
+    : when
+      ? { key: 'teach.scNoExpiryFrom', values: { date: when } }
+      : { key: 'teach.scNoExpiry' };
+  return { status: 'teach.scStChecked', sentence, kind, note: null, kept };
 }
 
 const SCREENING_ERROR: Record<string, string> = {

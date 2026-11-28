@@ -90,6 +90,7 @@ import { REVIEW_ASSIGNMENT } from './review-assignment.ts';
 import { STAFF } from './staff.ts';
 import { CONSOLE } from './console.ts';
 import { SWITCH } from './switch.ts';
+import { TEACH } from './teach.ts';
 import type { Messages } from './en.ts';
 
 /**
@@ -957,6 +958,8 @@ export const WRITTEN: Partial<Record<LocaleCode, Partial<Messages>>> = merge(
   CONSOLE,
   // The owner's switchboard on the staff console, on the same rule.
   SWITCH,
+  // The teacher's dashboard (`/teach`), on the same rule.
+  TEACH,
 );
 
 /**

@@ -1,0 +1,55 @@
+import type { LocaleCode } from '../locales.ts';
+import type { Messages } from './en.ts';
+
+/**
+ * The teacher's dashboard (`/teach`): what somebody who has not been
+ * appointed is told, the list of the teacher's courses with their state,
+ * the record of the teacher's own screening, the links to the other
+ * teaching screens with the sentence beside each, and the form that
+ * creates a course with its four refusals.
+ *
+ * Written on 2026-11-28, in the same twenty-seven languages as the staff
+ * console. **Written by the people who built the site and read by no
+ * speaker.** Some of these sentences say what a teacher may and may not do:
+ * that copyright stays with them, that a learner who enrolled keeps access,
+ * that a course for children cannot be published without a current check.
+ * A wrong one misdescribes a rule. Nothing here enforces one: the database
+ * decides, whatever the sentence says.
+ *
+ * The sentence beside a link follows a dash, so it begins small and ends
+ * without a full stop. A count follows a colon ("…: 3"), so that no
+ * language has to agree a noun with a number. A date is written by
+ * `formatDay` in the reader's calendar and digits and dropped into `{date}`
+ * or `{until}`; where a language needs a word beside a date to carry a case
+ * ending ("{date} tarihinde", "{date} күні"), the word is in the sentence.
+ * The sentence that ends "What the database said:" is followed by the
+ * database's own sentence, and the one that ends "as it was written down:"
+ * by the words a member of staff typed; both are English or whatever was
+ * typed, and the page marks them.
+ *
+ * French puts a no-break space before `:` and `;`. Uzbek writes oʻ and gʻ
+ * with U+02BB. "Screening" and "check" are said as `console.nScreenings`
+ * says them in each language, "owner" as `tapply.` says it (Turkish, Uzbek,
+ * Kazakh, Azerbaijani, Kyrgyz and Turkmen write "the platform's owner"),
+ * and the name on the teachers' board as `board.nameTitle` does.
+ *
+ * Nine sentences are copies, letter for letter, of what older parts say:
+ * "Teaching" (`switch.gTeaching`), "Teaching here is by appointment." (the
+ * first sentence of `tapply.byAppointment`), "Apply to teach"
+ * (`account.teachLink`), "Go to my learning" (`account.selfGo`), "Learning
+ * paths" (`paths.title`), "Teachers’ discussion" (`board.teachers`),
+ * "Creating…" (`family.creating`), "Back to my learning" (`course.back`)
+ * and being signed out (`family.signedOut`). They are copied rather than
+ * borrowed so that this part is whole on its own: were one of those parts
+ * held for a language, a borrowed word would come out in English inside a
+ * block that is not marked as English.
+ *
+ * Not here, and shown in English, marked as English: a takedown notice and
+ * the teacher's answer to it, the conduct card, the authorisations on
+ * record, the agreement about the teacher's work, and the screens these
+ * links lead to. A course's title and the kind of check are what somebody
+ * typed, in whatever language they typed it.
+ *
+ * Made by `scripts/catalogue-part/gen.py` from
+ * `scripts/catalogue-part/data/teach.txt`.
+ */

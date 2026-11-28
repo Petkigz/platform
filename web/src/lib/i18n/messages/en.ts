@@ -4212,6 +4212,87 @@ export const en = {
   'switch.rsERefused': 'The database refused that change, and the share is as it was. What it said:',
   'switch.rsEUnsure':
     'Nobody can say whether the share was saved. Load the page again and read the figure before saving again.',
+  // The teacher's dashboard (`/teach`): what somebody who has not been
+  // appointed is told, the list of the teacher's courses, the record of
+  // their screening, the links to the other teaching screens and the form
+  // that creates a course. The sentence beside a link follows a dash, so it
+  // starts small and has no full stop. Not here, and shown in English,
+  // marked: a takedown notice and its answer, the conduct card, the
+  // authorisations on record and the agreement about the teacher's work.
+  'teach.eyebrow': 'Teaching',
+  'teach.notYetTitle': 'This is the teaching area',
+  'teach.byAppointment': 'Teaching here is by appointment.',
+  'teach.byAppointmentBody':
+    'The owner appoints a teacher. Until then your account is a learner’s, and a learner’s account cannot open a course.',
+  'teach.ask':
+    'You may ask: send your qualifications and a sample lesson, and the owner reads them. Applying is not being appointed. Nothing is granted until somebody decides, in writing.',
+  'teach.apply': 'Apply to teach',
+  'teach.goLearning': 'Go to my learning',
+  'teach.title': 'My courses',
+  'teach.lede':
+    'You keep the copyright on everything here. Nothing you have already sold is taken back: learners who enrolled keep their access even if you retire the course later.',
+  'teach.tdDecided': 'A notice about one of your versions was decided.',
+  'teach.tdHeldOne': 'One of your courses is held while a claim against it is looked at.',
+  'teach.tdHeldMany': 'Courses of yours held while claims against them are looked at: {count}.',
+  'teach.tdBelow': 'The claim is below, in the words it was sent, and you can answer it there.',
+  'teach.lPromotions': 'Promotions',
+  'teach.nPromotions':
+    'run an offer on your own courses, in the countries you choose, with a limit on how many times a family may use it',
+  'teach.scTitle': 'Screening',
+  'teach.scStNone': 'No check on file',
+  'teach.scStChecked': 'Checked',
+  'teach.scStLapsed': 'Lapsed',
+  'teach.scStFailed': 'Did not pass',
+  'teach.scNone':
+    'No check is on file for you yet. Whoever appoints teachers records one: the kind of check, the date, and whether it lapses.',
+  'teach.scFailedOn':
+    'A check recorded on {date} did not pass. Whoever recorded it can tell you what happens next.',
+  'teach.scFailed':
+    'A check recorded against your account did not pass. Whoever recorded it can tell you what happens next.',
+  'teach.scLapsedOn': 'Your last check lapsed on {date}.',
+  'teach.scLapsed': 'Your last check has lapsed.',
+  'teach.scHoldsFrom': 'A check was recorded on {date} and holds until {until}.',
+  'teach.scHolds': 'A check was recorded and holds until {until}.',
+  'teach.scNoExpiryFrom': 'A check was recorded on {date}, with no expiry stated.',
+  'teach.scNoExpiry': 'A check was recorded, with no expiry stated.',
+  'teach.scKind': 'The kind of check, as it was written down:',
+  'teach.scBlocks': 'Until a current check is recorded, a course you write for children cannot be published.',
+  'teach.scNotAsked':
+    'The platform is not asking for a check today, so nothing here stops a course of yours being published. If that changes, this page says so first.',
+  'teach.scKept': 'This record is kept until {date} and then deleted.',
+  'teach.empty': 'You have not created a course yet.',
+  'teach.stDraft': 'Draft',
+  'teach.stActive': 'Active',
+  'teach.stRetired': 'Retired',
+  'teach.published': 'Published',
+  'teach.open': 'Open curriculum',
+  'teach.lPaths': 'Learning paths',
+  'teach.nPaths': 'curate a sequence of active courses',
+  'teach.lProfile': 'Public teacher profile',
+  'teach.nProfile': 'introduce yourself and link your social channels',
+  'teach.lMedia': 'Media library',
+  'teach.nMedia': 'upload lesson recordings and see which ones are ready to use',
+  'teach.lBoard': 'Teachers’ discussion',
+  'teach.nBoard': 'the board for teachers only; you write there under a username, not your name',
+  'teach.lEarnings': 'Earnings',
+  'teach.nEarnings':
+    'what your courses have earned, in each currency, and the sales behind it; nothing is paid out yet, so this is the record and not a balance',
+  'teach.lPayouts': 'Getting paid',
+  'teach.nPayouts':
+    'ask for the money your courses have earned once it is out of its refund hold, and see what happened to every earlier request',
+  'teach.create': 'Create',
+  'teach.ncTitle': 'New course',
+  'teach.ncField': 'Course title',
+  'teach.ncExample': 'Introduction to Tajweed',
+  'teach.ncCreate': 'Create course',
+  'teach.ncCreating': 'Creating…',
+  'teach.ncETitle': 'Give the course a title.',
+  'teach.ncEDuplicate': 'A course with that name already exists. Change the title a little and try again.',
+  'teach.ncERefused': 'The course was not created. What the database said:',
+  'teach.ncEUnsure':
+    'Nobody can say whether the course was created. Load the page again and look at your courses before creating it again.',
+  'teach.ncESignedOut': 'You are signed out. Sign in again, then try once more.',
+  'teach.back': 'Back to my learning',
 } as const;
 
 export type MessageKey = keyof typeof en;

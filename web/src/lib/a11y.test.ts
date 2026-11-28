@@ -207,4 +207,19 @@ describe('reading preferences', () => {
     assert.doesNotMatch(A11Y_BOOT, /<\/script/i);
     assert.doesNotThrow(() => new Function(A11Y_BOOT));
   });
+
+  it('tells React that the element the boot script writes on differs from what the server sent', () => {
+    // The script sets attributes on <html> before React wakes up. React then
+    // reports "a tree hydrated but some attributes ... didn't match" on every
+    // page a reader with a preference opens (seen in a browser, 2026-11-28),
+    // unless that one element says the difference is meant.
+    const layout = readFileSync(new URL('../app/layout.tsx', import.meta.url), 'utf8');
+    assert.match(layout, /__html: A11Y_BOOT/);
+    assert.match(layout, /<html lang=\{code\} dir=\{directionOf\(code\)\} suppressHydrationWarning>/);
+    // And it is said nowhere else in the layout: a difference inside the page is still reported.
+    assert.equal(layout.split('suppressHydrationWarning').length - 1, 1);
+    // The script writes on that element and no other.
+    assert.match(A11Y_BOOT, /var h=document\.documentElement;/);
+    assert.equal(A11Y_BOOT.split('setAttribute').length - 1, A11Y_BOOT.split('h.setAttribute').length - 1);
+  });
 });

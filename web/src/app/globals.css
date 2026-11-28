@@ -2881,3 +2881,17 @@ p.support-small { margin: 0; }
 .staff-page [data-staff-switchboard] label,
 .staff-page [data-staff-switchboard] [role="alert"],
 .staff-page [data-staff-switchboard] [data-switch-retention] { overflow-wrap: anywhere; }
+
+/* The teacher's dashboard (`/teach`), in the reader's language since
+   2026-11-28. A badge is one line everywhere else; here it may wrap, because
+   the Turkish for "Retired" is two words that are wider than a card on a
+   320-pixel phone at the largest text, and pushed the page sideways
+   (`scripts/teach-route-smoke.mjs` draws every language at that width and
+   fails without this). Everything a teacher types is inside a card, and a
+   card already breaks a word longer than itself. The links to the other
+   teaching screens are one to a line: they used to share a line, parted by
+   dots, which no longer reads once a sentence is a line long. */
+.teach-page .badge { max-width: 100%; white-space: normal; }
+.teach-page .teach-actions { margin-block-start: 1.5rem; }
+.teach-page .teach-links { margin-block-start: 1.5rem; }
+.teach-page .teach-links > p { margin-block: 0 0.6rem; }

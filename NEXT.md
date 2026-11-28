@@ -11633,4 +11633,101 @@ started: recitation correction, native apps, push notifications.
   preconditions, which are the longest English left on the page and are
   rows of the database, not of the catalogue. `/teach`, `/institution`,
   `/admin/panels`, `/admin/reviewers`, `/admin/course-reviews` and the
-  other staff pages are still English, with no mark.
+  other staff pages are still English, with no mark. *(`/teach` itself
+  the same day: the next entry.)*
+- **The teacher's dashboard, `/teach`, is in the reader's language
+  (2026-11-28, fourth unit).** *From the catalogue* (`teach.`, 63
+  sentences, the twenty-seven languages, **read by no speaker**): what
+  somebody who is not a teacher is told, the heading and the sentence
+  about copyright, the line above a takedown notice, the screening record
+  (four states and nine sentences, with what it stops and the day it is
+  deleted), a course's state and "Published", the seven links to the other
+  teaching screens with the sentence beside each, and the form that makes a
+  course with its five refusals. The screening sentences tell a teacher
+  whether a course for children can be published; the database decides
+  that, and a wrong sentence would misreport it.
+  *Still English, in one block marked as English on a page that is not:*
+  the takedown notice and its answer, the conduct card, the
+  authorisations, and the agreement about the teacher's work. They are
+  the longest text on the page and state rights and duties; they were left
+  for a unit of their own rather than translated in a hurry. A state of a
+  course the page has no word for, the kind of a check as staff typed it,
+  and the database's sentence when it refuses a course are English too,
+  each marked. **Every page under `/teach` but this one and `/teach/apply`
+  is still English with no mark** (earnings, payouts, promotions, paths,
+  profile, media, a course's own pages).
+  *What changed besides the words.* (1) **A course whose title is not in
+  Latin letters can be made.** The address was built from the title's
+  Latin letters and digits, so "مقدمة في التجويد" had none and was refused
+  with "That title has no usable letters in it", and "Başlangıç" became
+  `baslang-c`. A title that loses a letter now keeps what an address can
+  carry and gets ten random characters (`course-3f9a2c1b0d` when nothing
+  is left); an accent is stripped, as before; a title that is carried
+  whole keeps the address it always had. Nobody was asked whether a
+  random address is acceptable for a course's public page: it can be
+  changed in the database and nowhere on a screen. (2) **Making a course
+  answers by name**: `title`, `duplicate` (409), `refused` with the
+  database's sentence beside it, and `unsure` (502) when there was no
+  answer, or when the course was made and its first version was not. The
+  last used to be reported as a refusal in the database's words, and left
+  a course on the list that the teacher had been told was not made. The
+  form says to look before making it again. The route's other actions
+  still answer in English. (3) The form takes one request until it is
+  answered, keeps what was typed after a refusal, and no longer takes the
+  keyboard when the page opens: it is the last thing on the page, and the
+  page used to open scrolled past a takedown notice to reach it. (4) The
+  screening card said "cannot be published" whenever no check was on
+  file, whether or not the platform was asking for one. It says that only
+  while `platform.safeguarding` asks, says that nothing is stopped while
+  it does not, and says neither if the database's answer does not say. A
+  date the browser cannot read gets the sentence with no date in it. (5)
+  The links to the other teaching screens are one to a line, each named
+  for the page it opens. (6) **The warning about attributes on `<html>`
+  is explained and gone**: the script that applies a reader's text size
+  before the first paint writes on `<html>`, and React reported the
+  difference on every page a reader with a preference opened. In a
+  production build nothing was printed and nothing was undone; in
+  development it hid real mismatches among itself. `<html>` now says the
+  difference is meant (`suppressHydrationWarning`, that element only).
+  *Checked by:* `teach-page.test.ts`, `course-create.test.ts`,
+  `screening.test.ts`, `takedowns.test.ts`, `a11y.test.ts`;
+  `scripts/teach-route-smoke.mjs` in CI against a stand-in API: both
+  pages in English and Arabic, Persian dates and digits, French spacing, a
+  held language given English in one frame, seven answers of the
+  screening function, three shapes of notice, and what the route answers
+  to a course made, a title in Arabic, an empty title, a taken name, a
+  refusal, no answer, and a course left without its version. With a browser (the responsive workflow): English, Arabic and
+  Tamil at 320, 390 and 1440 pixels, and **every one of the twenty-seven
+  languages at 320 pixels with the largest text in the dyslexia font**,
+  which is how the Turkish for "Retired" was found pushing the page
+  sideways from inside a badge; the form in Arabic through each refusal,
+  with the connection cut, and asked three times before its answer.
+  Ten of these assertions were proved by breaking the page on purpose
+  and watching the smoke fail (the mark on the English block, the badge
+  rule, the second request, the 502, the mark on the database's sentence,
+  the keyboard taken at opening, the direction of the box, the button
+  left busy with no connection, the warning on `<html>`, the direction
+  of an address); nothing else was. Four rules written to let headings,
+  sentences, buttons and the box break or shrink were removed when
+  breaking them changed nothing in any language: a card already does it.
+  `scripts/client-bundle-check.mjs` looks for four of the sentences in
+  every script and finds none.
+  *Looked at, drawn (Chromium in the sandbox, Noto fonts put in by hand;
+  `TEACH_SMOKE_SHOTS=<directory>` keeps the pictures):* both pages in
+  English, Arabic and Tamil at 320 and 390 pixels, the dashboard at the
+  largest text, and a refusal in Arabic. On an Arabic page a course with
+  an English title has its title and address at the left of its card and
+  its badges at the right; that is what "read it the way it was written"
+  does, and nobody who reads Arabic has said whether it looks wrong. The
+  example in the title box is cut short in Tamil at the largest text. In
+  the main navigation at 390 pixels the Arabic word for this page is half
+  off the edge until the row is scrolled; that is the navigation, on every
+  page, and was not touched.
+  **Not done:** read by anybody who speaks any of the languages; a real
+  teacher's session, the table's real constraints or policies (the
+  stand-in's refusals are typed into the smoke); Firefox and WebKit; the
+  four English cards; the pages under `/teach`; the box's own "fill in
+  this field" bubble, which the browser writes in its own language.
+  `/institution`, `/admin/panels`, `/admin/reviewers`,
+  `/admin/course-reviews` and the other staff pages are still English,
+  with no mark.

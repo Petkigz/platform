@@ -64,7 +64,7 @@ test('the shell says out loud which language it is in', () => {
   // `lang` and `dir` come from the register now, not from a constant. That is
   // what a screen reader and a bidi algorithm read, so it is the two attributes
   // and not the words on the page that decide whether an Arabic page is Arabic.
-  assert.match(layout, /<html lang=\{code\} dir=\{directionOf\(code\)\}>/u);
+  assert.match(layout, /<html lang=\{code\} dir=\{directionOf\(code\)\}(?: suppressHydrationWarning)?>/u);
 
   // Both sources the choice can come from: the cookie this browser set, and the
   // device's own `Accept-Language` when it has not set one.

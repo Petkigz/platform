@@ -220,7 +220,9 @@ test('the audit over the real register is small, and says so', () => {
   // is still a long way off. On 2026-11-28 the owner's switchboard would have
   // taken it to 264, forty-two of them a flag's key or a server variable kept
   // as the English writes it; the audit stopped asking about those, here and
-  // on the staff console, and it stands at 194.)
+  // on the staff console, and it stood at 194. The teacher's dashboard, the
+  // same day, added two that are the same word in both languages: the French
+  // for "Promotions" and the Filipino for "Draft". It stands at 196.)
   assert.ok(total < 220, `the audit found ${total} things, which is a wall and not a shortlist`);
 
   // And it never claims more than it can see.

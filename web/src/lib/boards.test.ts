@@ -227,9 +227,13 @@ test('a board that is switched on can be reached from where its people work', as
   assert.match(learn, /\{\(studentBoardOn \|\| teacherBoardOn\) && <Link href="\/discuss">\{t\('board\.title'\)\}<\/Link>\}/u);
   const teach = read('teach/page.tsx');
   assert.match(teach, /isFlagEnabled\(supabase, 'community\.teacher_board'\)\.catch\(\(\) => false\)/u);
-  assert.match(teach, /\{teacherBoardOn && \([\s\S]*?<Link href="\/discuss\/teachers">/u);
+  // (`/teach` is in the reader's language since 2026-11-28 and writes each of
+  // its links through one helper, so the address is an argument there.)
+  assert.match(teach, /\{teacherBoardOn && link\('\/discuss\/teachers', 'teach\.lBoard', 'teach\.nBoard'\)\}/u);
   // Each page has that one link and no other: nothing leads to a board that is off.
-  for (const page of [learn, teach]) assert.equal(page.split('href="/discuss').length - 1, 1);
+  assert.equal(learn.split('href="/discuss').length - 1, 1);
+  assert.equal(teach.split("'/discuss").length - 1, 1);
+  assert.equal(teach.split('"/discuss').length - 1, 0);
 });
 
 test('what a closed account wrote is read whole or not at all', async () => {

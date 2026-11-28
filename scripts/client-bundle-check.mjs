@@ -314,6 +314,14 @@ for (const [file, key] of [
   ['switch.ts', 'switch.eUnsure'],
   ['switch.ts', 'switch.rsBody'],
   ['switch.ts', 'switch.rsEUnsure'],
+  // The teacher's dashboard (2026-11-28). The form that makes a course is a
+  // script and is handed the reader's words as properties; what it says when
+  // nobody knows whether a course was made, and what the screening record
+  // stops, must be in the HTML of one language and in no script.
+  ['teach.ts', 'teach.lede'],
+  ['teach.ts', 'teach.scBlocks'],
+  ['teach.ts', 'teach.ncEUnsure'],
+  ['teach.ts', 'teach.ncEDuplicate'],
 ]) {
   const path = join(messages, file);
   if (!existsSync(path)) fail(`${relative(root, path)} is missing; this check reads its sentences from it.`);

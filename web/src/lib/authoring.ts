@@ -21,6 +21,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { one, type Embedded } from './embed.ts';
+import { isNoAnswer } from './flags.ts';
 
 export type VersionStatus =
   | 'draft'
@@ -320,21 +321,64 @@ export function slugify(title: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
+    .slice(0, 60)
+    // Cutting at sixty can leave the cut on a hyphen, and the column refuses
+    // a slug that ends in one.
+    .replace(/-+$/g, '');
 }
+
+/** Ten letters and digits nobody chose, for a slug the title cannot fill. */
+function spareTail(): string {
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+}
+
+/**
+ * The slug of a new course.
+ *
+ * The column takes `a-z`, `0-9` and hyphens, because the slug is in the
+ * address. A title in Arabic, Bengali or Chinese has none of those, and used
+ * to be refused as having "no usable letters", on a page that is written in
+ * those languages and suggests a title in them. Now a title whose letters the
+ * address cannot carry gets a tail nobody chose: `course-3f9a2c1b0d` when
+ * nothing is left, `tajweed-3f9a2c1b0d` when part is. The tail is also what
+ * keeps two such titles apart, since what is left of them ("1", "tajweed")
+ * says little about whether they are the same name.
+ *
+ * A title the address carries whole is as it was: its own slug, and a second
+ * course of that name is told the name is taken.
+ */
+export function courseSlug(title: string, tail: () => string = spareTail): string {
+  const slug = slugify(title);
+  const plain = title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  // A letter or a digit that is still not ASCII after the accents are taken
+  // off is one the slug has dropped.
+  const lost = /[\p{L}\p{N}]/u.test(plain.replace(/[\u0000-\u007f]/g, ''));
+  if (!lost) return slug;
+  const kept = slug.slice(0, 49).replace(/-+$/g, '');
+  return `${kept === '' ? 'course' : kept}-${tail()}`;
+}
+
+/**
+ * What creating a course came to. A reason and never a sentence: the page
+ * that asked is written in the reader's language and says it (`teach.ncE…`).
+ * `said` is the database's own sentence, for the page to print marked as
+ * English after "What the database said:".
+ */
+export type CreateCourseOutcome =
+  | { ok: true; value: { courseId: string; versionId: string } }
+  | { ok: false; code: 'title' | 'duplicate' }
+  | { ok: false; code: 'refused'; said: string }
+  | { ok: false; code: 'unsure' };
 
 export async function createCourse(
   supabase: SupabaseClient,
   args: { title: string; userId: string },
-): Promise<WriteOutcome<{ courseId: string; versionId: string }>> {
+): Promise<CreateCourseOutcome> {
   const title = args.title.trim();
-  if (title.length === 0) {
-    return { ok: false, code: 'rejected', message: 'A title is required.' };
-  }
-  const slug = slugify(title);
-  if (slug.length === 0) {
-    return { ok: false, code: 'rejected', message: 'That title has no usable letters in it.' };
-  }
+  if (title.length === 0) return { ok: false, code: 'title' };
+  const slug = courseSlug(title);
+  // Punctuation alone ("???") leaves nothing and has lost no letter.
+  if (slug.length === 0) return { ok: false, code: 'title' };
 
   // The course and its first version are created together, because a course
   // with no version has nowhere to put content and nothing to publish.
@@ -345,14 +389,13 @@ export async function createCourse(
     .single();
 
   if (cErr) {
-    if (/duplicate key/i.test(cErr.message)) {
-      return {
-        ok: false,
-        code: 'duplicate',
-        message: 'A course with that name already exists.',
-      };
+    // A gateway's page or a cut connection is not a refusal: the row may be
+    // there and the answer lost.
+    if (isNoAnswer(cErr)) return { ok: false, code: 'unsure' };
+    if (cErr.code === '23505' || /duplicate key/i.test(cErr.message)) {
+      return { ok: false, code: 'duplicate' };
     }
-    return classify(cErr);
+    return { ok: false, code: 'refused', said: cErr.message };
   }
 
   const courseId = (course as unknown as { id: string }).id;
@@ -363,7 +406,10 @@ export async function createCourse(
     .select('id')
     .single();
 
-  if (vErr) return classify(vErr);
+  // The course is in the list by now, whatever became of its first version.
+  // "Not created" would be false and would invite a second course of the same
+  // name; the true instruction is to look at the list before trying again.
+  if (vErr) return { ok: false, code: 'unsure' };
 
   return {
     ok: true,

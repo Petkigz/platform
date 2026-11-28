@@ -1,0 +1,1728 @@
+### ar
+التدريس
+هذه منطقة التدريس
+التدريس هنا بالتعيين.
+المالك هو من يعيّن المعلّم. وإلى أن يحدث ذلك يبقى حسابك حساب متعلّم، وحساب المتعلّم لا يستطيع فتح دورة.
+لك أن تطلب: أرسل مؤهلاتك ودرسًا نموذجيًا، والمالك يقرؤهما. التقدّم بالطلب ليس تعيينًا. لا يُمنح شيء حتى يقرّر أحدٌ ذلك كتابةً.
+التقدّم للتدريس
+اذهب إلى تعلّمي
+دوراتي
+حقوق النشر في كل ما هنا تبقى لك. ما بعتَه من قبل لا يُسترجَع: المتعلّمون الذين سجّلوا يحتفظون بوصولهم حتى لو سحبتَ الدورة لاحقًا.
+صدر قرار في إشعار يخصّ إحدى نسخك.
+إحدى دوراتك محجوبة ريثما يُنظر في مطالبة ضدها.
+دوراتك المحجوبة ريثما يُنظر في المطالبات ضدها: {count}.
+المطالبة في الأسفل بالكلمات التي أُرسلت بها، ويمكنك الرد عليها هناك.
+العروض الترويجية
+قدّم عرضًا على دوراتك أنت، في البلدان التي تختارها، مع حدّ لعدد المرات التي يجوز لعائلة أن تستخدمه فيها
+التحقق
+لا يوجد تحقق محفوظ
+تم التحقق
+انتهت صلاحيته
+لم يجتز
+لا يوجد تحقق محفوظ عنك بعد. من يعيّن المعلمين هو من يسجّله: نوع التحقق، وتاريخه، وهل تنتهي صلاحيته.
+تحقق سُجّل بتاريخ {date} لم يجتز. من سجّله يستطيع أن يخبرك بما يحدث بعد ذلك.
+تحقق سُجّل على حسابك لم يجتز. من سجّله يستطيع أن يخبرك بما يحدث بعد ذلك.
+انتهت صلاحية آخر تحقق لك بتاريخ {date}.
+انتهت صلاحية آخر تحقق لك.
+سُجّل تحقق بتاريخ {date} وهو سارٍ حتى {until}.
+سُجّل تحقق وهو سارٍ حتى {until}.
+سُجّل تحقق بتاريخ {date}، ولم يُذكر له تاريخ انتهاء.
+سُجّل تحقق، ولم يُذكر له تاريخ انتهاء.
+نوع التحقق، كما كُتب:
+إلى أن يُسجَّل تحقق سارٍ، لا يمكن نشر دورة تكتبها للأطفال.
+المنصة لا تطلب تحققًا اليوم، فلا شيء هنا يمنع نشر دورة لك. وإن تغيّر ذلك فهذه الصفحة تقوله أولًا.
+يُحفظ هذا السجل حتى {date} ثم يُحذف.
+لم تنشئ أي دورة بعد.
+مسودة
+نشطة
+مسحوبة
+منشورة
+افتح المنهج
+مسارات التعلّم
+رتّب سلسلة من الدورات النشطة
+الملف العام للمعلّم
+عرّف بنفسك واربط قنواتك على وسائل التواصل
+مكتبة الوسائط
+ارفع تسجيلات الدروس واعرف أيّها جاهز للاستخدام
+نقاش المعلمين
+منتدى خاص بالمعلمين؛ تكتب فيه باسم مستعار لا باسمك
+الأرباح
+ما كسبته دوراتك، بكل عملة، والمبيعات التي وراءه؛ لم يُدفع شيء بعد، فهذا سجلّ وليس رصيدًا
+استلام مستحقاتك
+اطلب المال الذي كسبته دوراتك بعد خروجه من مدة حجز الاسترداد، واعرف ما جرى لكل طلب سابق
+إنشاء
+دورة جديدة
+عنوان الدورة
+مقدمة في التجويد
+أنشئ الدورة
+جارٍ الإنشاء…
+اكتب عنوانًا للدورة.
+توجد دورة بهذا الاسم من قبل. غيّر العنوان قليلًا وحاول من جديد.
+لم تُنشأ الدورة. وهذا ما قالته قاعدة البيانات:
+لا أحد يستطيع أن يقول هل أُنشئت الدورة. أعد تحميل الصفحة وانظر إلى دوراتك قبل أن تنشئها من جديد.
+لقد سُجّل خروجك. سجّل الدخول من جديد ثم حاول مرة أخرى.
+العودة إلى تعلّمي
+### ur
+تدریس
+یہ تدریس کا حصہ ہے
+یہاں پڑھانا تقرری سے ہوتا ہے۔
+استاد کو مالک مقرر کرتا ہے۔ تب تک آپ کا اکاؤنٹ سیکھنے والے کا ہے، اور سیکھنے والے کا اکاؤنٹ کورس نہیں کھول سکتا۔
+آپ درخواست کر سکتے ہیں: اپنی اہلیت اور نمونے کا ایک سبق بھیجیں، مالک انہیں پڑھتا ہے۔ درخواست دینا تقرری نہیں ہے۔ جب تک کوئی تحریری فیصلہ نہ کرے، کچھ نہیں دیا جاتا۔
+پڑھانے کی درخواست دیں
+میری تعلیم پر جائیں
+میرے کورسز
+یہاں کی ہر چیز کے حقوقِ اشاعت آپ کے پاس رہتے ہیں۔ جو آپ بیچ چکے ہیں وہ واپس نہیں لیا جاتا: داخل ہو چکے سیکھنے والوں کی رسائی برقرار رہتی ہے، چاہے آپ بعد میں کورس واپس لے لیں۔
+آپ کے ایک ورژن سے متعلق نوٹس کا فیصلہ ہو گیا۔
+آپ کا ایک کورس اس وقت تک روکا ہوا ہے جب تک اس کے خلاف دعوے کو دیکھا جا رہا ہے۔
+آپ کے کورسز جو اپنے خلاف دعووں کے دیکھے جانے تک روکے ہوئے ہیں: {count}۔
+دعویٰ نیچے انہی الفاظ میں ہے جن میں بھیجا گیا تھا، اور آپ وہیں اس کا جواب دے سکتے ہیں۔
+پروموشنز
+اپنے کورسز پر پیشکش چلائیں، ان ملکوں میں جو آپ چنیں، اور اس حد کے ساتھ کہ ایک خاندان اسے کتنی بار استعمال کر سکتا ہے
+جانچ
+کوئی جانچ ریکارڈ پر نہیں
+جانچ ہو گئی
+مدت ختم
+پاس نہیں ہوئی
+آپ کی کوئی جانچ ابھی ریکارڈ پر نہیں۔ جو اساتذہ کو مقرر کرتا ہے وہی اسے درج کرتا ہے: جانچ کی قسم، تاریخ، اور یہ کہ اس کی مدت ختم ہوتی ہے یا نہیں۔
+{date} کو درج کی گئی جانچ پاس نہیں ہوئی۔ جس نے اسے درج کیا وہ بتا سکتا ہے کہ آگے کیا ہوگا۔
+آپ کے اکاؤنٹ پر درج کی گئی ایک جانچ پاس نہیں ہوئی۔ جس نے اسے درج کیا وہ بتا سکتا ہے کہ آگے کیا ہوگا۔
+آپ کی آخری جانچ کی مدت {date} کو ختم ہو گئی۔
+آپ کی آخری جانچ کی مدت ختم ہو چکی ہے۔
+ایک جانچ {date} کو درج کی گئی اور {until} تک برقرار ہے۔
+ایک جانچ درج کی گئی اور {until} تک برقرار ہے۔
+ایک جانچ {date} کو درج کی گئی، اور ختم ہونے کی کوئی تاریخ نہیں بتائی گئی۔
+ایک جانچ درج کی گئی، اور ختم ہونے کی کوئی تاریخ نہیں بتائی گئی۔
+جانچ کی قسم، جیسی لکھی گئی تھی:
+جب تک کوئی موجودہ جانچ درج نہ ہو، بچوں کے لیے آپ کا لکھا ہوا کورس شائع نہیں ہو سکتا۔
+پلیٹ فارم آج جانچ نہیں مانگ رہا، اس لیے یہاں کوئی چیز آپ کے کورس کی اشاعت نہیں روکتی۔ اگر یہ بدلا تو یہ صفحہ سب سے پہلے بتائے گا۔
+یہ ریکارڈ {date} تک رکھا جاتا ہے اور پھر حذف کر دیا جاتا ہے۔
+آپ نے ابھی تک کوئی کورس نہیں بنایا۔
+مسودہ
+فعال
+واپس لیا گیا
+شائع شدہ
+نصاب کھولیں
+تعلیمی راستے
+فعال کورسز کی ایک ترتیب بنائیں
+استاد کا عوامی پروفائل
+اپنا تعارف کرائیں اور اپنے سوشل چینلز کے روابط دیں
+میڈیا لائبریری
+اسباق کی ریکارڈنگز اپ لوڈ کریں اور دیکھیں کہ کون سی استعمال کے لیے تیار ہیں
+اساتذہ کی گفتگو
+صرف اساتذہ کا بورڈ؛ وہاں آپ اپنے نام سے نہیں، فرضی نام سے لکھتے ہیں
+آمدنی
+آپ کے کورسز نے ہر کرنسی میں جو کمایا، اور اس کے پیچھے کی فروخت؛ ابھی کچھ ادا نہیں کیا جاتا، اس لیے یہ ریکارڈ ہے، بیلنس نہیں
+ادائیگی لینا
+اپنے کورسز کی کمائی اس وقت مانگیں جب وہ رقم واپسی کی روک سے نکل آئے، اور دیکھیں کہ ہر پچھلی درخواست کا کیا ہوا
+بنائیں
+نیا کورس
+کورس کا عنوان
+تجوید کا تعارف
+کورس بنائیں
+بنایا جا رہا ہے…
+کورس کو کوئی عنوان دیں۔
+اس نام کا کورس پہلے سے موجود ہے۔ عنوان تھوڑا بدلیں اور دوبارہ کوشش کریں۔
+کورس نہیں بنا۔ ڈیٹا بیس نے یہ کہا:
+کوئی نہیں بتا سکتا کہ کورس بنا یا نہیں۔ صفحہ دوبارہ کھولیں اور دوبارہ بنانے سے پہلے اپنے کورسز دیکھ لیں۔
+آپ سائن آؤٹ ہو چکے ہیں۔ دوبارہ سائن اِن کریں، پھر ایک بار اور کوشش کریں۔
+میری تعلیم پر واپس
+### fa
+تدریس
+اینجا بخش تدریس است
+تدریس در اینجا با انتصاب است.
+معلم را مالک منصوب می‌کند. تا آن زمان حساب شما حساب یادگیرنده است، و حساب یادگیرنده نمی‌تواند دوره‌ای باز کند.
+می‌توانید درخواست کنید: صلاحیت‌های خود و یک درس نمونه بفرستید و مالک آن‌ها را می‌خواند. درخواست دادن منصوب شدن نیست. تا کسی کتباً تصمیم نگیرد، چیزی داده نمی‌شود.
+درخواست تدریس
+رفتن به یادگیری من
+دوره‌های من
+حق نشر هر آنچه اینجاست نزد شما می‌ماند. آنچه پیش‌تر فروخته‌اید پس گرفته نمی‌شود: یادگیرندگانی که ثبت‌نام کرده‌اند دسترسی‌شان را نگه می‌دارند، حتی اگر بعداً دوره را کنار بگذارید.
+دربارهٔ اعلامیه‌ای مربوط به یکی از نسخه‌های شما تصمیم گرفته شد.
+یکی از دوره‌های شما تا وقتی ادعایی علیه آن بررسی می‌شود نگه داشته شده است.
+دوره‌های شما که تا بررسی ادعاهای علیه آن‌ها نگه داشته شده‌اند: {count}.
+ادعا در پایین آمده است، با همان کلماتی که فرستاده شد، و همان‌جا می‌توانید به آن پاسخ دهید.
+تخفیف‌های تبلیغی
+برای دوره‌های خودتان پیشنهادی بگذارید، در کشورهایی که انتخاب می‌کنید، با سقفی برای دفعاتی که یک خانواده می‌تواند از آن استفاده کند
+بررسی پیشینه
+هیچ بررسی‌ای در پرونده نیست
+بررسی شد
+منقضی‌شده
+قبول نشد
+هنوز هیچ بررسی‌ای برای شما در پرونده نیست. هر کس معلمان را منصوب می‌کند آن را ثبت می‌کند: نوع بررسی، تاریخ، و اینکه منقضی می‌شود یا نه.
+بررسی‌ای که در تاریخ {date} ثبت شد قبول نشد. کسی که آن را ثبت کرده می‌تواند بگوید بعد چه می‌شود.
+بررسی‌ای که برای حساب شما ثبت شد قبول نشد. کسی که آن را ثبت کرده می‌تواند بگوید بعد چه می‌شود.
+آخرین بررسی شما در تاریخ {date} منقضی شد.
+آخرین بررسی شما منقضی شده است.
+یک بررسی در تاریخ {date} ثبت شد و تا {until} معتبر است.
+یک بررسی ثبت شد و تا {until} معتبر است.
+یک بررسی در تاریخ {date} ثبت شد و تاریخ انقضایی برایش گفته نشده است.
+یک بررسی ثبت شد و تاریخ انقضایی برایش گفته نشده است.
+نوع بررسی، همان‌طور که نوشته شد:
+تا وقتی بررسیِ معتبری ثبت نشود، دوره‌ای که برای کودکان می‌نویسید نمی‌تواند منتشر شود.
+سکو امروز بررسی نمی‌خواهد، پس چیزی در اینجا جلوی انتشار دورهٔ شما را نمی‌گیرد. اگر این تغییر کند، این صفحه پیش از هر جای دیگر آن را می‌گوید.
+این سابقه تا {date} نگه داشته و سپس حذف می‌شود.
+هنوز دوره‌ای نساخته‌اید.
+پیش‌نویس
+فعال
+کنارگذاشته
+منتشرشده
+باز کردن برنامهٔ درسی
+مسیرهای یادگیری
+رشته‌ای از دوره‌های فعال را بچینید
+نمایهٔ عمومی معلم
+خودتان را معرفی کنید و به کانال‌های اجتماعی‌تان پیوند دهید
+کتابخانهٔ رسانه
+ضبط‌های درس را بارگذاری کنید و ببینید کدام‌ها آمادهٔ استفاده‌اند
+گفت‌وگوی معلمان
+تابلویی فقط برای معلمان؛ آنجا با نام کاربری می‌نویسید، نه با نام خودتان
+درآمد
+آنچه دوره‌های شما به هر ارز به دست آورده‌اند، و فروش‌های پشت آن؛ هنوز چیزی پرداخت نمی‌شود، پس این سابقه است نه موجودی
+دریافت پول
+پولی را که دوره‌هایتان به دست آورده‌اند، پس از بیرون آمدن از نگه‌داشتِ بازپرداخت، بخواهید و ببینید هر درخواست پیشین چه شد
+ساختن
+دورهٔ تازه
+عنوان دوره
+درآمدی بر تجوید
+ساختن دوره
+در حال ساختن…
+برای دوره عنوانی بنویسید.
+دوره‌ای با این نام از پیش هست. عنوان را کمی تغییر دهید و دوباره تلاش کنید.
+دوره ساخته نشد. آنچه پایگاه داده گفت:
+هیچ‌کس نمی‌تواند بگوید دوره ساخته شد یا نه. صفحه را دوباره بار کنید و پیش از ساختن دوباره، به دوره‌هایتان نگاه کنید.
+از حساب خارج شده‌اید. دوباره وارد شوید و یک بار دیگر تلاش کنید.
+بازگشت به یادگیری من
+### fa-af
+تدریس
+اینجا بخش تدریس است
+تدریس در اینجا با تقرر است.
+آموزگار را مالک مقرر می‌کند. تا آن وقت حساب شما حساب شاگرد است، و حساب شاگرد نمی‌تواند کورسی باز کند.
+می‌توانید درخواست کنید: شایستگی‌های خود و یک درس نمونه بفرستید و مالک آن‌ها را می‌خواند. درخواست دادن تقرر نیست. تا کسی به‌صورت نوشته تصمیم نگیرد، چیزی داده نمی‌شود.
+درخواست تدریس
+رفتن به آموزش من
+کورس‌های من
+حق نشر هر آنچه اینجاست نزد شما می‌ماند. آنچه پیش‌تر فروخته‌اید پس گرفته نمی‌شود: شاگردانی که شامل شده‌اند دسترسی‌شان را نگه می‌دارند، حتی اگر بعدتر کورس را کنار بگذارید.
+دربارهٔ اطلاعیه‌ای مربوط به یکی از نسخه‌های شما تصمیم گرفته شد.
+یکی از کورس‌های شما تا وقتی ادعایی علیه آن بررسی می‌شود نگه داشته شده است.
+کورس‌های شما که تا بررسی ادعاهای علیه آن‌ها نگه داشته شده‌اند: {count}.
+ادعا در پایین آمده است، با همان کلماتی که فرستاده شد، و همان‌جا می‌توانید به آن جواب بدهید.
+تخفیف‌های تبلیغاتی
+برای کورس‌های خودتان پیشنهادی بگذارید، در کشورهایی که انتخاب می‌کنید، با سقفی برای دفعاتی که یک فامیل می‌تواند از آن استفاده کند
+بررسی پیشینه
+هیچ بررسی‌ای در دوسیه نیست
+بررسی شد
+مدت ختم‌شده
+قبول نشد
+هنوز هیچ بررسی‌ای برای شما در دوسیه نیست. هر کس آموزگاران را مقرر می‌کند آن را ثبت می‌کند: نوع بررسی، تاریخ، و اینکه مدتش ختم می‌شود یا نه.
+بررسی‌ای که به تاریخ {date} ثبت شد قبول نشد. کسی که آن را ثبت کرده می‌تواند بگوید بعد چه می‌شود.
+بررسی‌ای که برای حساب شما ثبت شد قبول نشد. کسی که آن را ثبت کرده می‌تواند بگوید بعد چه می‌شود.
+مدت آخرین بررسی شما به تاریخ {date} ختم شد.
+مدت آخرین بررسی شما ختم شده است.
+یک بررسی به تاریخ {date} ثبت شد و تا {until} اعتبار دارد.
+یک بررسی ثبت شد و تا {until} اعتبار دارد.
+یک بررسی به تاریخ {date} ثبت شد و تاریخ ختمی برایش گفته نشده است.
+یک بررسی ثبت شد و تاریخ ختمی برایش گفته نشده است.
+نوع بررسی، همان‌طور که نوشته شد:
+تا وقتی بررسیِ معتبری ثبت نشود، کورسی که برای اطفال می‌نویسید نشر شده نمی‌تواند.
+پلتفرم امروز بررسی نمی‌خواهد، پس چیزی در اینجا جلو نشر کورس شما را نمی‌گیرد. اگر این تغییر کند، این صفحه پیش از هر جای دیگر آن را می‌گوید.
+این سابقه تا {date} نگه داشته و سپس حذف می‌شود.
+هنوز کورسی نساخته‌اید.
+پیش‌نویس
+فعال
+کنارگذاشته
+نشرشده
+باز کردن نصاب درسی
+مسیرهای آموزش
+رشته‌ای از کورس‌های فعال را ترتیب بدهید
+پروفایل عمومی آموزگار
+خودتان را معرفی کنید و به کانال‌های اجتماعی‌تان پیوند بدهید
+کتابخانهٔ رسانه
+ثبت‌های درس را بارگذاری کنید و ببینید کدام‌ها آمادهٔ استفاده‌اند
+گفت‌وگوی استادان
+تابلویی تنها برای آموزگاران؛ آنجا با نام مستعار می‌نویسید، نه با نام خودتان
+عاید
+آنچه کورس‌های شما به هر اسعار به دست آورده‌اند، و فروش‌های پشت آن؛ هنوز چیزی پرداخت نمی‌شود، پس این سابقه است نه بیلانس
+گرفتن پول
+پولی را که کورس‌هایتان به دست آورده‌اند، پس از بیرون شدن از نگه‌داشتِ بازپرداخت، بخواهید و ببینید هر درخواست پیشین چه شد
+ساختن
+کورس نو
+عنوان کورس
+مقدمه‌ای بر تجوید
+ساختن کورس
+در حال ساختن…
+برای کورس عنوانی بنویسید.
+کورسی با این نام از پیش هست. عنوان را کمی تغییر بدهید و دوباره کوشش کنید.
+کورس ساخته نشد. آنچه دیتابیس گفت:
+هیچ‌کس گفته نمی‌تواند که کورس ساخته شد یا نه. صفحه را دوباره باز کنید و پیش از دوباره ساختن، به کورس‌هایتان نگاه کنید.
+از حساب خارج شده‌اید. دوباره داخل شوید و یک بار دیگر کوشش کنید.
+برگشت به آموزش من
+### tr
+Öğretim
+Burası öğretim alanı
+Burada öğretmenlik atamayla olur.
+Öğretmeni platform sahibi atar. O zamana kadar hesabınız bir öğrenci hesabıdır ve bir öğrenci hesabı kurs açamaz.
+Başvurabilirsiniz: yeterliliklerinizi ve örnek bir ders gönderin, platform sahibi bunları okur. Başvurmak atanmak değildir. Biri yazılı olarak karar verene kadar hiçbir şey verilmez.
+Öğretmek için başvur
+Öğrenimime git
+Kurslarım
+Buradaki her şeyin telif hakkı sizde kalır. Önceden sattığınız hiçbir şey geri alınmaz: kursu sonradan kullanımdan kaldırsanız bile kayıt olmuş öğrenciler erişimlerini korur.
+Sürümlerinizden biriyle ilgili bir bildirim karara bağlandı.
+Kurslarınızdan biri, hakkındaki bir talep incelenirken bekletiliyor.
+Haklarındaki talepler incelenirken bekletilen kurslarınız: {count}.
+Talep, gönderildiği sözcüklerle aşağıda duruyor ve orada yanıtlayabilirsiniz.
+Promosyonlar
+kendi kurslarınızda, seçtiğiniz ülkelerde, bir ailenin kaç kez kullanabileceğine sınır koyarak bir teklif yürütün
+Tarama
+Dosyada tarama yok
+Tarandı
+Süresi doldu
+Geçmedi
+Dosyanızda henüz bir tarama yok. Öğretmenleri kim atıyorsa taramayı o kaydeder: taramanın türü, tarihi ve süresinin dolup dolmadığı.
+{date} tarihinde kaydedilen bir tarama geçmedi. Bundan sonra ne olacağını onu kaydeden kişi söyleyebilir.
+Hesabınıza kaydedilen bir tarama geçmedi. Bundan sonra ne olacağını onu kaydeden kişi söyleyebilir.
+Son taramanızın süresi {date} tarihinde doldu.
+Son taramanızın süresi doldu.
+{date} tarihinde bir tarama kaydedildi ve {until} tarihine kadar geçerli.
+Bir tarama kaydedildi ve {until} tarihine kadar geçerli.
+{date} tarihinde bir tarama kaydedildi; bitiş tarihi belirtilmedi.
+Bir tarama kaydedildi; bitiş tarihi belirtilmedi.
+Taramanın türü, yazıldığı gibi:
+Geçerli bir tarama kaydedilene kadar, çocuklar için yazdığınız bir kurs yayımlanamaz.
+Platform bugün tarama istemiyor; bu yüzden buradaki hiçbir şey bir kursunuzun yayımlanmasını engellemez. Bu değişirse önce bu sayfa söyler.
+Bu kayıt {date} tarihine kadar saklanır, sonra silinir.
+Henüz bir kurs oluşturmadınız.
+Taslak
+Etkin
+Kullanımdan kaldırıldı
+Yayımlandı
+Müfredatı aç
+Öğrenme yolları
+etkin kurslardan bir dizi oluşturun
+Herkese açık öğretmen profili
+kendinizi tanıtın ve sosyal kanallarınızın bağlantılarını ekleyin
+Medya kitaplığı
+ders kayıtlarını yükleyin ve hangilerinin kullanıma hazır olduğunu görün
+Öğretmen tartışması
+yalnızca öğretmenlere açık pano; orada adınızla değil, bir kullanıcı adıyla yazarsınız
+Kazançlar
+kurslarınızın her para biriminde kazandığı tutar ve bunun arkasındaki satışlar; henüz hiçbir ödeme yapılmıyor, yani bu bir bakiye değil, kayıttır
+Ödeme alma
+kurslarınızın kazandığı parayı, iade beklemesinden çıktıktan sonra isteyin ve önceki her talebe ne olduğunu görün
+Oluştur
+Yeni kurs
+Kurs başlığı
+Tecvide Giriş
+Kurs oluştur
+Oluşturuluyor…
+Kursa bir başlık verin.
+Bu adla bir kurs zaten var. Başlığı biraz değiştirip yeniden deneyin.
+Kurs oluşturulmadı. Veritabanının söylediği:
+Kursun oluşturulup oluşturulmadığını kimse söyleyemez. Sayfayı yeniden yükleyin ve yeniden oluşturmadan önce kurslarınıza bakın.
+Oturumunuz kapanmış. Yeniden oturum açın, sonra bir kez daha deneyin.
+Öğrenimime dön
+### id
+Pengajaran
+Ini area pengajaran
+Mengajar di sini dilakukan melalui penunjukan.
+Pengajar ditunjuk oleh pemilik. Sampai saat itu akun Anda adalah akun pelajar, dan akun pelajar tidak dapat membuka kursus.
+Anda boleh meminta: kirim kualifikasi Anda dan satu contoh pelajaran, dan pemilik membacanya. Melamar bukan berarti ditunjuk. Tidak ada yang diberikan sampai seseorang memutuskan, secara tertulis.
+Melamar untuk mengajar
+Buka pembelajaran saya
+Kursus saya
+Hak cipta atas semua yang ada di sini tetap milik Anda. Apa yang sudah Anda jual tidak ditarik kembali: pelajar yang sudah mendaftar tetap memiliki akses walaupun kursusnya Anda hentikan kemudian.
+Sebuah pemberitahuan tentang salah satu versi Anda telah diputuskan.
+Salah satu kursus Anda ditahan selama klaim terhadapnya diperiksa.
+Kursus Anda yang ditahan selama klaim terhadapnya diperiksa: {count}.
+Klaimnya ada di bawah, dengan kata-kata seperti saat dikirim, dan Anda dapat menjawabnya di sana.
+Promosi
+jalankan penawaran untuk kursus Anda sendiri, di negara yang Anda pilih, dengan batas berapa kali satu keluarga boleh memakainya
+Pemeriksaan latar belakang
+Tidak ada pemeriksaan yang tersimpan
+Sudah diperiksa
+Kedaluwarsa
+Tidak lulus
+Belum ada pemeriksaan yang tersimpan untuk Anda. Siapa pun yang menunjuk pengajar mencatatnya: jenis pemeriksaan, tanggalnya, dan apakah pemeriksaan itu kedaluwarsa.
+Pemeriksaan yang dicatat pada {date} tidak lulus. Orang yang mencatatnya dapat memberi tahu Anda apa yang terjadi selanjutnya.
+Pemeriksaan yang dicatat pada akun Anda tidak lulus. Orang yang mencatatnya dapat memberi tahu Anda apa yang terjadi selanjutnya.
+Pemeriksaan terakhir Anda kedaluwarsa pada {date}.
+Pemeriksaan terakhir Anda sudah kedaluwarsa.
+Sebuah pemeriksaan dicatat pada {date} dan berlaku sampai {until}.
+Sebuah pemeriksaan dicatat dan berlaku sampai {until}.
+Sebuah pemeriksaan dicatat pada {date}, tanpa tanggal kedaluwarsa yang disebutkan.
+Sebuah pemeriksaan dicatat, tanpa tanggal kedaluwarsa yang disebutkan.
+Jenis pemeriksaan, seperti yang dituliskan:
+Sampai ada pemeriksaan yang masih berlaku dicatat, kursus yang Anda tulis untuk anak-anak tidak dapat diterbitkan.
+Platform tidak meminta pemeriksaan hari ini, jadi tidak ada apa pun di sini yang menghalangi kursus Anda diterbitkan. Jika itu berubah, halaman ini yang pertama mengatakannya.
+Catatan ini disimpan sampai {date} lalu dihapus.
+Anda belum membuat kursus.
+Draf
+Aktif
+Dihentikan
+Diterbitkan
+Buka kurikulum
+Jalur belajar
+susun rangkaian kursus yang aktif
+Profil publik pengajar
+perkenalkan diri Anda dan tautkan kanal sosial Anda
+Pustaka media
+unggah rekaman pelajaran dan lihat mana yang siap dipakai
+Diskusi guru
+papan khusus untuk pengajar; Anda menulis di sana dengan nama pengguna, bukan nama Anda
+Pendapatan
+apa yang dihasilkan kursus Anda, dalam tiap mata uang, dan penjualan di baliknya; belum ada yang dibayarkan, jadi ini catatan dan bukan saldo
+Menerima pembayaran
+minta uang yang dihasilkan kursus Anda setelah keluar dari masa tahan pengembalian dana, dan lihat apa yang terjadi pada setiap permintaan sebelumnya
+Buat
+Kursus baru
+Judul kursus
+Pengantar Tajwid
+Buat kursus
+Membuat…
+Beri kursus ini judul.
+Kursus dengan nama itu sudah ada. Ubah judulnya sedikit lalu coba lagi.
+Kursus tidak dibuat. Yang dikatakan basis data:
+Tidak ada yang dapat memastikan apakah kursus itu dibuat. Muat ulang halaman dan lihat kursus Anda sebelum membuatnya lagi.
+Anda sudah keluar. Masuk lagi, lalu coba sekali lagi.
+Kembali ke pembelajaran saya
+### ms
+Pengajaran
+Ini ruang pengajaran
+Mengajar di sini adalah melalui pelantikan.
+Guru dilantik oleh pemilik. Sehingga itu akaun anda ialah akaun pelajar, dan akaun pelajar tidak boleh membuka kursus.
+Anda boleh memohon: hantar kelayakan anda dan satu contoh pelajaran, dan pemilik membacanya. Memohon bukan bermakna dilantik. Tiada apa-apa diberikan sehingga seseorang memutuskan, secara bertulis.
+Mohon untuk mengajar
+Pergi ke pembelajaran saya
+Kursus saya
+Hak cipta bagi semua yang ada di sini kekal milik anda. Apa yang telah anda jual tidak ditarik balik: pelajar yang telah mendaftar mengekalkan akses mereka walaupun anda menamatkan kursus itu kemudian.
+Satu notis tentang salah satu versi anda telah diputuskan.
+Salah satu kursus anda ditahan sementara tuntutan terhadapnya diteliti.
+Kursus anda yang ditahan sementara tuntutan terhadapnya diteliti: {count}.
+Tuntutan itu ada di bawah, dalam perkataan seperti ia dihantar, dan anda boleh menjawabnya di sana.
+Promosi
+jalankan tawaran untuk kursus anda sendiri, di negara yang anda pilih, dengan had bilangan kali sesebuah keluarga boleh menggunakannya
+Saringan
+Tiada saringan dalam simpanan
+Telah disaring
+Luput
+Tidak lulus
+Belum ada saringan dalam simpanan untuk anda. Sesiapa yang melantik guru merekodkannya: jenis saringan, tarikhnya, dan sama ada ia luput.
+Saringan yang direkodkan pada {date} tidak lulus. Orang yang merekodkannya boleh memberitahu anda apa yang berlaku seterusnya.
+Saringan yang direkodkan pada akaun anda tidak lulus. Orang yang merekodkannya boleh memberitahu anda apa yang berlaku seterusnya.
+Saringan terakhir anda luput pada {date}.
+Saringan terakhir anda telah luput.
+Satu saringan direkodkan pada {date} dan sah sehingga {until}.
+Satu saringan direkodkan dan sah sehingga {until}.
+Satu saringan direkodkan pada {date}, tanpa tarikh luput dinyatakan.
+Satu saringan direkodkan, tanpa tarikh luput dinyatakan.
+Jenis saringan, seperti yang ditulis:
+Sehingga saringan yang masih sah direkodkan, kursus yang anda tulis untuk kanak-kanak tidak boleh diterbitkan.
+Platform tidak meminta saringan hari ini, jadi tiada apa-apa di sini yang menghalang kursus anda diterbitkan. Jika itu berubah, halaman ini yang akan menyatakannya dahulu.
+Rekod ini disimpan sehingga {date} dan kemudian dipadam.
+Anda belum mencipta kursus.
+Draf
+Aktif
+Ditamatkan
+Diterbitkan
+Buka kurikulum
+Laluan pembelajaran
+susun satu rangkaian kursus yang aktif
+Profil awam guru
+perkenalkan diri anda dan pautkan saluran sosial anda
+Pustaka media
+muat naik rakaman pelajaran dan lihat yang mana sedia digunakan
+Perbincangan guru
+papan untuk guru sahaja; anda menulis di sana dengan nama pengguna, bukan nama anda
+Pendapatan
+apa yang diperoleh kursus anda, dalam setiap mata wang, dan jualan di sebaliknya; belum ada yang dibayar, jadi ini rekod dan bukan baki
+Menerima bayaran
+minta wang yang diperoleh kursus anda setelah ia keluar daripada tempoh tahanan bayaran balik, dan lihat apa yang berlaku kepada setiap permintaan terdahulu
+Cipta
+Kursus baharu
+Tajuk kursus
+Pengenalan kepada Tajwid
+Cipta kursus
+Sedang mencipta…
+Berikan tajuk kepada kursus ini.
+Kursus dengan nama itu sudah wujud. Ubah tajuk sedikit dan cuba lagi.
+Kursus tidak dicipta. Apa yang dikatakan oleh pangkalan data:
+Tiada sesiapa dapat memastikan sama ada kursus itu dicipta. Muat semula halaman dan lihat kursus anda sebelum menciptanya lagi.
+Anda telah log keluar. Log masuk semula, kemudian cuba sekali lagi.
+Kembali ke pembelajaran saya
+### bn
+শিক্ষাদান
+এটি শিক্ষাদানের জায়গা
+এখানে পড়ানো হয় নিয়োগের মাধ্যমে।
+শিক্ষককে নিয়োগ দেন মালিক। ততদিন আপনার অ্যাকাউন্ট একজন শিক্ষার্থীর, আর শিক্ষার্থীর অ্যাকাউন্ট কোর্স খুলতে পারে না।
+আপনি আবেদন করতে পারেন: আপনার যোগ্যতা ও একটি নমুনা পাঠ পাঠান, মালিক সেগুলো পড়েন। আবেদন করা মানে নিয়োগ পাওয়া নয়। কেউ লিখিতভাবে সিদ্ধান্ত না নেওয়া পর্যন্ত কিছুই দেওয়া হয় না।
+পড়ানোর জন্য আবেদন করুন
+আমার শেখায় যান
+আমার কোর্স
+এখানকার সবকিছুর কপিরাইট আপনারই থাকে। আপনি আগে যা বিক্রি করেছেন তা ফিরিয়ে নেওয়া হয় না: পরে কোর্সটি তুলে নিলেও ভর্তি হওয়া শিক্ষার্থীদের প্রবেশাধিকার থাকে।
+আপনার একটি সংস্করণ নিয়ে আসা একটি নোটিশের সিদ্ধান্ত হয়েছে।
+আপনার একটি কোর্স আটকে রাখা হয়েছে, যতক্ষণ তার বিরুদ্ধে একটি দাবি খতিয়ে দেখা হচ্ছে।
+আপনার যে কোর্সগুলো তাদের বিরুদ্ধে দাবি খতিয়ে দেখা পর্যন্ত আটকে আছে: {count}।
+দাবিটি নিচে আছে, যে কথায় পাঠানো হয়েছিল সেই কথায়, এবং সেখানেই আপনি উত্তর দিতে পারেন।
+প্রচার-অফার
+নিজের কোর্সে অফার চালান, আপনার বেছে নেওয়া দেশে, একটি পরিবার কতবার তা ব্যবহার করতে পারবে তার সীমাসহ
+যাচাই
+নথিতে কোনো যাচাই নেই
+যাচাই হয়েছে
+মেয়াদ শেষ
+উত্তীর্ণ হয়নি
+আপনার কোনো যাচাই এখনো নথিতে নেই। যিনি শিক্ষক নিয়োগ দেন তিনিই তা নথিভুক্ত করেন: যাচাইয়ের ধরন, তারিখ, এবং তার মেয়াদ শেষ হয় কি না।
+{date} তারিখে নথিভুক্ত একটি যাচাই উত্তীর্ণ হয়নি। যিনি এটি নথিভুক্ত করেছেন তিনি বলতে পারবেন এরপর কী হবে।
+আপনার অ্যাকাউন্টে নথিভুক্ত একটি যাচাই উত্তীর্ণ হয়নি। যিনি এটি নথিভুক্ত করেছেন তিনি বলতে পারবেন এরপর কী হবে।
+আপনার শেষ যাচাইয়ের মেয়াদ {date} তারিখে শেষ হয়েছে।
+আপনার শেষ যাচাইয়ের মেয়াদ শেষ হয়ে গেছে।
+{date} তারিখে একটি যাচাই নথিভুক্ত হয়েছে এবং {until} পর্যন্ত বহাল থাকবে।
+একটি যাচাই নথিভুক্ত হয়েছে এবং {until} পর্যন্ত বহাল থাকবে।
+{date} তারিখে একটি যাচাই নথিভুক্ত হয়েছে, মেয়াদ শেষের কোনো তারিখ বলা হয়নি।
+একটি যাচাই নথিভুক্ত হয়েছে, মেয়াদ শেষের কোনো তারিখ বলা হয়নি।
+যাচাইয়ের ধরন, যেমন লেখা হয়েছিল:
+চলমান কোনো যাচাই নথিভুক্ত না হওয়া পর্যন্ত, শিশুদের জন্য আপনার লেখা কোর্স প্রকাশ করা যাবে না।
+প্ল্যাটফর্ম আজ কোনো যাচাই চাইছে না, তাই এখানকার কিছুই আপনার কোর্স প্রকাশে বাধা দেয় না। তা বদলালে এই পাতাই প্রথমে জানাবে।
+এই নথি {date} পর্যন্ত রাখা হয়, তারপর মুছে ফেলা হয়।
+আপনি এখনো কোনো কোর্স তৈরি করেননি।
+খসড়া
+সক্রিয়
+তুলে নেওয়া
+প্রকাশিত
+পাঠ্যক্রম খুলুন
+শেখার পথ
+সক্রিয় কোর্সগুলোর একটি ধারাক্রম সাজান
+শিক্ষকের প্রকাশ্য প্রোফাইল
+নিজের পরিচয় দিন এবং আপনার সামাজিক চ্যানেলগুলোর লিংক দিন
+মিডিয়া লাইব্রেরি
+পাঠের রেকর্ডিং আপলোড করুন এবং দেখুন কোনগুলো ব্যবহারের জন্য প্রস্তুত
+শিক্ষকদের আলোচনা
+শুধু শিক্ষকদের বোর্ড; সেখানে আপনি নিজের নামে নয়, একটি ব্যবহারকারী-নামে লেখেন
+আয়
+আপনার কোর্সগুলো প্রতিটি মুদ্রায় যা আয় করেছে, এবং তার পেছনের বিক্রি; এখনো কিছু পরিশোধ করা হয় না, তাই এটি নথি, ব্যালান্স নয়
+পরিশোধ নেওয়া
+আপনার কোর্সের আয় অর্থ ফেরতের আটক থেকে বেরোলে তা চেয়ে নিন, এবং আগের প্রতিটি অনুরোধের কী হলো তা দেখুন
+তৈরি করুন
+নতুন কোর্স
+কোর্সের শিরোনাম
+তাজবিদ পরিচিতি
+কোর্স তৈরি করুন
+তৈরি হচ্ছে…
+কোর্সটির একটি শিরোনাম দিন।
+এই নামে একটি কোর্স আগে থেকেই আছে। শিরোনাম একটু বদলে আবার চেষ্টা করুন।
+কোর্সটি তৈরি হয়নি। ডেটাবেস যা বলেছে:
+কোর্সটি তৈরি হয়েছে কি না কেউ বলতে পারে না। পাতাটি আবার লোড করুন এবং আবার তৈরি করার আগে আপনার কোর্সগুলো দেখে নিন।
+আপনি সাইন আউট হয়ে গেছেন। আবার সাইন ইন করুন, তারপর আরেকবার চেষ্টা করুন।
+আমার শেখায় ফিরে যান
+### hi
+अध्यापन
+यह अध्यापन का क्षेत्र है
+यहाँ पढ़ाना नियुक्ति से होता है।
+शिक्षक को मालिक नियुक्त करता है। तब तक आपका खाता एक शिक्षार्थी का है, और शिक्षार्थी का खाता कोर्स नहीं खोल सकता।
+आप आवेदन कर सकते हैं: अपनी योग्यताएँ और एक नमूना पाठ भेजें, मालिक उन्हें पढ़ता है। आवेदन करना नियुक्त होना नहीं है। जब तक कोई लिखित में निर्णय न करे, कुछ नहीं दिया जाता।
+पढ़ाने के लिए आवेदन करें
+मेरी पढ़ाई पर जाएँ
+मेरे कोर्स
+यहाँ की हर चीज़ का प्रतिलिप्यधिकार आपके पास रहता है। जो आप पहले बेच चुके हैं वह वापस नहीं लिया जाता: नामांकित शिक्षार्थियों की पहुँच बनी रहती है, भले ही आप बाद में कोर्स हटा लें।
+आपके एक संस्करण से जुड़े नोटिस पर निर्णय हो गया।
+आपका एक कोर्स तब तक रोका गया है जब तक उसके विरुद्ध एक दावे को देखा जा रहा है।
+आपके कोर्स जो अपने विरुद्ध दावों के देखे जाने तक रोके गए हैं: {count}।
+दावा नीचे है, उन्हीं शब्दों में जिनमें भेजा गया था, और आप वहीं उसका उत्तर दे सकते हैं।
+प्रमोशन
+अपने कोर्स पर ऑफ़र चलाएँ, उन देशों में जो आप चुनें, और इस सीमा के साथ कि एक परिवार उसे कितनी बार इस्तेमाल कर सकता है
+जाँच
+अभिलेख में कोई जाँच नहीं
+जाँच हो गई
+अवधि समाप्त
+उत्तीर्ण नहीं हुई
+आपकी कोई जाँच अभी अभिलेख में नहीं है। जो शिक्षकों को नियुक्त करता है वही इसे दर्ज करता है: जाँच का प्रकार, तारीख़, और यह कि उसकी अवधि समाप्त होती है या नहीं।
+{date} को दर्ज की गई जाँच उत्तीर्ण नहीं हुई। जिसने इसे दर्ज किया वह बता सकता है कि आगे क्या होगा।
+आपके खाते पर दर्ज की गई एक जाँच उत्तीर्ण नहीं हुई। जिसने इसे दर्ज किया वह बता सकता है कि आगे क्या होगा।
+आपकी पिछली जाँच की अवधि {date} को समाप्त हो गई।
+आपकी पिछली जाँच की अवधि समाप्त हो चुकी है।
+एक जाँच {date} को दर्ज की गई और {until} तक मान्य है।
+एक जाँच दर्ज की गई और {until} तक मान्य है।
+एक जाँच {date} को दर्ज की गई, और समाप्ति की कोई तारीख़ नहीं बताई गई।
+एक जाँच दर्ज की गई, और समाप्ति की कोई तारीख़ नहीं बताई गई।
+जाँच का प्रकार, जैसा लिखा गया था:
+जब तक कोई मान्य जाँच दर्ज नहीं होती, बच्चों के लिए आपका लिखा कोर्स प्रकाशित नहीं हो सकता।
+मंच आज जाँच नहीं माँग रहा, इसलिए यहाँ कुछ भी आपके कोर्स के प्रकाशन को नहीं रोकता। अगर यह बदला तो यह पेज सबसे पहले बताएगा।
+यह अभिलेख {date} तक रखा जाता है और फिर हटा दिया जाता है।
+आपने अभी तक कोई कोर्स नहीं बनाया है।
+ड्राफ़्ट
+सक्रिय
+हटा लिया गया
+प्रकाशित
+पाठ्यक्रम खोलें
+सीखने के मार्ग
+सक्रिय कोर्सों का एक क्रम बनाएँ
+शिक्षक की सार्वजनिक प्रोफ़ाइल
+अपना परिचय दें और अपने सोशल चैनलों के लिंक जोड़ें
+मीडिया लाइब्रेरी
+पाठों की रिकॉर्डिंग अपलोड करें और देखें कि कौन-सी इस्तेमाल के लिए तैयार हैं
+शिक्षकों की चर्चा
+केवल शिक्षकों का बोर्ड; वहाँ आप अपने नाम से नहीं, उपयोगकर्ता नाम से लिखते हैं
+कमाई
+आपके कोर्सों ने हर मुद्रा में जो कमाया, और उसके पीछे की बिक्री; अभी कुछ भी भुगतान नहीं किया जाता, इसलिए यह अभिलेख है, शेष राशि नहीं
+भुगतान पाना
+अपने कोर्सों की कमाई तब माँगें जब वह रिफ़ंड की रोक से बाहर आ जाए, और देखें कि हर पिछले अनुरोध का क्या हुआ
+बनाएँ
+नया कोर्स
+कोर्स का शीर्षक
+तजवीद का परिचय
+कोर्स बनाएँ
+बनाया जा रहा है…
+कोर्स को एक शीर्षक दें।
+इस नाम का कोर्स पहले से मौजूद है। शीर्षक थोड़ा बदलें और फिर कोशिश करें।
+कोर्स नहीं बना। डेटाबेस ने यह कहा:
+कोई नहीं बता सकता कि कोर्स बना या नहीं। पेज फिर से लोड करें और दोबारा बनाने से पहले अपने कोर्स देख लें।
+आप साइन आउट हो चुके हैं। फिर से साइन इन करें, फिर एक बार और कोशिश करें।
+मेरी पढ़ाई पर वापस
+### fr
+Enseignement
+Voici l’espace d’enseignement
+On enseigne ici sur nomination.
+C’est le propriétaire qui nomme un enseignant. D’ici là, votre compte est celui d’un apprenant, et un compte d’apprenant ne peut pas ouvrir de cours.
+Vous pouvez le demander : envoyez vos qualifications et une leçon d’exemple, et le propriétaire les lit. Postuler n’est pas être nommé. Rien n’est accordé tant que quelqu’un n’a pas décidé, par écrit.
+Postuler pour enseigner
+Aller à mon apprentissage
+Mes cours
+Vous gardez le droit d’auteur sur tout ce qui est ici. Rien de ce que vous avez déjà vendu n’est repris : les apprenants inscrits gardent leur accès même si vous retirez le cours plus tard.
+Une notification concernant l’une de vos versions a été tranchée.
+L’un de vos cours est suspendu pendant l’examen d’une réclamation qui le vise.
+Vos cours suspendus pendant l’examen des réclamations qui les visent : {count}.
+La réclamation est ci-dessous, dans les mots où elle a été envoyée, et vous pouvez y répondre à cet endroit.
+Promotions
+proposez une offre sur vos propres cours, dans les pays que vous choisissez, avec une limite au nombre de fois où une famille peut l’utiliser
+Vérification
+Aucune vérification au dossier
+Vérifié
+Expirée
+Non concluante
+Aucune vérification n’est encore à votre dossier. La personne qui nomme les enseignants l’enregistre : le type de vérification, la date, et si elle expire.
+Une vérification enregistrée le {date} n’a pas été concluante. La personne qui l’a enregistrée peut vous dire ce qui se passe ensuite.
+Une vérification enregistrée sur votre compte n’a pas été concluante. La personne qui l’a enregistrée peut vous dire ce qui se passe ensuite.
+Votre dernière vérification a expiré le {date}.
+Votre dernière vérification a expiré.
+Une vérification a été enregistrée le {date} et vaut jusqu’au {until}.
+Une vérification a été enregistrée et vaut jusqu’au {until}.
+Une vérification a été enregistrée le {date}, sans date d’expiration indiquée.
+Une vérification a été enregistrée, sans date d’expiration indiquée.
+Le type de vérification, tel qu’il a été noté :
+Tant qu’une vérification en cours de validité n’est pas enregistrée, un cours que vous écrivez pour des enfants ne peut pas être publié.
+La plateforme ne demande pas de vérification aujourd’hui ; rien ici n’empêche donc la publication d’un de vos cours. Si cela change, cette page le dira en premier.
+Cet enregistrement est conservé jusqu’au {date}, puis supprimé.
+Vous n’avez pas encore créé de cours.
+Brouillon
+Actif
+Retiré
+Publié
+Ouvrir le programme
+Parcours d’apprentissage
+composez une suite de cours actifs
+Profil public d’enseignant
+présentez-vous et ajoutez les liens de vos réseaux sociaux
+Médiathèque
+envoyez des enregistrements de leçons et voyez lesquels sont prêts à servir
+Discussion des enseignants
+le forum réservé aux enseignants ; vous y écrivez sous un pseudonyme, pas sous votre nom
+Revenus
+ce que vos cours ont rapporté, dans chaque devise, et les ventes correspondantes ; rien n’est encore versé, c’est donc le relevé et non un solde
+Être payé
+demandez l’argent que vos cours ont rapporté une fois sorti de sa retenue pour remboursement, et voyez ce qu’il est advenu de chaque demande précédente
+Créer
+Nouveau cours
+Titre du cours
+Introduction au tajwid
+Créer le cours
+Création…
+Donnez un titre au cours.
+Un cours portant ce nom existe déjà. Modifiez un peu le titre et réessayez.
+Le cours n’a pas été créé. Ce qu’a dit la base de données :
+Personne ne peut dire si le cours a été créé. Rechargez la page et regardez vos cours avant de le créer à nouveau.
+Votre session est fermée. Reconnectez-vous, puis réessayez une fois.
+Retour à mon apprentissage
+### es
+Enseñanza
+Esta es el área de enseñanza
+Aquí se enseña por nombramiento.
+Es el propietario quien nombra a un docente. Hasta entonces su cuenta es de estudiante, y una cuenta de estudiante no puede abrir un curso.
+Puede solicitarlo: envíe sus cualificaciones y una lección de muestra, y el propietario las lee. Solicitar no es ser nombrado. No se concede nada hasta que alguien decide, por escrito.
+Solicitar enseñar
+Ir a mi aprendizaje
+Mis cursos
+Usted conserva los derechos de autor de todo lo que hay aquí. Nada de lo que ya ha vendido se retira: los estudiantes inscritos conservan su acceso aunque usted retire el curso más adelante.
+Se ha resuelto un aviso sobre una de sus versiones.
+Uno de sus cursos está retenido mientras se examina una reclamación contra él.
+Cursos suyos retenidos mientras se examinan las reclamaciones contra ellos: {count}.
+La reclamación está abajo, con las palabras con que se envió, y puede responderla allí.
+Promociones
+ponga una oferta en sus propios cursos, en los países que elija, con un límite de veces que una familia puede usarla
+Comprobación de antecedentes
+Ninguna comprobación archivada
+Comprobado
+Caducada
+No superada
+Todavía no hay ninguna comprobación archivada sobre usted. Quien nombra a los docentes la registra: el tipo de comprobación, la fecha y si caduca.
+Una comprobación registrada el {date} no se superó. Quien la registró puede decirle qué ocurre ahora.
+Una comprobación registrada en su cuenta no se superó. Quien la registró puede decirle qué ocurre ahora.
+Su última comprobación caducó el {date}.
+Su última comprobación ha caducado.
+Se registró una comprobación el {date} y es válida hasta el {until}.
+Se registró una comprobación y es válida hasta el {until}.
+Se registró una comprobación el {date}, sin fecha de caducidad indicada.
+Se registró una comprobación, sin fecha de caducidad indicada.
+El tipo de comprobación, tal como se anotó:
+Hasta que se registre una comprobación vigente, un curso que usted escriba para niños no puede publicarse.
+La plataforma no pide hoy ninguna comprobación, así que nada aquí impide que se publique un curso suyo. Si eso cambia, esta página lo dirá primero.
+Este registro se conserva hasta el {date} y después se elimina.
+Todavía no ha creado ningún curso.
+Borrador
+Activo
+Retirado
+Publicado
+Abrir el plan de estudios
+Rutas de aprendizaje
+organice una secuencia de cursos activos
+Perfil público de docente
+preséntese y enlace sus canales sociales
+Biblioteca multimedia
+suba grabaciones de lecciones y vea cuáles están listas para usarse
+Debate de docentes
+el foro solo para docentes; allí escribe con un nombre de usuario, no con su nombre
+Ingresos
+lo que han ganado sus cursos, en cada moneda, y las ventas que hay detrás; todavía no se paga nada, así que esto es el registro y no un saldo
+Cobrar
+pida el dinero que han ganado sus cursos una vez que salga de su retención por reembolso, y vea qué pasó con cada solicitud anterior
+Crear
+Curso nuevo
+Título del curso
+Introducción al tajwid
+Crear curso
+Creando…
+Ponga un título al curso.
+Ya existe un curso con ese nombre. Cambie un poco el título e inténtelo de nuevo.
+El curso no se creó. Lo que dijo la base de datos:
+Nadie puede decir si el curso se creó. Vuelva a cargar la página y mire sus cursos antes de crearlo otra vez.
+Su sesión está cerrada. Inicie sesión de nuevo y vuelva a intentarlo una vez.
+Volver a mi aprendizaje
+### pt
+Ensino
+Esta é a área de ensino
+Ensina-se aqui por nomeação.
+É o proprietário quem nomeia um professor. Até lá, a sua conta é de aprendente, e uma conta de aprendente não pode abrir um curso.
+Pode pedir: envie as suas qualificações e uma aula de exemplo, e o proprietário lê-as. Candidatar-se não é ser nomeado. Nada é concedido até alguém decidir, por escrito.
+Candidatar-se a ensinar
+Ir para a minha aprendizagem
+Os meus cursos
+Mantém os direitos de autor sobre tudo o que aqui está. Nada do que já vendeu é retirado: os aprendentes inscritos mantêm o acesso mesmo que retire o curso mais tarde.
+Foi decidido um aviso sobre uma das suas versões.
+Um dos seus cursos está retido enquanto uma reclamação contra ele é analisada.
+Cursos seus retidos enquanto as reclamações contra eles são analisadas: {count}.
+A reclamação está abaixo, nas palavras em que foi enviada, e pode responder-lhe aí.
+Promoções
+lance uma oferta nos seus próprios cursos, nos países que escolher, com um limite de vezes que uma família a pode usar
+Verificação de antecedentes
+Nenhuma verificação em arquivo
+Verificado
+Caducada
+Não aprovada
+Ainda não há nenhuma verificação em arquivo a seu respeito. Quem nomeia os professores regista-a: o tipo de verificação, a data e se caduca.
+Uma verificação registada em {date} não foi aprovada. Quem a registou pode dizer-lhe o que acontece a seguir.
+Uma verificação registada na sua conta não foi aprovada. Quem a registou pode dizer-lhe o que acontece a seguir.
+A sua última verificação caducou em {date}.
+A sua última verificação caducou.
+Foi registada uma verificação em {date}, válida até {until}.
+Foi registada uma verificação, válida até {until}.
+Foi registada uma verificação em {date}, sem data de caducidade indicada.
+Foi registada uma verificação, sem data de caducidade indicada.
+O tipo de verificação, tal como foi escrito:
+Até ser registada uma verificação válida, um curso que escreva para crianças não pode ser publicado.
+A plataforma não está a pedir uma verificação hoje, por isso nada aqui impede que um curso seu seja publicado. Se isso mudar, esta página di-lo primeiro.
+Este registo é guardado até {date} e depois eliminado.
+Ainda não criou nenhum curso.
+Rascunho
+Ativo
+Retirado
+Publicado
+Abrir o currículo
+Percursos de aprendizagem
+organize uma sequência de cursos ativos
+Perfil público de professor
+apresente-se e ligue os seus canais sociais
+Biblioteca multimédia
+carregue gravações de aulas e veja quais estão prontas a usar
+Discussão dos professores
+o fórum só para professores; aí escreve com um nome de utilizador, não com o seu nome
+Ganhos
+o que os seus cursos renderam, em cada moeda, e as vendas por trás disso; ainda nada é pago, por isso isto é o registo e não um saldo
+Receber
+peça o dinheiro que os seus cursos renderam depois de sair da retenção para reembolso, e veja o que aconteceu a cada pedido anterior
+Criar
+Novo curso
+Título do curso
+Introdução ao tajwid
+Criar curso
+A criar…
+Dê um título ao curso.
+Já existe um curso com esse nome. Altere um pouco o título e tente de novo.
+O curso não foi criado. O que a base de dados disse:
+Ninguém pode dizer se o curso foi criado. Volte a carregar a página e veja os seus cursos antes de o criar outra vez.
+A sua sessão terminou. Inicie sessão de novo e tente mais uma vez.
+Voltar à minha aprendizagem
+### sw
+Ufundishaji
+Hili ni eneo la ufundishaji
+Kufundisha hapa ni kwa kuteuliwa.
+Mwalimu huteuliwa na mmiliki. Hadi hapo akaunti yako ni ya mwanafunzi, na akaunti ya mwanafunzi haiwezi kufungua kozi.
+Unaweza kuomba: tuma sifa zako na somo la mfano, na mmiliki atavisoma. Kuomba si kuteuliwa. Hakuna kinachotolewa hadi mtu aamue, kwa maandishi.
+Omba kufundisha
+Nenda kwenye masomo yangu
+Kozi zangu
+Hakimiliki ya kila kilichopo hapa inabaki kwako. Ulichokwisha kuuza hakirudishwi: wanafunzi waliojiandikisha wanabaki na ufikiaji wao hata ukiiondoa kozi baadaye.
+Taarifa kuhusu mojawapo ya matoleo yako imeamuliwa.
+Mojawapo ya kozi zako imezuiliwa wakati dai dhidi yake linachunguzwa.
+Kozi zako zilizozuiliwa wakati madai dhidi yake yanachunguzwa: {count}.
+Dai liko hapa chini, kwa maneno yaliyotumwa, na unaweza kulijibu hapo.
+Ofa za matangazo
+endesha ofa kwenye kozi zako mwenyewe, katika nchi unazochagua, ukiwa na kikomo cha mara ambazo familia inaweza kuitumia
+Uchunguzi
+Hakuna uchunguzi kwenye kumbukumbu
+Amekaguliwa
+Muda umeisha
+Haukupita
+Bado hakuna uchunguzi kwenye kumbukumbu kukuhusu. Anayeteua walimu ndiye anayeurekodi: aina ya uchunguzi, tarehe, na kama muda wake unaisha.
+Uchunguzi uliorekodiwa tarehe {date} haukupita. Aliyeurekodi anaweza kukuambia kinachofuata.
+Uchunguzi uliorekodiwa kwenye akaunti yako haukupita. Aliyeurekodi anaweza kukuambia kinachofuata.
+Muda wa uchunguzi wako wa mwisho uliisha tarehe {date}.
+Muda wa uchunguzi wako wa mwisho umeisha.
+Uchunguzi ulirekodiwa tarehe {date} na unadumu hadi {until}.
+Uchunguzi ulirekodiwa na unadumu hadi {until}.
+Uchunguzi ulirekodiwa tarehe {date}, bila tarehe ya kuisha kutajwa.
+Uchunguzi ulirekodiwa, bila tarehe ya kuisha kutajwa.
+Aina ya uchunguzi, kama ilivyoandikwa:
+Hadi uchunguzi ambao muda wake haujaisha urekodiwe, kozi unayoandika kwa ajili ya watoto haiwezi kuchapishwa.
+Jukwaa haliombi uchunguzi leo, kwa hiyo hakuna chochote hapa kinachozuia kozi yako kuchapishwa. Hilo likibadilika, ukurasa huu ndio utakaosema kwanza.
+Rekodi hii inahifadhiwa hadi {date} kisha inafutwa.
+Bado hujaunda kozi.
+Rasimu
+Inatumika
+Imeondolewa
+Imechapishwa
+Fungua mtaala
+Njia za kujifunza
+panga mfululizo wa kozi zinazotumika
+Wasifu wa mwalimu wa hadharani
+jitambulishe na uunganishe chaneli zako za kijamii
+Maktaba ya midia
+pakia rekodi za masomo na uone zipi ziko tayari kutumika
+Majadiliano ya walimu
+ubao wa walimu pekee; huko unaandika kwa jina la mtumiaji, si kwa jina lako
+Mapato
+kile kozi zako zilichopata, kwa kila sarafu, na mauzo yaliyo nyuma yake; bado hakuna kinacholipwa, kwa hiyo hii ni rekodi, si salio
+Kulipwa
+omba pesa ambazo kozi zako zimepata baada ya kutoka kwenye zuio la marejesho, na uone kilichotokea kwa kila ombi la awali
+Unda
+Kozi mpya
+Kichwa cha kozi
+Utangulizi wa Tajwidi
+Unda kozi
+Inaunda…
+Ipe kozi kichwa.
+Kozi yenye jina hilo tayari ipo. Badilisha kichwa kidogo kisha ujaribu tena.
+Kozi haikuundwa. Hifadhidata ilichosema:
+Hakuna anayeweza kusema kama kozi iliundwa. Pakia ukurasa upya na uangalie kozi zako kabla ya kuiunda tena.
+Umetoka kwenye akaunti. Ingia tena, kisha ujaribu mara moja zaidi.
+Rudi kwenye masomo yangu
+### af
+Onderrig
+Dit is die onderrigarea
+Onderrig hier is deur aanstelling.
+Die eienaar stel ’n onderwyser aan. Tot dan is jou rekening ’n leerder s’n, en ’n leerder se rekening kan nie ’n kursus open nie.
+Jy mag vra: stuur jou kwalifikasies en ’n voorbeeldles, en die eienaar lees dit. Om aansoek te doen is nie om aangestel te word nie. Niks word toegeken voordat iemand skriftelik besluit nie.
+Doen aansoek om te onderrig
+Gaan na my leer
+My kursusse
+Jy behou die kopiereg op alles hier. Niks wat jy reeds verkoop het, word teruggeneem nie: leerders wat ingeskryf het, behou hul toegang al onttrek jy die kursus later.
+’n Kennisgewing oor een van jou weergawes is beslis.
+Een van jou kursusse word teruggehou terwyl ’n eis daarteen ondersoek word.
+Kursusse van jou wat teruggehou word terwyl eise daarteen ondersoek word: {count}.
+Die eis is hieronder, in die woorde waarin dit gestuur is, en jy kan dit daar beantwoord.
+Promosies
+bied ’n aanbod op jou eie kursusse aan, in die lande wat jy kies, met ’n perk op hoeveel keer ’n gesin dit mag gebruik
+Sifting
+Geen sifting op rekord nie
+Gesif
+Verval
+Het nie geslaag nie
+Daar is nog geen sifting oor jou op rekord nie. Wie ook al onderwysers aanstel, teken dit aan: die soort sifting, die datum, en of dit verval.
+’n Sifting wat op {date} aangeteken is, het nie geslaag nie. Wie dit aangeteken het, kan jou sê wat volgende gebeur.
+’n Sifting wat teen jou rekening aangeteken is, het nie geslaag nie. Wie dit aangeteken het, kan jou sê wat volgende gebeur.
+Jou laaste sifting het op {date} verval.
+Jou laaste sifting het verval.
+’n Sifting is op {date} aangeteken en geld tot {until}.
+’n Sifting is aangeteken en geld tot {until}.
+’n Sifting is op {date} aangeteken, sonder dat ’n vervaldatum genoem is.
+’n Sifting is aangeteken, sonder dat ’n vervaldatum genoem is.
+Die soort sifting, soos dit neergeskryf is:
+Totdat ’n geldige sifting aangeteken is, kan ’n kursus wat jy vir kinders skryf nie gepubliseer word nie.
+Die platform vra nie vandag ’n sifting nie, dus keer niks hier dat ’n kursus van jou gepubliseer word nie. As dit verander, sê hierdie bladsy dit eerste.
+Hierdie rekord word tot {date} bewaar en dan uitgevee.
+Jy het nog nie ’n kursus geskep nie.
+Konsep
+Aktief
+Onttrek
+Gepubliseer
+Open kurrikulum
+Leerpaaie
+stel ’n reeks aktiewe kursusse saam
+Openbare onderwyserprofiel
+stel jouself bekend en skakel jou sosiale kanale
+Mediabiblioteek
+laai lesopnames op en sien watter gereed is om te gebruik
+Onderwysersbespreking
+die bord net vir onderwysers; jy skryf daar onder ’n gebruikersnaam, nie jou naam nie
+Verdienste
+wat jou kursusse verdien het, in elke geldeenheid, en die verkope daaragter; niks word nog uitbetaal nie, dus is dit die rekord en nie ’n saldo nie
+Om betaal te word
+vra die geld wat jou kursusse verdien het sodra dit uit sy terugbetalingshouvas is, en sien wat met elke vorige versoek gebeur het
+Skep
+Nuwe kursus
+Kursustitel
+Inleiding tot tadjwied
+Skep kursus
+Skep tans…
+Gee die kursus ’n titel.
+’n Kursus met daardie naam bestaan reeds. Verander die titel effens en probeer weer.
+Die kursus is nie geskep nie. Wat die databasis gesê het:
+Niemand kan sê of die kursus geskep is nie. Laai die bladsy weer en kyk na jou kursusse voordat jy dit weer skep.
+Jy is afgemeld. Meld weer aan en probeer dan nog een keer.
+Terug na my leer
+### zh-hans
+教学
+这里是教学区
+在这里任教须经任命。
+教师由所有者任命。在此之前，你的账户是学习者账户，而学习者账户不能开设课程。
+你可以提出申请：提交你的资历和一节示范课，所有者会阅读。申请并不等于获得任命。在有人以书面形式作出决定之前，不会授予任何权限。
+申请任教
+前往我的学习
+我的课程
+这里所有内容的版权都归你所有。你已经售出的内容不会被收回：即使你日后停用课程，已报名的学习者仍保留访问权限。
+关于你某个版本的一份通知已有决定。
+你的一门课程已被暂停，针对它的一项投诉正在审查中。
+因针对它们的投诉正在审查而被暂停的课程数：{count}。
+投诉内容在下方，按发送时的原文显示，你可以在那里答复。
+促销
+为你自己的课程推出优惠，在你选择的国家/地区，并限定一个家庭可以使用的次数
+背景核查
+没有核查记录
+已核实
+已到期
+未通过
+目前还没有关于你的核查记录。由任命教师的人登记：核查的种类、日期，以及是否会到期。
+{date}登记的一项核查未通过。登记的人可以告诉你接下来会怎样。
+登记在你账户上的一项核查未通过。登记的人可以告诉你接下来会怎样。
+你最近的一项核查已于{date}到期。
+你最近的一项核查已到期。
+一项核查已于{date}登记，有效期至{until}。
+已登记一项核查，有效期至{until}。
+一项核查已于{date}登记，未注明到期日。
+已登记一项核查，未注明到期日。
+核查的种类，按当时写下的原文：
+在登记一项有效的核查之前，你为儿童编写的课程不能发布。
+平台目前不要求核查，所以这里没有任何事项会阻止你的课程发布。如果情况有变，本页面会最先说明。
+这条记录保存至{date}，之后删除。
+你还没有创建课程。
+草稿
+使用中
+已停用
+已发布
+打开课程大纲
+学习路径
+把已上线的课程编排成一个序列
+公开的教师资料
+介绍你自己，并链接你的社交频道
+媒体库
+上传课程录音录像，并查看哪些已可使用
+教师讨论区
+仅限教师的讨论区；你在那里用用户名发言，而不是你的姓名
+收入
+你的课程在每种货币下的收入，以及背后的销售记录；目前尚未支付任何款项，所以这是记录而不是余额
+收款
+在你的课程收入过了退款保留期之后申请支付，并查看以前每一次申请的结果
+创建
+新课程
+课程标题
+泰吉威德入门
+创建课程
+正在创建…
+请给课程起一个标题。
+已有同名课程。请稍微改一下标题，然后再试一次。
+课程没有创建。数据库的说明：
+无法确定课程是否已创建。请重新加载页面，先看一看你的课程，再决定是否重新创建。
+你已退出登录。请重新登录，然后再试一次。
+返回我的学习
+### zh-hant
+教學
+這裡是教學區
+在這裡任教須經任命。
+教師由擁有者任命。在此之前，你的帳戶是學習者帳戶，而學習者帳戶不能開設課程。
+你可以提出申請：提交你的資歷和一節示範課，擁有者會閱讀。申請並不等於獲得任命。在有人以書面形式作出決定之前，不會授予任何權限。
+申請任教
+前往我的學習
+我的課程
+這裡所有內容的版權都歸你所有。你已經售出的內容不會被收回：即使你日後停用課程，已報名的學習者仍保留存取權限。
+關於你某個版本的一份通知已有決定。
+你的一門課程已被暫停，針對它的一項投訴正在審查中。
+因針對它們的投訴正在審查而被暫停的課程數：{count}。
+投訴內容在下方，按發送時的原文顯示，你可以在那裡答覆。
+促銷
+為你自己的課程推出優惠，在你選擇的國家/地區，並限定一個家庭可以使用的次數
+背景核查
+沒有核查紀錄
+已核實
+已到期
+未通過
+目前還沒有關於你的核查紀錄。由任命教師的人登記：核查的種類、日期，以及是否會到期。
+{date}登記的一項核查未通過。登記的人可以告訴你接下來會怎樣。
+登記在你帳戶上的一項核查未通過。登記的人可以告訴你接下來會怎樣。
+你最近的一項核查已於{date}到期。
+你最近的一項核查已到期。
+一項核查已於{date}登記，有效期至{until}。
+已登記一項核查，有效期至{until}。
+一項核查已於{date}登記，未註明到期日。
+已登記一項核查，未註明到期日。
+核查的種類，按當時寫下的原文：
+在登記一項有效的核查之前，你為兒童編寫的課程不能發布。
+平台目前不要求核查，所以這裡沒有任何事項會阻止你的課程發布。如果情況有變，本頁面會最先說明。
+這筆紀錄保存至{date}，之後刪除。
+你還沒有建立課程。
+草稿
+使用中
+已停用
+已發布
+開啟課程大綱
+學習路徑
+把已上線的課程編排成一個序列
+公開的教師資料
+介紹你自己，並連結你的社群頻道
+媒體庫
+上傳課程錄音錄影，並查看哪些已可使用
+教師討論區
+僅限教師的討論區；你在那裡用使用者名稱發言，而不是你的姓名
+收入
+你的課程在每種貨幣下的收入，以及背後的銷售紀錄；目前尚未支付任何款項，所以這是紀錄而不是餘額
+收款
+在你的課程收入過了退款保留期之後申請支付，並查看以前每一次申請的結果
+建立
+新課程
+課程標題
+泰吉威德入門
+建立課程
+正在建立…
+請給課程起一個標題。
+已有同名課程。請稍微改一下標題，然後再試一次。
+課程沒有建立。資料庫的說明：
+無法確定課程是否已建立。請重新載入頁面，先看一看你的課程，再決定是否重新建立。
+你已登出。請重新登入，然後再試一次。
+返回我的學習
+### vi
+Giảng dạy
+Đây là khu vực giảng dạy
+Việc giảng dạy ở đây là theo bổ nhiệm.
+Chủ sở hữu là người bổ nhiệm giáo viên. Cho đến lúc đó, tài khoản của bạn là tài khoản người học, và tài khoản người học không thể mở khoá học.
+Bạn có thể đề nghị: gửi bằng cấp của bạn và một bài học mẫu, và chủ sở hữu sẽ đọc. Nộp đơn không phải là được bổ nhiệm. Không có gì được cấp cho đến khi có người quyết định, bằng văn bản.
+Đăng ký giảng dạy
+Đến việc học của tôi
+Khoá học của tôi
+Bạn giữ bản quyền đối với mọi thứ ở đây. Không có gì bạn đã bán bị lấy lại: người học đã ghi danh vẫn giữ quyền truy cập ngay cả khi sau này bạn ngừng khoá học.
+Một thông báo về một trong các phiên bản của bạn đã được quyết định.
+Một khoá học của bạn đang bị tạm giữ trong khi một khiếu nại về nó được xem xét.
+Số khoá học của bạn đang bị tạm giữ trong khi các khiếu nại về chúng được xem xét: {count}.
+Khiếu nại ở bên dưới, đúng theo lời lẽ đã được gửi, và bạn có thể trả lời ở đó.
+Khuyến mãi
+đưa ra ưu đãi cho các khoá học của chính bạn, ở những quốc gia bạn chọn, với giới hạn số lần một gia đình được dùng
+Thẩm tra
+Chưa có lần thẩm tra nào trong hồ sơ
+Đã kiểm tra
+Đã hết hạn
+Không đạt
+Chưa có lần thẩm tra nào về bạn trong hồ sơ. Người bổ nhiệm giáo viên sẽ ghi nhận: loại thẩm tra, ngày, và nó có hết hạn hay không.
+Một lần thẩm tra được ghi nhận ngày {date} đã không đạt. Người ghi nhận có thể cho bạn biết điều gì xảy ra tiếp theo.
+Một lần thẩm tra được ghi nhận cho tài khoản của bạn đã không đạt. Người ghi nhận có thể cho bạn biết điều gì xảy ra tiếp theo.
+Lần thẩm tra gần nhất của bạn đã hết hạn ngày {date}.
+Lần thẩm tra gần nhất của bạn đã hết hạn.
+Một lần thẩm tra được ghi nhận ngày {date} và có hiệu lực đến {until}.
+Một lần thẩm tra đã được ghi nhận và có hiệu lực đến {until}.
+Một lần thẩm tra được ghi nhận ngày {date}, không nêu ngày hết hạn.
+Một lần thẩm tra đã được ghi nhận, không nêu ngày hết hạn.
+Loại thẩm tra, đúng như đã được ghi lại:
+Cho đến khi một lần thẩm tra còn hiệu lực được ghi nhận, khoá học bạn viết cho trẻ em không thể được xuất bản.
+Hôm nay nền tảng không yêu cầu thẩm tra, nên không có gì ở đây ngăn một khoá học của bạn được xuất bản. Nếu điều đó thay đổi, trang này sẽ nói trước tiên.
+Bản ghi này được lưu đến {date} rồi bị xoá.
+Bạn chưa tạo khoá học nào.
+Bản nháp
+Đang hoạt động
+Đã ngừng
+Đã xuất bản
+Mở chương trình học
+Lộ trình học tập
+sắp xếp một chuỗi các khoá học đang hoạt động
+Hồ sơ giáo viên công khai
+giới thiệu bản thân và liên kết các kênh mạng xã hội của bạn
+Thư viện phương tiện
+tải lên bản ghi bài học và xem bản nào đã sẵn sàng để dùng
+Thảo luận của giáo viên
+diễn đàn chỉ dành cho giáo viên; ở đó bạn viết dưới một tên người dùng, không phải tên thật
+Thu nhập
+những gì các khoá học của bạn đã kiếm được, theo từng loại tiền, và các lần bán đứng sau đó; chưa có gì được chi trả, nên đây là sổ ghi chứ không phải số dư
+Nhận tiền
+yêu cầu số tiền các khoá học của bạn đã kiếm được sau khi nó ra khỏi khoảng giữ lại để hoàn tiền, và xem mỗi yêu cầu trước đây đã ra sao
+Tạo
+Khoá học mới
+Tiêu đề khoá học
+Nhập môn tajwid
+Tạo khoá học
+Đang tạo…
+Hãy đặt tiêu đề cho khoá học.
+Đã có một khoá học mang tên đó. Hãy đổi tiêu đề một chút rồi thử lại.
+Khoá học chưa được tạo. Điều cơ sở dữ liệu nói:
+Không ai có thể nói khoá học đã được tạo hay chưa. Hãy tải lại trang và xem các khoá học của bạn trước khi tạo lần nữa.
+Bạn đã đăng xuất. Hãy đăng nhập lại rồi thử thêm một lần nữa.
+Quay lại việc học của tôi
+### th
+การสอน
+ที่นี่คือพื้นที่การสอน
+การสอนที่นี่เป็นไปโดยการแต่งตั้ง
+เจ้าของเป็นผู้แต่งตั้งครู จนกว่าจะถึงตอนนั้น บัญชีของคุณเป็นบัญชีผู้เรียน และบัญชีผู้เรียนเปิดหลักสูตรไม่ได้
+คุณขอได้: ส่งคุณวุฒิของคุณและบทเรียนตัวอย่าง แล้วเจ้าของจะอ่าน การสมัครไม่ใช่การได้รับแต่งตั้ง จะไม่มีการให้สิทธิ์ใดจนกว่าจะมีผู้ตัดสินใจเป็นลายลักษณ์อักษร
+สมัครเป็นผู้สอน
+ไปที่การเรียนของฉัน
+หลักสูตรของฉัน
+ลิขสิทธิ์ของทุกอย่างที่นี่ยังเป็นของคุณ สิ่งที่คุณขายไปแล้วจะไม่ถูกเรียกคืน: ผู้เรียนที่ลงทะเบียนแล้วยังเข้าถึงได้ แม้คุณจะยุติหลักสูตรในภายหลัง
+มีการตัดสินเรื่องการแจ้งเกี่ยวกับเวอร์ชันหนึ่งของคุณแล้ว
+หลักสูตรหนึ่งของคุณถูกพักไว้ระหว่างที่มีการพิจารณาข้อร้องเรียนต่อหลักสูตรนั้น
+หลักสูตรของคุณที่ถูกพักไว้ระหว่างที่มีการพิจารณาข้อร้องเรียน: {count}
+ข้อร้องเรียนอยู่ด้านล่าง ตามถ้อยคำที่ส่งมา และคุณตอบได้ที่นั่น
+โปรโมชัน
+จัดข้อเสนอสำหรับหลักสูตรของคุณเอง ในประเทศที่คุณเลือก โดยจำกัดจำนวนครั้งที่ครอบครัวหนึ่งใช้ได้
+การตรวจสอบประวัติ
+ไม่มีการตรวจสอบในแฟ้ม
+ตรวจสอบแล้ว
+หมดอายุ
+ไม่ผ่าน
+ยังไม่มีการตรวจสอบเกี่ยวกับคุณในแฟ้ม ผู้ที่แต่งตั้งครูเป็นผู้บันทึก: ประเภทของการตรวจสอบ วันที่ และหมดอายุหรือไม่
+การตรวจสอบที่บันทึกเมื่อ {date} ไม่ผ่าน ผู้ที่บันทึกบอกคุณได้ว่าจะเกิดอะไรขึ้นต่อไป
+การตรวจสอบที่บันทึกไว้กับบัญชีของคุณไม่ผ่าน ผู้ที่บันทึกบอกคุณได้ว่าจะเกิดอะไรขึ้นต่อไป
+การตรวจสอบครั้งล่าสุดของคุณหมดอายุเมื่อ {date}
+การตรวจสอบครั้งล่าสุดของคุณหมดอายุแล้ว
+มีการบันทึกการตรวจสอบเมื่อ {date} และใช้ได้ถึง {until}
+มีการบันทึกการตรวจสอบ และใช้ได้ถึง {until}
+มีการบันทึกการตรวจสอบเมื่อ {date} โดยไม่ได้ระบุวันหมดอายุ
+มีการบันทึกการตรวจสอบ โดยไม่ได้ระบุวันหมดอายุ
+ประเภทของการตรวจสอบ ตามที่เขียนไว้:
+จนกว่าจะมีการบันทึกการตรวจสอบที่ยังไม่หมดอายุ หลักสูตรที่คุณเขียนสำหรับเด็กจะเผยแพร่ไม่ได้
+วันนี้แพลตฟอร์มไม่ได้ขอการตรวจสอบ จึงไม่มีอะไรที่นี่ขวางการเผยแพร่หลักสูตรของคุณ หากเรื่องนี้เปลี่ยนไป หน้านี้จะบอกก่อน
+บันทึกนี้จะเก็บไว้ถึง {date} แล้วจึงลบ
+คุณยังไม่ได้สร้างหลักสูตร
+ฉบับร่าง
+ใช้งานอยู่
+ยุติแล้ว
+เผยแพร่แล้ว
+เปิดเนื้อหาหลักสูตร
+เส้นทางการเรียนรู้
+จัดลำดับหลักสูตรที่ใช้งานอยู่ให้เป็นชุด
+โปรไฟล์ครูแบบสาธารณะ
+แนะนำตัวและใส่ลิงก์ช่องทางโซเชียลของคุณ
+คลังสื่อ
+อัปโหลดไฟล์บันทึกบทเรียนและดูว่ารายการใดพร้อมใช้
+การสนทนาของครู
+กระดานสำหรับครูเท่านั้น คุณเขียนที่นั่นด้วยชื่อผู้ใช้ ไม่ใช่ชื่อจริง
+รายได้
+สิ่งที่หลักสูตรของคุณทำรายได้ ในแต่ละสกุลเงิน และรายการขายที่อยู่เบื้องหลัง ยังไม่มีการจ่ายเงินออก นี่จึงเป็นบันทึก ไม่ใช่ยอดคงเหลือ
+การรับเงิน
+ขอรับเงินที่หลักสูตรของคุณทำรายได้เมื่อพ้นช่วงพักเงินไว้เผื่อคืนเงินแล้ว และดูว่าคำขอก่อนหน้าแต่ละครั้งเป็นอย่างไร
+สร้าง
+หลักสูตรใหม่
+ชื่อหลักสูตร
+ตัจวีดเบื้องต้น
+สร้างหลักสูตร
+กำลังสร้าง…
+โปรดตั้งชื่อหลักสูตร
+มีหลักสูตรชื่อนั้นอยู่แล้ว โปรดเปลี่ยนชื่อเล็กน้อยแล้วลองอีกครั้ง
+ไม่ได้สร้างหลักสูตร สิ่งที่ฐานข้อมูลบอก:
+ไม่มีใครบอกได้ว่าหลักสูตรถูกสร้างแล้วหรือไม่ โปรดโหลดหน้านี้ใหม่และดูหลักสูตรของคุณก่อนสร้างอีกครั้ง
+คุณออกจากระบบแล้ว โปรดเข้าสู่ระบบอีกครั้ง แล้วลองอีกหนึ่งครั้ง
+กลับไปที่การเรียนของฉัน
+### fil
+Pagtuturo
+Ito ang lugar ng pagtuturo
+Ang pagtuturo rito ay sa pamamagitan ng paghirang.
+Ang may-ari ang humihirang ng guro. Hangga’t wala pa iyon, account ng mag-aaral ang account mo, at hindi makapagbubukas ng kurso ang account ng mag-aaral.
+Maaari kang humiling: ipadala ang iyong mga kuwalipikasyon at isang halimbawang aralin, at babasahin ng may-ari ang mga ito. Ang pag-apply ay hindi pagkahirang. Walang ibinibigay hangga’t walang nagpapasya, nang nakasulat.
+Mag-apply para magturo
+Pumunta sa aking pag-aaral
+Aking mga kurso
+Sa iyo pa rin ang karapatang-ari ng lahat ng narito. Walang binabawi sa anumang naibenta mo na: nananatili ang access ng mga mag-aaral na nag-enrol kahit iretiro mo ang kurso sa hinaharap.
+Napagpasyahan na ang isang abiso tungkol sa isa sa iyong mga bersyon.
+Nakabinbin ang isa sa iyong mga kurso habang sinusuri ang isang reklamo laban dito.
+Mga kurso mong nakabinbin habang sinusuri ang mga reklamo laban sa mga ito: {count}.
+Nasa ibaba ang reklamo, sa mga salitang ipinadala, at masasagot mo ito roon.
+Mga promosyon
+magpatakbo ng alok sa sarili mong mga kurso, sa mga bansang pipiliin mo, na may limitasyon kung ilang beses ito magagamit ng isang pamilya
+Pagsisiyasat
+Walang nakatalang pagsisiyasat
+Nasuri na
+Nag-expire
+Hindi pumasa
+Wala pang nakatalang pagsisiyasat tungkol sa iyo. Ang humihirang ng mga guro ang nagtatala nito: ang uri ng pagsisiyasat, ang petsa, at kung nawawalan ito ng bisa.
+Hindi pumasa ang isang pagsisiyasat na itinala noong {date}. Masasabi sa iyo ng nagtala nito kung ano ang susunod na mangyayari.
+Hindi pumasa ang isang pagsisiyasat na itinala sa account mo. Masasabi sa iyo ng nagtala nito kung ano ang susunod na mangyayari.
+Nawalan ng bisa ang huli mong pagsisiyasat noong {date}.
+Nawalan na ng bisa ang huli mong pagsisiyasat.
+May pagsisiyasat na itinala noong {date} at may bisa ito hanggang {until}.
+May pagsisiyasat na itinala at may bisa ito hanggang {until}.
+May pagsisiyasat na itinala noong {date}, na walang sinabing petsa ng pagkawala ng bisa.
+May pagsisiyasat na itinala, na walang sinabing petsa ng pagkawala ng bisa.
+Ang uri ng pagsisiyasat, ayon sa pagkakasulat:
+Hangga’t walang naitatalang pagsisiyasat na may bisa pa, hindi mailalathala ang kursong isinusulat mo para sa mga bata.
+Hindi humihingi ng pagsisiyasat ang platform ngayon, kaya walang anuman dito ang pumipigil sa paglalathala ng kurso mo. Kung magbago iyon, ang pahinang ito ang unang magsasabi.
+Iniingatan ang talang ito hanggang {date} at saka buburahin.
+Wala ka pang nagagawang kurso.
+Draft
+Aktibo
+Iniretiro
+Nailathala
+Buksan ang kurikulum
+Mga landas ng pag-aaral
+bumuo ng pagkakasunod-sunod ng mga aktibong kurso
+Pampublikong profile ng guro
+ipakilala ang sarili at i-link ang iyong mga social channel
+Aklatan ng media
+mag-upload ng mga recording ng aralin at tingnan kung alin ang handa nang gamitin
+Talakayan ng mga guro
+ang board na para lamang sa mga guro; sumusulat ka roon sa ilalim ng username, hindi ng pangalan mo
+Kita
+ang kinita ng iyong mga kurso, sa bawat pera, at ang mga bentang nasa likod nito; wala pang ibinabayad, kaya ito ang talaan at hindi balanse
+Pagtanggap ng bayad
+hingin ang perang kinita ng iyong mga kurso kapag wala na ito sa pagpigil para sa refund, at tingnan kung ano ang nangyari sa bawat naunang hiling
+Gumawa
+Bagong kurso
+Pamagat ng kurso
+Panimula sa tajwid
+Gumawa ng kurso
+Ginagawa…
+Bigyan ng pamagat ang kurso.
+May kurso nang ganoon ang pangalan. Baguhin nang kaunti ang pamagat at subukang muli.
+Hindi nagawa ang kurso. Ang sinabi ng database:
+Walang makapagsasabi kung nagawa ang kurso. I-load muli ang pahina at tingnan ang iyong mga kurso bago ito gawin ulit.
+Naka-sign out ka na. Mag-sign in muli, saka subukan nang isa pang beses.
+Bumalik sa aking pag-aaral
+### uz
+Oʻqitish
+Bu yer oʻqitish boʻlimi
+Bu yerda dars berish tayinlov asosida boʻladi.
+Oʻqituvchini platforma egasi tayinlaydi. Ungacha hisobingiz oʻquvchi hisobi boʻlib turadi, oʻquvchi hisobi esa kurs ocha olmaydi.
+Soʻrashingiz mumkin: malakalaringizni va namunaviy darsni yuboring, platforma egasi ularni oʻqiydi. Ariza topshirish tayinlanish degani emas. Kimdir yozma ravishda qaror qilmaguncha hech narsa berilmaydi.
+Dars berishga ariza topshirish
+Taʼlimimga oʻtish
+Kurslarim
+Bu yerdagi hamma narsaning mualliflik huquqi sizda qoladi. Sotib boʻlganlaringizdan hech narsa qaytarib olinmaydi: keyinchalik kursni toʻxtatsangiz ham, yozilgan oʻquvchilar undan foydalanishda davom etadi.
+Versiyalaringizdan biri haqidagi xabarnoma boʻyicha qaror qabul qilindi.
+Kurslaringizdan biri unga qarshi daʼvo koʻrib chiqilayotgan paytda toʻxtatib turilibdi.
+Ularga qarshi daʼvolar koʻrib chiqilayotgan paytda toʻxtatib turilgan kurslaringiz: {count}.
+Daʼvo quyida, qanday yuborilgan boʻlsa, shu soʻzlarda turibdi va unga oʻsha yerda javob berishingiz mumkin.
+Aksiyalar
+oʻz kurslaringizga, oʻzingiz tanlagan mamlakatlarda, bir oila necha marta foydalanishi mumkinligi cheklangan taklif eʼlon qiling
+Tekshiruv
+Qayd etilgan tekshiruv yoʻq
+Tekshirilgan
+Muddati tugagan
+Oʻtmadi
+Siz haqingizda hali tekshiruv qayd etilmagan. Uni oʻqituvchilarni tayinlaydigan kishi qayd etadi: tekshiruv turi, sanasi va muddati tugaydimi.
+{date} sanasida qayd etilgan tekshiruv oʻtmadi. Keyin nima boʻlishini uni qayd etgan kishi aytib bera oladi.
+Hisobingizga qayd etilgan tekshiruv oʻtmadi. Keyin nima boʻlishini uni qayd etgan kishi aytib bera oladi.
+Oxirgi tekshiruvingiz muddati {date} sanasida tugagan.
+Oxirgi tekshiruvingiz muddati tugagan.
+Tekshiruv {date} sanasida qayd etilgan va {until} sanasigacha amal qiladi.
+Tekshiruv qayd etilgan va {until} sanasigacha amal qiladi.
+Tekshiruv {date} sanasida qayd etilgan, tugash muddati koʻrsatilmagan.
+Tekshiruv qayd etilgan, tugash muddati koʻrsatilmagan.
+Tekshiruv turi, qanday yozib qoʻyilgan boʻlsa:
+Amaldagi tekshiruv qayd etilmaguncha, bolalar uchun yozgan kursingizni nashr etib boʻlmaydi.
+Platforma bugun tekshiruv talab qilmayapti, shuning uchun bu yerda kursingiz nashr etilishiga hech narsa toʻsqinlik qilmaydi. Agar bu oʻzgarsa, birinchi boʻlib shu sahifa aytadi.
+Bu yozuv {date} sanasigacha saqlanadi, soʻng oʻchiriladi.
+Hali kurs yaratmagansiz.
+Qoralama
+Faol
+Toʻxtatilgan
+Nashr etilgan
+Oʻquv dasturini ochish
+Oʻquv yoʻllari
+faol kurslardan ketma-ketlik tuzing
+Oʻqituvchining ochiq profili
+oʻzingizni tanishtiring va ijtimoiy tarmoqlardagi kanallaringizga havola qoʻying
+Media kutubxonasi
+dars yozuvlarini yuklang va qaysilari foydalanishga tayyorligini koʻring
+Oʻqituvchilar muhokamasi
+faqat oʻqituvchilar uchun muhokama maydoni; u yerda ismingiz bilan emas, foydalanuvchi nomi bilan yozasiz
+Daromad
+kurslaringiz har bir valyutada topgan daromad va uning ortidagi savdolar; hali hech narsa toʻlanmagan, shuning uchun bu qoldiq emas, qayd
+Toʻlov olish
+kurslaringiz topgan pul qaytarish uchun ushlab turishdan chiqqach, uni soʻrang va oldingi har bir soʻrov nima boʻlganini koʻring
+Yaratish
+Yangi kurs
+Kurs sarlavhasi
+Tajvidga kirish
+Kurs yaratish
+Yaratilmoqda…
+Kursga sarlavha bering.
+Shu nomli kurs allaqachon bor. Sarlavhani biroz oʻzgartirib, qayta urinib koʻring.
+Kurs yaratilmadi. Maʼlumotlar bazasi aytgan gap:
+Kurs yaratilgan-yaratilmaganini hech kim ayta olmaydi. Sahifani qayta yuklang va qayta yaratishdan oldin kurslaringizga qarang.
+Hisobdan chiqqansiz. Qayta kiring, soʻng yana bir marta urinib koʻring.
+Taʼlimimga qaytish
+### kk
+Оқыту
+Бұл — оқыту бөлімі
+Мұнда сабақ беру тағайындау арқылы жүреді.
+Мұғалімді платформа иесі тағайындайды. Оған дейін тіркелгіңіз оқушы тіркелгісі болады, ал оқушы тіркелгісі курс аша алмайды.
+Сұрауыңызға болады: біліктілігіңізді және үлгі сабақты жіберіңіз, платформа иесі оларды оқиды. Өтінім беру тағайындалу емес. Біреу жазбаша шешім қабылдамайынша ештеңе берілмейді.
+Сабақ беруге өтінім беру
+Оқуыма өту
+Менің курстарым
+Мұндағының бәріне авторлық құқық өзіңізде қалады. Сатып қойғаныңыздан ештеңе қайтарып алынбайды: кейін курсты тоқтатсаңыз да, жазылған оқушылардың қолжетімділігі сақталады.
+Нұсқаларыңыздың бірі туралы хабарлама бойынша шешім қабылданды.
+Курстарыңыздың бірі оған қарсы шағым қаралып жатқанда тоқтатылып тұр.
+Өздеріне қарсы шағымдар қаралып жатқанда тоқтатылып тұрған курстарыңыз: {count}.
+Шағым төменде, қалай жіберілсе, сол сөздермен тұр, оған сол жерде жауап бере аласыз.
+Науқандар
+өз курстарыңызға, өзіңіз таңдаған елдерде, бір отбасы неше рет пайдалана алатыны шектелген ұсыныс жариялаңыз
+Тексеру
+Тіркелген тексеру жоқ
+Тексерілді
+Мерзімі өткен
+Өтпеді
+Сіз туралы әзірге тексеру тіркелмеген. Оны мұғалімдерді тағайындайтын адам тіркейді: тексерудің түрі, күні және мерзімі бітетін-бітпейтіні.
+{date} күні тіркелген тексеру өтпеді. Әрі қарай не болатынын оны тіркеген адам айта алады.
+Тіркелгіңізге тіркелген тексеру өтпеді. Әрі қарай не болатынын оны тіркеген адам айта алады.
+Соңғы тексеруіңіздің мерзімі {date} күні бітті.
+Соңғы тексеруіңіздің мерзімі бітті.
+Тексеру {date} күні тіркелген және {until} күніне дейін жарамды.
+Тексеру тіркелген және {until} күніне дейін жарамды.
+Тексеру {date} күні тіркелген, аяқталу мерзімі көрсетілмеген.
+Тексеру тіркелген, аяқталу мерзімі көрсетілмеген.
+Тексерудің түрі, қалай жазылса, солай:
+Жарамды тексеру тіркелмейінше, балаларға арнап жазған курсыңызды жариялау мүмкін емес.
+Платформа бүгін тексеруді талап етіп отырған жоқ, сондықтан мұнда курсыңыздың жариялануына ештеңе кедергі болмайды. Егер бұл өзгерсе, алдымен осы бет айтады.
+Бұл жазба {date} күніне дейін сақталады, содан кейін жойылады.
+Әзірге курс жасаған жоқсыз.
+Жоба
+Белсенді
+Тоқтатылған
+Жарияланған
+Оқу бағдарламасын ашу
+Оқу жолдары
+белсенді курстардан тізбек құрастырыңыз
+Мұғалімнің ашық профилі
+өзіңізді таныстырып, әлеуметтік желідегі арналарыңызға сілтеме қойыңыз
+Медиа кітапханасы
+сабақ жазбаларын жүктеп, қайсысы пайдалануға дайын екенін көріңіз
+Мұғалімдер талқылауы
+тек мұғалімдерге арналған талқылау алаңы; онда өз атыңызбен емес, пайдаланушы атымен жазасыз
+Табыс
+курстарыңыздың әр валютада тапқан табысы және оның артындағы сатылымдар; әзірге ештеңе төленген жоқ, сондықтан бұл қалдық емес, жазба
+Төлем алу
+курстарыңыз тапқан ақша қайтаруға арналған ұстап тұрудан шыққан соң оны сұраңыз және бұрынғы әр сұраудың не болғанын көріңіз
+Жасау
+Жаңа курс
+Курс атауы
+Тәжуидке кіріспе
+Курс жасау
+Жасалуда…
+Курсқа атау беріңіз.
+Мұндай атаулы курс бұрыннан бар. Атауын сәл өзгертіп, қайта байқап көріңіз.
+Курс жасалмады. Дерекқордың айтқаны:
+Курстың жасалған-жасалмағанын ешкім айта алмайды. Бетті қайта жүктеп, қайта жасамас бұрын курстарыңызға қараңыз.
+Тіркелгіден шығып кеткенсіз. Қайта кіріп, тағы бір рет байқап көріңіз.
+Оқуыма оралу
+### az
+Tədris
+Bura tədris bölməsidir
+Burada dərs demək təyinatla olur.
+Müəllimi platformanın sahibi təyin edir. O vaxta qədər hesabınız öyrənən hesabıdır və öyrənən hesabı kurs aça bilməz.
+Xahiş edə bilərsiniz: ixtisas sənədlərinizi və nümunə dərsi göndərin, platformanın sahibi onları oxuyur. Müraciət etmək təyin olunmaq deyil. Kimsə yazılı şəkildə qərar verməyincə heç nə verilmir.
+Dərs demək üçün müraciət et
+Təhsilimə keç
+Kurslarım
+Buradakı hər şeyin müəllif hüququ sizdə qalır. Artıq satdıqlarınızdan heç nə geri alınmır: kursu sonradan dayandırsanız belə, yazılmış öyrənənlərin girişi qalır.
+Versiyalarınızdan biri haqqında bildiriş üzrə qərar verildi.
+Kurslarınızdan biri ona qarşı iddiaya baxılarkən saxlanılıb.
+Onlara qarşı iddialara baxılarkən saxlanılan kurslarınız: {count}.
+İddia aşağıdadır, göndərildiyi sözlərlə, və ona orada cavab verə bilərsiniz.
+Kampaniyalar
+öz kurslarınıza, seçdiyiniz ölkələrdə, bir ailənin neçə dəfə istifadə edə biləcəyinə məhdudiyyət qoyulmuş təklif elan edin
+Yoxlama
+Qeydə alınmış yoxlama yoxdur
+Yoxlanılıb
+Müddəti bitib
+Keçmədi
+Sizin barənizdə hələ yoxlama qeydə alınmayıb. Onu müəllimləri təyin edən şəxs qeydə alır: yoxlamanın növü, tarixi və müddətinin bitib-bitmədiyi.
+{date} tarixində qeydə alınmış yoxlama keçmədi. Bundan sonra nə olacağını onu qeydə alan şəxs sizə deyə bilər.
+Hesabınıza qeydə alınmış yoxlama keçmədi. Bundan sonra nə olacağını onu qeydə alan şəxs sizə deyə bilər.
+Son yoxlamanızın müddəti {date} tarixində bitib.
+Son yoxlamanızın müddəti bitib.
+Yoxlama {date} tarixində qeydə alınıb və {until} tarixinədək qüvvədədir.
+Yoxlama qeydə alınıb və {until} tarixinədək qüvvədədir.
+Yoxlama {date} tarixində qeydə alınıb, bitmə tarixi göstərilməyib.
+Yoxlama qeydə alınıb, bitmə tarixi göstərilməyib.
+Yoxlamanın növü, necə yazılıbsa, elə:
+Qüvvədə olan yoxlama qeydə alınmayınca, uşaqlar üçün yazdığınız kurs dərc oluna bilməz.
+Platforma bu gün yoxlama tələb etmir, ona görə burada kursunuzun dərc olunmasına heç nə mane olmur. Bu dəyişsə, ilk olaraq bu səhifə deyəcək.
+Bu qeyd {date} tarixinədək saxlanılır, sonra silinir.
+Hələ kurs yaratmamısınız.
+Qaralama
+Aktiv
+Dayandırılıb
+Dərc olunub
+Tədris proqramını aç
+Öyrənmə yolları
+aktiv kurslardan ardıcıllıq qurun
+Müəllimin açıq profili
+özünüzü təqdim edin və sosial kanallarınıza keçid əlavə edin
+Media kitabxanası
+dərs yazılarını yükləyin və hansılarının istifadəyə hazır olduğuna baxın
+Müəllimlərin müzakirəsi
+yalnız müəllimlər üçün müzakirə lövhəsi; orada adınızla deyil, istifadəçi adı ilə yazırsınız
+Qazanc
+kurslarınızın hər valyutada qazandığı məbləğ və onun arxasındakı satışlar; hələ heç nə ödənilmir, ona görə bu qalıq deyil, qeyddir
+Ödəniş almaq
+kurslarınızın qazandığı pul geri qaytarma üçün saxlamadan çıxandan sonra onu istəyin və əvvəlki hər sorğunun nə olduğuna baxın
+Yarat
+Yeni kurs
+Kursun başlığı
+Təcvidə giriş
+Kurs yarat
+Yaradılır…
+Kursa başlıq verin.
+Bu adda kurs artıq var. Başlığı bir az dəyişib yenidən cəhd edin.
+Kurs yaradılmadı. Verilənlər bazasının dediyi:
+Kursun yaradılıb-yaradılmadığını heç kim deyə bilməz. Səhifəni yenidən yükləyin və onu yenidən yaratmazdan əvvəl kurslarınıza baxın.
+Hesabdan çıxmısınız. Yenidən daxil olun, sonra bir dəfə də cəhd edin.
+Təhsilimə qayıt
+### tg
+Таълим
+Ин ҷо бахши таълим аст
+Дар ин ҷо дарс додан бо таъинот аст.
+Муаллимро соҳиб таъин мекунад. То он вақт ҳисоби шумо ҳисоби омӯзанда аст, ва ҳисоби омӯзанда курс кушода наметавонад.
+Шумо метавонед хоҳиш кунед: тахассусҳои худ ва як дарси намунавиро фиристед, ва соҳиб онҳоро мехонад. Ариза додан таъин шудан нест. То даме ки касе хаттӣ қарор накунад, ҳеҷ чиз дода намешавад.
+Барои дарс додан ариза додан
+Ба таълими ман гузаштан
+Курсҳои ман
+Ҳуқуқи муаллиф ба ҳар чизе, ки дар ин ҷост, дар дасти шумо мемонад. Аз он чи аллакай фурӯхтаед, ҳеҷ чиз пас гирифта намешавад: омӯзандагоне, ки номнавис шудаанд, дастрасии худро нигоҳ медоранд, ҳатто агар баъдтар курсро қатъ кунед.
+Оид ба огоҳинома дар бораи яке аз версияҳои шумо қарор қабул шуд.
+Яке аз курсҳои шумо то баррасии даъво бар зидди он боздошта шудааст.
+Курсҳои шумо, ки то баррасии даъвоҳо бар зидди онҳо боздошта шудаанд: {count}.
+Даъво дар поён аст, бо ҳамон суханоне, ки фиристода шуд, ва шумо метавонед дар ҳамон ҷо ба он ҷавоб диҳед.
+Аксияҳо
+барои курсҳои худ, дар кишварҳое, ки интихоб мекунед, пешниҳоде эълон кунед, ки як оила чанд бор истифода карда метавонад, маҳдуд аст
+Санҷиш
+Санҷиши сабтшуда нест
+Тафтиш шуд
+Мӯҳлаташ гузашта
+Нагузашт
+Дар бораи шумо ҳанӯз санҷише сабт нашудааст. Онро шахсе, ки муаллимонро таъин мекунад, сабт мекунад: навъи санҷиш, сана ва оё мӯҳлаташ тамом мешавад.
+Санҷише, ки {date} сабт шуда буд, нагузашт. Шахсе, ки онро сабт кардааст, метавонад ба шумо гӯяд, ки баъд чӣ мешавад.
+Санҷише, ки ба ҳисоби шумо сабт шуда буд, нагузашт. Шахсе, ки онро сабт кардааст, метавонад ба шумо гӯяд, ки баъд чӣ мешавад.
+Мӯҳлати санҷиши охирини шумо {date} тамом шуд.
+Мӯҳлати санҷиши охирини шумо тамом шудааст.
+Санҷиш {date} сабт шуд ва то {until} эътибор дорад.
+Санҷиш сабт шуд ва то {until} эътибор дорад.
+Санҷиш {date} сабт шуд, санаи анҷоми мӯҳлат зикр нашудааст.
+Санҷиш сабт шуд, санаи анҷоми мӯҳлат зикр нашудааст.
+Навъи санҷиш, ҳамон тавре ки навишта шуда буд:
+То даме ки санҷиши боэътибор сабт нашавад, курсе, ки барои кӯдакон менависед, нашр шуда наметавонад.
+Платформа имрӯз санҷиш талаб намекунад, бинобар ин дар ин ҷо ҳеҷ чиз ба нашри курси шумо монеъ намешавад. Агар ин тағйир ёбад, аввал ҳамин саҳифа мегӯяд.
+Ин сабт то {date} нигоҳ дошта мешавад ва баъд нест карда мешавад.
+Шумо ҳанӯз курсе насохтаед.
+Сиёҳнавис
+Фаъол
+Қатъшуда
+Нашршуда
+Кушодани барномаи таълимӣ
+Роҳҳои омӯзиш
+аз курсҳои фаъол пайдарпаие тартиб диҳед
+Профили оммавии муаллим
+худро муаррифӣ кунед ва ба каналҳои иҷтимоии худ пайванд гузоред
+Китобхонаи медиа
+сабтҳои дарсро бор кунед ва бинед, ки кадомашон барои истифода тайёр аст
+Муҳокимаи муаллимон
+майдони муҳокима танҳо барои муаллимон; дар он ҷо шумо бо номи корбарӣ менависед, на бо номи худ
+Даромад
+он чи курсҳои шумо бо ҳар асъор ба даст овардаанд ва фурӯшҳое, ки дар паси он ҳастанд; ҳанӯз ҳеҷ чиз пардохт намешавад, пас ин сабт аст, на бақия
+Гирифтани пардохт
+пулеро, ки курсҳои шумо ба даст овардаанд, пас аз баромадан аз нигоҳдорӣ барои баргардонидани маблағ талаб кунед ва бинед, ки бо ҳар дархости пешина чӣ шуд
+Сохтан
+Курси нав
+Сарлавҳаи курс
+Муқаддима ба таҷвид
+Сохтани курс
+Сохта мешавад…
+Ба курс сарлавҳа диҳед.
+Курсе бо чунин ном аллакай ҳаст. Сарлавҳаро каме тағйир диҳед ва дубора кӯшиш кунед.
+Курс сохта нашуд. Он чи пойгоҳи додаҳо гуфт:
+Ҳеҷ кас гуфта наметавонад, ки курс сохта шуд ё не. Саҳифаро аз нав бор кунед ва пеш аз дубора сохтан ба курсҳои худ нигаред.
+Шумо аз ҳисоб баромадаед. Дубора ворид шавед, сипас як бори дигар кӯшиш кунед.
+Бозгашт ба таълими ман
+### ky
+Окутуу
+Бул — окутуу бөлүмү
+Бул жерде сабак берүү дайындоо аркылуу болот.
+Мугалимди платформанын ээси дайындайт. Ага чейин аккаунтуңуз окуучунун аккаунту болот, ал эми окуучунун аккаунту курс ача албайт.
+Сурансаңыз болот: квалификацияңызды жана үлгү сабакты жөнөтүңүз, платформанын ээси аларды окуйт. Арыз берүү дайындалуу эмес. Кимдир бирөө жазуу жүзүндө чечмейинче эч нерсе берилбейт.
+Сабак берүүгө арыз берүү
+Окуума өтүү
+Менин курстарым
+Бул жердегинин баарына автордук укук өзүңүздө калат. Сатып койгонуңуздан эч нерсе кайтарылып алынбайт: кийин курсту токтотсоңуз да, жазылган окуучулардын кирүү мүмкүнчүлүгү сакталат.
+Версияларыңыздын бири тууралуу билдирүү боюнча чечим кабыл алынды.
+Курстарыңыздын бири ага каршы доо каралып жатканда кармалып турат.
+Аларга каршы доолор каралып жатканда кармалып турган курстарыңыз: {count}.
+Доо төмөндө, кандай жөнөтүлсө, ошол сөздөр менен турат, ага ошол жерден жооп бере аласыз.
+Акциялар
+өз курстарыңызга, өзүңүз тандаган өлкөлөрдө, бир үй-бүлө канча жолу колдоно алары чектелген сунуш жарыялаңыз
+Текшерүү
+Катталган текшерүү жок
+Текшерилди
+Мөөнөтү бүткөн
+Өткөн жок
+Сиз тууралуу азырынча текшерүү каттала элек. Аны мугалимдерди дайындаган адам каттайт: текшерүүнүн түрү, күнү жана мөөнөтү бүтөр-бүтпөсү.
+{date} күнү катталган текшерүү өткөн жок. Андан ары эмне болорун аны каттаган адам айтып бере алат.
+Аккаунтуңузга катталган текшерүү өткөн жок. Андан ары эмне болорун аны каттаган адам айтып бере алат.
+Акыркы текшерүүңүздүн мөөнөтү {date} күнү бүттү.
+Акыркы текшерүүңүздүн мөөнөтү бүттү.
+Текшерүү {date} күнү катталган жана {until} күнүнө чейин жарактуу.
+Текшерүү катталган жана {until} күнүнө чейин жарактуу.
+Текшерүү {date} күнү катталган, бүтүү мөөнөтү көрсөтүлгөн эмес.
+Текшерүү катталган, бүтүү мөөнөтү көрсөтүлгөн эмес.
+Текшерүүнүн түрү, кандай жазылса, ошондой:
+Жарактуу текшерүү катталмайынча, балдар үчүн жазган курсуңузду жарыялоого болбойт.
+Платформа бүгүн текшерүүнү талап кылбайт, ошондуктан бул жерде курсуңуздун жарыяланышына эч нерсе тоскоол болбойт. Эгер бул өзгөрсө, биринчи болуп ушул барак айтат.
+Бул жазуу {date} күнүнө чейин сакталат, андан кийин өчүрүлөт.
+Азырынча курс түзө элексиз.
+Каралама
+Активдүү
+Токтотулган
+Жарыяланган
+Окуу программасын ачуу
+Окуу жолдору
+активдүү курстардан ырааттуулук түзүңүз
+Мугалимдин ачык профили
+өзүңүздү тааныштырып, социалдык каналдарыңызга шилтеме коюңуз
+Медиа китепканасы
+сабак жазууларын жүктөп, кайсынысы колдонууга даяр экенин көрүңүз
+Мугалимдердин талкуусу
+мугалимдер үчүн гана талкуу аянты; ал жерде өз атыңыз менен эмес, колдонуучу аты менен жазасыз
+Киреше
+курстарыңыздын ар бир валютада тапканы жана анын артындагы сатуулар; азырынча эч нерсе төлөнө элек, ошондуктан бул калдык эмес, жазуу
+Төлөм алуу
+курстарыңыз тапкан акча кайтаруу үчүн кармап туруудан чыккандан кийин аны сураңыз жана мурунку ар бир сурамдын эмне болгонун көрүңүз
+Түзүү
+Жаңы курс
+Курстун аталышы
+Тажвидге киришүү
+Курс түзүү
+Түзүлүүдө…
+Курска аталыш бериңиз.
+Мындай аталыштагы курс мурунтан эле бар. Аталышын бир аз өзгөртүп, кайра аракет кылыңыз.
+Курс түзүлгөн жок. Маалымат базасынын айтканы:
+Курс түзүлгөнүн же түзүлбөгөнүн эч ким айта албайт. Баракты кайра жүктөп, кайра түзөрдөн мурда курстарыңызды караңыз.
+Аккаунттан чыгып кеткенсиз. Кайра кирип, дагы бир жолу аракет кылыңыз.
+Менин окуума кайтуу
+### tk
+Okatmak
+Bu ýer okatmak bölümidir
+Bu ýerde sapak bermek bellenilmek arkaly bolýar.
+Mugallymy platformanyň eýesi belleýär. Şoňa çenli hasabyňyz okuwçynyň hasabydyr, okuwçynyň hasaby bolsa kurs açyp bilmeýär.
+Haýyş edip bilersiňiz: hünär derejeleriňizi we nusga sapagy iberiň, platformanyň eýesi olary okaýar. Ýüz tutmak bellenilmek däldir. Kimdir biri ýazmaça karar berýänçä hiç zat berilmeýär.
+Sapak bermek üçin ýüz tut
+Okuwyma geç
+Kurslarym
+Bu ýerdäki ähli zadyň awtorlyk hukugy sizde galýar. Eýýäm satan zatlaryňyzdan hiç zat yzyna alynmaýar: kursy soň bes etseňiz-de, ýazylan okuwçylaryň elýeterliligi galýar.
+Wersiýalaryňyzyň biri barada habarnama boýunça karar berildi.
+Kurslaryňyzyň biri oňa garşy talap seredilýärkä saklanyp dur.
+Olara garşy talaplar seredilýärkä saklanyp duran kurslaryňyz: {count}.
+Talap aşakda, nähili iberilen bolsa, şol sözler bilen dur, oňa şol ýerde jogap berip bilersiňiz.
+Aksiýalar
+öz kurslaryňyza, özüňiz saýlan ýurtlarda, bir maşgalanyň näçe gezek ulanyp biljekdigi çäklendirilen teklip yglan ediň
+Barlag
+Ýazga geçirilen barlag ýok
+Barlandy
+Möhleti geçen
+Geçmedi
+Siz barada entek barlag ýazga geçirilmedi. Ony mugallymlary belleýän adam ýazga geçirýär: barlagyň görnüşi, senesi we möhletiniň gutarýandygy ýa-da gutarmaýandygy.
+{date} senesinde ýazga geçirilen barlag geçmedi. Mundan soň näme boljakdygyny ony ýazga geçiren adam aýdyp biler.
+Hasabyňyza ýazga geçirilen barlag geçmedi. Mundan soň näme boljakdygyny ony ýazga geçiren adam aýdyp biler.
+Soňky barlagyňyzyň möhleti {date} senesinde gutardy.
+Soňky barlagyňyzyň möhleti gutardy.
+Barlag {date} senesinde ýazga geçirildi we {until} senesine çenli güýjünde.
+Barlag ýazga geçirildi we {until} senesine çenli güýjünde.
+Barlag {date} senesinde ýazga geçirildi, gutarýan möhleti görkezilmedi.
+Barlag ýazga geçirildi, gutarýan möhleti görkezilmedi.
+Barlagyň görnüşi, nähili ýazylan bolsa, şeýle:
+Güýjündäki barlag ýazga geçirilýänçä, çagalar üçin ýazan kursuňyzy çap edip bolmaýar.
+Platforma şu gün barlag talap etmeýär, şonuň üçin bu ýerde kursuňyzyň çap edilmegine hiç zat päsgel bermeýär. Eger bu üýtgese, ilki şu sahypa aýdar.
+Bu ýazgy {date} senesine çenli saklanýar, soňra pozulýar.
+Entek kurs döretmediňiz.
+Garalama
+Işjeň
+Bes edilen
+Çap edilen
+Okuw meýilnamasyny aç
+Okuw ýollary
+işjeň kurslardan yzygiderlilik düzüň
+Mugallymyň açyk profili
+özüňizi tanyşdyryň we sosial kanallaryňyza salgylanma goýuň
+Media kitaphanasy
+sapak ýazgylaryny ýükläň we haýsylarynyň ulanmaga taýýardygyny görüň
+Mugallymlaryň maslahaty
+diňe mugallymlar üçin maslahat meýdançasy; ol ýerde öz adyňyz bilen däl-de, ulanyjy ady bilen ýazýarsyňyz
+Girdeji
+kurslaryňyzyň her walýutada gazanany we onuň arkasyndaky satuwlar; entek hiç zat tölenmeýär, şonuň üçin bu galyndy däl-de, ýazgydyr
+Töleg almak
+kurslaryňyzyň gazanan puly gaýtarylmak üçin saklawdan çykandan soň ony soraň we öňki her haýyşyň näme bolandygyny görüň
+Döret
+Täze kurs
+Kursuň sözbaşysy
+Tejwide giriş
+Kurs döret
+Döredilýär…
+Kursa sözbaşy beriň.
+Şeýle atly kurs eýýäm bar. Sözbaşyny biraz üýtgedip, täzeden synanyşyň.
+Kurs döredilmedi. Maglumat bazasynyň aýdany:
+Kursuň döredilendigini ýa-da döredilmändigini hiç kim aýdyp bilmez. Sahypany täzeden ýükläň we täzeden döretmezden öň kurslaryňyza serediň.
+Hasapdan çykypsyňyz. Täzeden giriň, soňra ýene bir gezek synanyşyň.
+Okuwyma dolanmak
+### ta
+கற்பித்தல்
+இது கற்பித்தல் பகுதி
+இங்கே கற்பித்தல் நியமனத்தின் மூலமே நடக்கிறது.
+ஆசிரியரை உரிமையாளர் நியமிக்கிறார். அதுவரை உங்கள் கணக்கு கற்பவரின் கணக்கு; கற்பவரின் கணக்கால் பாடநெறியைத் திறக்க முடியாது.
+நீங்கள் கேட்கலாம்: உங்கள் தகுதிகளையும் ஒரு மாதிரிப் பாடத்தையும் அனுப்புங்கள்; உரிமையாளர் அவற்றைப் படிக்கிறார். விண்ணப்பிப்பது நியமிக்கப்படுவது அல்ல. யாராவது எழுத்து மூலம் முடிவு செய்யும் வரை எதுவும் வழங்கப்படாது.
+கற்பிக்க விண்ணப்பிக்க
+என் கற்றலுக்குச் செல்
+என் பாடநெறிகள்
+இங்குள்ள அனைத்தின் பதிப்புரிமையும் உங்களிடமே இருக்கும். நீங்கள் ஏற்கெனவே விற்றது எதுவும் திரும்பப் பெறப்படாது: பின்னர் நீங்கள் பாடநெறியை நிறுத்தினாலும், சேர்ந்த கற்பவர்களின் அணுகல் தொடரும்.
+உங்கள் பதிப்புகளில் ஒன்றைப் பற்றிய அறிவிப்பில் முடிவு எடுக்கப்பட்டது.
+உங்கள் பாடநெறிகளில் ஒன்று, அதற்கு எதிரான ஒரு கோரல் பரிசீலிக்கப்படும் வரை நிறுத்திவைக்கப்பட்டுள்ளது.
+எதிரான கோரல்கள் பரிசீலிக்கப்படும் வரை நிறுத்திவைக்கப்பட்டுள்ள உங்கள் பாடநெறிகள்: {count}.
+கோரல் கீழே உள்ளது, அனுப்பப்பட்ட சொற்களிலேயே; அங்கேயே நீங்கள் பதிலளிக்கலாம்.
+விளம்பரச் சலுகைகள்
+உங்கள் சொந்தப் பாடநெறிகளுக்கு, நீங்கள் தேர்ந்தெடுக்கும் நாடுகளில், ஒரு குடும்பம் எத்தனை முறை பயன்படுத்தலாம் என்ற வரம்புடன் ஒரு சலுகையை நடத்துங்கள்
+பின்னணிச் சரிபார்ப்பு
+பதிவில் சரிபார்ப்பு இல்லை
+சரிபார்க்கப்பட்டது
+காலாவதியானது
+தேறவில்லை
+உங்களைப் பற்றிய சரிபார்ப்பு இன்னும் பதிவில் இல்லை. ஆசிரியர்களை நியமிப்பவரே அதைப் பதிவு செய்கிறார்: சரிபார்ப்பின் வகை, தேதி, அது காலாவதியாகுமா என்பது.
+{date} அன்று பதிவு செய்யப்பட்ட சரிபார்ப்பு தேறவில்லை. அடுத்து என்ன நடக்கும் என்பதை அதைப் பதிவு செய்தவர் உங்களுக்குச் சொல்லலாம்.
+உங்கள் கணக்கில் பதிவு செய்யப்பட்ட சரிபார்ப்பு தேறவில்லை. அடுத்து என்ன நடக்கும் என்பதை அதைப் பதிவு செய்தவர் உங்களுக்குச் சொல்லலாம்.
+உங்கள் கடைசிச் சரிபார்ப்பு {date} அன்று காலாவதியானது.
+உங்கள் கடைசிச் சரிபார்ப்பு காலாவதியாகிவிட்டது.
+{date} அன்று ஒரு சரிபார்ப்பு பதிவு செய்யப்பட்டது; அது {until} வரை செல்லுபடியாகும்.
+ஒரு சரிபார்ப்பு பதிவு செய்யப்பட்டது; அது {until} வரை செல்லுபடியாகும்.
+{date} அன்று ஒரு சரிபார்ப்பு பதிவு செய்யப்பட்டது; காலாவதித் தேதி குறிப்பிடப்படவில்லை.
+ஒரு சரிபார்ப்பு பதிவு செய்யப்பட்டது; காலாவதித் தேதி குறிப்பிடப்படவில்லை.
+சரிபார்ப்பின் வகை, எழுதி வைக்கப்பட்டபடியே:
+நடப்பிலுள்ள சரிபார்ப்பு பதிவு செய்யப்படும் வரை, குழந்தைகளுக்காக நீங்கள் எழுதும் பாடநெறியை வெளியிட முடியாது.
+தளம் இன்று சரிபார்ப்பைக் கேட்கவில்லை; எனவே உங்கள் பாடநெறி வெளியிடப்படுவதை இங்கே எதுவும் தடுக்கவில்லை. அது மாறினால், இந்தப் பக்கமே முதலில் சொல்லும்.
+இந்தப் பதிவு {date} வரை வைத்திருக்கப்பட்டு, பின்னர் நீக்கப்படும்.
+நீங்கள் இன்னும் பாடநெறி எதையும் உருவாக்கவில்லை.
+வரைவு
+செயலில் உள்ளது
+நிறுத்தப்பட்டது
+வெளியிடப்பட்டது
+பாடத்திட்டத்தைத் திற
+கற்றல் பாதைகள்
+செயலிலுள்ள பாடநெறிகளை ஒரு வரிசையாக அமையுங்கள்
+பொது ஆசிரியர் சுயவிவரம்
+உங்களை அறிமுகப்படுத்தி, உங்கள் சமூக ஊடகச் சேனல்களை இணையுங்கள்
+ஊடக நூலகம்
+பாடப் பதிவுகளைப் பதிவேற்றி, எவை பயன்படுத்தத் தயாராக உள்ளன என்று பாருங்கள்
+ஆசிரியர் கலந்துரையாடல்
+ஆசிரியர்களுக்கு மட்டுமான பலகை; அங்கே உங்கள் பெயரில் அல்ல, பயனர்பெயரில் எழுதுகிறீர்கள்
+வருமானம்
+உங்கள் பாடநெறிகள் ஒவ்வொரு நாணயத்திலும் ஈட்டியதும் அதன் பின்னாலுள்ள விற்பனைகளும்; இன்னும் எதுவும் செலுத்தப்படவில்லை, எனவே இது பதிவேடு, இருப்புத் தொகை அல்ல
+பணம் பெறுதல்
+உங்கள் பாடநெறிகள் ஈட்டிய பணம் பணத்திருப்புக்கான நிறுத்திவைப்பிலிருந்து வெளிவந்ததும் அதைக் கேளுங்கள்; முந்தைய ஒவ்வொரு கோரிக்கைக்கும் என்ன ஆனது என்று பாருங்கள்
+உருவாக்கு
+புதிய பாடநெறி
+பாடநெறித் தலைப்பு
+தஜ்வீத் அறிமுகம்
+பாடநெறியை உருவாக்கு
+உருவாக்கப்படுகிறது…
+பாடநெறிக்கு ஒரு தலைப்பைக் கொடுங்கள்.
+அந்தப் பெயரில் ஒரு பாடநெறி ஏற்கெனவே உள்ளது. தலைப்பைச் சற்று மாற்றி மீண்டும் முயலுங்கள்.
+பாடநெறி உருவாக்கப்படவில்லை. தரவுத்தளம் சொன்னது:
+பாடநெறி உருவாக்கப்பட்டதா என்று யாராலும் சொல்ல முடியாது. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் உருவாக்குவதற்கு முன் உங்கள் பாடநெறிகளைப் பாருங்கள்.
+நீங்கள் வெளியேறியுள்ளீர்கள். மீண்டும் உள்நுழைந்து, இன்னொரு முறை முயலுங்கள்.
+என் கற்றலுக்குத் திரும்பு
+### ne
+शिक्षण
+यो शिक्षण क्षेत्र हो
+यहाँ पढाउने काम नियुक्तिबाट हुन्छ।
+शिक्षकलाई मालिकले नियुक्त गर्छन्। त्यतिन्जेल तपाईंको खाता सिकारुको खाता हो, र सिकारुको खाताले कोर्स खोल्न सक्दैन।
+तपाईं अनुरोध गर्न सक्नुहुन्छ: आफ्ना योग्यता र एउटा नमुना पाठ पठाउनुहोस्, र मालिकले ती पढ्छन्। आवेदन दिनु नियुक्त हुनु होइन। कसैले लिखित रूपमा निर्णय नगरेसम्म केही पनि दिइँदैन।
+पढाउन आवेदन दिनुहोस्
+मेरो सिकाइमा जानुहोस्
+मेरा कोर्सहरू
+यहाँ भएका सबै कुराको प्रतिलिपि अधिकार तपाईंसँगै रहन्छ। तपाईंले पहिले नै बेचिसकेको कुनै पनि कुरा फिर्ता लिइँदैन: तपाईंले पछि कोर्स हटाए पनि भर्ना भएका सिकारुहरूको पहुँच कायम रहन्छ।
+तपाईंको एउटा संस्करणबारेको सूचनामा निर्णय भयो।
+तपाईंको एउटा कोर्स त्यसविरुद्धको दाबी हेरिँदै गर्दा रोकिएको छ।
+तिनका विरुद्धका दाबीहरू हेरिँदै गर्दा रोकिएका तपाईंका कोर्सहरू: {count}।
+दाबी तल छ, जुन शब्दमा पठाइएको थियो त्यही शब्दमा, र तपाईं त्यहीँ जवाफ दिन सक्नुहुन्छ।
+प्रवर्द्धनहरू
+आफ्नै कोर्सहरूमा, आफूले रोजेका देशहरूमा, एउटा परिवारले कति पटक प्रयोग गर्न पाउने भन्ने सीमासहित अफर चलाउनुहोस्
+जाँच
+अभिलेखमा कुनै जाँच छैन
+जाँच भयो
+म्याद सकिएको
+पास भएन
+तपाईंबारे अझै कुनै जाँच अभिलेखमा छैन। शिक्षक नियुक्त गर्ने व्यक्तिले त्यो दर्ता गर्छन्: जाँचको प्रकार, मिति, र त्यसको म्याद सकिन्छ कि सकिँदैन।
+{date} मा दर्ता गरिएको जाँच पास भएन। अब के हुन्छ भनेर त्यो दर्ता गर्ने व्यक्तिले तपाईंलाई बताउन सक्छन्।
+तपाईंको खातामा दर्ता गरिएको जाँच पास भएन। अब के हुन्छ भनेर त्यो दर्ता गर्ने व्यक्तिले तपाईंलाई बताउन सक्छन्।
+तपाईंको पछिल्लो जाँचको म्याद {date} मा सकियो।
+तपाईंको पछिल्लो जाँचको म्याद सकिएको छ।
+{date} मा एउटा जाँच दर्ता गरियो र त्यो {until} सम्म मान्य छ।
+एउटा जाँच दर्ता गरियो र त्यो {until} सम्म मान्य छ।
+{date} मा एउटा जाँच दर्ता गरियो, म्याद सकिने मिति उल्लेख गरिएको छैन।
+एउटा जाँच दर्ता गरियो, म्याद सकिने मिति उल्लेख गरिएको छैन।
+जाँचको प्रकार, जसरी लेखिएको थियो त्यसरी नै:
+म्याद बाँकी रहेको जाँच दर्ता नभएसम्म, तपाईंले बालबालिकाका लागि लेखेको कोर्स प्रकाशित हुन सक्दैन।
+प्लेटफर्मले आज जाँच मागिरहेको छैन, त्यसैले यहाँ कुनै पनि कुराले तपाईंको कोर्स प्रकाशित हुन रोक्दैन। त्यो बदलियो भने, यो पृष्ठले नै पहिले भन्छ।
+यो अभिलेख {date} सम्म राखिन्छ र त्यसपछि मेटाइन्छ।
+तपाईंले अझै कुनै कोर्स बनाउनुभएको छैन।
+मस्यौदा
+सक्रिय
+हटाइएको
+प्रकाशित
+पाठ्यक्रम खोल्नुहोस्
+सिकाइका मार्गहरू
+सक्रिय कोर्सहरूको एउटा क्रम मिलाउनुहोस्
+सार्वजनिक शिक्षक प्रोफाइल
+आफ्नो परिचय दिनुहोस् र आफ्ना सामाजिक च्यानलहरू जोड्नुहोस्
+मिडिया पुस्तकालय
+पाठका रेकर्डिङहरू अपलोड गर्नुहोस् र कुन-कुन प्रयोग गर्न तयार छन् हेर्नुहोस्
+शिक्षकहरूको छलफल
+शिक्षकहरूका लागि मात्र छलफल बोर्ड; त्यहाँ तपाईं आफ्नो नाममा होइन, प्रयोगकर्ता नाममा लेख्नुहुन्छ
+आम्दानी
+तपाईंका कोर्सहरूले हरेक मुद्रामा कमाएको रकम र त्यसका पछाडिका बिक्रीहरू; अझै केही पनि भुक्तानी गरिएको छैन, त्यसैले यो अभिलेख हो, मौज्दात होइन
+भुक्तानी पाउने
+तपाईंका कोर्सहरूले कमाएको पैसा रकम फिर्ताका लागि रोक्काबाट बाहिर आएपछि माग्नुहोस्, र अघिल्लो हरेक अनुरोधको के भयो हेर्नुहोस्
+बनाउनुहोस्
+नयाँ कोर्स
+कोर्सको शीर्षक
+तजवीदको परिचय
+कोर्स बनाउनुहोस्
+बनाइँदै छ…
+कोर्सलाई शीर्षक दिनुहोस्।
+त्यो नामको कोर्स पहिले नै छ। शीर्षक अलिकति बदलेर फेरि प्रयास गर्नुहोस्।
+कोर्स बनेन। डाटाबेसले भनेको कुरा:
+कोर्स बन्यो कि बनेन कसैले भन्न सक्दैन। पृष्ठ फेरि लोड गर्नुहोस् र फेरि बनाउनुअघि आफ्ना कोर्सहरू हेर्नुहोस्।
+तपाईं साइन आउट हुनुभएको छ। फेरि साइन इन गर्नुहोस्, अनि अर्को एक पटक प्रयास गर्नुहोस्।
+मेरो सिकाइमा फर्कनुहोस्

@@ -123,7 +123,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const policyWords = translator(policyShown.code);
 
   return (
-    <html lang={code} dir={directionOf(code)}>
+    // The script below writes a reader's preferences on this element before
+    // React wakes up, so the element in the browser has attributes the server
+    // did not send. That is the intent, and React is told so: without this it
+    // reports the difference on every page a reader with a preference opens.
+    // It covers this element's attributes only, not anything inside it.
+    <html lang={code} dir={directionOf(code)} suppressHydrationWarning>
       <body>
         {/*
           Reading preferences are applied before the first paint. The script is
