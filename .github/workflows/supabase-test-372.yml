@@ -10,8 +10,8 @@
 # caller still answered about itself, and every role assignment and teacher
 # page as it was.
 #
-# NOT STARTED, and nobody has been asked to approve it (2026-11-28). The step
-# before it (371) has to have run first: until then this one refuses. It
+# Started on 2026-11-28, after the step before it (371) had run and the owner
+# wrote "done . continue as planned". It
 # starts only on a commit whose message begins with the words in the `if`
 # below; the environment then still requires the owner's approval before the
 # job, and so before any secret, is released. One-time: once it has run, never

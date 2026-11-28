@@ -11202,15 +11202,19 @@ started: recitation correction, native apps, push notifications.
   completed, or had the reviewer mark it completed themselves, and now
   do what a reviewer does. `DB_SUITES='a,b' node supabase/tests/run.mjs`
   runs a few suites while writing one.
-  **Not done:** the hosted project is at 370 and has every one of these
-  holes until the 371st is applied. Its job was written on 2026-11-28,
-  when the owner asked for it (`scripts/hosted-migration-371.mjs`,
-  `.github/workflows/supabase-test-371.yml`), and run `46104196908`
-  has waited since for the owner's approval in the environment
-  `ayahspring-test-migration-apply`. Read on 2026-11-27:
-  it holds one account and no course version, enrolment, reviewer,
-  assignment or decision, so nothing existed that they could be used
-  on. The other functions that answer a question about a user id they
+  **Applied to the hosted project on 2026-11-28**: trigger commit
+  `0da5804`, run `46104196908`, job `apply-371`, approved by the owner,
+  success at 07:13 UTC (`scripts/hosted-migration-371.mjs`,
+  `.github/workflows/supabase-test-371.yml`). Read back through the
+  read-only connector at 07:18: 371 entries ending at `20261281164000`,
+  both functions asking whose name, both triggers there; one account and
+  no review assignment, as before. The job is spent: never run it again
+  and never push its trigger words again. Read on 2026-11-27, before it:
+  the project held one account and no course version, enrolment,
+  reviewer, assignment or decision, so nothing existed that the holes
+  could be used on. The job's own log could not be read from here (its
+  host is not reachable from this sandbox); the step that applies is
+  marked successful. The other functions that answer a question about a user id they
   are handed (`is_privileged(uuid)`, `has_role(uuid, text)`, several
   `can_…(uuid)`) tell anybody signed in (the first two, anybody at all)
   whether an account is staff; they write nothing and were left (closed
@@ -11282,7 +11286,7 @@ started: recitation correction, native apps, push notifications.
   number fails in `npm test` before a push instead of after one.
 - **Whether an account is staff is a question a caller may ask about
   itself (migration 372, written 2026-11-28, NOT applied to the hosted
-  project, which is still at 370).** Measured first on a database built
+  project, which is at 371 since 07:13 UTC that day).** Measured first on a database built
   from the 371: every stable function the API roles may call with a uuid
   was asked about an account holding the four staff roles and about an
   ordinary one, as `authenticated` and as `anon`. Nine told them apart:
@@ -11337,13 +11341,18 @@ started: recitation correction, native apps, push notifications.
   policy, and no function that runs with the caller's rights, asks these
   questions about anybody but the caller (either would now be refused
   for every reader who is not staff).
-  **Not done.** The hosted project has the hole until 372 is applied,
-  and 371 has to be applied first (run `46104196908` still waits for the
-  owner). The step for 372 is written and tested
-  (`scripts/hosted-migration-372.mjs`,
-  `.github/workflows/supabase-test-372.yml`) and **has not been
-  started**: it would refuse a project at 370. Its trigger words are in
-  the workflow; push them only after 371 has run and the owner says so.
+  **Not done.** The hosted project has the hole until 372 is applied.
+  Its step (`scripts/hosted-migration-372.mjs`,
+  `.github/workflows/supabase-test-372.yml`) was started on 2026-11-28
+  by the commit that follows this paragraph, after 371 had run and the
+  owner wrote "done . continue as planned"; **it applies nothing until
+  the owner approves the run** in the environment
+  `ayahspring-test-migration-apply`. Read through the connector just
+  before: the project is at exactly 371, none of the five functions is
+  there, the nine still run with the owner's rights, the hosted
+  `postgres` may become `anon` and `authenticated` (which the job needs
+  in order to ask), and there is one account, one role assignment and no
+  teacher page. Push those trigger words once and never again.
   The sweep hands made-up ids to a function's other arguments, so one
   that tells staff apart only for a real lesson or institution would
   pass it; the functions were also read for calls that hand a parameter

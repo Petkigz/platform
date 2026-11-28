@@ -458,8 +458,12 @@ duplicates retired, the two that stay active and the number of subjects
 unchanged, or nothing is applied.
 
 The 371st, `20261281164000_review_decided_in_own_name.sql`, was written on
-2026-11-27 and **is not applied: the hosted project is at 370 and behaves as
-described here until it is.** It closes six things measured on a database
+2026-11-27 and **was applied on 2026-11-28**: trigger commit `0da5804`, run
+`46104196908`, job `apply-371`, approved by the owner, success at 07:13 UTC.
+Read back through the read-only connector at 07:18: 371 entries ending at
+`20261281164000`, both functions asking whose name, both triggers in place,
+one account and no review assignment. The job is spent: never run it again
+and never push its trigger words again. It closes six things measured on a database
 built from the 370, signed in as an ordinary account through the API:
 
 - `set_course_version_status()` and `re_pin_enrolment()` believed the actor
@@ -489,17 +493,17 @@ asks the hosted database, with a signed-in person's claims set, to move a
 course version that does not exist in somebody else's name: that must NOT be
 refused before the migration, must be refused inside the rehearsal and
 again after the apply, and every assignment and decision must be exactly as
-it was. Read through the read-only connector on 2026-11-27: the hosted project
-is at 370, its `set_course_version_status()` does not check the caller and
-the guard trigger is absent, so the holes are there; and it holds one
-account, no course version, no enrolment, no reviewer, no assignment, no
-decision and no re-pin, so there was nothing they could have been used on.
-That stops being true with the first course somebody writes. Suite:
+it was. Read through the read-only connector on 2026-11-27, before it ran:
+the hosted project was at 370, its `set_course_version_status()` did not
+check the caller and the guard trigger was absent, so the holes were there;
+and it held one account, no course version, no enrolment, no reviewer, no
+assignment, no decision and no re-pin, so there was nothing they could have
+been used on. Suite:
 `supabase/tests/review_own_name.test.mjs`.
 
 The 372nd, `20261281165000_role_questions_about_oneself.sql`, was written on
-2026-11-28 and **is not applied either: the hosted project is at 370, and
-this one cannot be applied before the 371st.** Until it is, anybody, signed
+2026-11-28 and **is not applied: the hosted project is at 371.** Until it
+is, anybody, signed
 in or not, can ask the hosted database whether any account id belongs to
 staff and which role it holds: `has_role(uuid, text)` and
 `is_privileged(uuid)` answer about any id to `anon` and `authenticated`, and
@@ -517,16 +521,18 @@ twice what it did (measured in the test engine, not on a server).
 Its one-time job is `scripts/hosted-migration-372.mjs`, run by the workflow
 "Apply Supabase test migration 372" on a commit that begins with that
 workflow's trigger words, behind the same environment and approval as the
-eleven before it. **It has not been started, and nobody has been asked to
-approve it**: it refuses unless the hosted history is exactly the 371, so
-the 371st has to run first. Before it applies anything it asks the hosted
+eleven before it. **It was started on 2026-11-28**, after the 371st had run
+and the owner wrote "done . continue as planned", and applies nothing until
+the owner approves the run. It refuses unless the hosted history is exactly
+the 371. Before it applies anything it asks the hosted
 database, as `authenticated` and as `anon`, about an account id that belongs
 to nobody: that must be answered before the migration, refused inside the
 rehearsal and again after the apply, a signed-in caller must still be
 answered about itself, and every role assignment and teacher page must be
 exactly as it was. To ask, the job's connection has to become each of the
 two roles (`set local role`); if the hosted `postgres` may not, the job says
-so and applies nothing. Suite: `supabase/tests/role_questions.test.mjs`.
+so and applies nothing (read through the connector on 2026-11-28: it is a
+member of both). Suite: `supabase/tests/role_questions.test.mjs`.
 
 Read back afterwards through the read-only connector, separately from the job:
 
