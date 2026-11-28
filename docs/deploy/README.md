@@ -196,7 +196,7 @@ error.
 
 ### 1.3 Apply the migrations
 
-371 files in `supabase/migrations/`, applied in filename order — the 14-digit
+372 files in `supabase/migrations/`, applied in filename order — the 14-digit
 prefix is a timestamp, and the order is not cosmetic: a table cannot be referenced
 before it exists.
 
@@ -496,6 +496,37 @@ account, no course version, no enrolment, no reviewer, no assignment, no
 decision and no re-pin, so there was nothing they could have been used on.
 That stops being true with the first course somebody writes. Suite:
 `supabase/tests/review_own_name.test.mjs`.
+
+The 372nd, `20261281165000_role_questions_about_oneself.sql`, was written on
+2026-11-28 and **is not applied either: the hosted project is at 370, and
+this one cannot be applied before the 371st.** Until it is, anybody, signed
+in or not, can ask the hosted database whether any account id belongs to
+staff and which role it holds: `has_role(uuid, text)` and
+`is_privileged(uuid)` answer about any id to `anon` and `authenticated`, and
+seven functions built on them (`can_appoint_teacher`,
+`can_decide_guardian_consent`, `can_decide_sponsorship`,
+`can_moderate_boards`, `can_work_incidents`, `may_change_control`,
+`may_write_setting`) to anybody signed in. Nothing can be written that way.
+The migration answers a caller about itself, which is all the application
+asks, and refuses `anon` and `authenticated` about anybody else (42501);
+functions that run with the owner's rights and the server's key ask as
+before. It adds five functions, changes how nine run and one policy, and
+changes no table, column or row. Each question about the caller costs about
+twice what it did (measured in the test engine, not on a server).
+
+Its one-time job is `scripts/hosted-migration-372.mjs`, run by the workflow
+"Apply Supabase test migration 372" on a commit that begins with that
+workflow's trigger words, behind the same environment and approval as the
+eleven before it. **It has not been started, and nobody has been asked to
+approve it**: it refuses unless the hosted history is exactly the 371, so
+the 371st has to run first. Before it applies anything it asks the hosted
+database, as `authenticated` and as `anon`, about an account id that belongs
+to nobody: that must be answered before the migration, refused inside the
+rehearsal and again after the apply, a signed-in caller must still be
+answered about itself, and every role assignment and teacher page must be
+exactly as it was. To ask, the job's connection has to become each of the
+two roles (`set local role`); if the hosted `postgres` may not, the job says
+so and applies nothing. Suite: `supabase/tests/role_questions.test.mjs`.
 
 Read back afterwards through the read-only connector, separately from the job:
 

@@ -63,6 +63,7 @@ import { run as privacyNoticeBoardsDraft } from './privacy_notice_boards_draft.t
 import { run as providerEvents } from './provider_events.test.mjs';
 import { run as duplicateSubjects } from './duplicate_subjects.test.mjs';
 import { run as reviewOwnName } from './review_own_name.test.mjs';
+import { run as roleQuestions } from './role_questions.test.mjs';
 import { run as translateButton } from './translate_button.test.mjs';
 import { run as institutions } from './institutions.test.mjs';
 import { run as institutionSeats } from './institution_seats.test.mjs';
@@ -403,6 +404,7 @@ for (const [name, fn] of [
   ['provider_events', providerEvents],
   ['duplicate_subjects', duplicateSubjects],
   ['review own name', reviewOwnName],
+  ['role questions', roleQuestions],
   ['translate_button', translateButton],
   ['institutions', institutions],
   ['institution_seats', institutionSeats],

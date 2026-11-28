@@ -703,7 +703,7 @@ moves; `platform.search` blamed a missing index when no transcript text existed.
 Optional author-provided transcripts now exist and are searchable only when the caller may read them. Both rows
 have since been updated; their switches did not move.
 
-Verification: **The current tree has 371 migrations and 184 suites. An earlier tree passed 2 653 database assertions in
+Verification: **The current tree has 372 migrations and 185 suites. An earlier tree passed 2 653 database assertions in
 its 170 suites across eight separate PGlite databases. An earlier web tree passed 2 175 tests. Lint, TypeScript,
 `check:repo` and build passed. Hosted deployment and real concurrent PostgreSQL
 and storage behavior remain unverified.**
@@ -11213,7 +11213,8 @@ started: recitation correction, native apps, push notifications.
   on. The other functions that answer a question about a user id they
   are handed (`is_privileged(uuid)`, `has_role(uuid, text)`, several
   `can_…(uuid)`) tell anybody signed in (the first two, anybody at all)
-  whether an account is staff; they write nothing and were left.
+  whether an account is staff; they write nothing and were left (closed
+  in the tree by migration 372, the last entry here).
   Nothing here was tried through PostgREST or a real session.
 - **One assignment, `/review/[assignmentId]`, in the reader's language,
   and nine faults on the page (2026-11-28, unreviewed).** The page, its
@@ -11279,3 +11280,85 @@ started: recitation correction, native apps, push notifications.
   same thing happened on 2026-11-27. `held-translations.test.ts` now
   reads those lines of `scripts/companion-browser-smoke.mjs`, so the
   number fails in `npm test` before a push instead of after one.
+- **Whether an account is staff is a question a caller may ask about
+  itself (migration 372, written 2026-11-28, NOT applied to the hosted
+  project, which is still at 370).** Measured first on a database built
+  from the 371: every stable function the API roles may call with a uuid
+  was asked about an account holding the four staff roles and about an
+  ordinary one, as `authenticated` and as `anon`. Nine told them apart:
+  `has_role(uuid, text)` and `is_privileged(uuid)` to a visitor who was
+  not signed in, and `can_appoint_teacher`, `can_decide_guardian_consent`,
+  `can_decide_sponsorship`, `can_moderate_boards`, `can_work_incidents`,
+  `may_change_control` and `may_write_setting` to anybody signed in.
+  Account ids are on course versions, assignments, posts and decisions,
+  so anybody could find which accounts are staff and which role each
+  holds. Nothing could be written this way.
+  *Now:* asked about nobody the two say false (a visitor has no id, and
+  131 policies rely on that); asked about the caller they answer, which
+  is all the application ever asks (about 145 places, none changed);
+  asked about anybody else they answer only a role that may execute the
+  lookup `account_has_role()` / `account_is_privileged()` (the owner, so
+  every function that runs with the owner's rights, and the server's
+  key) and refuse `anon` and `authenticated` with 42501, the same
+  refusal whoever the id belongs to and whether or not it exists. The
+  seven built on them run with the caller's rights and so inherit the
+  rule. Staff are refused through these too; they read
+  `user_role_assignments`, which its policy already opens to them. One
+  policy asked about a row's owner (a teacher's published page is public
+  only while they hold the teaching role) and now asks
+  `teaches_in_public(uuid)`, which says yes only where the page can
+  already be read.
+  *Two things found while writing it, both by measuring:*
+  1. Written the obvious way (SQL functions behind a PL/pgSQL one) each
+     question was planned again on every call: 20 000 questions about
+     the caller took about 6 seconds against 0.45 before. Policies ask
+     once per row. As shipped (PL/pgSQL throughout, and the caller's id
+     read once) the same 20 000 take about 0.86: **the question itself
+     costs about twice what it did** (43 millionths of a second against
+     22, in the engine the suites run on), because it now has to find
+     out who is asking. In a policy, where the caller's id was already
+     being read for the argument, that is about 60 against 40 for each
+     row the reader does not own. Not measured on a server.
+  2. The first version left the refusal to PostgreSQL's own check of
+     the right to execute the lookup. PL/pgSQL sets an expression up
+     once in a transaction and that check is made at set-up only: once
+     the owner had asked, an `anon` question in the same transaction
+     was answered. The hosted step's test caught it (it asks as both
+     roles in one transaction). The functions now look the right up by
+     name on every call. No way to do this through the API was found
+     (one request is one transaction and one role); the rule no longer
+     rests on that. The same property holds for any other PL/pgSQL
+     function that calls something its caller may not execute; nobody
+     has looked for others.
+  *Checked by:* `supabase/tests/role_questions.test.mjs` (20 tests),
+  whose last test repeats the sweep on every run: about 250 pairs of
+  questions over every stable function with a uuid that the two roles
+  may call. Two of its tests read the catalogue instead of asking: no
+  policy, and no function that runs with the caller's rights, asks these
+  questions about anybody but the caller (either would now be refused
+  for every reader who is not staff).
+  **Not done.** The hosted project has the hole until 372 is applied,
+  and 371 has to be applied first (run `46104196908` still waits for the
+  owner). The step for 372 is written and tested
+  (`scripts/hosted-migration-372.mjs`,
+  `.github/workflows/supabase-test-372.yml`) and **has not been
+  started**: it would refuse a project at 370. Its trigger words are in
+  the workflow; push them only after 371 has run and the owner says so.
+  The sweep hands made-up ids to a function's other arguments, so one
+  that tells staff apart only for a real lesson or institution would
+  pass it; the functions were also read for calls that hand a parameter
+  to these questions, and the five found (`set_course_version_status`,
+  `re_pin_enrolment`, `record_payment_success`, `complete_refund`,
+  `record_teacher_screening`) check the caller first. **Not looked at:**
+  the functions that tell `anon` or `authenticated` other facts about an
+  account id they are handed: `has_declared_adult(uuid)` (whether an
+  account says it is an adult, so by elimination whether it may be a
+  child's), `is_family_owner`, `is_family_member_of`,
+  `is_active_family_member`, `is_institution_admin`,
+  `is_authorised_reviewer`, `can_access_lesson`,
+  `can_access_course_version`, `can_enrol_in_version`,
+  `can_use_lesson_study_data`, `may_read_shared_learning`. Several are
+  used by policies about other rows' users, so each needs the reading
+  this one got. Nothing here was tried through PostgREST or with a real
+  session: that PostgREST answers 403 (401 to a visitor) for 42501 is
+  its documented behaviour, not something seen.
